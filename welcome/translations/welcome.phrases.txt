@@ -1,0 +1,62 @@
+"Phrases"
+{
+	"ConnectingWithHours"
+	{
+		"en"		"[{orange}!{default}] Player{olive} %N {default} [{olive}%iHours{default}] is connecting..."
+		"chi"		"[{orange}!{default}] 玩家{olive} %N {default}[{olive}%i小时{default}]正在连接中..."
+	}
+
+	"Connecting"
+	{
+		"en"		"[{orange}!{default}] Player{olive} %N {default}is connecting..."
+		"chi"		"[{orange}!{default}] 玩家{olive} %N {default}正在连接中..."
+	}
+
+	"ConnectedWithHoursAndRegion"
+	{
+		"en"		"[{orange}!{default}] Player{olive} %N {default} [{olive}%i Hours{default}] has joined this server, from region [{olive}%s{default}, {olive}%s{default}]."
+		"chi"		"[{orange}!{default}] 玩家{olive} %N {default} [{olive}%i 小时{default}] 进入了服务器, 来自[{olive}%s{default}, {olive}%s{default}]."
+	}
+
+	"ConnectedWithHours"
+	{
+		"en"		"[{orange}!{default}] Player{olive} %N {default}[{olive}%i Hours{default}] has joined this server."
+		"chi"		"[{orange}!{default}] 玩家{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器."
+	}
+
+	"ConnectedWithRegion"
+	{
+		"en"		"[{orange}!{default}] Player{olive} %N {default}has joined this server, from region [{olive}%s{default}, {olive}%s{default}]."
+		"chi"		"[{orange}!{default}] 玩家{olive} %N {default}进入了服务器, 来自 [{olive}%s{default}, {olive}%s{default}]."
+	}
+
+	"Connected"
+	{
+		"en"		"[{orange}!{default}] Player{olive} %N {default} has joined this server."
+		"chi"		"[{orange}!{default}] 玩家{olive} %N {default} 进入了服务器."
+	}
+
+	"RequestTimeAndRegion"
+	{
+		"en"		"[{orange}!{default}] Player{olive} %N {default}has played [{olive}%i{default}] hours, from region [{olive}%s{default}, {olive}%s{default}]."
+		"chi"		"[{orange}!{default}] 玩家{olive} %N {default}已游玩 [{olive}%i{default}] 小时, 来自 [{olive}%s{default}, {olive}%s{default}] 地区."
+	}
+
+	"RequestTime"
+	{
+		"en"		"[{orange}!{default}] Player{olive} %N {default}has played [{olive}%i{default}] hours, from region [{red}Unknow{default}]."
+		"chi"		"[{orange}!{default}] 玩家{olive} %N {default}已游玩 [{olive}%i{default}] 小时, 来自 [{red}未知{default}] 地区."
+	}
+
+	"RequestRegion"
+	{
+		"en"		"[{orange}!{default}] Player{olive} %N {default}has played [{red}Unknow{default}] hours, from region [{olive}%s{default}, {olive}%s{default}]."
+		"chi"		"[{orange}!{default}] 玩家{olive} %N {default}已游玩 [{red}未知{default}] 小时, 来自 [{olive}%s{default}, {olive}%s{default}] 地区."
+	}
+
+	"RequestFailed"
+	{
+		"en"		"[{orange}!{default}] Player{olive} %N {default}has played [{red}Unknow{default}] hours, from region [{red}Unknow{default}]."
+		"chi"		"[{orange}!{default}] 玩家{olive} %N {default}已游玩 [{red}未知{default}] 小时, 来自 [{red}未知{default}] 地区."
+	}
+}

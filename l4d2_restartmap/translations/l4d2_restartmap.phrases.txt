@@ -1,0 +1,20 @@
+"Phrases"
+{
+	"BrokenFlowDetected"
+	{
+		"en"		"[{orange}!{default}] Broken flow detected. Map will restart in 5s!"
+		"chi"		"[{orange}!{default}] 检测到地图进度问题. 地图将在五秒内重启!"
+	}
+
+	"Restarting"
+	{
+		"en"		"[{orange}!{default}] Map will restart in 5s!"
+		"chi"		"[{orange}!{default}] 地图将会在五秒内重启!"
+	}
+
+	"VersusRestarting"
+	{
+		"en"		"[{orange}!{default}] Map will restart in 5s, both team's {olive}versus scores{default} will be preserved!"
+		"chi"		"[{orange}!{default}] 地图将会在五秒内重启, 双方队伍的{olive}对抗得分{default}将会得到保存!"
+	}
+}

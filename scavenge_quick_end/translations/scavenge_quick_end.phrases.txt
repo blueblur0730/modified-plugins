@@ -1,0 +1,28 @@
+"Phrases"
+{
+	"PrintLastRoundTime"
+	{
+		"en"		"[{olive}!{default}] {default}Last Round: {orange}%d cans {default}in {orange}%d:%05.2f"
+		"chi"		"[{olive}!{default}] {default}上一轮: {orange}%d桶 {default}用时: {orange}%d:%05.2f"
+	}
+	"PrintThisRoundTime"
+	{
+		"en"		"[{olive}!{default}] {default}This Round: {orange}%d cans {default}in {orange}%d:%05.2f"
+		"chi"		"[{olive}!{default}] {default}这一轮: {orange}%d桶 {default}已用时: {orange}%d:%05.2f"
+	}
+	"PrintLastRoundEndTime"
+	{
+		"en"		"[{olive}Round Count{default}] {default}Last Round: {orange}%d cans {default}in {orange}%d:%05.2f"
+		"chi"		"[{olive}轮回结算{default}] {default}上一轮: {orange}%d桶 {default}用时: {orange}%d:%05.2f"
+	}
+	"PrintThisRoundEndTime"
+	{
+		"en"		"[{olive}Round Count{default}] {default}This Round: {orange}%d cans {default}in {orange}%d:%05.2f"
+		"chi"		"[{olive}轮回结算{default}] {default}这一轮: {orange}%d桶 {default}用时: {orange}%d:%05.2f"
+	}
+	"RoundEndEarly"
+	{
+		"en"		"[{olive}Quick End{default}] {blue}Round Ended Early: Win condition decided on time."
+		"chi"		"[{olive}提前结束{default}] {blue}该回合提前结束:胜利条件已由时间决定"
+	}
+}

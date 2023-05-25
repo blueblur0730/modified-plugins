@@ -1,0 +1,173 @@
+"Phrases"
+{
+	"VoteRestoreHealthPass"
+	{
+		"en"		"[{olive}vote{default}] {blue}Admin {olive}%N{blue} restored all players' health."
+		"chi"		"[{olive}vote{default}] {blue}管理员 {olive}%N{blue} 已恢复所有玩家血量."
+	}
+
+	"VoteCancel"
+	{
+		"en"		"[{olive}vote{default}] {blue}Admin {olive}%N{blue} canceled the current vote!"
+		"chi"		"[{olive}vote{default}] {blue}管理员 {olive}%N{blue} 取消了当前投票!"
+	}
+
+	"VoteCancelFailed"
+	{
+		"en"		"[{olive}vote{default}] {blue}No vote is in progress!"
+		"chi"		"[{olive}vote{default}] {blue}没有投票在进行!"
+	}
+
+	"NoSpecVoteRequest"
+	{
+		"en"		"[{olive}vote{default}] {blue}}Spectators aren't allowed to initiate a vote!"
+		"chi"		"[{olive}vote{default}] {blue}旁观者不允许发起投票!"
+	}
+
+	"RelatedFileNoExist"
+	{
+		"en"		"[{olive}vote{default}] {red}No related file exists."
+		"chi"		"[{olive}vote{default}] {red}没有相关的文件存在."
+	}
+
+	"StartVote"
+	{
+		"en"		"[{olive}vote{default}] {default}({olive}%N{default}) {blue}Initiate a vote!"
+		"chi"		"[{olive}vote{default}] {default}({olive}%N{default}) {blue}发起了一个投票!"
+	}
+
+	"AlreadyInProgress"
+	{
+		"en"		"[{olive}vote{default}] {red}There's already a vote in progress"
+		"chi"		"[{olive}vote{default}] {red}已经有一个投票正在进行."
+	}
+
+	"VoteNonePlayer"
+	{
+		"en"		"[{olive}vote{default}] {blue}There is no available player to vote."
+		"chi"		"[{olive}vote{default}] {blue}当前无符合投票条件的玩家。"
+	}
+
+	"VoteKickCilent"
+	{
+		"en"		"[{olive}vote{default}] {olive}%N{blue} Initiate a vote to kick {olive}%N"
+		"chi"		"[{olive}vote{default}] {olive}%N{blue} 发起投票踢出 {olive}%N"
+	}
+
+	"BanningRequirePoints"
+	{
+		"en"		"[{olive}vote{default}] {red}In case anyone abuse banning vote, only players with 10w points is allowed to use"
+		"chi"		"[{olive}vote{default}] {red}未防止封禁被乱用，需要10w以上积分玩家才能使用."
+	}
+
+	"PowerWarning"
+	{
+		"en"		"[{olive}vote{default}] {red}Use your power properly and carefully, Abusing banning will cause your account being banned.(First time: 7 days, Second: 1 mouth, Third: permanetyly.)."
+		"chi"		"[{olive}vote{default}] {red}请谨慎使用您的权力，乱用封禁会导致您的账户面临封禁（首次7天，第二次一个月，第三次永久.)."
+	}
+
+	"VoteBanClient"
+	{
+		"en"		"[{olive}vote{default}] {olive}%N{blue} Initiated a vote to ban {olive}%N{blue} for 1 day."
+		"chi"		"[{olive}vote{default}] {olive}%N{blue} 发起投票封禁 {olive}%N{blue} 一天"
+	}
+
+	"SpecDone"
+	{
+		"en"		"[{olive}vote{default}] {olive}%N{blue} has been voted to be a spectator."
+		"chi"		"[{olive}vote{default}] {olive}%N{blue} 已被投票至旁观者."
+	}
+
+	"VoteSpecClient"
+	{
+		"en"		"[{olive}vote{default}] {blue}%N{default} initiated a vote to make{blue} %N {default}be a spectator."
+		"chi"		"[{olive}vote{default}] {blue}%N{default} 发起投票使{blue} %N {default}成为旁观者"
+	}
+
+	//The Following phrases aren't allowed to use color tag.
+	//以下语句不允许使用文字颜色tag.
+
+	"LoadingCFG"
+	{
+		"en"		"Loading Cfg..."
+		"chi"		"Cfg文件正在加载..."
+	}
+
+	"VotingDone"
+	{
+		"en"		"Vote Finished..."
+		"chi"		"投票已完成..."
+	}
+
+	"KickDone"
+	{
+		"en"		"Kicked by vote"
+		"chi"		"投票踢出"
+	}
+
+	"BanDone"
+	{
+		"en"		"Banned by vote"
+		"chi"		"投票封禁"
+	}
+
+	"Reason"
+	{
+		"en"		"You were kicked from this server because you are banned by vote"
+		"chi"		"你已被当前服务器踢出，原因为投票封禁"
+	}
+
+	"Select1"
+	{
+		"en"		"Select:"
+		"chi"		"选择:"
+	}
+
+	"Select2"
+	{
+		"en"		"Select %s :"
+		"chi"		"选择 %s :"
+	}
+
+	"Execute"
+	{
+		"en"		"Execute '%s' ?"
+		"chi"		"执行 '%s' ?"
+	}
+
+	"SelectKick"
+	{
+		"en"		"Select a player to kick"
+		"chi"		"选择踢出玩家"
+	}
+
+	"Kick"
+	{
+		"en"		"Kick '%N' ?"
+		"chi"		"踢出 '%N' ?"
+	}
+
+	"SelectBan"
+	{
+		"en"		"Select a player to ban"
+		"chi"		"选择封禁玩家"
+	}
+
+	"OneDay"
+	{
+		"en"		"Ban '%N' for one day?"
+		"chi"		"封禁 '%N' 一天?"
+	}
+
+	"SelectSpec"
+	{
+		"en"		"Select a player to be a Spectator"
+		"chi"		"选择旁观玩家"
+	}
+
+	"Spec"
+	{
+		"en"		"Make %N a Spectator?"
+		"chi"		"使 %N 旁观?"
+	}
+}
