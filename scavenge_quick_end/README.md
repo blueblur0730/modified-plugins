@@ -20,6 +20,7 @@ l4d2_enable_scavenge_quick_end 1
 ```
 
 ### Client Cmd
+```
 // 查询当前回合所用时间和上一轮所用时间
 sm_time
 ```
