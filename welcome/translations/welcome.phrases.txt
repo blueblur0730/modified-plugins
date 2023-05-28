@@ -2,38 +2,50 @@
 {
 	"ConnectingWithHours"
 	{
-		"en"		"[{orange}!{default}] Player{olive} %N {default} [{olive}%iHours{default}] is connecting..."
-		"chi"		"[{orange}!{default}] 玩家{olive} %N {default}[{olive}%i小时{default}]正在连接中..."
+		"en"		"[{orange}!{default}] %s{olive} %N [{olive}%iHours{default}] is connecting..."
+		"chi"		"[{orange}!{default}] %s{olive} %N {default}[{olive}%i小时{default}]正在连接中..."
 	}
 
 	"Connecting"
 	{
-		"en"		"[{orange}!{default}] Player{olive} %N {default}is connecting..."
-		"chi"		"[{orange}!{default}] 玩家{olive} %N {default}正在连接中..."
+		"en"		"[{orange}!{default}] %s{olive} %N {default}is connecting..."
+		"chi"		"[{orange}!{default}] %s{olive} %N {default}正在连接中..."
 	}
 
-	"ConnectedWithHoursAndRegion"
+	"ConnectedWithHours_City_Country"
 	{
-		"en"		"[{orange}!{default}] Player{olive} %N {default} [{olive}%i Hours{default}] has joined this server, from region [{olive}%s{default}, {olive}%s{default}]."
-		"chi"		"[{orange}!{default}] 玩家{olive} %N {default} [{olive}%i 小时{default}] 进入了服务器, 来自[{olive}%s{default}, {olive}%s{default}]."
+		"en"		"[{orange}!{default}] %s{olive} %N {default} [{olive}%i Hours{default}] has joined, from [{olive}%s{default}, {olive}%s{default}]."
+		"chi"		"[{orange}!{default}] %s{olive} %N {default} [{olive}%i 小时{default}] 进入了服务器, 来自[{olive}%s{default}, {olive}%s{default}]."
+	}
+
+	"ConnectedWithHours_City_Or_Country"
+	{
+		"en"		"[{orange}!{default}] %s{olive} %N {default}[{olive}%i Hours{default}] has joined, from [{olive}%s{default}]."
+		"chi"		"[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器, 来自[{olive}%s{default}]."
 	}
 
 	"ConnectedWithHours"
 	{
-		"en"		"[{orange}!{default}] Player{olive} %N {default}[{olive}%i Hours{default}] has joined this server."
-		"chi"		"[{orange}!{default}] 玩家{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器."
+		"en"		"[{orange}!{default}] %s{olive} %N {default}[{olive}%i Hours{default}] has joined."
+		"chi"		"[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器."
 	}
 
-	"ConnectedWithRegion"
+	"ConnectedWithCountry_City"
 	{
-		"en"		"[{orange}!{default}] Player{olive} %N {default}has joined this server, from region [{olive}%s{default}, {olive}%s{default}]."
-		"chi"		"[{orange}!{default}] 玩家{olive} %N {default}进入了服务器, 来自 [{olive}%s{default}, {olive}%s{default}]."
+		"en"		"[{orange}!{default}] %s{olive} %N {default} has joined, from [{olive}%s{default}, {olive}%s{default}]."
+		"chi"		"[{orange}!{default}] %s{olive} %N {default}进入了服务器, 来自[{olive}%s{default}, {olive}%s{default}]."
+	}
+
+	"ConnectedWith_City_Or_Country"
+	{
+		"en"		"[{orange}!{default}] %s{olive} %N {default}has joined, from [{olive}%s{default}]."
+		"chi"		"[{orange}!{default}] %s{olive} %N {default}进入了服务器, 来自[{olive}%s{default}]."
 	}
 
 	"Connected"
 	{
-		"en"		"[{orange}!{default}] Player{olive} %N {default} has joined this server."
-		"chi"		"[{orange}!{default}] 玩家{olive} %N {default} 进入了服务器."
+		"en"		"[{orange}!{default}] %s{olive} %N {default} has joined this server."
+		"chi"		"[{orange}!{default}] %s{olive} %N {default} 进入了服务器."
 	}
 
 	"RequestTimeAndRegion"
