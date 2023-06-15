@@ -28,7 +28,7 @@ sn_main_name "Hostname"
 sn_host_num "0"
 
 // 设置txt文件路径, 插件主要从这个txt文件读取主服名, 文件应位于sourcemod/内, 对应下文参数{hostname}
-// 默认值: 无 (建议设置为configs/hostname/hostname.txt)
+// 默认值: 无 (建议设置为hostname/hostname.txt)
 sn_main_name_path ""
 
 // 设置当Confogl配置可用时或难度固定时的Vanilla模式的(官版对抗, 生还者等)服务器名称
