@@ -1,5 +1,17 @@
 "Phrases"
 {
+	"Admin"
+	{
+		"en"		"Admin"
+		"chi"		"管理员"
+	}
+
+	"Player"
+	{
+		"en"		"Player"
+		"chi"		"玩家"
+	}
+
 	"ConnectingWithHours"
 	{
 		"en"		"[{orange}!{default}] %s{olive} %N [{olive}%iHours{default}] is connecting..."

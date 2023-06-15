@@ -26,7 +26,7 @@ public Plugin myinfo =
     name = "Show Your PlayTime",   
     author = "A1R, blueblur",   
     description = "Show the players real play time and their region.",   
-    version = "3.0",   
+    version = "3.1",   
     url = "https://github.com/A1oneR/AirMod/blob/main/addons/sourcemod/scripting/Welcome.sp (Original version)"
 };
 /*
@@ -66,26 +66,30 @@ public Action CheckEnableStatus()
     return Plugin_Continue;
 }
 
-public void OnClientConnected(int client)   
+public void OnClientConnected(int i)   
 {       
     int playtime = L4D2_GetTotalPlaytime(authId, true) / 60 / 60;
     bool b_PlayerIdentity = !PlayerIdentity();
     Format(Admin, sizeof(Admin), "%t", "Admin");
     Format(Player, sizeof(Player), "%t", "Player");
-    if(!IsFakeClient(client))
+    for(i = 1; i <= MaxClients; i++)
     {
-        if(playtime > 0 && GetConVarBool(ShowPlayTime))
+        if(IsClientConnected(i) && !IsFakeClient(i))
         {
-            CPrintToChatAll("%t", "ConnectingWithHours", (b_PlayerIdentity ? Player : Admin), client, playtime);           //[{orange}!{default}] %s{olive} %N [{olive}%iHours{default}] is connecting...
-        }
-        else
-        {
-            CPrintToChatAll("%t", "Connecting", (b_PlayerIdentity ? Player : Admin), client);             //[{orange}!{default}] %s{olive} %N {default}正在连接中...
+            GetClientUserId(i);
+            if(playtime > 0 && GetConVarBool(ShowPlayTime))
+            {
+                CPrintToChatAll("%t", "ConnectingWithHours", (b_PlayerIdentity ? Player : Admin), i, playtime);           //[{orange}!{default}] %s{olive} %N [{olive}%iHours{default}] is connecting...
+            }
+            else
+            {
+                CPrintToChatAll("%t", "Connecting", (b_PlayerIdentity ? Player : Admin), i);             //[{orange}!{default}] %s{olive} %N {default}正在连接中...
+            }
         }
     }
 }
 
-public void OnClientPutInServer(int client)
+public void OnClientPutInServer(int i)
 {
     int playtime;
     bool b_PlayerIdentity = !PlayerIdentity();
@@ -97,93 +101,72 @@ public void OnClientPutInServer(int client)
     {
         playtime = 0;
     }
-
-    GetClientIP(client, ip, sizeof(ip));
-    GetClientAuthId(client, AuthId_Steam2, authId, sizeof(authId));
+    GetClientIP(i, ip, sizeof(ip));
+    GetClientAuthId(i, AuthId_Steam2, authId, sizeof(authId));
     GeoipCode2(ip, country);
     GeoipCity(ip, city, sizeof(city));
     Format(Admin, sizeof(Admin), "%t", "Admin");
     Format(Player, sizeof(Player), "%t", "Player");
-    if(!IsFakeClient(client))
+    for(i = 1; i <= MaxClients; i++)
     {
-        if(playtime > 0)
+        if(IsClientInGame(i) && !IsFakeClient(i))
         {
-            if(GetConVarBool(ShowCountry) && GetConVarBool(ShowCity))
+            GetClientUserId(i);
+            if(playtime > 0)
             {
-                if(GeoipCode2(ip, country) && GeoipCity(ip, city, sizeof(city)))
+                if(GetConVarBool(ShowCountry) && GetConVarBool(ShowCity))
                 {
-                    CPrintToChatAll("%t", "ConnectedWithHours_City_Country", (b_PlayerIdentity ? Player : Admin), client, playtime, country, city);            //[{orange}!{default}] %s{olive} %N {default} [{olive}%i 小时{default}] 进入了服务器, 来自[{olive}%s{default}, {olive}%s{default}].
-                }
-                else
-                {
-                    CPrintToChatAll("%t", "ConnectedWithHours", (b_PlayerIdentity ? Player : Admin), client, playtime);             //[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器.
-                }
-            }
-            else if(GetConVarBool(ShowCountry))
-            {
-                if(GeoipCode2(ip, country))
-                {
-                    CPrintToChatAll("%t", "ConnectedWithHours_City_Or_Country", (b_PlayerIdentity ? Player : Admin), client, playtime, country);          //[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器, 来自[{olive}%s{default}].
-                }
-                else
-                {
-                    CPrintToChatAll("%t", "ConnectedWithHours", (b_PlayerIdentity ? Player : Admin), client, playtime);             //[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器.
-                }
-            }
-            else if(GetConVarBool(ShowCity))
-            {
-                if(GeoipCity(ip, city, sizeof(city)))
-                {
-                    CPrintToChatAll("%t", "ConnectedWithHours_City_Or_Country", (b_PlayerIdentity ? Player : Admin), client, playtime, city);         //[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器, 来自 [{olive}%s{default}].
-                }
-                else
-                {
-                    CPrintToChatAll("%t", "ConnectedWithHours", (b_PlayerIdentity ? Player : Admin), client, playtime);             //[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器.
+                    if(GeoipCode2(ip, country) && GeoipCity(ip, city, sizeof(city)))
+                    {
+                        CPrintToChatAll("%t", "ConnectedWithHours_City_Country", (b_PlayerIdentity ? Player : Admin), i, playtime, country, city);            //[{orange}!{default}] %s{olive} %N {default} [{olive}%i 小时{default}] 进入了服务器, 来自[{olive}%s{default}, {olive}%s{default}].
+                    }
+                    else if(GetConVarBool(ShowCountry))
+                    {
+                        if(GeoipCode2(ip, country))
+                        {
+                            CPrintToChatAll("%t", "ConnectedWithHours_City_Or_Country", (b_PlayerIdentity ? Player : Admin), i, playtime, country);          //[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器, 来自[{olive}%s{default}].
+                        }
+                        else if(GetConVarBool(ShowCity))
+                        {
+                            if(GeoipCity(ip, city, sizeof(city)))
+                            {
+                                CPrintToChatAll("%t", "ConnectedWithHours_City_Or_Country", (b_PlayerIdentity ? Player : Admin), i, playtime, city);         //[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器, 来自 [{olive}%s{default}].
+                            }
+                            else
+                            {
+                                CPrintToChatAll("%t", "ConnectedWithHours", (b_PlayerIdentity ? Player : Admin), i, playtime);             //[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器.
+                            }
+                        }
+                    }
                 }
             }
             else
             {
-                CPrintToChatAll("%t", "ConnectedWithHours", (b_PlayerIdentity ? Player : Admin), client, playtime);             //[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器.
-            }
-        }
-        else
-        {
-            if(GetConVarBool(ShowCountry) && GetConVarBool(ShowCity))
-            {
-                if(GeoipCode2(ip, country) && GeoipCity(ip, city, sizeof(city)))
+                if(GetConVarBool(ShowCountry) && GetConVarBool(ShowCity))
                 {
-                    CPrintToChatAll("%t", "ConnectedWithCountry_City", (b_PlayerIdentity ? Player : Admin), client, country, city);            //[{orange}!{default}] %s{olive} %N {default}进入了服务器, 来自[{olive}%s{default}, {olive}%s{default}].
+                    if(GeoipCode2(ip, country) && GeoipCity(ip, city, sizeof(city)))
+                    {
+                        CPrintToChatAll("%t", "ConnectedWithCountry_City", (b_PlayerIdentity ? Player : Admin), i, country, city);            //[{orange}!{default}] %s{olive} %N {default}进入了服务器, 来自[{olive}%s{default}, {olive}%s{default}].
+                    }
+                    else if(GetConVarBool(ShowCountry))
+                    {
+                        if(GeoipCode2(ip, country))
+                        {
+                            CPrintToChatAll("%t", "ConnectedWith_City_Or_Country", (b_PlayerIdentity ? Player : Admin), i, country);          //[{orange}!{default}] %s{olive} %N {default}进入了服务器, 来自[{olive}%s{default}].
+                        }
+                        else if(GetConVarBool(ShowCity))
+                        {
+                            if(GeoipCity(ip, city, sizeof(city)))
+                            {
+                                CPrintToChatAll("%t", "ConnectedWith_City_Or_Country", (b_PlayerIdentity ? Player : Admin), i, city);         //[{orange}!{default}] %s{olive} %N {default}进入了服务器, 来自 [{olive}%s{default}].
+                            }
+                            else
+                            {
+                                CPrintToChatAll("%t", "Connected", (b_PlayerIdentity ? Player : Admin), i);             //[{orange}!{default}] %s{olive} %N {default} 进入了服务器.
+                            }
+                        }
+                    }
                 }
-                else
-                {
-                    CPrintToChatAll("%t", "Connected", (b_PlayerIdentity ? Player : Admin), client);             //[{orange}!{default}] %s{olive} %N {default} 进入了服务器.
-                }
-            }
-            else if(GetConVarBool(ShowCountry))
-            {
-                if(GeoipCode2(ip, country))
-                {
-                    CPrintToChatAll("%t", "ConnectedWith_City_Or_Country", (b_PlayerIdentity ? Player : Admin), client, country);          //[{orange}!{default}] %s{olive} %N {default}进入了服务器, 来自[{olive}%s{default}].
-                }
-                else
-                {
-                    CPrintToChatAll("%t", "Connecte", (b_PlayerIdentity ? Player : Admin), client);             //[{orange}!{default}] %s{olive} %N {default} 进入了服务器.
-                }
-            }
-            else if(GetConVarBool(ShowCity))
-            {
-                if(GeoipCity(ip, city, sizeof(city)))
-                {
-                    CPrintToChatAll("%t", "ConnectedWith_City_Or_Country", (b_PlayerIdentity ? Player : Admin), client, city);         //[{orange}!{default}] %s{olive} %N {default}进入了服务器, 来自 [{olive}%s{default}].
-                }
-                else
-                {
-                    CPrintToChatAll("%t", "Connected", (b_PlayerIdentity ? Player : Admin), client);             //[{orange}!{default}] %s{olive} %N {default} 进入了服务器.
-                }
-            }
-            else
-            {
-                CPrintToChatAll("%t", "Connected", (b_PlayerIdentity ? Player : Admin), client);             //[{orange}!{default}] %s{olive} %N {default} 进入了服务器.
             }
         }
     }
@@ -194,14 +177,14 @@ public Action Player_Time_Country(int client, int args)
     char id[64];
     for (int i = 1 ; i <= MaxClients ; i++)
     {
-        GetClientAuthId(i, AuthId_Steam2, id, sizeof(id));
-        if(IsClientConnected(i) && IsClientInGame(i))
+        if(IsClientInGame(i))
 	    {
+            GetClientAuthId(i, AuthId_Steam2, id, sizeof(id));
             int playtime = L4D2_GetTotalPlaytime(authId, true) / 60 / 60;
             GetClientIP(client, ip, sizeof(ip));
             GeoipCode2(ip, country);
             GeoipCity(ip, city, sizeof(city));
-            GetClientAuthId(i, AuthId_Steam2, authId, sizeof(authId));
+            GetClientAuthId(client, AuthId_Steam2, authId, sizeof(authId));
 	        if(!StrEqual(id, "BOT"))
             {
 	            if(playtime > 0 && GeoipCode2(ip, country))
@@ -231,20 +214,18 @@ public Action Player_Time_Country(int client, int args)
 
 stock bool PlayerIdentity()
 {
-    int client;
     for(int i = 1; i <= MaxClients; i++)
     {
-        if(IsClientConnected(i) && IsClientInGame(i))
+        if(IsClientConnected(i) && !IsFakeClient(i))
         {
             if(GetConVarBool(ShowIdentity))
             {
                 /*
-                *
                 *   This Part is from readyup.sp
                 */
 
                 // Check if admin always allowed to do so
-		        AdminId id = GetUserAdmin(client);
+		        AdminId id = GetUserAdmin(i);
 		        if (id != INVALID_ADMIN_ID && GetAdminFlag(id, Admin_Ban)) // Check for specific admin flag
 		        {
 			        return true;
