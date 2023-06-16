@@ -42,6 +42,10 @@ public Plugin myinfo =
     - Fiexes.
   3.0
     - Add Cvars to control the output.
+  3.1
+    - Fixed bugs.
+  3.2
+    - Fixed bugs.
 */
 
 public void OnPluginStart()
@@ -72,19 +76,19 @@ public void OnClientConnected(int i)
     bool b_PlayerIdentity = !PlayerIdentity();
     Format(Admin, sizeof(Admin), "%t", "Admin");
     Format(Player, sizeof(Player), "%t", "Player");
-    for(i = 1; i <= MaxClients; i++)
+    if(!IsFakeClient(i))
     {
-        if(IsClientConnected(i) && !IsFakeClient(i))
+        GetClientUserId(i);
+        if(playtime > 0)
         {
-            GetClientUserId(i);
-            if(playtime > 0 && GetConVarBool(ShowPlayTime))
+            if(GetConVarBool(ShowPlayTime))
             {
                 CPrintToChatAll("%t", "ConnectingWithHours", (b_PlayerIdentity ? Player : Admin), i, playtime);           //[{orange}!{default}] %s{olive} %N [{olive}%iHours{default}] is connecting...
             }
-            else
-            {
-                CPrintToChatAll("%t", "Connecting", (b_PlayerIdentity ? Player : Admin), i);             //[{orange}!{default}] %s{olive} %N {default}正在连接中...
-            }
+        }
+        else
+        {
+            CPrintToChatAll("%t", "Connecting", (b_PlayerIdentity ? Player : Admin), i);             //[{orange}!{default}] %s{olive} %N {default}正在连接中...
         }
     }
 }
@@ -132,10 +136,10 @@ public void OnClientPutInServer(int i)
                             {
                                 CPrintToChatAll("%t", "ConnectedWithHours_City_Or_Country", (b_PlayerIdentity ? Player : Admin), i, playtime, city);         //[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器, 来自 [{olive}%s{default}].
                             }
-                            else
-                            {
+                        }
+                        else
+                        {
                                 CPrintToChatAll("%t", "ConnectedWithHours", (b_PlayerIdentity ? Player : Admin), i, playtime);             //[{orange}!{default}] %s{olive} %N {default}[{olive}%i 小时{default}] 进入了服务器.
-                            }
                         }
                     }
                 }
@@ -160,10 +164,10 @@ public void OnClientPutInServer(int i)
                             {
                                 CPrintToChatAll("%t", "ConnectedWith_City_Or_Country", (b_PlayerIdentity ? Player : Admin), i, city);         //[{orange}!{default}] %s{olive} %N {default}进入了服务器, 来自 [{olive}%s{default}].
                             }
-                            else
-                            {
-                                CPrintToChatAll("%t", "Connected", (b_PlayerIdentity ? Player : Admin), i);             //[{orange}!{default}] %s{olive} %N {default} 进入了服务器.
-                            }
+                        }
+                        else
+                        {
+                            CPrintToChatAll("%t", "Connected", (b_PlayerIdentity ? Player : Admin), i);             //[{orange}!{default}] %s{olive} %N {default} 进入了服务器.
                         }
                     }
                 }
