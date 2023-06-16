@@ -5,6 +5,8 @@
 #include <colors>
 #include <l4d2_playtime_interface>
 #include <geoip>
+#include <sdktools>
+#include <sdkhooks>
 
 char
     authId[65],
@@ -19,7 +21,8 @@ ConVar
     ShowPlayTime,
     ShowCountry,
     ShowCity,
-    ShowIdentity;
+    ShowIdentity,
+    ShowDisconnectInfo;
 
 public Plugin myinfo =    
 {   
@@ -37,7 +40,7 @@ public Plugin myinfo =
   2.1
     - Optimized Codes, added more expression.
   2.2
-    - Fix codes, added city expression.
+    - Fixed codes, added city expression.
   2.2.1
     - Fiexes.
   3.0
@@ -46,6 +49,9 @@ public Plugin myinfo =
     - Fixed bugs.
   3.2
     - Fixed bugs.
+  4.0
+    - Added Disconnect Info from AnneHappy.
+      - Added a new cvar to control the Disconnect output.
 */
 
 public void OnPluginStart()
@@ -55,7 +61,9 @@ public void OnPluginStart()
     ShowCountry = CreateConVar("l4d2_show_welcome_country", "1", "Enable country output", FCVAR_NOTIFY, true, 0.0, true, 1.0);
     ShowCity = CreateConVar("l4d2_show_welcome_city", "1", "Enable city output", FCVAR_NOTIFY, true, 0.0, true, 1.0);
     ShowIdentity = CreateConVar("l4d2_show_welcome_identity", "1", "Enable Identity output", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+    ShowDisconnectInfo = CreateConVar("l4d2_show_welcome_disconnect_info", "1", "Enable Disconnect Info Output", FCVAR_NOTIFY, true, 0.0, true, 1.0);
     RegConsoleCmd("sm_playerinfo", Player_Time_Country);
+    HookEvent("player_disconnect", PlayerDisconnect_Event, EventHookMode_Pre);
     LoadTranslations("welcome.phrases");
     CheckEnableStatus();
 } 
@@ -167,7 +175,7 @@ public void OnClientPutInServer(int i)
                         }
                         else
                         {
-                            CPrintToChatAll("%t", "Connected", (b_PlayerIdentity ? Player : Admin), i);             //[{orange}!{default}] %s{olive} %N {default} 进入了服务器.
+                            CPrintToChatAll("%t", "Connected", (b_PlayerIdentity ? Player : Admin), i);             //[{orange}!{default}] %s{olive} %N {default}进入了服务器.
                         }
                     }
                 }
@@ -213,6 +221,76 @@ public Action Player_Time_Country(int client, int args)
             }
         }
     }
+    return Plugin_Handled;
+}
+
+public Action PlayerDisconnect_Event(Handle event, const char[] name, bool dontBroadcast)
+{
+    int client = GetClientOfUserId(GetEventInt(event,"userid"));
+    bool b_PlayerIdentity = !PlayerIdentity();
+    if (!GetConVarBool(ShowDisconnectInfo))       //Check if enabled
+    {
+        return Plugin_Handled;
+    }
+    
+    if (!(1 <= client <= MaxClients))
+        return Plugin_Handled;
+
+    if (!IsClientInGame(client))
+        return Plugin_Handled;
+
+    if (IsFakeClient(client))
+        return Plugin_Handled;
+
+    char reason[64], message[64];
+    GetEventString(event, "reason", reason, sizeof(reason));
+
+    if(StrContains(reason, "connection rejected", false) != -1)
+    {
+        Format(message,sizeof(message), "%t", "Rejected");     //连接被拒绝
+    }
+    else if(StrContains(reason, "timed out", false) != -1)
+    {
+        Format(message,sizeof(message), "%t", "TimedOut");     //超时
+    }
+    else if(StrContains(reason, "by console", false) != -1)
+    {
+        Format(message,sizeof(message), "%t", "ByConsole");     //控制台退出
+    }
+    else if(StrContains(reason, "by user", false) != -1)
+    {
+        Format(message,sizeof(message), "%t", "ByUser");     //自己主动断开连接
+    }
+    else if(StrContains(reason, "ping is too high", false) != -1)
+    {
+        Format(message,sizeof(message), "%t", "HighPing");     //ping值过高
+    }
+    else if(StrContains(reason, "No Steam logon", false) != -1)
+    {
+        Format(message,sizeof(message), "%t", "NoLogen");     //no steam logon/ steam验证失败
+    }
+    else if(StrContains(reason, "Steam account is being used in another", false) != -1)
+    {
+        Format(message,sizeof(message), "%t", "BeingUsed");     //该Steam账号已被另一人登录
+    }
+    else if(StrContains(reason, "Steam Connection lost", false) != -1)
+    {
+        Format(message,sizeof(message), "%t", "ConnectionLost");        //Steam连接丢失
+    }
+    else if(StrContains(reason, "This Steam account does not own this game", false) != -1)
+    {
+        Format(message,sizeof(message), "%t", "NotProperty");       //没有这款游戏
+    }
+    else if(StrContains(reason, "Validation Rejected", false) != -1)
+    {
+        Format(message,sizeof(message), "%t", "ValidationRejected");        //验证失败
+    }
+    else
+    {
+        message = reason;
+    }
+
+    CPrintToChatAll("%t", "Disconnect", (b_PlayerIdentity ? Player : Admin), client, message);       //[{orange}!{default}] %s{green} %N {olive}离开了游戏 - 理由: [{green}%s{olive}]
     return Plugin_Handled;
 }
 
