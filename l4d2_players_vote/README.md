@@ -33,7 +33,7 @@ sm_votespec
 ```
 ### Server ConVar
 ```
-// 指定投票文件的路径. 投票文件的位置(位于sourcemod/文件夹)
+// 指定投票文件的路径. 投票文件的位置位于configs目录下
 // 默认值: "configs/cfg.txt"
 votecfgfile "configs/<你的txt文件.txt>"
 ```
