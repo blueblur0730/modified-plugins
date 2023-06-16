@@ -27,9 +27,9 @@ ConVar
 public Plugin myinfo =    
 {   
     name = "Show Your PlayTime",   
-    author = "A1R, blueblur",   
+    author = "A1R, 东, modified by blueblur",   
     description = "Show the players real play time and their region.",   
-    version = "3.1",   
+    version = "4.0",   
     url = "https://github.com/A1oneR/AirMod/blob/main/addons/sourcemod/scripting/Welcome.sp (Original version)"
 };
 /*
