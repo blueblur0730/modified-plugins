@@ -45,5 +45,6 @@ sm_restartmap_autofix_max_tries
 ```
 // 重置地图
 sm_restartmap
+```
 
 <hr>
