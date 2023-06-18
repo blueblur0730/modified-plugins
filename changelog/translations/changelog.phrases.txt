@@ -1,0 +1,14 @@
+"Phrases"
+{
+	"Empty"
+	{
+		"en"		"{olive}No link is provided!"
+		"chi"		"{olive}没有链接提供!"
+	}
+
+	"ChatAnnounce"
+	{
+		"en"		"{blue}[{green}ChangeLog{blue}]{default} For more infomation about current config, pleases check out the {orange}link {default}below:\n{olive}%s"
+		"chi"		"{blue}[{green}更改日志{blue}]{default} 欲知晓当前配置更多信息, 请访问如下{orange} 链接 {default}:\n{olive}%s"
+	}
+}
