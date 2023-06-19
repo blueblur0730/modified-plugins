@@ -2,13 +2,19 @@
 {
 	"Empty"
 	{
-		"en"		"{olive}No link is provided!"
-		"chi"		"{olive}没有链接提供!"
+		"en"		"No link is provided!"
+		"chi"		"没有链接提供!"
+	}
+
+	"PleaseTypeIn"
+	{
+		"en"		"{blue}[{green}ChangeLog{blue}]{default} Type {olive}/info{default} to know more about {orange}%s{default}."
+		"chi"		"{blue}[{green}更改日志{blue}]{default} 输入 {olive}/info{default} 获取更多关于 {orange}%s{default} 的信息"
 	}
 
 	"ChatAnnounce"
 	{
-		"en"		"{blue}[{green}ChangeLog{blue}]{default} For more infomation about current config, pleases check out the {orange}link {default}below:\n{olive}%s"
-		"chi"		"{blue}[{green}更改日志{blue}]{default} 欲知晓当前配置更多信息, 请访问如下{orange} 链接 {default}:\n{olive}%s"
+		"en"		"{blue}[{green}ChangeLog{blue}]{default} pleases check out the {orange}link {default}below:\n{olive}%s"
+		"chi"		"{blue}[{green}更改日志{blue}]{default} 请访问如下{orange}链接{default}:\n{olive}%s"
 	}
 }
