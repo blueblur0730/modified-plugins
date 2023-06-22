@@ -1,0 +1,32 @@
+"Positions"
+{
+	"c8m5_rooftop"
+	{
+		"height_zlimit_down"		"500.0"
+		"height_zlimit_up"		"6000.0"
+		"width_xlimit_one"		""
+		"width_ylimit_one"		""
+		"width_xlimit_two"		""
+		"width_xlimit_two"		""
+	}
+
+	"cedafever_m3"
+	{
+		"height_zlimit_down"		"900.0"
+		"height_zlimit_up"		"2100.0"
+		"width_xlimit_one"		""
+		"width_ylimit_one"		""
+		"width_xlimit_two"		""
+		"width_xlimit_two"		""
+	}
+
+	"roofdownthedrain"
+	{
+		"height_zlimit_down"		"900.0"
+		"height_zlimit_up"		"2200.0"
+		"width_xlimit_one"		""
+		"width_ylimit_one"		""
+		"width_xlimit_two"		""
+		"width_xlimit_two"		""
+	}
+}
