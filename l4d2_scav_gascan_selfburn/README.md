@@ -34,7 +34,9 @@ l4d2_scav_gascan_selfburn_height "1"
 <hr>
 
 <hr>
+
 ### Config File
+
 ```
 在sourcemod/config/l4d2_scav_gascan_selfburn.txt里, 你需要做如下编辑:
 
