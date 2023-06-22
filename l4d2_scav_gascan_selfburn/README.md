@@ -54,7 +54,7 @@ l4d2_scav_gascan_selfburn_height "1"
  - 所有引索后面的数字应该为浮点型数字, 即都要带小数点
  - height_zlimit_down指油桶在z轴不能低于的垂直边界, 低于这个垂直边界油桶会被点燃.
  - height_zlimit_up指油桶在z轴不能高于的垂直边界, 高于这个垂直边界油桶会被点燃.
-  -  width_xlimit_one指油桶在x轴上不能大于的水平边界, 大于这个水平边界油桶会被点燃.
+ - width_xlimit_one指油桶在x轴上不能大于的水平边界, 大于这个水平边界油桶会被点燃.
  - width_ylimit_one指油桶在y轴上不能大于的水平边界, 大于这个水平边界油桶会被点燃.
  - width_xlimit_two指油桶在x轴上不能小于的水平边界, 小于这个水平边界油桶会被点燃.
  - width_xlimit_two指油桶在y轴上不能小于的水平边界, 小于这个水平边界油桶会被点燃.
