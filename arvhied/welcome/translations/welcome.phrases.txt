@@ -14,7 +14,7 @@
 
 	"ConnectingWithHours"
 	{
-		"en"		"[{orange}!{default}] %s{olive} %N [{olive}%iHours{default}] is connecting..."
+		"en"		"[{orange}!{default}] %s{olive} %N [{olive}%i Hours{default}] is connecting..."
 		"chi"		"[{orange}!{default}] %s{olive} %N {default}[{olive}%i小时{default}]正在连接中..."
 	}
 
