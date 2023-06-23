@@ -42,9 +42,6 @@
 * - 2.0
 * 	- player will die under the c8m5 rooftop.
 * 	- supported new syntax.
-* ----------------------------------------------------------------
-* - To Do
-*	- Add a method to detect minor coordinate.
 *
 */
 
