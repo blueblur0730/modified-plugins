@@ -47,7 +47,7 @@ l4d2_scav_gascan_selfburn_height "1"
 		"width_xlimit_one"		""
 		"width_ylimit_one"		""
 		"width_xlimit_two"		""
-		"width_xlimit_two"		""
+		"width_ylimit_two"		""
 	}
 
 下面对引索进行一一说明:
