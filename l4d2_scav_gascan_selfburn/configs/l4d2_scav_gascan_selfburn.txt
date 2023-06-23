@@ -2,31 +2,41 @@
 {
 	"c8m5_rooftop"
 	{
-		"height_zlimit_down"		"500.0"
-		"height_zlimit_up"		"7000.0"
-		"width_xlimit_one"		"8100.0"
-		"width_ylimit_one"		"9800.0"
-		"width_xlimit_two"		"4700.0"
-		"width_ylimit_two"		"7200.0"
+		"height_zlimit_min"		"500.0"
+		"height_zlimit_max"		"7000.0"
+		"width_xlimit_max"		"8100.0"
+		"width_ylimit_max"		"9800.0"
+		"width_xlimit_min"		"4700.0"
+		"width_ylimit_min"		"7200.0"
 	}
 
 	"cedafever_m3"
 	{
-		"height_zlimit_down"		"900.0"
-		"height_zlimit_up"		"2100.0"
-		"width_xlimit_one"		"-7100.0"
-		"width_ylimit_one"		"4750.0"
-		"width_xlimit_two"		"-3800.0"
-		"width_ylimit_two"		"1900.0"
+		"height_zlimit_min"		"900.0"
+		"height_zlimit_max"		"2100.0"
+		"width_xlimit_max"		"-7100.0"
+		"width_ylimit_max"		"4750.0"
+		"width_xlimit_min"		"-3800.0"
+		"width_ylimit_min"		"1900.0"
 	}
 
 	"roofdownthedrain"
 	{
-		"height_zlimit_down"		"900.0"
-		"height_zlimit_up"		"2200.0"
-		"width_xlimit_one"		""
-		"width_ylimit_one"		""
-		"width_xlimit_two"		""
-		"width_ylimit_two"		""
+		"height_zlimit_min"		"900.0"
+		"height_zlimit_max"		"2200.0"
+		"width_xlimit_max"		""
+		"width_ylimit_max"		""
+		"width_xlimit_min"		""
+		"width_ylimit_min"		""
+	}
+
+	"c11m1_greenhouse_scavenge"
+	{
+		"height_zlimit_min"		"200.0"
+		"height_zlimit_max"		"1200.0"
+		"width_xlimit_max"		""
+		"width_ylimit_max"		""
+		"width_xlimit_min"		""
+		"width_ylimit_min"		""
 	}
 }

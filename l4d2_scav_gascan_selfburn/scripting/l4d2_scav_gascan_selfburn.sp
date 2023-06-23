@@ -6,9 +6,13 @@
 #include <left4dhooks>
 #include <colors>
 
-#define PLUGIN_VERSION "2.5"
+#define PLUGIN_VERSION "2.5.1"
 #define CONFIG_PATH "configs/l4d2_scav_gascan_selfburn.txt"
 /* Change log:
+* - 2.5.1
+*	- Changed varibles' name.
+*   - Added a new ConVar to control kill_player.
+*
 * - 2.5
 *	- Added 2 ConVars to control the time every detection dose.
 *	- Saperate Square ConVar into 2 individual ConVars to detect x and y.
@@ -50,10 +54,11 @@ KeyValues
 
 ConVar
 	EnableSelfBurn,
-	EnableSquareDetect1,
-	EnableSquareDetect2,
-	EnableHeightDetect,
+	EnableSquareDetectx,
+	EnableSquareDetecty,
+	EnableHeightDetectz,
 	EnableDebug,
+	EnableKillPlayer,
 	IntervalBurnGascan,
 	IntervalKillPlayer;
 
@@ -75,13 +80,14 @@ public void OnPluginStart()
 
 	// ConVars
 	EnableSelfBurn 		= 	CreateConVar("l4d2_scav_gascan_selfburn_enable", "1", "Enable Plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableSquareDetect1 = 	CreateConVar("l4d2_scav_gascan_selfburn_detect_x", "0", "Enable square coordinate detect(detect x)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableSquareDetect2 =   CreateConVar("l4d2_scav_gascan_selfburn_detect_y", "0", "Enable square coordinate detect(detect y)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableHeightDetect 	=	CreateConVar("l4d2_scav_gascan_selfburn_detect_z", "1", "Enable height coordinate detect(detect z)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableSquareDetectx = 	CreateConVar("l4d2_scav_gascan_selfburn_detect_x", "0", "Enable square coordinate detect(detect x)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableSquareDetecty =   CreateConVar("l4d2_scav_gascan_selfburn_detect_y", "0", "Enable square coordinate detect(detect y)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableHeightDetectz =	CreateConVar("l4d2_scav_gascan_selfburn_detect_z", "1", "Enable height coordinate detect(detect z)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	EnableDebug 		= 	CreateConVar("l4d2_scav_gascan_selfburn_debug", "0", "Enable Debug", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableKillPlayer    = 	CreateConVar("l4d2_scav_kill_player", "0", "Enable Kill Player", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	IntervalBurnGascan  = 	CreateConVar("l4d2_scav_gascan_selfburn_interval", "10.0", "Interval every gascan detection dose", FCVAR_NOTIFY, true, 0.0);
-	IntervalKillPlayer  = 	CreateConVar("l4d2_scav_kill_player_interval", "5.0", "Interval every kill_player detection dose", FCVAR_NOTIFY, true, 0.0);
+	IntervalKillPlayer  = 	CreateConVar("l4d2_scav_kill_player_interval", "3.0", "Interval every kill_player detection dose", FCVAR_NOTIFY, true, 0.0);
 
 	// KeyValue
 	kv = CreateKeyValues("Positions", "", "");
@@ -136,16 +142,16 @@ public Action KillPlayerTimer(Handle Timer, any Client)
 	return Plugin_Handled;
 }
 
-public void ParseMapnameAndHeight(char[] height_down, char[] height_up, int maxlength, int maxlength2)
+public void ParseMapnameAndHeight(char[] height_min, char[] height_max, int maxlength, int maxlength2)
 {
 	KvRewind(kv);
 	if(KvJumpToKey(kv, c_mapname))
 	{
-		KvGetString(kv, "height_zlimit_down", height_down, maxlength);
-		KvGetString(kv, "height_zlimit_up", height_up, maxlength2);
+		KvGetString(kv, "height_zlimit_min", height_min, maxlength);
+		KvGetString(kv, "height_zlimit_max", height_max, maxlength2);
 		if(GetConVarBool(EnableDebug))
 		{
-			PrintToConsoleAll("--------------------------\nparsed mapname and value.\n mapname = %s\n height_down = %s\n height_up = %s", c_mapname, height_down, height_up);
+			PrintToConsoleAll("--------------------------\nparsed mapname and value.\n mapname = %s\n height_min = %s\n height_max = %s", c_mapname, height_min, height_max);
 		}
 	}
 	else
@@ -154,16 +160,16 @@ public void ParseMapnameAndHeight(char[] height_down, char[] height_up, int maxl
 	}
 }
 
-public void ParseMapnameAndWidthFirst(char[] width_x_one, char[] width_y_one, int maxlength, int maxlength2)
+public void ParseMapnameAndWidthMax(char[] width_x_max, char[] width_y_max, int maxlength, int maxlength2)
 {
 	KvRewind(kv);
 	if(KvJumpToKey(kv, c_mapname))
 	{
-		KvGetString(kv, "width_xlimit_one", width_x_one, maxlength);
-		KvGetString(kv, "width_ylimit_one", width_y_one, maxlength2);
+		KvGetString(kv, "width_xlimit_max", width_x_max, maxlength);
+		KvGetString(kv, "width_ylimit_max", width_y_max, maxlength2);
 		if(GetConVarBool(EnableDebug))
 		{
-			PrintToConsoleAll("\nparsed mapname and value.\n mapname = %s\n width_x_one = %s\n width_y_one = %s", c_mapname, width_x_one, width_y_one);
+			PrintToConsoleAll("\nparsed mapname and value.\n mapname = %s\n width_x_max = %s\n width_y_max = %s", c_mapname, width_x_max, width_y_max);
 		}
 	}
 	else
@@ -172,16 +178,16 @@ public void ParseMapnameAndWidthFirst(char[] width_x_one, char[] width_y_one, in
 	}
 }
 
-public void ParseMapnameAndWidthSecond(char[] width_x_two, char[] width_y_two, int maxlength, int maxlength2)
+public void ParseMapnameAndWidthMin(char[] width_x_min, char[] width_y_min, int maxlength, int maxlength2)
 {
 	KvRewind(kv);
 	if(KvJumpToKey(kv, c_mapname))
 	{
-		KvGetString(kv, "width_xlimit_two", width_x_two, maxlength);
-		KvGetString(kv, "width_ylimit_two", width_y_two, maxlength2);
+		KvGetString(kv, "width_xlimit_min", width_x_min, maxlength);
+		KvGetString(kv, "width_ylimit_min", width_y_min, maxlength2);
 		if(GetConVarBool(EnableDebug))
 		{
-			PrintToConsoleAll("\nparsed mapname and value.\n mapname = %s\n width_x_two = %s\n width_y_two = %s\n --------------------------", c_mapname, width_x_two, width_y_two);
+			PrintToConsoleAll("\nparsed mapname and value.\n mapname = %s\n width_x_max = %s\n width_y_max = %s\n --------------------------", c_mapname, width_x_min, width_y_min);
 		}
 	}
 	else
@@ -193,13 +199,13 @@ public void ParseMapnameAndWidthSecond(char[] width_x_two, char[] width_y_two, i
 stock void FindMisplacedCans()
 {
 	int ent = -1;
-	char g_height_down[128], g_height_up[128];
-	char g_width_x_one[128], g_width_y_one[128];
-	char g_width_x_two[128], g_width_y_two[128];
+	char g_height_min[128], g_height_max[128];
+	char g_width_x_min[128], g_width_y_min[128];
+	char g_width_x_max[128], g_width_y_max[128];
 
-	ParseMapnameAndHeight(g_height_down, g_height_up, sizeof(g_height_down), sizeof(g_height_up));
-	ParseMapnameAndWidthFirst(g_width_x_one, g_width_y_one, sizeof(g_width_x_one), sizeof(g_width_y_one));
-	ParseMapnameAndWidthSecond(g_width_x_two, g_width_y_two, sizeof(g_width_x_two), sizeof(g_width_y_two));
+	ParseMapnameAndHeight(g_height_min, g_height_max, sizeof(g_height_min), sizeof(g_height_max));
+	ParseMapnameAndWidthMax(g_width_x_max, g_width_y_max, sizeof(g_width_x_max), sizeof(g_width_y_max));
+	ParseMapnameAndWidthMin(g_width_x_min, g_width_y_min, sizeof(g_width_x_min), sizeof(g_width_y_min));
 
 	while ((ent = FindEntityByClassname(ent, "weapon_gascan")) != -1)
 	{
@@ -210,31 +216,31 @@ stock void FindMisplacedCans()
 		GetEntPropVector(ent, Prop_Send, "m_vecOrigin", position);
 
 		/*
-		* if gascan reached a place that is lower than the coordinate the g_height_down given on z axie, ignite gascan.
-		* if gascan reached a place that is higher than the coordinate the g_height_up given on z axie, ignite gascan.
-		* if gascan reached a place that its coordinate is bigger than the coordinate g_width_x_one given on x axie, ignite gascan.
-		* if gascan reached a place that its coordinate is bigger than the coordinate g_width_y_one given on y axie, ignite gascan.
-		* if gascan reached a place that its coordinate is smaller than the coordinate g_width_x_two given on x axie, ignite gascan.
-		* if gascan reached a place that its coordinate is smaller than the coordinate g_width_y_two given on y axie, ignite gascan.
+		* if gascan reached a place that is lower than the coordinate the g_height_min given on z axie, ignite gascan.
+		* if gascan reached a place that is higher than the coordinate the g_height_max given on z axie, ignite gascan.
+		* if gascan reached a place that its coordinate is smaller than the coordinate g_width_x_min given on x axie, ignite gascan.
+		* if gascan reached a place that its coordinate is smaller than the coordinate g_width_y_min given on y axie, ignite gascan.
+		* if gascan reached a place that its coordinate is bigger than the coordinate g_width_x_max given on x axie, ignite gascan.
+		* if gascan reached a place that its coordinate is bigger than the coordinate g_width_y_max given on y axie, ignite gascan.
 		*
-		* In summary, gascan will get burned if it has ran out of a cube you defined on every specific map.
+		* In summary, gascan will get burned if it has ran out of the cube boundray you defined on every specific map.
 		*/
 
-		if(GetConVarBool(EnableHeightDetect))
+		if(GetConVarBool(EnableHeightDetectz))
 		{
-			if(strlen(g_height_down) == 0 || strlen(g_height_up) == 0)
+			if(strlen(g_height_min) == 0 || strlen(g_height_max) == 0)
 			{
 				return;
 			}
 			else
 			{
-				if(position[2] <= StringToFloat(g_height_down))
+				if(position[2] <= StringToFloat(g_height_min))
 				{
 					if(position[2])			// Has gascan not hold by survivor? or has gascan become static?
 						Ignite(ent);
 				}
 
-				if(StringToFloat(g_height_up) <= position[2])
+				if(StringToFloat(g_height_max) <= position[2])
 				{
 					if(position[2])
 						Ignite(ent);
@@ -242,21 +248,21 @@ stock void FindMisplacedCans()
 			}
 		}
 
-		if(GetConVarBool(EnableSquareDetect1))
+		if(GetConVarBool(EnableSquareDetectx))
 		{
-			if(strlen(g_width_x_one) == 0 || strlen(g_width_x_two) == 0)
+			if(strlen(g_width_x_max) == 0 || strlen(g_width_x_min) == 0)
 			{
 				return;
 			}
 			else
 			{
-				if(StringToFloat(g_width_x_one) <= position[0])
+				if(StringToFloat(g_width_x_max) <= position[0])
 				{
 					if(position[0])
 						Ignite(ent);
 				}
 
-				if(position[0] <= StringToFloat(g_width_x_two))
+				if(position[0] <= StringToFloat(g_width_x_min))
 				{
 					if(position[0])
 					Ignite(ent);
@@ -264,21 +270,21 @@ stock void FindMisplacedCans()
 			}
 		}
 
-		if(GetConVarBool(EnableSquareDetect2))
+		if(GetConVarBool(EnableSquareDetecty))
 		{
-			if(strlen(g_width_y_one) == 0 || strlen(g_width_y_two) == 0)
+			if(strlen(g_width_y_max) == 0 || strlen(g_width_y_min) == 0)
 			{
 				return;
 			}
 			else
 			{
-				if(StringToFloat(g_width_y_one) <= position[1])
+				if(StringToFloat(g_width_y_max) <= position[1])
 				{
 					if(position[1])
 						Ignite(ent);
 				}
 
-				if(position[1] <= StringToFloat(g_width_y_two))
+				if(position[1] <= StringToFloat(g_width_y_min))
 				{	
 					if(position[1])
 						Ignite(ent);
@@ -290,9 +296,9 @@ stock void FindMisplacedCans()
 
 public void KillPlayer()
 {
-	char g_height_down[128], g_height_up[128];
+	char g_height_min[128], g_height_max[128];
 
-	ParseMapnameAndHeight(g_height_down, g_height_up, sizeof(g_height_down), sizeof(g_height_up));
+	ParseMapnameAndHeight(g_height_min, g_height_max, sizeof(g_height_min), sizeof(g_height_max));
 
 	for (int i = 1; i <= MAXPLAYERS; i++)
 	{
@@ -300,9 +306,9 @@ public void KillPlayer()
 		{
 			float position[3];
 			GetClientAbsOrigin(i, position);
-			if(GetConVarBool(EnableHeightDetect))
+			if(GetConVarBool(EnableKillPlayer))
 			{
-				if(position[2] <= StringToInt(g_height_down))
+				if(position[2] <= StringToInt(g_height_min))
 				{
 					ForcePlayerSuicide(i);
 				}
