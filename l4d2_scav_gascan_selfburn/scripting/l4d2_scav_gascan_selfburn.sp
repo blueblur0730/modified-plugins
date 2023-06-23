@@ -6,17 +6,21 @@
 #include <left4dhooks>
 #include <colors>
 
-#define PLUGIN_VERSION "2.5.1"
+#define PLUGIN_VERSION "2.5.2"
 #define CONFIG_PATH "configs/l4d2_scav_gascan_selfburn.txt"
 /* Change log:
+* - 2.5.2
+*	- Made the ConVar EnableKillPlayer control the TimerK instead of controlling the function KillPlayer() itself.
+*	- Added back the detection of mapname c8m5 to decide whether the TimerK should be activated.
+*
 * - 2.5.1
 *	- Changed varibles' name.
-*   - Added a new ConVar to control kill_player.
+*   - Added a new ConVar to control function KillPlayer().
 *
 * - 2.5
 *	- Added 2 ConVars to control the time every detection dose.
-*	- Saperate Square ConVar into 2 individual ConVars to detect x and y.
-*	- Deleted a function that never being uesed.
+*	- Saperated Square ConVar into 2 individual ConVars to detect x and y.
+*	- Deleted a function that is never being uesed.
 *	- Optimized the logic.
 *
 * - 2.4
@@ -26,18 +30,18 @@
 * - 2.3
 *	- Added 3 ConVars to control the coordinate detections
 *	- Added more coordinate detections to control the boundray the gascan will not get burned (or will get burned in another way to say).
-*	- Added coordinate detection to control the height boundray the player will get killed compulsorily.
+*	- Added coordinate detection to control the function KillPlayer(), which decided wether a player should die under the detection of z axie, instead of only detecting mapname c8m5.
 *
 * - 2.2
-* 	- Added config file to configurate the height bounds that a gascan needs to burn.
+* 	- Added a config file to configurate the height boundray where a gascan will be burned.
 *
 * - 2.1
 *	- Optimized codes.
-*	- supprt translations.
+*	- supprted translations.
 *
 * - 2.0
 * 	- player will die under the c8m5 rooftop.
-* 	- support new syntax.
+* 	- supported new syntax.
 * ----------------------------------------------------------------
 * - To Do
 *	- Add a method to detect minor coordinate.
@@ -127,7 +131,10 @@ public void OnMapStart()
 	GetCurrentMap(c_mapname, sizeof(c_mapname));
 
 	TimerG = CreateTimer(GetConVarFloat(IntervalBurnGascan), GascanDetectTimer, _, TIMER_REPEAT);
-	TimerK = CreateTimer(GetConVarFloat(IntervalKillPlayer), KillPlayerTimer, _, TIMER_REPEAT);
+	if(GetConVarBool(EnableKillPlayer) || strcmp(c_mapname, "c8m5_rooftop") == 0)
+	{
+		TimerK = CreateTimer(GetConVarFloat(IntervalKillPlayer), KillPlayerTimer, _, TIMER_REPEAT);
+	}
 }
 
 public Action GascanDetectTimer(Handle Timer, any Client)
@@ -306,12 +313,9 @@ public void KillPlayer()
 		{
 			float position[3];
 			GetClientAbsOrigin(i, position);
-			if(GetConVarBool(EnableKillPlayer))
+			if(position[2] <= StringToInt(g_height_min))
 			{
-				if(position[2] <= StringToInt(g_height_min))
-				{
-					ForcePlayerSuicide(i);
-				}
+				ForcePlayerSuicide(i);
 			}
 		}
 	}

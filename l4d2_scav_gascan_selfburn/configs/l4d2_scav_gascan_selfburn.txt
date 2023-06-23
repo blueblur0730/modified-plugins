@@ -10,20 +10,71 @@
 		"width_ylimit_min"		"7200.0"
 	}
 
+	"c8m1_apartment"
+	{
+		"height_zlimit_min"		"0.0"
+		"height_zlimit_max"		"678.0"			// rooftop of some apartment
+		"width_xlimit_max"		""
+		"width_ylimit_max"		""
+		"width_xlimit_min"		""
+		"width_ylimit_min"		""
+	}
+
+	"c6m3_port"
+	{
+		"height_zlimit_min"		"0.0"
+		"height_zlimit_max"		"1000.0"		// although it's impossible for cans to go such high, these number is just to make the plugin works
+		"width_xlimit_max"		""
+		"width_ylimit_max"		""
+		"width_xlimit_min"		""
+		"width_ylimit_min"		""
+	}
+
+	"c4m2_sugarmill_a"
+	{
+		"height_zlimit_min"		"0.0"
+		"height_zlimit_max"		"864.2"			// rooftop of sugarmill
+		"width_xlimit_max"		""
+		"width_ylimit_max"		"-5470.0"
+		"width_xlimit_min"		""
+		"width_ylimit_min"		"-9510.0"		// sugar field
+	}
+
+	"c14m1_junkyard"
+	{
+		"height_zlimit_min"		"-200.0"		// river vally
+		"height_zlimit_max"		"1000.0"
+		"width_xlimit_max"		""
+		"width_ylimit_max"		""
+		"width_xlimit_min"		""
+		"width_ylimit_min"		""
+	}
+
+
+	"c14m2_lighthouse"
+	{
+		"height_zlimit_min"		"-200.0"
+		"height_zlimit_max"		"5000.0"
+		"width_xlimit_max"		"500.0"
+		"width_ylimit_max"		"6180.0"		// sea
+		"width_xlimit_min"		"-5220.0"		// beyong the clife
+		"width_ylimit_min"		"-200.0"
+	}
+
 	"cedafever_m3"
 	{
 		"height_zlimit_min"		"900.0"
 		"height_zlimit_max"		"2100.0"
-		"width_xlimit_max"		"-7100.0"
+		"width_xlimit_max"		"-3800.0"
 		"width_ylimit_max"		"4750.0"
-		"width_xlimit_min"		"-3800.0"
+		"width_xlimit_min"		"-7100.0"
 		"width_ylimit_min"		"1900.0"
 	}
 
 	"roofdownthedrain"
 	{
 		"height_zlimit_min"		"900.0"
-		"height_zlimit_max"		"2200.0"
+		"height_zlimit_max"		"3100.0"
 		"width_xlimit_max"		""
 		"width_ylimit_max"		""
 		"width_xlimit_min"		""
