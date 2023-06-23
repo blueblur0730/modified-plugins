@@ -1,7 +1,7 @@
 # l4d2_scav_gascan_selfburn
 ### Introduction
  - 插件原作者 Ratchet. 插件原名叫l4d2_fix_scav_nm5. 我对插件功能进行了拓展.
- - 插件会在清道夫模式下 (战役和对抗中的清道夫事件不会触发插件) 对特定地图检测油桶位置是否非法并点燃.
+ - 插件会在清道夫模式下 (战役和对抗中的清道夫事件不会触发插件) 对特定地图检测油桶xyz轴位置是否非法并点燃.
  - 检测玩家高度并强制使其死亡.
  - 支持文字输出翻译.
 
@@ -20,15 +20,35 @@
 // min: 0, max: 1
 l4d2_scav_gascan_selfburn_enable "1"
 
-// 开启xy轴检测
-// 默认值: 1
+// 开启x轴检测
+// 默认值: 0
 // min: 0, max:1
-l4d2_scav_gascan_selfburn_square "1"
+l4d2_scav_gascan_selfburn_detect_x "0"
+
+// 开启y轴检测
+// 默认值: 0
+// min: 0, max:1
+l4d2_scav_gascan_selfburn_detect_y "0"
 
 // 开启z轴检测
 // 默认值: 1
 // min: 0, max: 1
-l4d2_scav_gascan_selfburn_height "1"
+l4d2_scav_gascan_selfburn_detect_z "1"
+
+// 开启插件Debug
+// 默认值: 0
+// min: 0, max: 1
+l4d2_scav_gascan_selfburn_debug "0"
+
+// 每一次检测油桶所需的时间间隔
+// 默认值: 10.0
+// min: 0.0, max: 不限
+l4d2_scav_gascan_selfburn_interval "10.0"
+
+// 每一次检测玩家超界使其死亡的时间间隔(只检测z轴)
+// 默认值: 5.0
+// min: 0.0, max: 不限
+l4d2_scav_kill_player_interval "5.0"
 
 ```
 <hr>
@@ -58,7 +78,8 @@ l4d2_scav_gascan_selfburn_height "1"
  - width_ylimit_one指油桶在y轴上不能大于的水平边界, 大于这个水平边界油桶会被点燃.
  - width_xlimit_two指油桶在x轴上不能小于的水平边界, 小于这个水平边界油桶会被点燃.
  - width_ylimit_two指油桶在y轴上不能小于的水平边界, 小于这个水平边界油桶会被点燃.
- - 所有引索后面的参数如果不填, 即没有数值, 插件不会在这个方向检测油桶并点燃油桶.
+ - 所有引索后面的参数如果在特定轴检测开启的情况下不填, 即没有数值, 其他数值也不会检测, 即插件相当于未开启.
+ - 目前只能检测正坐标.
 
 ```
 <hr>

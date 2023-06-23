@@ -6,9 +6,15 @@
 #include <left4dhooks>
 #include <colors>
 
-#define PLUGIN_VERSION "2.4"
+#define PLUGIN_VERSION "2.5"
 #define CONFIG_PATH "configs/l4d2_scav_gascan_selfburn.txt"
 /* Change log:
+* - 2.5
+*	- Added 2 ConVars to control the time every detection dose.
+*	- Saperate Square ConVar into 2 individual ConVars to detect x and y.
+*	- Deleted a function that never being uesed.
+*	- Optimized the logic.
+*
 * - 2.4
 *	- Added a ConVar to debug the parse result.
 *   - Optimized the logic.
@@ -31,23 +37,25 @@
 * ----------------------------------------------------------------
 * - To Do
 *	- Add a method to detect minor coordinate.
-*	- Add 2 ConVars to control the time the detect need.
-*
 *
 */
 
 //Timer
 Handle
-	TimerH = INVALID_HANDLE;
+	TimerG = INVALID_HANDLE,
+	TimerK = INVALID_HANDLE;
 
 KeyValues
 	kv;
 
 ConVar
 	EnableSelfBurn,
-	EnableSquareDetect,
+	EnableSquareDetect1,
+	EnableSquareDetect2,
 	EnableHeightDetect,
-	EnableDebug;
+	EnableDebug,
+	IntervalBurnGascan,
+	IntervalKillPlayer;
 
 char
 	c_mapname[128];
@@ -56,7 +64,7 @@ public Plugin myinfo =
 {
 	name = "L4D2 Scavenge Gascan Self Burn",
 	author = "Ratchet, blueblur",
-	description = "A plugin that able to configurate the position where the gascan will get burned once they were out of boundray in L4D2 scavenge mode.",
+	description = "A plugin that able to configurate the position where the gascan will get burned once they were out of boundray in L4D2 scavenge mode. (And force player to die in impossible places.)",
 	version = PLUGIN_VERSION,
 	url = "https://github.com/blueblur0730/modified-plugins"
 };
@@ -65,11 +73,15 @@ public void OnPluginStart()
 {
 	char buffer[128];
 
-	// ConVar
+	// ConVars
 	EnableSelfBurn 		= 	CreateConVar("l4d2_scav_gascan_selfburn_enable", "1", "Enable Plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableSquareDetect 	= 	CreateConVar("l4d2_scav_gascan_selfburn_square", "0", "Enable square coordinate detect(detect x and y)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableHeightDetect 	=	CreateConVar("l4d2_scav_gascan_selfburn_height", "1", "Enable height coordinate detect(detect z)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableSquareDetect1 = 	CreateConVar("l4d2_scav_gascan_selfburn_detect_x", "0", "Enable square coordinate detect(detect x)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableSquareDetect2 =   CreateConVar("l4d2_scav_gascan_selfburn_detect_y", "0", "Enable square coordinate detect(detect y)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableHeightDetect 	=	CreateConVar("l4d2_scav_gascan_selfburn_detect_z", "1", "Enable height coordinate detect(detect z)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	EnableDebug 		= 	CreateConVar("l4d2_scav_gascan_selfburn_debug", "0", "Enable Debug", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+
+	IntervalBurnGascan  = 	CreateConVar("l4d2_scav_gascan_selfburn_interval", "10.0", "Interval every gascan detection dose", FCVAR_NOTIFY, true, 0.0);
+	IntervalKillPlayer  = 	CreateConVar("l4d2_scav_kill_player_interval", "5.0", "Interval every kill_player detection dose", FCVAR_NOTIFY, true, 0.0);
 
 	// KeyValue
 	kv = CreateKeyValues("Positions", "", "");
@@ -96,19 +108,30 @@ public Action CheckStatus()
 
 public void OnMapStart()
 {
-	if( TimerH != INVALID_HANDLE )
-		KillTimer(TimerH);
+	if( TimerG != INVALID_HANDLE )
+		KillTimer(TimerG);
 
-	TimerH = INVALID_HANDLE;
+	TimerG = INVALID_HANDLE;
+
+	if( TimerK != INVALID_HANDLE )
+	KillTimer(TimerK);
+
+	TimerK = INVALID_HANDLE;
 
 	GetCurrentMap(c_mapname, sizeof(c_mapname));
 
-	TimerH = CreateTimer(15.0, ScavTimerH, _, TIMER_REPEAT);
+	TimerG = CreateTimer(GetConVarFloat(IntervalBurnGascan), GascanDetectTimer, _, TIMER_REPEAT);
+	TimerK = CreateTimer(GetConVarFloat(IntervalKillPlayer), KillPlayerTimer, _, TIMER_REPEAT);
 }
 
-public Action ScavTimerH(Handle Timer, any Client)
+public Action GascanDetectTimer(Handle Timer, any Client)
 {
 	FindMisplacedCans();
+	return Plugin_Handled;
+}
+
+public Action KillPlayerTimer(Handle Timer, any Client)
+{
 	KillPlayer();
 	return Plugin_Handled;
 }
@@ -199,43 +222,67 @@ stock void FindMisplacedCans()
 
 		if(GetConVarBool(EnableHeightDetect))
 		{
-			if(position[2] <= StringToFloat(g_height_down))
+			if(strlen(g_height_down) == 0 || strlen(g_height_up) == 0)
 			{
-				if(position[2])
-					Ignite(ent);
+				return;
 			}
-
-			if(StringToFloat(g_height_up) <= position[2])
+			else
 			{
-				if(position[2])
-					Ignite(ent);
+				if(position[2] <= StringToFloat(g_height_down))
+				{
+					if(position[2])			// Has gascan not hold by survivor? or has gascan become static?
+						Ignite(ent);
+				}
+
+				if(StringToFloat(g_height_up) <= position[2])
+				{
+					if(position[2])
+						Ignite(ent);
+				}
 			}
 		}
 
-		if(GetConVarBool(EnableSquareDetect))
+		if(GetConVarBool(EnableSquareDetect1))
 		{
-			if(StringToFloat(g_width_x_one) <= position[0])
+			if(strlen(g_width_x_one) == 0 || strlen(g_width_x_two) == 0)
 			{
-				if(position[0])
-					Ignite(ent);
+				return;
 			}
-
-			if(position[0] <= StringToFloat(g_width_x_two))
+			else
 			{
-				if(position[0])
+				if(StringToFloat(g_width_x_one) <= position[0])
+				{
+					if(position[0])
+						Ignite(ent);
+				}
+
+				if(position[0] <= StringToFloat(g_width_x_two))
+				{
+					if(position[0])
 					Ignite(ent);
+				}
 			}
+		}
 
-			if(StringToFloat(g_width_y_one) <= position[1])
+		if(GetConVarBool(EnableSquareDetect2))
+		{
+			if(strlen(g_width_y_one) == 0 || strlen(g_width_y_two) == 0)
 			{
-				if(position[1])
-					Ignite(ent);
+				return;
 			}
-
-			if(position[1] <= StringToFloat(g_width_y_two))
+			else
 			{
-				if(position[1])
-					Ignite(ent);
+				if(StringToFloat(g_width_y_one) <= position[1])
+				{
+					if(position[1])
+						Ignite(ent);
+				}
+
+				if(position[1] <= StringToFloat(g_width_y_two))
+				{	
+					if(position[1])
+						Ignite(ent);
+				}
 			}
 		}
 	}
@@ -245,8 +292,7 @@ public void KillPlayer()
 {
 	char g_height_down[128], g_height_up[128];
 
-	if(GetConVarBool(EnableHeightDetect))
-		ParseMapnameAndHeight(g_height_down, g_height_up, sizeof(g_height_down), sizeof(g_height_up));
+	ParseMapnameAndHeight(g_height_down, g_height_up, sizeof(g_height_down), sizeof(g_height_up));
 
 	for (int i = 1; i <= MAXPLAYERS; i++)
 	{
@@ -254,7 +300,7 @@ public void KillPlayer()
 		{
 			float position[3];
 			GetClientAbsOrigin(i, position);
-			if(StringToInt(g_height_down) != 0.0)
+			if(GetConVarBool(EnableHeightDetect))
 			{
 				if(position[2] <= StringToInt(g_height_down))
 				{
@@ -277,10 +323,4 @@ stock Action Ignite(int entity)
 	AcceptEntityInput(entity, "ignite");
 	CPrintToChatAll("%t", "Ignite");		//"Gascan out of bounds! Ignited!"
 	return Plugin_Handled;
-}
-
-stock int FindEntityByClassname2(int startEnt, char classname[64])
-{
-	while (startEnt > -1 && !IsValidEntity(startEnt)) startEnt--;
-	return FindEntityByClassname(startEnt, classname);
 }
