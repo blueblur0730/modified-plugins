@@ -5,8 +5,8 @@
 #include <sdktools>
 #include <colors>
 #include <left4dhooks>
-#undef REQUIRE_PLUGIN
 #include <readyup>
+#undef REQUIRE_PLUGIN
 #include <l4d_tank_control_eq>
 
 #define CVAR_FLAGS FCVAR_NOTIFY
@@ -109,6 +109,7 @@ bool bFirstTeam;
 bool bPooredIn = false;
 
 int nGasCount;
+int Candidate;
 
 public void OnPluginStart()
 {
@@ -146,7 +147,7 @@ public void OnPluginStart()
 
 public void OnAllPluginsLoaded()
 {
-
+	Candidate = GetTankSelection()
 }
 
 public void OnMapStart()

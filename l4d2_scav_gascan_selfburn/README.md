@@ -44,10 +44,10 @@ l4d2_scav_gascan_selfburn_height "1"
 	{
 		"height_zlimit_down"		"500.0"		//这一条同时影响强迫玩家死亡的检测
 		"height_zlimit_up"		"6000.0"
-		"width_xlimit_one"		""
-		"width_ylimit_one"		""
-		"width_xlimit_two"		""
-		"width_ylimit_two"		""
+		"width_xlimit_one"		"8100.0"
+		"width_ylimit_one"		"9800.0"
+		"width_xlimit_two"		"4700.0"
+		"width_ylimit_two"		"7200.0"
 	}
 
 下面对引索进行一一说明:

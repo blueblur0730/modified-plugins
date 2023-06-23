@@ -6,17 +6,21 @@
 #include <left4dhooks>
 #include <colors>
 
-#define PLUGIN_VERSION "2.3"
+#define PLUGIN_VERSION "2.4"
 #define CONFIG_PATH "configs/l4d2_scav_gascan_selfburn.txt"
 /* Change log:
+* - 2.4
+*	- Added a ConVar to debug the parse result.
+*   - Optimized the logic.
+*
 * - 2.3
 *	- Added 3 ConVars to control the coordinate detections
 *	- Added more coordinate detections to control the boundray the gascan will not get burned (or will get burned in another way to say).
-*	- Added coordinate detection to control the height boundray the player will get killed compulsoryly.
+*	- Added coordinate detection to control the height boundray the player will get killed compulsorily.
 *
 * - 2.2
 * 	- Added config file to configurate the height bounds that a gascan needs to burn.
-* 
+*
 * - 2.1
 *	- Optimized codes.
 *	- supprt translations.
@@ -24,6 +28,11 @@
 * - 2.0
 * 	- player will die under the c8m5 rooftop.
 * 	- support new syntax.
+* ----------------------------------------------------------------
+* - To Do
+*	- Add a method to detect minor coordinate.
+*	- Add 2 ConVars to control the time the detect need.
+*
 *
 */
 
@@ -35,11 +44,12 @@ KeyValues
 	kv;
 
 ConVar
-	PluginEnable,
-	SquareEnable,
-	HeightEnable;
+	EnableSelfBurn,
+	EnableSquareDetect,
+	EnableHeightDetect,
+	EnableDebug;
 
-char 
+char
 	c_mapname[128];
 
 public Plugin myinfo =
@@ -56,9 +66,10 @@ public void OnPluginStart()
 	char buffer[128];
 
 	// ConVar
-	PluginEnable 	= CreateConVar("l4d2_scav_gascan_selfburn_enable", "1", "Enable Plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	SquareEnable 	= CreateConVar("l4d2_scav_gascan_selfburn_square", "1", "Enable square coordinate detect(detect x and y)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	HeightEnable 	= CreateConVar("l4d2_scav_gascan_selfburn_height", "1", "Enable height coordinate detect(detect z)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableSelfBurn 		= 	CreateConVar("l4d2_scav_gascan_selfburn_enable", "1", "Enable Plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableSquareDetect 	= 	CreateConVar("l4d2_scav_gascan_selfburn_square", "0", "Enable square coordinate detect(detect x and y)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableHeightDetect 	=	CreateConVar("l4d2_scav_gascan_selfburn_height", "1", "Enable height coordinate detect(detect z)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableDebug 		= 	CreateConVar("l4d2_scav_gascan_selfburn_debug", "0", "Enable Debug", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	// KeyValue
 	kv = CreateKeyValues("Positions", "", "");
@@ -68,7 +79,7 @@ public void OnPluginStart()
 		SetFailState("File %s may be missed!", CONFIG_PATH);
 	}
 
-	// Translations 
+	// Translations
 	LoadTranslations("l4d2_scav_gascan_selfburn.phrases");
 
 	// Check scavenge mode and enable status
@@ -77,17 +88,17 @@ public void OnPluginStart()
 
 public Action CheckStatus()
 {
-	if(GetConVarInt(PluginEnable) == 1 && L4D2_IsScavengeMode() == true)
-		return Plugin_Continue;
-	else
+	if(!GetConVarBool(EnableSelfBurn) || !L4D2_IsScavengeMode())
 		return Plugin_Handled;
+	else
+		return Plugin_Continue;
 }
 
 public void OnMapStart()
 {
 	if( TimerH != INVALID_HANDLE )
 		KillTimer(TimerH);
-		
+
 	TimerH = INVALID_HANDLE;
 
 	GetCurrentMap(c_mapname, sizeof(c_mapname));
@@ -96,7 +107,7 @@ public void OnMapStart()
 }
 
 public Action ScavTimerH(Handle Timer, any Client)
-{	
+{
 	FindMisplacedCans();
 	KillPlayer();
 	return Plugin_Handled;
@@ -109,6 +120,10 @@ public void ParseMapnameAndHeight(char[] height_down, char[] height_up, int maxl
 	{
 		KvGetString(kv, "height_zlimit_down", height_down, maxlength);
 		KvGetString(kv, "height_zlimit_up", height_up, maxlength2);
+		if(GetConVarBool(EnableDebug))
+		{
+			PrintToConsoleAll("--------------------------\nparsed mapname and value.\n mapname = %s\n height_down = %s\n height_up = %s", c_mapname, height_down, height_up);
+		}
 	}
 	else
 	{
@@ -123,6 +138,10 @@ public void ParseMapnameAndWidthFirst(char[] width_x_one, char[] width_y_one, in
 	{
 		KvGetString(kv, "width_xlimit_one", width_x_one, maxlength);
 		KvGetString(kv, "width_ylimit_one", width_y_one, maxlength2);
+		if(GetConVarBool(EnableDebug))
+		{
+			PrintToConsoleAll("\nparsed mapname and value.\n mapname = %s\n width_x_one = %s\n width_y_one = %s", c_mapname, width_x_one, width_y_one);
+		}
 	}
 	else
 	{
@@ -137,6 +156,10 @@ public void ParseMapnameAndWidthSecond(char[] width_x_two, char[] width_y_two, i
 	{
 		KvGetString(kv, "width_xlimit_two", width_x_two, maxlength);
 		KvGetString(kv, "width_ylimit_two", width_y_two, maxlength2);
+		if(GetConVarBool(EnableDebug))
+		{
+			PrintToConsoleAll("\nparsed mapname and value.\n mapname = %s\n width_x_two = %s\n width_y_two = %s\n --------------------------", c_mapname, width_x_two, width_y_two);
+		}
 	}
 	else
 	{
@@ -151,14 +174,9 @@ stock void FindMisplacedCans()
 	char g_width_x_one[128], g_width_y_one[128];
 	char g_width_x_two[128], g_width_y_two[128];
 
-	if(GetConVarBool(HeightEnable))
-		ParseMapnameAndHeight(g_height_down, g_height_up, sizeof(g_height_down), sizeof(g_height_up));
-
-	if(GetConVarBool(SquareEnable))
-		ParseMapnameAndWidthFirst(g_width_x_one, g_width_y_one, sizeof(g_width_x_one), sizeof(g_width_y_one));
-
-	if(GetConVarBool(SquareEnable))
-		ParseMapnameAndWidthSecond(g_width_x_two, g_width_y_two, sizeof(g_width_x_two), sizeof(g_width_y_two));
+	ParseMapnameAndHeight(g_height_down, g_height_up, sizeof(g_height_down), sizeof(g_height_up));
+	ParseMapnameAndWidthFirst(g_width_x_one, g_width_y_one, sizeof(g_width_x_one), sizeof(g_width_y_one));
+	ParseMapnameAndWidthSecond(g_width_x_two, g_width_y_two, sizeof(g_width_x_two), sizeof(g_width_y_two));
 
 	while ((ent = FindEntityByClassname(ent, "weapon_gascan")) != -1)
 	{
@@ -176,43 +194,49 @@ stock void FindMisplacedCans()
 		* if gascan reached a place that its coordinate is smaller than the coordinate g_width_x_two given on x axie, ignite gascan.
 		* if gascan reached a place that its coordinate is smaller than the coordinate g_width_y_two given on y axie, ignite gascan.
 		*
-		* In summary, gascan will get burned if it has ran out of a cube you defined on every specific map. 
+		* In summary, gascan will get burned if it has ran out of a cube you defined on every specific map.
 		*/
 
-		if(StringToFloat(g_height_down) != 0.0)		//empty string converts to float 0.0
+		if(GetConVarBool(EnableHeightDetect))
 		{
 			if(position[2] <= StringToFloat(g_height_down))
-				Ignite(ent);
-		}
+			{
+				if(position[2])
+					Ignite(ent);
+			}
 
-		if(StringToFloat(g_height_up) != 0.0)
-		{
 			if(StringToFloat(g_height_up) <= position[2])
-				Ignite(ent);
+			{
+				if(position[2])
+					Ignite(ent);
+			}
 		}
 
-		if(StringToFloat(g_width_x_one) != 0.0)
+		if(GetConVarBool(EnableSquareDetect))
 		{
 			if(StringToFloat(g_width_x_one) <= position[0])
-				Ignite(ent);
-		}
+			{
+				if(position[0])
+					Ignite(ent);
+			}
 
-		if(StringToFloat(g_width_x_two) != 0.0)
-		{
 			if(position[0] <= StringToFloat(g_width_x_two))
-				Ignite(ent);
-		}
+			{
+				if(position[0])
+					Ignite(ent);
+			}
 
-		if(StringToFloat(g_width_y_one) != 0.0)
-		{
 			if(StringToFloat(g_width_y_one) <= position[1])
-				Ignite(ent);
-		}
+			{
+				if(position[1])
+					Ignite(ent);
+			}
 
-		if(StringToFloat(g_width_y_two) != 0.0)
-		{
 			if(position[1] <= StringToFloat(g_width_y_two))
-				Ignite(ent);
+			{
+				if(position[1])
+					Ignite(ent);
+			}
 		}
 	}
 }
@@ -221,7 +245,7 @@ public void KillPlayer()
 {
 	char g_height_down[128], g_height_up[128];
 
-	if(GetConVarBool(HeightEnable))
+	if(GetConVarBool(EnableHeightDetect))
 		ParseMapnameAndHeight(g_height_down, g_height_up, sizeof(g_height_down), sizeof(g_height_up));
 
 	for (int i = 1; i <= MAXPLAYERS; i++)
