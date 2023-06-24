@@ -21,14 +21,14 @@
 l4d2_scav_gascan_selfburn_enable "1"
 
 // 开启x轴检测
-// 默认值: 0
+// 默认值: 1
 // min: 0, max:1
-l4d2_scav_gascan_selfburn_detect_x "0"
+l4d2_scav_gascan_selfburn_detect_x "1"
 
 // 开启y轴检测
-// 默认值: 0
+// 默认值: 1
 // min: 0, max:1
-l4d2_scav_gascan_selfburn_detect_y "0"
+l4d2_scav_gascan_selfburn_detect_y "1"
 
 // 开启z轴检测
 // 默认值: 1
@@ -63,7 +63,7 @@ l4d2_scav_kill_player_interval "3.0"
 ### Config File
 
 ```
-在sourcemod/config/l4d2_scav_gascan_selfburn.txt里, 你需要做如下编辑:
+在sourcemod/configs/l4d2_scav_gascan_selfburn.txt里, 你需要做如下编辑:
 
 	"c8m5_rooftop"		//这里是你需要进行边界设置的清道夫地图名
 	{
@@ -76,7 +76,8 @@ l4d2_scav_kill_player_interval "3.0"
 	}
 
 下面对引索进行一一说明:
- - 所有引索后面的数字应该为浮点型数字, 即都要带小数点
+ - 控制台输入 cl_showpos 1 开启坐标显示, 进入你的服务器寻找你认为的边界坐标.
+ - 所有引索后面的数字应该为浮点型数字, 即都要带小数点.
  - height_zlimit_min指油桶在z轴不能低于的垂直边界, 低于这个垂直边界油桶会被点燃.
  - height_zlimit_max指油桶在z轴不能高于的垂直边界, 高于这个垂直边界油桶会被点燃.
  - width_xlimit_max指油桶在x轴上不能大于的水平边界, 大于这个水平边界油桶会被点燃.

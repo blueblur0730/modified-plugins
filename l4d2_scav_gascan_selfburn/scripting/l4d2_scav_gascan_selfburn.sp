@@ -81,9 +81,9 @@ public void OnPluginStart()
 
 	// ConVars
 	EnableSelfBurn 		= 	CreateConVar("l4d2_scav_gascan_selfburn_enable", "1", "Enable Plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableSquareDetectx = 	CreateConVar("l4d2_scav_gascan_selfburn_detect_x", "0", "Enable square coordinate detect(detect x)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableSquareDetecty =   CreateConVar("l4d2_scav_gascan_selfburn_detect_y", "0", "Enable square coordinate detect(detect y)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableHeightDetectz =	CreateConVar("l4d2_scav_gascan_selfburn_detect_z", "1", "Enable height coordinate detect(detect z)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableSquareDetectx = 	CreateConVar("l4d2_scav_gascan_selfburn_detect_x", "1", "Enable square coordinate detection(detect x)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableSquareDetecty =   CreateConVar("l4d2_scav_gascan_selfburn_detect_y", "1", "Enable square coordinate detection(detect y)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableHeightDetectz =	CreateConVar("l4d2_scav_gascan_selfburn_detect_z", "1", "Enable height coordinate detection(detect z)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	EnableDebug 		= 	CreateConVar("l4d2_scav_gascan_selfburn_debug", "0", "Enable Debug", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	EnableKillPlayer    = 	CreateConVar("l4d2_scav_kill_player", "0", "Enable Kill Player", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
