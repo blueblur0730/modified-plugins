@@ -2,6 +2,7 @@
 ### Introduction
  - 插件原作者 Ratchet. 插件原名叫l4d2_fix_scav_nm5. 我对插件功能进行了拓展.
  - 插件会在清道夫模式下 (战役和对抗中的清道夫事件不会触发插件) 对特定地图检测油桶xyz轴位置是否非法并点燃.
+ - 可限制最大自燃油桶数量.
  - 检测玩家高度并强制使其死亡.
  - 支持文字输出翻译.
 
@@ -40,6 +41,11 @@ l4d2_scav_gascan_selfburn_detect_z "1"
 // min: 0, max: 1
 l4d2_scav_gascan_selfburn_debug "0"
 
+// 开启油桶自燃数量限制
+// 默认值: 1
+// min: 0, max: 1
+l4d2_scav_gascan_burned_limit_enable "1"
+
 // 开启检测玩家超界使其死亡的功能(只检测z轴)
 // 默认值: 0
 // min: 0, max: 1
@@ -54,6 +60,11 @@ l4d2_scav_gascan_selfburn_interval "10.0"
 // 默认值: 3.0
 // min: 0.0, max: 不限
 l4d2_scav_kill_player_interval "3.0"
+
+// 最大自燃油桶数量限制?
+// 默认值: 4
+// min: 0, max: 不限
+l4d2_scav_gascan_burned_limit "4"
 
 ```
 <hr>

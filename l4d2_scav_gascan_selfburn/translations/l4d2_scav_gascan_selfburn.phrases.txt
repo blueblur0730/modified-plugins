@@ -5,4 +5,17 @@
 		"en"		"[{olive}!{default}] Gascan out of bounds! {orange}Ignited{default}!"
 		"chi"		"[{olive}!{default}] 油桶超界! {orange}已点燃{default}!"
 	}
+
+	"IgniteInLimit"
+	{
+		"#format"	"{1:d},{2:d}"		//1: current burned gascan count. 2: max burned count.
+		"en"		"[{olive}!{default}] Gascan out of bounds! {orange}Ignited{default}! [{olive}{1}{default} / {orange}{2}{default}]"
+		"chi"		"[{olive}!{default}] 油桶超界! {orange}已点燃{default}! [{olive}{1}{default} / {orange}{2}{default}]"
+	}
+
+	"ReachedLimit"
+	{
+		"en"		"[{olive}!{default}] Reached the maxmium number of selfburn gascan, no more {orange}out-boundary gascans {default}will ignited now!"
+		"chi"		"[{olive}!{default}] 已达最大油桶自燃数, 将不会再有任何{orange}越界油桶{default}点燃!"
+	}
 }

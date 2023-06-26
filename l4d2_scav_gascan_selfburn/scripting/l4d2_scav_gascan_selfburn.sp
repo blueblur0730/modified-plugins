@@ -6,9 +6,20 @@
 #include <left4dhooks>
 #include <colors>
 
-#define PLUGIN_VERSION "2.5.2"
+#define PLUGIN_VERSION "2.6.2"
 #define CONFIG_PATH "configs/l4d2_scav_gascan_selfburn.txt"
 /* Change log:
+* - 2.6.2
+*	- Optimized the logic.
+*
+* - 2.6.1
+*	- Now if a gascan were crossed two axies(such as x and z), it would be only seen as the same one transborder.
+*	- Added a new translation for noticing player the limit has been reached.
+*
+* - 2.6
+*	- Added two ConVars to control the limit of burned gascan to decide wether we choose to stop the igniting optionally.
+*	- Added optional translations
+*
 * - 2.5.2
 *	- Made the ConVar EnableKillPlayer control the TimerK instead of controlling the function KillPlayer() itself.
 *	- Added back the detection of mapname c8m5 to decide whether the TimerK should be activated.
@@ -60,11 +71,18 @@ ConVar
 	EnableHeightDetectz,
 	EnableDebug,
 	EnableKillPlayer,
+	EnableCountLimit,
 	IntervalBurnGascan,
-	IntervalKillPlayer;
+	IntervalKillPlayer,
+	BurnedGascanMaxLimit;
 
 char
 	c_mapname[128];
+
+int
+	BurnedGascanCount,
+	DetectCount,
+	ent;
 
 public Plugin myinfo =
 {
@@ -80,15 +98,18 @@ public void OnPluginStart()
 	char buffer[128];
 
 	// ConVars
-	EnableSelfBurn 		= 	CreateConVar("l4d2_scav_gascan_selfburn_enable", "1", "Enable Plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableSquareDetectx = 	CreateConVar("l4d2_scav_gascan_selfburn_detect_x", "1", "Enable square coordinate detection(detect x)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableSquareDetecty =   CreateConVar("l4d2_scav_gascan_selfburn_detect_y", "1", "Enable square coordinate detection(detect y)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableHeightDetectz =	CreateConVar("l4d2_scav_gascan_selfburn_detect_z", "1", "Enable height coordinate detection(detect z)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableDebug 		= 	CreateConVar("l4d2_scav_gascan_selfburn_debug", "0", "Enable Debug", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	EnableKillPlayer    = 	CreateConVar("l4d2_scav_kill_player", "0", "Enable Kill Player", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableSelfBurn 			= 	CreateConVar("l4d2_scav_gascan_selfburn_enable", "1", "Enable Plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableSquareDetectx 	= 	CreateConVar("l4d2_scav_gascan_selfburn_detect_x", "1", "Enable square coordinate detection(detect x)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableSquareDetecty 	=   CreateConVar("l4d2_scav_gascan_selfburn_detect_y", "1", "Enable square coordinate detection(detect y)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableHeightDetectz 	=	CreateConVar("l4d2_scav_gascan_selfburn_detect_z", "1", "Enable height coordinate detection(detect z)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableDebug 			= 	CreateConVar("l4d2_scav_gascan_selfburn_debug", "0", "Enable Debug", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableKillPlayer    	= 	CreateConVar("l4d2_scav_kill_player", "0", "Enable Kill Player", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	EnableCountLimit		=	CreateConVar("l4d2_scav_gascan_burned_limit_enable", "1", "Enable Limited Gascan burn",FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
-	IntervalBurnGascan  = 	CreateConVar("l4d2_scav_gascan_selfburn_interval", "10.0", "Interval every gascan detection dose", FCVAR_NOTIFY, true, 0.0);
-	IntervalKillPlayer  = 	CreateConVar("l4d2_scav_kill_player_interval", "3.0", "Interval every kill_player detection dose", FCVAR_NOTIFY, true, 0.0);
+	IntervalBurnGascan  	= 	CreateConVar("l4d2_scav_gascan_selfburn_interval", "10.0", "Interval every gascan detection dose", FCVAR_NOTIFY, true, 0.0);
+	IntervalKillPlayer  	= 	CreateConVar("l4d2_scav_kill_player_interval", "3.0", "Interval every kill_player detection dose", FCVAR_NOTIFY, true, 0.0);
+
+	BurnedGascanMaxLimit	=	CreateConVar("l4d2_scav_gascan_burned_limit", "4", "Limits the max gascan can get burned if they are out of bounds.", FCVAR_NOTIFY, true, 0.0);
 
 	// KeyValue
 	kv = CreateKeyValues("Positions", "", "");
@@ -97,6 +118,10 @@ public void OnPluginStart()
 	{
 		SetFailState("File %s may be missed!", CONFIG_PATH);
 	}
+
+	// Hooks
+	HookEvent("scavenge_round_start", Event_ScavRoundStart,EventHookMode_PostNoCopy);
+	HookEvent("scavenge_round_finished", Event_ScavRoundFinished, EventHookMode_PostNoCopy);
 
 	// Translations
 	LoadTranslations("l4d2_scav_gascan_selfburn.phrases");
@@ -132,6 +157,27 @@ public void OnMapStart()
 	{
 		TimerK = CreateTimer(GetConVarFloat(IntervalKillPlayer), KillPlayerTimer, _, TIMER_REPEAT);
 	}
+
+	BurnedGascanCount = 0;
+}
+
+public void OnMapEnd()
+{
+	BurnedGascanCount = 0;
+}
+
+public Action Event_ScavRoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+	BurnedGascanCount = 0;
+	return Plugin_Continue;
+	// if the reason of round ending is that the last survivor was holding the gascan and died out-bound,
+	// the gascan will ignite and the count will pass to the next round. we should reset the count on round start.
+}
+
+public Action Event_ScavRoundFinished(Event event, const char[] name, bool dontBroadcast)
+{
+	BurnedGascanCount = 0;
+	return Plugin_Continue;
 }
 
 public Action GascanDetectTimer(Handle Timer, any Client)
@@ -202,7 +248,7 @@ public void ParseMapnameAndWidthMin(char[] width_x_min, char[] width_y_min, int 
 
 stock void FindMisplacedCans()
 {
-	int ent = -1;
+	ent = -1;
 	char g_height_min[128], g_height_max[128];
 	char g_width_x_min[128], g_width_y_min[128];
 	char g_width_x_max[128], g_width_y_max[128];
@@ -214,10 +260,15 @@ stock void FindMisplacedCans()
 	while ((ent = FindEntityByClassname(ent, "weapon_gascan")) != -1)
 	{
 		if (!IsValidEntity(ent))
-			continue;
+			continue;		// the entity is not a gascan, continue next loop
+
+		if(GetConVarBool(EnableCountLimit) && IsReachedLimit() == true)
+			break;		// burned gascan has reached its max limit we set, stop the loop (stop igniting the gascan).
 
 		float position[3];
 		GetEntPropVector(ent, Prop_Send, "m_vecOrigin", position);
+
+		DetectCount = 0;
 
 		/*
 		* if gascan reached a place that is lower than the coordinate the g_height_min given on z axie, ignite gascan.
@@ -241,14 +292,20 @@ stock void FindMisplacedCans()
 				if(position[2] <= StringToFloat(g_height_min))
 				{
 					if(position[2])			// Has gascan not hold by survivor? or has gascan become static?
-						Ignite(ent);
+					{
+						DetectCount++;		// +1 detect count
+						CheckDetectCountThenIgnite();
+					}
 				}
 
 				if(StringToFloat(g_height_max) <= position[2])
 				{
 					if(position[2])
-						Ignite(ent);
-				}
+					{
+						DetectCount++;
+						CheckDetectCountThenIgnite();
+					}
+				}				
 			}
 		}
 
@@ -263,13 +320,19 @@ stock void FindMisplacedCans()
 				if(StringToFloat(g_width_x_max) <= position[0])
 				{
 					if(position[0])
-						Ignite(ent);
+					{
+						DetectCount++;
+						CheckDetectCountThenIgnite();
+					}
 				}
 
 				if(position[0] <= StringToFloat(g_width_x_min))
 				{
 					if(position[0])
-					Ignite(ent);
+					{
+						DetectCount++;
+						CheckDetectCountThenIgnite();
+					}
 				}
 			}
 		}
@@ -285,17 +348,45 @@ stock void FindMisplacedCans()
 				if(StringToFloat(g_width_y_max) <= position[1])
 				{
 					if(position[1])
-						Ignite(ent);
+					{
+						DetectCount++;
+						CheckDetectCountThenIgnite();
+					}
 				}
 
 				if(position[1] <= StringToFloat(g_width_y_min))
 				{	
 					if(position[1])
-						Ignite(ent);
+					{
+						DetectCount++;
+						CheckDetectCountThenIgnite();
+					}
 				}
 			}
 		}
 	}
+}
+
+public void CheckDetectCountThenIgnite()
+{
+	if(GetConVarBool(EnableCountLimit))
+	{
+		if(IsDetectCountOverflow() == false)		// if detect count overflow, return.
+		{
+			AddBurnedGascanCount();					// +1 burned gascan count.
+			Ignite(ent);							// do ignition.
+			return;									// retrun to check if there is a detect count overflow.
+		}
+	}
+	else
+	{
+		if(IsDetectCountOverflow() == false)
+		{
+			Ignite(ent);
+			return;
+		}
+	}
+
 }
 
 public void KillPlayer()
@@ -318,16 +409,50 @@ public void KillPlayer()
 	}
 }
 
+int AddBurnedGascanCount()
+{
+	return BurnedGascanCount++;
+}
+
+bool IsReachedLimit()
+{
+	if(BurnedGascanCount < GetConVarInt(BurnedGascanMaxLimit))
+		return false;
+	else
+		return true;
+}
+
+bool IsDetectCountOverflow()
+{
+	if(DetectCount >= 2)
+		return true;
+	else
+		return false;
+}
+
 static bool IsValidPlayer(int client)
 {
 	if (0 < client <= MaxClients)
 		return true;
-	return false;
+	else
+		return false;
 }
 
 stock Action Ignite(int entity)
 {
 	AcceptEntityInput(entity, "ignite");
-	CPrintToChatAll("%t", "Ignite");		//"Gascan out of bounds! Ignited!"
+	if(GetConVarBool(EnableCountLimit))
+	{
+		CPrintToChatAll("%t", "IgniteInLimit", BurnedGascanCount, GetConVarInt(BurnedGascanMaxLimit));
+		if(BurnedGascanCount == GetConVarInt(BurnedGascanMaxLimit))
+		{
+			CPrintToChatAll("%t", "ReachedLimit");
+		}
+	}
+	else
+	{
+		CPrintToChatAll("%t", "Ignite");
+	}
+	
 	return Plugin_Handled;
 }
