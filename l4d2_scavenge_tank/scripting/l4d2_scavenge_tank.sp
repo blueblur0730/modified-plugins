@@ -5,7 +5,6 @@
 #include <sdktools>
 #include <colors>
 #include <left4dhooks>
-#include <readyup>
 #undef REQUIRE_PLUGIN
 #include <l4d_tank_control_eq>
 
@@ -86,6 +85,8 @@ public Plugin myinfo =
 	url 			= PLUGIN_URL
 }
 
+#define DANG "ui/pickup_secret01.wav"
+
 ConVar hNotification;
 
 ConVar hHordeEnable;
@@ -140,14 +141,9 @@ public void OnPluginStart()
 	hWitchAfterScoreTied 	= CreateConVar("l4d2_scavengetank_spawn_witch_after_score_tied", "0", "Spawn witch after score tied (only for second team)", CVAR_FLAGS);
 	hWitchAfterCanCount 	= CreateConVar("l4d2_scavengetank_spawn_witch_after_cans_count", "5", "Spawn witch after specified count of poured cans ( 0 to disable )", CVAR_FLAGS);
 
-	LoadTranslations("l4d2_scavenge_tank.phrases")
+	LoadTranslations("l4d2_scavenge_tank.phrases");
 
 	SetRandomSeed(GetTime());
-}
-
-public void OnAllPluginsLoaded()
-{
-	Candidate = GetTankSelection()
 }
 
 public void OnMapStart()
@@ -155,13 +151,13 @@ public void OnMapStart()
 	if(L4D2_IsScavengeMode())
 	{
 		HookEvent("scavenge_round_start", Event_RoundStart, EventHookMode_Pre);
+		HookEvent("scavenge_round_finished", Event_RoundFinished, EventHookMode_PostNoCopy);
 		HookEvent("scavenge_round_halftime", Event_Halftime, EventHookMode_Pre);
 		HookEvent("scavenge_score_tied", Event_ScoreTied, EventHookMode_Pre);
 		HookEvent("begin_scavenge_overtime", Event_Overtime, EventHookMode_Pre);
 		HookEvent("gascan_pour_completed", Event_GasCanPourCompleted, EventHookMode_Pre);
 
-		PrefetchSound(SOUND_TANK);
-		PrecacheSound(SOUND_TANK);
+		PrecacheSound(DANG);
 
 		bUnhook = true;
 
@@ -179,6 +175,7 @@ public void OnMapEnd()
 	if(bUnhook)
 	{
 		UnhookEvent("scavenge_round_start", Event_RoundStart, EventHookMode_Pre);
+		UnhookEvent("scavenge_round_finished", Event_RoundFinished, EventHookMode_PostNoCopy);
 		UnhookEvent("scavenge_round_halftime", Event_Halftime, EventHookMode_Pre);
 		UnhookEvent("scavenge_score_tied", Event_ScoreTied, EventHookMode_Pre);
 		UnhookEvent("begin_scavenge_overtime", Event_Overtime, EventHookMode_Pre);
@@ -191,6 +188,13 @@ public Action Event_RoundStart(Handle event, char[] name, bool nobroadcast)
 	bOvertime = false;
 	nGasCount = 0;
 	bFirstTeam = true;
+	Candidate = GetTankSelection();
+	return Plugin_Continue;
+}
+
+public Action Event_RoundFinished(Handle event, char[] name, bool nobroadcast)
+{
+	Candidate = -1;
 	return Plugin_Continue;
 }
 
@@ -202,7 +206,7 @@ public Action Event_Overtime(Handle event, char[] name, bool nobroadcast)
 			SpawnHorde();
 
 		if(GetConVarBool(hTankAfterOvertime) && GetConVarBool(hTankEnable))
-			SpawnTank();
+			SetTank();
 
 		if(GetConVarBool(hWitchAfterOvertime) && GetConVarBool(hWitchEnable))
 			SpawnWitch();
@@ -226,7 +230,7 @@ public Action Event_ScoreTied(Handle event, char[] name, bool nobroadcast)
 		SpawnHorde();
 
 	if(GetConVarBool(hTankAfterScoreTied) && GetConVarBool(hTankEnable))
-		SpawnTank();
+		SetTank();
 
 	if(GetConVarBool(hWitchAfterScoreTied) && GetConVarBool(hWitchEnable))
 		SpawnWitch();
@@ -246,7 +250,7 @@ public Action Event_GasCanPourCompleted(Handle event, char[] name, bool nobroadc
 			SpawnHorde();
 
 		if(GetConVarBool(hTankAfterScoreTied) && GetConVarBool(hTankEnable))
-			SpawnTank();
+			SetTank();
 
 		if(GetConVarBool(hWitchAfterScoreTied) && GetConVarBool(hWitchEnable))
 			SpawnWitch();
@@ -260,7 +264,7 @@ public Action Event_GasCanPourCompleted(Handle event, char[] name, bool nobroadc
 		SpawnHorde();
 
 	if(tankcount > 0 && (nGasCount % tankcount == 0))
-		SpawnTank();
+		SetTank();
 
 	if(witchcount > 0 && (nGasCount % witchcount == 0))
 		SpawnWitch();
@@ -285,7 +289,7 @@ public Action Server_ForceHordeSpawn(int args)
 
 public Action Server_ForceTankSpawn(int args)
 {
-	SpawnTank();
+	SetTank();
 	return Plugin_Continue;
 }
 
@@ -294,62 +298,6 @@ public Action Server_ForceWitchSpawn(int args)
 	SpawnWitch();
 	return Plugin_Continue;
 }
-
-/*
-public void chooseTank(any data)
-{
-    //Let other plugins to override tank selection
-    char sOverrideTank[64];
-    sOverrideTank[0] = '\0';
-    Call_StartForward(hForwardOnTankSelection);
-    Call_PushStringEx(sOverrideTank, sizeof(sOverrideTank), SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
-    Call_Finish();
-
-    if (StrEqual(sOverrideTank, ""))
-    {
-        // Create our pool of players to choose from
-        ArrayList infectedPool = new ArrayList(ByteCountToCells(64));
-        addTeamSteamIdsToArray(infectedPool, L4D2Team_Infected);
-
-        // If there is nobody on the infected team, return (otherwise we'd be stuck trying to select forever)
-        if (GetArraySize(infectedPool) == 0)
-        {
-            delete infectedPool;
-            return;
-        }
-
-        // Remove players who've already had tank from the pool.
-        removeTanksFromPool(infectedPool, h_whosHadTank);
-
-        // If the infected pool is empty, remove infected players from pool
-        if (GetArraySize(infectedPool) == 0) // (when nobody on infected ,error)
-        {
-            ArrayList infectedTeam = new ArrayList(ByteCountToCells(64));
-            addTeamSteamIdsToArray(infectedTeam, L4D2Team_Infected);
-            if (GetArraySize(infectedTeam) > 1)
-            {
-                removeTanksFromPool(h_whosHadTank, infectedTeam);
-                chooseTank(0);
-            }
-            else
-            {
-                queuedTankSteamId = "";
-            }
-
-            delete infectedTeam;
-            delete infectedPool;
-            return;
-        }
-
-        // Select a random person to become tank
-        int rndIndex = GetRandomInt(0, GetArraySize(infectedPool) - 1);
-        GetArrayString(infectedPool, rndIndex, queuedTankSteamId, sizeof(queuedTankSteamId));
-        delete infectedPool;
-    } else {
-        strcopy(queuedTankSteamId, sizeof(queuedTankSteamId), sOverrideTank);
-    }
-}
-*/
 
 public void SpawnHorde()
 {
@@ -372,85 +320,23 @@ public void SpawnHorde()
 	// %s A {orange}horde{default} spawned! Pay attention!
 }
 
-public void SpawnTank()
+public void SetTank()
 {
-	int[] infectedAlive = new int[MaxClients];
-	int infectedAliveCount = 0;
-	int[] infectedDead = new int[MaxClients];
-	int infectedDeadCount = 0;
+	EmitSoundToAll(DANG);
+	if (GetConVarInt(hNotification) == 1) CPrintToChatAll("%t", "SpawnTank", PLUGIN_TAG);
+	// %s A {orange}tank{default} spawned! Be ready!
+	CreateTimer(3.0, SpawnTank);
+}
 
-	for(int i = 1; i <= MaxClients; i++)
-	{
-		if(!IsClientConnected(i)) continue;
-		if(!IsClientInGame(i)) continue;
-
-		// infected?
-		if(GetClientTeam(i) == 3)
-		{
-			/*
-			Dead:
-				Alive: 0
-				Ghost: 0
-				LifeState: 1
-
-			Waiting:
-				Alive: 0
-				Ghost: 0
-				LifeState: 2
-
-			Spawning:
-				Alive: 1
-				Ghost: 1
-				LifeState: 0
-
-			Alive:
-				Alive: 1
-				Ghost: 0
-				LifeState: 0
-			*/
-			if (!IsPlayerAlive(i) || GetEntProp(i, Prop_Send, "m_isGhost") == 1)
-			{
-				// Dead / Waiting / Ghost
-				infectedDead[infectedDeadCount] = i;
-				infectedDeadCount++;
-			}
-			else {
-				// Alive
-				infectedAlive[infectedAliveCount] = i;
-				infectedAliveCount++;
-			}
-		}
-	}
-
-	int chosenTank = -1;
-
-	// Tank bot fix (if everyone is alive)
-	if (infectedDeadCount < 1)
-	{
-		// choose tank
-		int choice = GetRandomInt(0, infectedAliveCount-1);
-		chosenTank = infectedAlive[choice];
-
-		// move to spec and back
-		ChangeClientTeam(chosenTank, 1);
-		ChangeClientTeam(chosenTank, 3);
-	}
-	else
-	{
-		// somebody random spawns the tank
-		int choice = GetRandomInt(0, infectedDeadCount-1);
-		chosenTank = infectedDead[choice];
-	}
-
+public Action SpawnTank(Handle Timer)
+{
 	// spawn tank
 	int flags = GetCommandFlags("z_spawn");
 	SetCommandFlags("z_spawn", flags & ~FCVAR_CHEAT);
-	FakeClientCommand(chosenTank, "z_spawn tank auto");
+	FakeClientCommand(Candidate, "z_spawn tank");
 	SetCommandFlags("z_spawn", flags);
 
-	if (GetConVarInt(hNotification) == 1) CPrintToChatAll("%t", "SpawnTank", PLUGIN_TAG);
-	// %s A {orange}tank{default} spawned! Be ready!
-	EmitSoundToAll(SOUND_TANK);
+	return Plugin_Handled;
 }
 
 public void SpawnWitch()

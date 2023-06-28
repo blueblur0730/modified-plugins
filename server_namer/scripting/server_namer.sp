@@ -1,7 +1,4 @@
 /* -------------------CHANGELOG--------------------
-4.3
- - Display difficulty if current game mode is in coop and is functioning with confogl (Confogl Vanilla)
-
 4.2
  - Optimized some merged AnneHappy related codes
 
@@ -69,7 +66,7 @@
 #include <sdktools>
 //#include <left4dhooks>
 #define REQUIRE_PLUGIN
-#define PL_VERSION "4.3"
+#define PL_VERSION "4.2"
 
 bool CustomName;
 bool IsConfoglAvailable;
@@ -357,31 +354,9 @@ public void SetConfoglName()
 						}
 						else
 						{
-							char CurGamemode[128];
 							GetConVarString(cvarReadyUpCfgName, GameMode, sizeof(GameMode));
 							GetConVarString(cvarServerNameFormatCase1, FinalHostname, sizeof(FinalHostname));
 							ReplaceString(FinalHostname, sizeof(FinalHostname), "{gamemode}", GameMode);
-							if (StrContains("l4d_ready_cfg_name", "Coop", false)!=-1)
-							{
-								SetConVarString(cvarServerNameFormatCase1, "[{hostname} #{servernum}] {gamemode} - {difficulty}");
-								GetConVarString(cvarMpGameMode, CurGamemode, sizeof(CurGamemode));
-								KvRewind(kv);
-								if (KvJumpToKey(kv, CurGamemode))
-								{
-									KvGetString(kv, "name", GameMode, sizeof(GameMode));
-									if (KvGetNum(kv, "difficulty") == 1)
-									{
-										char CurDiff[32];
-										GetConVarString(cvarZDifficulty, CurDiff, sizeof(CurDiff));
-										KvRewind(kv);
-										KvJumpToKey(kv, "difficulties");
-										char CurDiffBuffer[32];
-										KvGetString(kv, CurDiff, CurDiffBuffer, sizeof(CurDiffBuffer));
-										ReplaceString(FinalHostname, sizeof(FinalHostname), "{difficulty}", CurDiffBuffer);
-										ParseNameAndSendToMainConVar(FinalHostname);
-									}
-								}
-							}
 							ParseNameAndSendToMainConVar(FinalHostname);
 						}
 					}

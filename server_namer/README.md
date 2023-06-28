@@ -52,8 +52,8 @@ sn_hostname_format3 "[{hostname} #{servernum}]"
 sn_hostname_format4 "[{hostname} #{servernum}] {hardcoop}{AnneHappy}{Full}"
 
 // 插件版本
-// 默认值: 4.3
-l4d2_server_namer_version "4.3"
+// 默认值: 4.2
+l4d2_server_namer_version "4.2"
 ```
 
 ### Admin Cmd
