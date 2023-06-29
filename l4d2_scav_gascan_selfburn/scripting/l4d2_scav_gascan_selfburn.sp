@@ -6,9 +6,14 @@
 #include <left4dhooks>
 #include <colors>
 
-#define PLUGIN_VERSION "2.6.2"
+#define PLUGIN_VERSION "2.6.3"
 #define CONFIG_PATH "configs/l4d2_scav_gascan_selfburn.txt"
 /* Change log:
+* - 2.6.3
+*	- Optimized the logic.
+*		- Fixed when current map name can not parse with coodinate, it caused players' death.
+*		- Coordinate parsing functions are no longer public. KillPlayer() function are no longer public.
+*
 * - 2.6.2
 *	- Optimized the logic.
 *
@@ -180,70 +185,16 @@ public Action Event_ScavRoundFinished(Event event, const char[] name, bool dontB
 	return Plugin_Continue;
 }
 
-public Action GascanDetectTimer(Handle Timer, any Client)
+Action GascanDetectTimer(Handle Timer, any Client)
 {
 	FindMisplacedCans();
 	return Plugin_Handled;
 }
 
-public Action KillPlayerTimer(Handle Timer, any Client)
+Action KillPlayerTimer(Handle Timer, any Client)
 {
 	KillPlayer();
 	return Plugin_Handled;
-}
-
-public void ParseMapnameAndHeight(char[] height_min, char[] height_max, int maxlength, int maxlength2)
-{
-	KvRewind(kv);
-	if(KvJumpToKey(kv, c_mapname))
-	{
-		KvGetString(kv, "height_zlimit_min", height_min, maxlength);
-		KvGetString(kv, "height_zlimit_max", height_max, maxlength2);
-		if(GetConVarBool(EnableDebug))
-		{
-			PrintToConsoleAll("--------------------------\nparsed mapname and value.\n mapname = %s\n height_min = %s\n height_max = %s", c_mapname, height_min, height_max);
-		}
-	}
-	else
-	{
-		return;
-	}
-}
-
-public void ParseMapnameAndWidthMax(char[] width_x_max, char[] width_y_max, int maxlength, int maxlength2)
-{
-	KvRewind(kv);
-	if(KvJumpToKey(kv, c_mapname))
-	{
-		KvGetString(kv, "width_xlimit_max", width_x_max, maxlength);
-		KvGetString(kv, "width_ylimit_max", width_y_max, maxlength2);
-		if(GetConVarBool(EnableDebug))
-		{
-			PrintToConsoleAll("\nparsed mapname and value.\n mapname = %s\n width_x_max = %s\n width_y_max = %s", c_mapname, width_x_max, width_y_max);
-		}
-	}
-	else
-	{
-		return;
-	}
-}
-
-public void ParseMapnameAndWidthMin(char[] width_x_min, char[] width_y_min, int maxlength, int maxlength2)
-{
-	KvRewind(kv);
-	if(KvJumpToKey(kv, c_mapname))
-	{
-		KvGetString(kv, "width_xlimit_min", width_x_min, maxlength);
-		KvGetString(kv, "width_ylimit_min", width_y_min, maxlength2);
-		if(GetConVarBool(EnableDebug))
-		{
-			PrintToConsoleAll("\nparsed mapname and value.\n mapname = %s\n width_x_max = %s\n width_y_max = %s\n --------------------------", c_mapname, width_x_min, width_y_min);
-		}
-	}
-	else
-	{
-		return;
-	}
 }
 
 stock void FindMisplacedCans()
@@ -389,7 +340,7 @@ public void CheckDetectCountThenIgnite()
 
 }
 
-public void KillPlayer()
+stock void KillPlayer()
 {
 	char g_height_min[128], g_height_max[128];
 
@@ -406,6 +357,60 @@ public void KillPlayer()
 				ForcePlayerSuicide(i);
 			}
 		}
+	}
+}
+
+void ParseMapnameAndHeight(char[] height_min, char[] height_max, int maxlength, int maxlength2)
+{
+	KvRewind(kv);
+	if(KvJumpToKey(kv, c_mapname))
+	{
+		KvGetString(kv, "height_zlimit_min", height_min, maxlength);
+		KvGetString(kv, "height_zlimit_max", height_max, maxlength2);
+		if(GetConVarBool(EnableDebug))
+		{
+			PrintToConsoleAll("--------------------------\nparsed mapname and value.\n mapname = %s\n height_min = %s\n height_max = %s", c_mapname, height_min, height_max);
+		}
+	}
+	else
+	{
+		return;
+	}
+}
+
+void ParseMapnameAndWidthMax(char[] width_x_max, char[] width_y_max, int maxlength, int maxlength2)
+{
+	KvRewind(kv);
+	if(KvJumpToKey(kv, c_mapname))
+	{
+		KvGetString(kv, "width_xlimit_max", width_x_max, maxlength);
+		KvGetString(kv, "width_ylimit_max", width_y_max, maxlength2);
+		if(GetConVarBool(EnableDebug))
+		{
+			PrintToConsoleAll("\nparsed mapname and value.\n mapname = %s\n width_x_max = %s\n width_y_max = %s", c_mapname, width_x_max, width_y_max);
+		}
+	}
+	else
+	{
+		return;
+	}
+}
+
+void ParseMapnameAndWidthMin(char[] width_x_min, char[] width_y_min, int maxlength, int maxlength2)
+{
+	KvRewind(kv);
+	if(KvJumpToKey(kv, c_mapname))
+	{
+		KvGetString(kv, "width_xlimit_min", width_x_min, maxlength);
+		KvGetString(kv, "width_ylimit_min", width_y_min, maxlength2);
+		if(GetConVarBool(EnableDebug))
+		{
+			PrintToConsoleAll("\nparsed mapname and value.\n mapname = %s\n width_x_max = %s\n width_y_max = %s\n --------------------------", c_mapname, width_x_min, width_y_min);
+		}
+	}
+	else
+	{
+		return;
 	}
 }
 

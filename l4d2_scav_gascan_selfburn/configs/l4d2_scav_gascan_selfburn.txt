@@ -12,22 +12,12 @@
 
 	"c8m1_apartment"
 	{
-		"height_zlimit_min"		"0.0"
+		"height_zlimit_min"		"-248.0"
 		"height_zlimit_max"		"678.0"			// rooftop of some apartment
-		"width_xlimit_max"		"3286.0"
+		"width_xlimit_max"		"3357.0"
 		"width_ylimit_max"		"5632.0"
 		"width_xlimit_min"		"240.0"
 		"width_ylimit_min"		"706.0"
-	}
-
-	"c6m3_port"
-	{
-		"height_zlimit_min"		"-100.0"
-		"height_zlimit_max"		"1000.0"		// although it's impossible for cans to go such high, these number is just to make the plugin works
-		"width_xlimit_max"		"2079.0"
-		"width_ylimit_max"		"2216.0"
-		"width_xlimit_min"		"-2565.0"
-		"width_ylimit_min"		"-1054.0"
 	}
 
 	"c4m2_sugarmill_a"
@@ -169,25 +159,5 @@
 		"width_ylimit_max"		"-4447.3"
 		"width_xlimit_min"		"-8434.0"
 		"width_ylimit_min"		"-10700.0"
-	}
-
-	""
-	{
-		"height_zlimit_min"		""
-		"height_zlimit_max"		""
-		"width_xlimit_max"		""
-		"width_ylimit_max"		""
-		"width_xlimit_min"		""
-		"width_ylimit_min"		""
-	}
-
-	""
-	{
-		"height_zlimit_min"		""
-		"height_zlimit_max"		""
-		"width_xlimit_max"		""
-		"width_ylimit_max"		""
-		"width_xlimit_min"		""
-		"width_ylimit_min"		""
 	}
 }
