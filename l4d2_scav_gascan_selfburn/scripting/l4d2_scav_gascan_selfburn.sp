@@ -3,12 +3,17 @@
 
 #include <sourcemod>
 #include <sdktools>
-#include <left4dhooks>
+//#include <left4dhooks>
 #include <colors>
 
-#define PLUGIN_VERSION "2.6.3"
+#define PLUGIN_VERSION "2.6.4"
 #define CONFIG_PATH "configs/l4d2_scav_gascan_selfburn.txt"
 /* Change log:
+* - 2.6.4
+*	- Optimized the logic
+*		- CheckDetectCountThenIgnite() is no longer public.
+* 	- Cancelled the nessarity of left4dhooks. Made IsScavengeMode() function alone.
+*
 * - 2.6.3
 *	- Optimized the logic.
 *		- Fixed when current map name can not parse with coodinate, it caused players' death.
@@ -79,7 +84,8 @@ ConVar
 	EnableCountLimit,
 	IntervalBurnGascan,
 	IntervalKillPlayer,
-	BurnedGascanMaxLimit;
+	BurnedGascanMaxLimit,
+	cvarGameMode;
 
 char
 	c_mapname[128];
@@ -116,6 +122,8 @@ public void OnPluginStart()
 
 	BurnedGascanMaxLimit	=	CreateConVar("l4d2_scav_gascan_burned_limit", "4", "Limits the max gascan can get burned if they are out of bounds.", FCVAR_NOTIFY, true, 0.0);
 
+	cvarGameMode 			= 	FindConVar("mp_gamemode");
+
 	// KeyValue
 	kv = CreateKeyValues("Positions", "", "");
 	BuildPath(Path_SM, buffer, 128, CONFIG_PATH);
@@ -137,7 +145,7 @@ public void OnPluginStart()
 
 public Action CheckStatus()
 {
-	if(!GetConVarBool(EnableSelfBurn) || !L4D2_IsScavengeMode())
+	if(!GetConVarBool(EnableSelfBurn) || !IsScavengeMode())
 		return Plugin_Handled;
 	else
 		return Plugin_Continue;
@@ -318,7 +326,7 @@ stock void FindMisplacedCans()
 	}
 }
 
-public void CheckDetectCountThenIgnite()
+void CheckDetectCountThenIgnite()
 {
 	if(GetConVarBool(EnableCountLimit))
 	{
@@ -414,12 +422,12 @@ void ParseMapnameAndWidthMin(char[] width_x_min, char[] width_y_min, int maxleng
 	}
 }
 
-int AddBurnedGascanCount()
+stock int AddBurnedGascanCount()
 {
 	return BurnedGascanCount++;
 }
 
-bool IsReachedLimit()
+stock bool IsReachedLimit()
 {
 	if(BurnedGascanCount < GetConVarInt(BurnedGascanMaxLimit))
 		return false;
@@ -427,7 +435,7 @@ bool IsReachedLimit()
 		return true;
 }
 
-bool IsDetectCountOverflow()
+stock bool IsDetectCountOverflow()
 {
 	if(DetectCount >= 2)
 		return true;
@@ -460,4 +468,18 @@ stock Action Ignite(int entity)
 	}
 	
 	return Plugin_Handled;
+}
+
+stock bool IsScavengeMode()
+{
+	char sGameMode[32];
+	GetConVarString(cvarGameMode, sGameMode, sizeof(sGameMode));
+	if (StrContains(sGameMode, "scavenge") > -1)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

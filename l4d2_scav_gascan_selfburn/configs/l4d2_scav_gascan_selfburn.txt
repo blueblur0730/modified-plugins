@@ -3,7 +3,7 @@
 	"c8m5_rooftop"
 	{
 		"height_zlimit_min"		"500.0"
-		"height_zlimit_max"		"7000.0"
+		"height_zlimit_max"		"10000.0"
 		"width_xlimit_max"		"8100.0"
 		"width_ylimit_max"		"9800.0"
 		"width_xlimit_min"		"4700.0"

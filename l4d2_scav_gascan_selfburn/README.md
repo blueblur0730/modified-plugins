@@ -6,9 +6,6 @@
  - 检测玩家高度并强制使其死亡.
  - 支持文字输出翻译.
 
-### Requirments
- - Left4dhooks
-
 ### Source
  - https://forums.alliedmods.net/showthread.php?t=178125
 
