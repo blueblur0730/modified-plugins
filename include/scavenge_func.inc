@@ -14,8 +14,10 @@
 */
 stock bool IsScavengeMode()
 {
+	char sCurGameMode[64];
 	ConVar CurGameMode = FindConVar("mp_gamemode");
-	if(strcmp(CurGameMode, "scavenge") == 0)
+	GetConVarString(CurGameMode, sCurGameMode, sizeof(sCurGameMode));
+	if(strcmp(sCurGameMode, "scavenge") == 0)
 		return true;
 	else 
 		return false;
@@ -249,12 +251,12 @@ stock int L4D2_TeamNumberToTeamIndex(int team)
 	// index = (team & 1) ^ flipped
 	// index = team-2 XOR flipped, or team%2 XOR flipped, or this...	
 	bool flipped;
-	flipped = GameRules_GetProp("m_bAreTeamsFlipped", 1);
+	flipped = view_as<bool>(GameRules_GetProp("m_bAreTeamsFlipped", 1));
 	if(flipped) ++team;
 	return team % 2;
 }
 
-/* GetCasCanCout() and Scavenge_FixNoGascanSpawnBug() Credit to Eyal282 from plugin '[L4D2] Scavenge Hardcore' */
+/* GetCasCanCout() Credit to Eyal282 from plugin '[L4D2] Scavenge Hardcore' */
 
 /*
 * Returns current gascan count.
@@ -280,31 +282,3 @@ stock int GetGasCanCount(int count)
 
     return count;
 }
-
-/*
-* Called to fix the bug when first round begins, no gascan spawned.
-*/
-stock void Scavenge_FixNoGascanSpawnBug()
-{   
-    char sSignature[128];
-    sSignature = "@_ZN9CDirector21SpawnAllScavengeItemsEv";
-   
-	Handle Call = INVALID_HANDLE;
-	if (Call == INVALID_HANDLE)
-	{
-		StartPrepSDKCall(SDKCall_Raw);
-		if (!PrepSDKCall_SetSignature(SDKLibrary_Server, sSignature, strlen(sSignature)-1))
-		{
-			return;
-		}
-
-		Call = EndPrepSDKCall();
-		if (Call == INVALID_HANDLE)
-		{
-			return;
-		}
-	}
-
-	SDKCall(Call, L4D_GetPointer(POINTER_DIRECTOR));
-}
-
