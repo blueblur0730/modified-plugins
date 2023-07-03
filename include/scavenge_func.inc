@@ -141,6 +141,24 @@ stock int GetScavengeTeamScore(int team, int round=-1)
 	}
 
 	return GameRules_GetProp("m_iScavengeTeamScore", _, (2*(round-1))+team);
+	// this is because:
+
+	/*
+	  Sub-Class Table (3 Deep): m_iScavengeTeamScore
+  		-Member: 000 (offset 0) (type integer) (bits 6)
+  		-Member: 001 (offset 4) (type integer) (bits 6)
+  		-Member: 002 (offset 8) (type integer) (bits 6)
+  		-Member: 003 (offset 12) (type integer) (bits 6)
+  		-Member: 004 (offset 16) (type integer) (bits 6)
+  		-Member: 005 (offset 20) (type integer) (bits 6)
+  		-Member: 006 (offset 24) (type integer) (bits 6)
+  		-Member: 007 (offset 28) (type integer) (bits 6)
+  		-Member: 008 (offset 32) (type integer) (bits 6)
+  		-Member: 009 (offset 36) (type integer) (bits 6)
+	*/
+
+	// '(2*(round-1))+team' can just be the result from 0 to 9. each number represents the round score a survivor team scured.
+	// In this formula, interger round = 1 to 5, interger team = 1 or 0.
 }
 
 /*
@@ -241,3 +259,4 @@ stock void Scavenge_FixNoGascanSpawnBug()
 
 	SDKCall(Call, L4D_GetPointer(POINTER_DIRECTOR));
 }
+
