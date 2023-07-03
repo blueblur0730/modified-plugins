@@ -133,7 +133,7 @@ public void OnPluginStart()
 	}
 
 	// Hooks
-	HookEvent("scavenge_round_start", Event_ScavRoundStart,EventHookMode_PostNoCopy);
+	HookEvent("scavenge_round_start", Event_ScavRoundStart, EventHookMode_PostNoCopy);
 	HookEvent("scavenge_round_finished", Event_ScavRoundFinished, EventHookMode_PostNoCopy);
 
 	// Translations
