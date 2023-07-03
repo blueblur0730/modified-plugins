@@ -83,7 +83,8 @@ stock int GetScavengeItemsGoal()
 	return GameRules_GetProp("m_nScavengeItemsGoal");
 }
 
-/* InSecondHalfOfRound() Credit to Forgetest from plugin 'Hyper-V HUD Manager(spechud)' */
+/* InSecondHalfOfRound() and FormatScavengeRoundTime() */
+/* Credit to Forgetest from plugin 'Hyper-V HUD Manager(spechud)' */
 
 /*
 * Returns the boolean value of the current round.
@@ -93,6 +94,28 @@ stock int GetScavengeItemsGoal()
 stock bool InSecondHalfOfRound()
 {
 	return view_as<bool>(GameRules_GetProp("m_bInSecondHalfOfRound", 1));
+}
+
+/*
+* Returns number of characters of scavenge format time.
+*
+* @param buffer				buffer to store the round and time
+* @param maxlen				maxlenth of buffer
+* @param team				team index, valide value is 2 and 3
+* @param nodecimalpoint		if true, returns time of first half of the round
+*							if false, returns time of second half of the round
+*
+* @return 					number of characters of scavenge format time
+*/
+stock int FormatScavengeRoundTime(char[] buffer, int maxlen, int team, bool nodecimalpoint = false)
+{
+	float seconds = GetScavengeRoundDuration(team);
+	int minutes = RoundToFloor(seconds) / 60;
+	seconds -= 60 * minutes;
+	
+	return nodecimalpoint ?
+				Format(buffer, maxlen, "%d:%02.0f", minutes, seconds) :
+				Format(buffer, maxlen, "%d:%05.2f", minutes, seconds);
 }
 
 /* GetRoundDuration(), GetScavengeTeamScore(), GetScavengeTeamScore(), L4D2_TeamNumberToTeamIndex() */
@@ -107,7 +130,7 @@ stock bool InSecondHalfOfRound()
 * @return			float value of this round duration
 *					if the team index is not 2 or 3, return -1.0
 */
-stock float GetRoundDuration(int team)
+stock float GetScavengeRoundDuration(int team)
 {
 	float flRoundStartTime = GameRules_GetPropFloat("m_flRoundStartTime");
 	if(team == 2 && flRoundStartTime != 0.0 && GameRules_GetPropFloat("m_flRoundEndTime") == 0.0)
@@ -130,7 +153,7 @@ stock float GetRoundDuration(int team)
 * @return 			the team score of this round
 * 					if the team index is not 2 or 3, return -1
 */
-stock int GetScavengeTeamScore(int team, int round=-1)
+stock int GetScavengeTeamScore(int team, int round = -1)
 {
 	team = L4D2_TeamNumberToTeamIndex(team);
 	if(team == -1) return -1;
@@ -162,6 +185,20 @@ stock int GetScavengeTeamScore(int team, int round=-1)
 }
 
 /*
+* Sets the round score on specific round.
+*
+* @param team 		team index, valid index is 2 or 3
+* @param round		round index to set the score, valid index is 1 to 5
+* @param score		round score to set
+*/
+stock void SetScavengeRoundScore(int team, int round = -1, int score)
+{
+	team = L4D2_TeamNumberToTeamIndex(team);
+
+	GameRules_SetProp("m_iScavengeTeamScore", score, 4, (2*(round-1))+team);
+}
+
+/*
 * Returns the team match score of this match.
 *
 * @param team 		team index. valid value is 2 and 3
@@ -174,6 +211,19 @@ stock int GetScavengeMatchScore(int team)
 	if(team == -1) return -1;
 	
 	return GameRules_GetProp("m_iScavengeMatchScore", _, team);
+}
+
+/*
+* Sets the match score of one team.
+*
+* @param team 		team index. valid value is 2 and 3
+* @param score		score to set
+*/
+stock void SetScavengeMatchScore(int team, int score)
+{
+	team = L4D2_TeamNumberToTeamIndex(team);
+	
+	GameRules_SetProp("m_iScavengeMatchScore", score, 4, team);
 }
 
 /*
@@ -233,8 +283,6 @@ stock int GetGasCanCount(int count)
 
 /*
 * Called to fix the bug when first round begins, no gascan spawned.
-*
-* @noreturn
 */
 stock void Scavenge_FixNoGascanSpawnBug()
 {   
