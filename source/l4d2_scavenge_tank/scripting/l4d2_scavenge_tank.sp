@@ -5,8 +5,7 @@
 #include <sdktools>
 #include <colors>
 #include <left4dhooks>
-#undef REQUIRE_PLUGIN
-#include <l4d_tank_control_eq>
+#include <scavenge_func>
 
 #define CVAR_FLAGS FCVAR_NOTIFY
 
@@ -83,6 +82,14 @@ public Plugin myinfo =
 	description 	= PLUGIN_DESC,
 	version 		= PLUGIN_VERSION,
 	url 			= PLUGIN_URL
+}
+
+enum L4D2Team
+{
+    L4D2Team_None = 0,
+    L4D2Team_Spectator,
+    L4D2Team_Survivor,
+    L4D2Team_Infected
 }
 
 #define DANG "ui/pickup_secret01.wav"
@@ -320,8 +327,55 @@ public void SpawnHorde()
 	// %s A {orange}horde{default} spawned! Pay attention!
 }
 
-public void SetTank()
+public void SetTank(any data)
 {
+    char sOverrideTank[64];
+    sOverrideTank[0] = '\0';
+
+    if (StrEqual(sOverrideTank, ""))
+    {
+        // Create our pool of players to choose from
+        ArrayList infectedPool = new ArrayList(ByteCountToCells(64));
+        addTeamSteamIdsToArray(infectedPool, L4D2Team_Infected);
+        
+        // If there is nobody on the infected team, return (otherwise we'd be stuck trying to select forever)
+        if (GetArraySize(infectedPool) == 0)
+        {
+            delete infectedPool;
+            return;
+        }
+
+        // Remove players who've already had tank from the pool.
+        removeTanksFromPool(infectedPool, h_whosHadTank);
+        
+        // If the infected pool is empty, remove infected players from pool
+        if (GetArraySize(infectedPool) == 0) // (when nobody on infected ,error)
+        {
+            ArrayList infectedTeam = new ArrayList(ByteCountToCells(64));
+            addTeamSteamIdsToArray(infectedTeam, L4D2Team_Infected);
+            if (GetArraySize(infectedTeam) > 1)
+            {
+                removeTanksFromPool(h_whosHadTank, infectedTeam);
+                chooseTank(0);
+            }
+            else
+            {
+                queuedTankSteamId = "";
+            }
+            
+            delete infectedTeam;
+            delete infectedPool;
+            return;
+        }
+        
+        // Select a random person to become tank
+        int rndIndex = GetRandomInt(0, GetArraySize(infectedPool) - 1);
+        GetArrayString(infectedPool, rndIndex, queuedTankSteamId, sizeof(queuedTankSteamId));
+        delete infectedPool;
+    } else {
+        strcopy(queuedTankSteamId, sizeof(queuedTankSteamId), sOverrideTank);
+    }
+
 	EmitSoundToAll(DANG);
 	if (GetConVarInt(hNotification) == 1) CPrintToChatAll("%t", "SpawnTank", PLUGIN_TAG);
 	// %s A {orange}tank{default} spawned! Be ready!
@@ -526,4 +580,57 @@ public Action WitchWanderingDelay(Handle timer)
 		int flags_pos = GetCommandFlags("witch_force_wander");
 		SetCommandFlags("witch_force_wander", flags_pos & FCVAR_CHEAT);
 		return Plugin_Handled;
+}
+
+stock void PrintToInfected(const char[] Message, any ... )
+{
+    char sPrint[256];
+    VFormat(sPrint, sizeof(sPrint), Message, 2);
+
+    for (int i = 1; i <= MaxClients; i++) 
+    {
+        if (!IS_VALID_INFECTED(i) && !IS_VALID_CASTER(i)) 
+        { 
+            continue; 
+        }
+
+        CPrintToChat(i, "{default}%s", sPrint);
+    }
+}
+
+public void removeTanksFromPool(ArrayList steamIdTankPool, ArrayList tanks)
+{
+    int index;
+    char steamId[64];
+    
+    int ArraySize = GetArraySize(tanks);
+    for (int i = 0; i < ArraySize; i++)
+    {
+        GetArrayString(tanks, i, steamId, sizeof(steamId));
+        index = FindStringInArray(steamIdTankPool, steamId);
+        
+        if (index != -1)
+        {
+            RemoveFromArray(steamIdTankPool, index);
+        }
+    }
+}
+
+public void addTeamSteamIdsToArray(ArrayList steamIds, L4D2Team team)
+{
+    char steamId[64];
+
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        // Basic check
+        if (IsClientInGame(i) && ! IsFakeClient(i))
+        {
+            // Checking if on our desired team
+            if (view_as<L4D2Team>(GetClientTeam(i)) != team)
+                continue;
+        
+            GetClientAuthId(i, AuthId_Steam2, steamId, sizeof(steamId));
+            PushArrayString(steamIds, steamId);
+        }
+    }
 }
