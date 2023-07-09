@@ -1,4 +1,4 @@
-# l4d2_fix_scav_no_gascan_firstround
+# l4d2_fix_scav_issues
 
 ### Introduction
 
