@@ -31,7 +31,7 @@ public Plugin myinfo =
 	name = "Scavenge Quick End",
 	author = "ProdigySim, modified by blueblur",
 	description = "Checks various tiebreaker win conditions mid-round and ends the round as necessary.",
-	version = "2.1",
+	version = "2.1.1",
 	url = "http://bitbucket.org/ProdigySim/misc-sourcemod-plugins/"
 }
 
@@ -144,7 +144,7 @@ public void PrintRoundEndTimeData(bool secondHalf)
 	}
 	else
 	{
-		CPrintToChatAll("%t", "PrintRoundEndTime", GetScavengeRoundNumber(), GetScavengeTeamScore(3), ThisRoundMinutes, ThisRoundTime);
+		CPrintToChatAll("%t", "PrintRoundEndTime", GetScavengeRoundNumber(), GetScavengeTeamScore(2), ThisRoundMinutes, ThisRoundTime);
 	}
 
 }
