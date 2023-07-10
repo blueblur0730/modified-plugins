@@ -153,8 +153,8 @@
 
 	"wth_3"
 	{
-		"height_zlimit_min"		"-713.7"		// under the river
-		"height_zlimit_max"		"-200.0"
+		"height_zlimit_min"		"-800.0"		// under the river
+		"height_zlimit_max"		"-48.0"
 		"width_xlimit_max"		"-1730.0"
 		"width_ylimit_max"		"-4447.3"
 		"width_xlimit_min"		"-8434.0"
