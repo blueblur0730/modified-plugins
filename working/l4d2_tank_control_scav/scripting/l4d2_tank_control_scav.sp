@@ -16,18 +16,22 @@
 #define MAX_WITCHES 16
 
 #define PLUGIN_NAME			"[L4D2] Scavenge Tank Control"
-#define PLUGIN_AUTHOR		"Mrs. Campanula, Die Teetasse, Conttributors from l4d_tank_control_eq, modified by blueblur"
+#define PLUGIN_AUTHOR		"Mrs. Campanula, Die Teetasse, Authors from l4d_tank_control_eq, modified by blueblur"
 #define PLUGIN_DESC			"Allow to spawn and control tank in scavenge mode"
-#define PLUGIN_VERSION		"1.1.0"
+#define PLUGIN_VERSION		"1.1.1"
 #define PLUGIN_URL_OLD		"http://forums.alliedmods.net/showthread.php?p=1058610"
-#define PLUGIN_URL_NEW      ""
+#define PLUGIN_URL_NEW      "https://github.com/blueblur0730/modified-plugins/tree/main/working/l4d2_tank_control_scav"
 
 /*
 Changelog:
+v1.1.1: 7/14/23
+- optimized logic to choose random gascan.
+
 v1.1.0:
 - rewrote whole plugin, merged most part from l4d_tank_control_eq, delete function to spawn horde and witch.
 - now tank spawns only if the gascan score reached the score we've gotten randomly on round start.
 
+--------------------------------------- old version
 v1.0.11:
 - rewrote tank logic
 - little revision
@@ -172,8 +176,9 @@ public void OnMapStart()
 {
 	if(IsScavengeMode())
 	{
-		HookEvent("scavenge_round_start", Event_RoundStart, EventHookMode_Pre);      // set random gascan count every round start
-		HookEvent("scavenge_round_finished", Event_RoundFinished, EventHookMode_PostNoCopy);
+        HookEvent("round_end", Event_RoundEnd, EventHookMode_Pre);      // clear the gascan count secured
+		HookEvent("scavenge_round_start", Event_ScavRoundStart, EventHookMode_Pre);      // set random gascan count every round start
+		HookEvent("scavenge_round_finished", Event_ScavRoundFinished, EventHookMode_PostNoCopy);
 		HookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
 		HookEvent("player_left_start_area", Event_PlayerLeftStartArea, EventHookMode_PostNoCopy);
 		HookEvent("gascan_pour_completed", Event_GasCanPourCompleted, EventHookMode_Pre);
@@ -220,11 +225,14 @@ public Action Tank_Cmd(int client, int args)
     return Plugin_Handled;
 }
 
-public void Event_RoundStart(Event hEvent, char[] name, bool nobroadcast)
+public void Event_RoundEnd(Event hEvent, char[]name, bool nobroadcast)
 {
-	nGasCount = 0;
-	RandomGasCan = GetRandomInt(hRandomGasCan.IntValue, GetScavengeItemsGoal());		// starting from cvar value, in case the tank spawns too early
+    // clear gascan count secured upon every half round end
+    nGasCount = 0;
+}
 
+public void Event_ScavRoundStart(Event hEvent, char[] name, bool nobroadcast)
+{
     int teamAScore = GetScavengeTeamScore(2, GetScavengeRoundNumber());		// survivor
 	int teamBScore = GetScavengeTeamScore(3, GetScavengeRoundNumber());		// infected
 
@@ -235,16 +243,20 @@ public void Event_RoundStart(Event hEvent, char[] name, bool nobroadcast)
     }
 }
 
-public void Event_PlayerLeftStartArea(Event hEvent, const char[] eName, bool dontBroadcast)
-{
-    SetTank(0);
-    outputTankToAll(0);
-}
-
-public void Event_RoundFinished(Event hEvent, char[] name, bool nobroadcast)
+public void Event_ScavRoundFinished(Event hEvent, char[] name, bool nobroadcast)
 {
 	RandomGasCan = 0;		// reset gascan count
 	queuedTankSteamId = "";
+}
+
+public void Event_PlayerLeftStartArea(Event hEvent, const char[] eName, bool dontBroadcast)
+{
+    if(InSecondHalfOfRound() == false)
+    {
+       RandomGasCan = GetRandomCount();
+    }
+    SetTank(0);
+    outputTankToAll(0);
 }
 
 public Action Event_GasCanPourCompleted(Event hEvent, char[] name, bool nobroadcast)
@@ -253,7 +265,7 @@ public Action Event_GasCanPourCompleted(Event hEvent, char[] name, bool nobroadc
 
 	nGasCount++;
 
-	if(RandomGasCan % nGasCount == 0)
+	if(RandomGasCan == nGasCount)
 	{
 		CreateTimer(3.0, SpawnTank);
 	}
@@ -634,4 +646,9 @@ stock int SetTank2()
 		chosenTank = infectedDead[choice];
         return chosenTank;
 	}
+}
+
+stock int GetRandomCount()
+{
+    return GetRandomInt(hRandomGasCan.IntValue, GetScavengeItemsGoal());		// starting from cvar value, in case the tank spawns too early
 }
