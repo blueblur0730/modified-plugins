@@ -33,6 +33,6 @@
 	"GasCanSelection"
 	{
 		"en"		"{red}<{default}GasCan Selection{red}> %d {default}cans"
-		"chi"		"{red}<{default}油桶轮换{red}> %d {default}桶"
+		"chi"		"{red}<{default}油桶点数{red}> %d {default}桶"
 	}
 }

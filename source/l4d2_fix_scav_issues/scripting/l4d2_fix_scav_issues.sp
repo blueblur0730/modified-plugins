@@ -18,7 +18,7 @@ public Plugin myinfo =
 	name = "[L4D2] Fix Scavenge Issues",
 	author = "Eyal282",
 	description = "Fix bug when first round start there are no gascans and set the round number",
-	version = "1.1",
+	version = "1.2",
 	url = "https://github.com/blueblur0730/modified-plugins/tree/main/source/l4d2_fix_scav_issues"
 }
 
@@ -55,32 +55,8 @@ public Action Timer_Fix(Handle hTimer)
 
     if(StrEqual(sValue, "scavenge") && GetScavengeRoundNumber() == 1 && GetGameTime() - g_fMapStartTime > 5.0 &&  GetScavengeItemsRemaining() == 0 && GetScavengeItemsGoal() == 0 && GetGasCanCount() == 0)
     {
-        Scavenge_FixNoGascanSpawnBug();
+        L4D2_SpawnAllScavengeItems();
     }
 
     return Plugin_Handled;
-}
-
-stock void Scavenge_FixNoGascanSpawnBug()
-{   
-    char sSignature[128];
-    sSignature = "@_ZN9CDirector21SpawnAllScavengeItemsEv";
-   
-	Handle Call = INVALID_HANDLE;
-	if (Call == INVALID_HANDLE)
-	{
-		StartPrepSDKCall(SDKCall_Raw);
-		if (!PrepSDKCall_SetSignature(SDKLibrary_Server, sSignature, strlen(sSignature)-1))
-		{
-			return;
-		}
-
-		Call = EndPrepSDKCall();
-		if (Call == INVALID_HANDLE)
-		{
-			return;
-		}
-	}
-
-	SDKCall(Call, L4D_GetPointer(POINTER_DIRECTOR));
 }

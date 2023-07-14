@@ -75,8 +75,6 @@ v1.0.4:
 #define IS_VALID_INFECTED(%1)   (IS_VALID_INGAME(%1) && IS_INFECTED(%1))
 #define IS_VALID_CASTER(%1)     (IS_VALID_INGAME(%1) && casterSystemAvailable && IsClientCaster(%1))
 
-#define SOUND_TANK 			"./music/tank/tank.wav"
-
 public Plugin myinfo =
 {
 	name 			= PLUGIN_NAME,
@@ -98,6 +96,7 @@ enum L4D2Team
 
 ConVar hTankEnable;
 ConVar hTankPrint;
+ConVar hRandomGasCan;
 
 bool bPooredIn = false;
 bool casterSystemAvailable;
@@ -131,8 +130,12 @@ public void OnPluginStart()
 	// Initialise the tank arrays/data values
     h_whosHadTank   = new ArrayList(ByteCountToCells(64));
 
+    // Cmd
+    RegConsoleCmd("sm_tank", Tank_Cmd);
+
 	// ConVars
 	hTankEnable	    = CreateConVar("l4d2_tank_control_scav_enabled", "1", "Enable Tank Spawn?", CVAR_FLAGS);
+    hRandomGasCan   = CreateConVar("l4d2_tank_control_scav_random_count_min", "5", "Set min random count", _, true, 1.0);
 	hTankPrint 	    = CreateConVar("tankcontrol_print_all", "0", "Who gets to see who will become the tank? (0 = Infected, 1 = Everyone)");
 
 	// Translations
@@ -169,7 +172,7 @@ public void OnMapStart()
 {
 	if(IsScavengeMode())
 	{
-		HookEvent("scavenge_round_start", Event_RoundStart, EventHookMode_Pre);
+		HookEvent("scavenge_round_start", Event_RoundStart, EventHookMode_Pre);      // set random gascan count every round start
 		HookEvent("scavenge_round_finished", Event_RoundFinished, EventHookMode_PostNoCopy);
 		HookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
 		HookEvent("player_left_start_area", Event_PlayerLeftStartArea, EventHookMode_PostNoCopy);
@@ -220,8 +223,16 @@ public Action Tank_Cmd(int client, int args)
 public void Event_RoundStart(Event hEvent, char[] name, bool nobroadcast)
 {
 	nGasCount = 0;
-	RandomGasCan = GetRandomInt(10, GetScavengeItemsGoal());		// starting from 10, in case the tank spawns too early
-	CreateTimer(10.0, newGame);
+	RandomGasCan = GetRandomInt(hRandomGasCan.IntValue, GetScavengeItemsGoal());		// starting from cvar value, in case the tank spawns too early
+
+    int teamAScore = GetScavengeTeamScore(2, GetScavengeRoundNumber());		// survivor
+	int teamBScore = GetScavengeTeamScore(3, GetScavengeRoundNumber());		// infected
+
+	// If it's a new game, reset the tank pool
+	if (teamAScore == 0 && teamBScore == 0 && GetScavengeRoundNumber() == 1 && InSecondHalfOfRound() == false)
+    {
+        CreateTimer(5.0, newGame);
+    }
 }
 
 public void Event_PlayerLeftStartArea(Event hEvent, const char[] eName, bool dontBroadcast)
@@ -314,15 +325,8 @@ public void TankKilled_Event(Event hEvent, const char[] eName, bool dontBroadcas
 
 public Action newGame(Handle timer)
 {
-	int teamAScore = GetScavengeTeamScore(2, GetScavengeRoundNumber());		// survivor
-	int teamBScore = GetScavengeTeamScore(3, GetScavengeRoundNumber());		// infected
-
-	// If it's a new game, reset the tank pool
-	if (teamAScore == 0 && teamBScore == 0 && GetScavengeRoundNumber() == 1)
-	{
-		h_whosHadTank.Clear();
-		queuedTankSteamId = "";
-	}
+	h_whosHadTank.Clear();
+	queuedTankSteamId = "";
 
 	return Plugin_Stop;
 }
@@ -390,7 +394,14 @@ public Action SpawnTank(Handle Timer)
 	// spawn tank
 	int flags = GetCommandFlags("z_spawn");
 	SetCommandFlags("z_spawn", flags & ~FCVAR_CHEAT);
-	FakeClientCommand(getInfectedPlayerBySteamId(queuedTankSteamId), "z_spawn tank auto");
+    if(getInfectedPlayerBySteamId(queuedTankSteamId) != -1)
+    {
+        FakeClientCommand(getInfectedPlayerBySteamId(queuedTankSteamId), "z_spawn tank auto");
+    }
+    else
+    {
+        FakeClientCommand(SetTank2(), "z_spawn tank auto");
+    }
 	SetCommandFlags("z_spawn", flags);
 
 	return Plugin_Handled;
@@ -554,4 +565,73 @@ void SetTankFrustration(int iTankClient, int iFrustration) {
     }
     
     SetEntProp(iTankClient, Prop_Send, "m_frustration", 100-iFrustration);
+}
+
+stock int SetTank2()
+{
+    int[] infectedAlive = new int[MaxClients];
+	int infectedAliveCount = 0;
+	int[] infectedDead = new int[MaxClients];
+	int infectedDeadCount = 0;
+	
+	for(int i = 1; i <= MaxClients; i++)
+	{	
+		if(!IsClientConnected(i)) continue;
+		if(!IsClientInGame(i)) continue;
+		
+		// infected?
+		if(GetClientTeam(i) == 3)
+		{
+			/*
+			Dead:
+				Alive: 0
+				Ghost: 0
+				LifeState: 1
+
+			Waiting:
+				Alive: 0
+				Ghost: 0
+				LifeState: 2
+				
+			Spawning:
+				Alive: 1
+				Ghost: 1
+				LifeState: 0
+				
+			Alive:
+				Alive: 1
+				Ghost: 0
+				LifeState: 0
+			*/
+			if (!IsPlayerAlive(i) || GetEntProp(i, Prop_Send, "m_isGhost") == 1)
+			{
+				// Dead / Waiting / Ghost
+				infectedDead[infectedDeadCount] = i;
+				infectedDeadCount++;
+			}
+			else {
+				// Alive
+				infectedAlive[infectedAliveCount] = i;
+				infectedAliveCount++;
+			}
+		}
+	}
+
+	int chosenTank = -1;
+	
+	// Tank bot fix (if everyone is alive)
+	if (infectedDeadCount < 1)
+	{	
+		// choose tank
+		int choice = GetRandomInt(0, infectedAliveCount-1);
+		chosenTank = infectedAlive[choice];
+        return chosenTank;
+	}
+	else 
+	{	
+		// somebody random spawns the tank
+		int choice = GetRandomInt(0, infectedDeadCount-1);
+		chosenTank = infectedDead[choice];
+        return chosenTank;
+	}
 }
