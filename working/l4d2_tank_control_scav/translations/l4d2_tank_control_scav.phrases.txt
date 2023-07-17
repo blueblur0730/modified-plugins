@@ -1,5 +1,11 @@
 "Phrases"
 {
+	"TankSpawned"
+	{
+		"en"		"{red}<{default}Scav Tank{red}> {default}A {red}Tank{default} has spawned! {orange}Gas pouring{default} is {red}paused{default}!"
+		"chi"		"{red}<{default}Scav Tank{red}> {default}一个 {red}Tank{default} 已生成! {orange}灌油功能{default} 已被 {red}暂停{default}!"
+	}
+
 	"TankSelection"
 	{
 		"en"		"{red}<{default}Tank Selection{red}> {olive}%s {default}will become the {red}Tank!"

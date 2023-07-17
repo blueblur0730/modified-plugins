@@ -18,12 +18,19 @@
 #define PLUGIN_NAME			"[L4D2] Scavenge Tank Control"
 #define PLUGIN_AUTHOR		"Mrs. Campanula, Die Teetasse, Authors from l4d_tank_control_eq, modified by blueblur"
 #define PLUGIN_DESC			"Allow to spawn and control tank in scavenge mode"
-#define PLUGIN_VERSION		"1.1.1"
+#define PLUGIN_VERSION		"1.1.2"
 #define PLUGIN_URL_OLD		"http://forums.alliedmods.net/showthread.php?p=1058610"
 #define PLUGIN_URL_NEW      "https://github.com/blueblur0730/modified-plugins/tree/main/working/l4d2_tank_control_scav"
 
+#define CONFIG_PATH         "configs/l4d2_tank_control_scav.txt"
+
 /*
 Changelog:
+v1.1.2: 7/15/23
+- added phrases to tell players tank has spawned
+- added config file to localize to position where tank gets spawned
+- tried to block gas nozzle when tank is playing
+
 v1.1.1: 7/14/23
 - optimized logic to choose random gascan.
 
@@ -96,7 +103,7 @@ enum L4D2Team
     L4D2Team_Infected
 }
 
-//#define DANG "ui/pickup_secret01.wav"
+#define DANG "ui/pickup_secret01.wav"
 
 ConVar hTankEnable;
 ConVar hTankPrint;
@@ -104,13 +111,18 @@ ConVar hRandomGasCan;
 
 bool bPooredIn = false;
 bool casterSystemAvailable;
+bool b_IsTankAlive;
 
 int nGasCount;
 int RandomGasCan;
 
 char queuedTankSteamId[64];
 
+Handle Timer_BlockGasNozzle = INVALID_HANDLE;
+
 ArrayList h_whosHadTank;
+
+KeyValues Kv;
 
 enum ZClass
 {
@@ -127,9 +139,17 @@ enum ZClass
 public void OnPluginStart()
 {
 	// Check Game
-	char game[12];
+	char game[12], buffer[32];
 	GetGameFolderName(game, sizeof(game));
 	if (StrContains(game, "left4dead2") == -1) SetFailState("Scavenge Tank will only work with Left 4 Dead 2!");
+
+    // KeyValue
+	Kv = CreateKeyValues("Coordinate", "", "");
+	BuildPath(Path_SM, buffer, 128, CONFIG_PATH);
+	if (!FileToKeyValues(Kv, buffer))
+	{
+		SetFailState("File %s may be missed!", CONFIG_PATH);
+	}
 
 	// Initialise the tank arrays/data values
     h_whosHadTank   = new ArrayList(ByteCountToCells(64));
@@ -144,6 +164,7 @@ public void OnPluginStart()
 
 	// Translations
 	LoadTranslations("l4d2_tank_control_scav.phrases");
+
 	CreateConVar("l4d2_tank_control_scav_version", PLUGIN_VERSION, "Scavenge tank version", CVAR_FLAGS|FCVAR_DONTRECORD);
 
     CheckEnableStatus();
@@ -178,12 +199,14 @@ public void OnMapStart()
 	{
         HookEvent("round_end", Event_RoundEnd, EventHookMode_Pre);      // clear the gascan count secured
 		HookEvent("scavenge_round_start", Event_ScavRoundStart, EventHookMode_Pre);      // set random gascan count every round start
-		HookEvent("scavenge_round_finished", Event_ScavRoundFinished, EventHookMode_PostNoCopy);
+		HookEvent("scavenge_round_finished", Event_ScavRoundFinished, EventHookMode_Post);
 		HookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
 		HookEvent("player_left_start_area", Event_PlayerLeftStartArea, EventHookMode_PostNoCopy);
 		HookEvent("gascan_pour_completed", Event_GasCanPourCompleted, EventHookMode_Pre);
+        HookEvent("tank_spawn", Event_TankSpawn, EventHookMode_PostNoCopy);
+        HookEvent("tank_killed", Event_TankKilled, EventHookMode_Pre);
 
-		//PrecacheSound(DANG);
+		PrecacheSound(DANG);
 
 		//fix for roundstart be triggered befor mapstart
 		nGasCount = 0;
@@ -267,21 +290,10 @@ public Action Event_GasCanPourCompleted(Event hEvent, char[] name, bool nobroadc
 
 	if(RandomGasCan == nGasCount)
 	{
-		CreateTimer(3.0, SpawnTank);
+		CreateTimer(2.0, SpawnTank);
+        EmitSoundToAll(DANG);
+        CPrintToChatAll("%t", "TankSpawned");
 	}
-	
-/*
-	if(nGasCount == 15 && !bFirstTeam)
-	{
-		if(GetConVarBool(hTankAfterScoreTied) && GetConVarBool(hTankEnable))
-			SetTank(0);
-	}
-
-	int tankcount = GetConVarInt(hTankAfterCanCount);
-
-	if(tankcount > 0 && (nGasCount % tankcount == 0))
-		SetTank(0);
-*/
 
 	bPooredIn = true;
 	CreateTimer(0.5, PouredInDelay);
@@ -314,7 +326,7 @@ public void Event_PlayerTeam(Event hEvent, const char[] name, bool dontBroadcast
  * When the tank dies, requeue a player to become tank (for finales)
  */
  
-public void PlayerDeath_Event(Event hEvent, const char[] eName, bool dontBroadcast)
+public void Event_PlayerDeath(Event hEvent, const char[] eName, bool dontBroadcast)
 {
     int zombieClass = 0;
     int victimId = hEvent.GetInt("userid");
@@ -330,8 +342,19 @@ public void PlayerDeath_Event(Event hEvent, const char[] eName, bool dontBroadca
     }
 }
 
-public void TankKilled_Event(Event hEvent, const char[] eName, bool dontBroadcast)
+public void Event_TankSpawn(Event hEvent, const char[] name, bool dontBroadcast)
 {
+    b_IsTankAlive = true;
+    Timer_BlockGasNozzle = CreateTimer(0.1, BlockGasNozzle, TIMER_REPEAT);     // frequently block
+}
+
+public void Event_TankKilled(Event hEvent, const char[] eName, bool dontBroadcast)
+{
+    b_IsTankAlive = false;
+    if(Timer_BlockGasNozzle != INVALID_HANDLE)
+    {
+        KillTimer(Timer_BlockGasNozzle);
+    }
     SetTank(0);
 }
 
@@ -347,6 +370,16 @@ public Action PouredInDelay(Handle timer, any data)
 {
 	bPooredIn = false;
 	return Plugin_Continue;
+}
+
+Action BlockGasNozzle(Handle timer)
+{
+    if(RandomGasCan == nGasCount && b_IsTankAlive == true)
+    {
+        FireEvent(CreateEvent("gascan_pour_blocked", true));
+    }
+
+    return Plugin_Continue;
 }
 
 public void SetTank(any data)
@@ -401,20 +434,37 @@ public void SetTank(any data)
 
 public Action SpawnTank(Handle Timer)
 {
-	//EmitSoundToAll(DANG);
-
-	// spawn tank
+    float coordinate[3];
+    char CurMapName[32];
 	int flags = GetCommandFlags("z_spawn");
+    int flags2 = GetCommandFlags("z_spawn_const_pos");
+
 	SetCommandFlags("z_spawn", flags & ~FCVAR_CHEAT);
+    SetCommandFlags("z_spawn_const_pos", flags2 & ~FCVAR_CHEAT);
+    GetCurrentMap(CurMapName, sizeof(CurMapName));
+    KvRewind(Kv);
+    if(KvJumpToKey(Kv, CurMapName))
+    {
+        coordinate[0] = KvGetFloat(Kv, "x");
+        coordinate[1] = KvGetFloat(Kv, "y");
+        coordinate[2] = KvGetFloat(Kv, "z");
+    }
+
     if(getInfectedPlayerBySteamId(queuedTankSteamId) != -1)
     {
-        FakeClientCommand(getInfectedPlayerBySteamId(queuedTankSteamId), "z_spawn tank auto");
+        FakeClientCommand(getInfectedPlayerBySteamId(queuedTankSteamId), "z_spawn_const_pos %f %f %f", coordinate[0], coordinate[1], coordinate[2]);       // https://forums.alliedmods.net/showthread.php?t=228298
+        FakeClientCommand(getInfectedPlayerBySteamId(queuedTankSteamId), "z_spawn tank");
+        FakeClientCommand(getInfectedPlayerBySteamId(queuedTankSteamId), "z_spawn_const_pos");      // no argument means disable specific spawn
     }
     else
     {
-        FakeClientCommand(SetTank2(), "z_spawn tank auto");
+        FakeClientCommand(SetTank2(), "z_spawn_const_pos %f %f %f", coordinate[0], coordinate[1], coordinate[2]);
+        FakeClientCommand(SetTank2(), "z_spawn tank");
+        FakeClientCommand(SetTank2(), "z_spawn_const_pos");
     }
+
 	SetCommandFlags("z_spawn", flags);
+    SetCommandFlags("z_spawn_const_pos", flags2);
 
 	return Plugin_Handled;
 }
@@ -456,16 +506,33 @@ public Action L4D_OnTryOfferingTankBot(int tank_index, bool &enterStatis)
     if (! strcmp(queuedTankSteamId, ""))
         SetTank(0);
 
-/*
+
     // Mark the player as having had tank
     if (strcmp(queuedTankSteamId, "") != 0)
     {
         setTankTickets(queuedTankSteamId, 20000);
         PushArrayString(h_whosHadTank, queuedTankSteamId);
     }
-*/
+
 
     return Plugin_Continue;
+}
+
+/**
+ * Sets the amount of tickets for a particular player, essentially giving them tank.
+ */
+ 
+public void setTankTickets(const char[] steamId, int tickets)
+{
+    int tankClientId = getInfectedPlayerBySteamId(steamId);
+    
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if (IsClientInGame(i) && ! IsFakeClient(i) && GetClientTeam(i) == 3)
+        {
+            L4D2Direct_SetTankTickets(i, (i == tankClientId) ? tickets : 0);
+        }
+    }
 }
 
 /**
@@ -579,6 +646,22 @@ void SetTankFrustration(int iTankClient, int iFrustration) {
     SetEntProp(iTankClient, Prop_Send, "m_frustration", 100-iFrustration);
 }
 
+/*
+void BlockAndUnblockGasNozzle()
+{
+    int ent;
+    ent = FindEntityByClassname(ent, "point_prop_use_target");
+    if(RandomGasCan == nGasCount)
+    {
+        SetEntProp(ent, Prop_Send, "m_hGasNozzle", 0);
+    }
+    else
+    {
+        SetEntProp(ent, Prop_Send, "m_hGasNozzle", 1);
+    }
+}
+*/
+
 stock int SetTank2()
 {
     int[] infectedAlive = new int[MaxClients];
@@ -650,5 +733,5 @@ stock int SetTank2()
 
 stock int GetRandomCount()
 {
-    return GetRandomInt(hRandomGasCan.IntValue, GetScavengeItemsGoal());		// starting from cvar value, in case the tank spawns too early
+    return GetRandomInt(hRandomGasCan.IntValue, GetScavengeItemsGoal() - 1);		// starting from cvar value, in case the tank spawns too early
 }
