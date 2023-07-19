@@ -1,12 +1,12 @@
 # l4d2_tank_control_scav
 
 ### Introduntion
+- 在清道夫模式下达到一定的油桶数量时生成tank.
 - l4d_tank_control_eq的清道夫版本, 同时继承了l4d2_scavenge_tank的思路. 
 [l4d2_scavenge_tank]作者: Mrs. Campanula, Die Teetasse
 [l4d_tank_control_eq]作者: arti(以及其他未署名的贡献者)
-- 在设定的油桶分数区间内进行随机选取来生成tank (区间最大值为本地图的油桶目标数)
+- 在设定的油桶分数区间内进行随机选取来生成tank (区间最大值为本地图的油桶目标数 - 1)
 - 生成tank时关闭灌油功能(to do)
-- 设定好tank生成地点(to do)
 
 ### Source
 - http://forums.alliedmods.net/showthread.php?p=1058610 [l4d2_scavenge_tank]
