@@ -7,6 +7,7 @@
 [l4d_tank_control_eq]作者: arti(以及其他未署名的贡献者)
 - 在设定的油桶分数区间内进行随机选取来生成tank (区间最大值为本地图的油桶目标数 - 1)
 - 生成tank时关闭灌油功能(to do)
+- 鉴于tank由导演系统生成, 完善两种思路来控制tank在44 33 22 11中的血量(to do)
 
 ### Source
 - http://forums.alliedmods.net/showthread.php?p=1058610 [l4d2_scavenge_tank]
