@@ -22,33 +22,22 @@ public Plugin myinfo =
 	name = "[L4D2] Mixmap Scavenge",
 	author = "Bred, blueblur",
 	description = "Randomly select five maps for scavenge. Adding for fun and reference from CMT",
-	version = "1.1",
+	version = "1.2",
 	url = ""
 };
 
 /*
 * changelog
+* v1.2: 7/20/23
+* - initial version.
+*
 * v1.1: 7/19/23
 * - reformatted.
 *   - constructing methods to set rounds, round scores, match scores.
 */
 
-#define DIR_CFGS 			"mixmap/"
-#define PATH_KV  			"cfg/mixmap/mapnames.txt"
-#define CFG_DEFAULT			"default"
-#define CFG_DODEFAULT		"disorderdefault"
-#define CFG_DODEFAULT_ST	"do"
-#define CFG_ALLOF			"official"
-#define CFG_ALLOF_ST		"of"
-#define	CFG_DOALLOF			"disorderofficial"
-#define	CFG_DOALLOF_ST		"doof"
-#define	CFG_UNOF			"unofficial"
-#define	CFG_UNOF_ST			"uof"
-#define	CFG_DOUNOF			"disorderunofficial"
-#define	CFG_DOUNOF_ST		"douof"
-#define BUF_SZ   			64
-#define DIR_CFGS 			"mixmap/"
-#define PATH_KV  			"cfg/mixmap/mapnames.txt"
+#define DIR_CFGS 			"mixmap_scav/"
+#define PATH_KV  			"cfg/mixmap_scav/mapnames.txt"
 #define CFG_DEFAULT			"default"
 #define CFG_DODEFAULT		"disorderdefault"
 #define CFG_DODEFAULT_ST	"do"
@@ -66,9 +55,6 @@ ConVar 	g_cvNextMapPrint,
 		g_cvMaxMapsNum,
 		g_cvFinaleEndStart;
 
-const TEAM_SPECTATOR = 1;
-const TEAM_SURVIVOR = 2;
-const TEAM_INFECTED = 3;
 char cfg_exec[BUF_SZ];
 
 Handle hVoteMixmap;
@@ -90,7 +76,9 @@ int g_iMapCount;
 
 int
 	g_iScoresTeam_A = 0,
-	g_iScoresTeam_B = 0;
+	g_iScoresTeam_B = 0,
+	g_iScoresMatch_A = 0,
+	g_iScoresMatch_B = 0;
 
 //bool bLeftStartArea;
 //bool bReadyUpAvailable;
@@ -207,15 +195,21 @@ void LoadSDK()
 
 public void Event_ScavRoundStart(Event event, char[] name, bool dontBroadcast)
 {
-
+	ClearArray(g_hArrayTeamA_RoundScore);
+	ClearArray(g_hArrayTeamB_RoundScore);
 }
 
 public void Event_ScavRoundFinished(Event event, char[] name, bool dontBroadcast)
 {
 	for (int i = 1; i < GetScavengeRoundNumber(); i++)
 	{
-		PushArrayCell(g_hArrayTeamA_RoundScore, GetScavengeTeamScore(2, i))
-		PushArrayCell(g_hArrayTeamB_RoundScore, GetScavengeTeamScore(3, i))
+		PushArrayCell(g_hArrayTeamA_RoundScore, GetScavengeTeamScore(2, i));
+		PushArrayCell(g_hArrayTeamB_RoundScore, GetScavengeTeamScore(3, i));
+	}
+
+	if (InSecondHalfOfRound() && g_bMapsetInitialized)
+	{
+		PerformMapProgression();
 	}
 }
 
@@ -302,38 +296,40 @@ void SetScores()
 	{
 		case 1:
 		{
-			SetScavengeTeamScore(2, 1, score);
-			SetScavengeMatchScore(2, g_iScoresTeam_A);
+			SetScavengeTeamScore(2, 1, GetArrayCell(g_hArrayTeamA_RoundScore, 1));
+			SetScavengeMatchScore(2, g_iScoresMatch_A);
 		}
 		case 2:
 		{
-			SetScavengeTeamScore(2, 1, score);
-			SetScavengeTeamScore(2, 2, score);
-			SetScavengeMatchScore(2, g_iScoresTeam_A);
+			for (int i = 1; i < 2; i++)
+			{
+				SetScavengeTeamScore(2, i, GetArrayCell(g_hArrayTeamA_RoundScore, i));
+			}
+			SetScavengeMatchScore(2, g_iScoresMatch_A);
 		}
 		case 3:
 		{
-			SetScavengeTeamScore(2, 1, score);
-			SetScavengeTeamScore(2, 2, score);
-			SetScavengeTeamScore(2, 3, score);
-			SetScavengeMatchScore(2, g_iScoresTeam_A);
+			for (int i = 1; i < 3; i++)
+			{
+				SetScavengeTeamScore(2, i, GetArrayCell(g_hArrayTeamA_RoundScore, i));
+			}
+			SetScavengeMatchScore(2, g_iScoresMatch_A);
 		}
 		case 4:
 		{
-			SetScavengeTeamScore(2, 1, score);
-			SetScavengeTeamScore(2, 2, score);
-			SetScavengeTeamScore(2, 3, score);
-			SetScavengeTeamScore(2, 4, score);
-			SetScavengeMatchScore(2, g_iScoresTeam_A);
+			for (int i = 1; i < 4; i++)
+			{
+				SetScavengeTeamScore(2, i, GetArrayCell(g_hArrayTeamA_RoundScore, i));
+			}
+			SetScavengeMatchScore(2, g_iScoresMatch_A);
 		}
 		case 5:
 		{
-			SetScavengeTeamScore(2, 1, score);
-			SetScavengeTeamScore(2, 2, score);
-			SetScavengeTeamScore(2, 3, score);
-			SetScavengeTeamScore(2, 4, score);
-			SetScavengeTeamScore(2, 5, score);
-			SetScavengeMatchScore(2, g_iScoresTeam_A);
+			for (int i = 1; i < 5; i++)
+			{
+				SetScavengeTeamScore(2, i, GetArrayCell(g_hArrayTeamA_RoundScore, i));
+			}
+			SetScavengeMatchScore(2, g_iScoresMatch_A);
 		}
 	}
 
@@ -341,50 +337,42 @@ void SetScores()
 	{
 		case 1:
 		{
-			SetScavengeTeamScore(3, 1, score);
-			SetScavengeMatchScore(3, g_iScoresTeam_B);
+			SetScavengeTeamScore(3, 1, GetArrayCell(g_hArrayTeamB_RoundScore, 1));
+			SetScavengeMatchScore(3, g_iScoresMatch_B);
 		}
 		case 2:
 		{
-			SetScavengeTeamScore(3, 1, score);
-			SetScavengeTeamScore(3, 2, score);
-			SetScavengeMatchScore(3, g_iScoresTeam_B);
+			for (int i = 1; i < 2; i++)
+			{
+				SetScavengeTeamScore(3, i, GetArrayCell(g_hArrayTeamB_RoundScore, i));
+			}
+			SetScavengeMatchScore(3, g_iScoresMatch_B);
 		}
 		case 3:
 		{
-			SetScavengeTeamScore(3, 1, score);
-			SetScavengeTeamScore(3, 2, score);
-			SetScavengeTeamScore(3, 3, score);
-			SetScavengeMatchScore(3, g_iScoresTeam_B);
+			for (int i = 1; i < 3; i++)
+			{
+				SetScavengeTeamScore(3, i, GetArrayCell(g_hArrayTeamB_RoundScore, i));
+			}
+			SetScavengeMatchScore(3, g_iScoresMatch_B);
 		}
 		case 4:
 		{
-			SetScavengeTeamScore(3, 1, score);
-			SetScavengeTeamScore(3, 2, score);
-			SetScavengeTeamScore(3, 3, score);
-			SetScavengeTeamScore(3, 4, score);
-			SetScavengeMatchScore(3, g_iScoresTeam_B);
+			for (int i = 1; i < 4; i++)
+			{
+				SetScavengeTeamScore(3, i, GetArrayCell(g_hArrayTeamB_RoundScore, i));
+			}
+			SetScavengeMatchScore(3, g_iScoresMatch_B);
 		}
 		case 5:
 		{
-			SetScavengeTeamScore(3, 1, score);
-			SetScavengeTeamScore(3, 2, score);
-			SetScavengeTeamScore(3, 3, score);
-			SetScavengeTeamScore(3, 4, score);
-			SetScavengeTeamScore(3, 5, score);
-			SetScavengeMatchScore(3, g_iScoresTeam_B);
+			for (int i = 1; i < 5; i++)
+			{
+				SetScavengeTeamScore(3, i, GetArrayCell(g_hArrayTeamB_RoundScore, i));
+			}
+			SetScavengeMatchScore(3, g_iScoresMatch_B);
 		}
 	}
-}
-
-public void L4D2_OnEndVersusModeRound_Post() 
-{
-	if (InSecondHalfOfRound() && g_bMapsetInitialized)
-	{
-		PerformMapProgression();
-		return;
-	}
-	return;
 }
 
 // ----------------------------------------------------------
@@ -438,6 +426,8 @@ public Action Timed_NextMapInfo(Handle timer)
 	{
 		g_iScoresTeam_A = GetScavengeTeamScore(2, GetScavengeRoundNumber());
 		g_iScoresTeam_B = GetScavengeTeamScore(3, GetScavengeRoundNumber());
+		g_iScoresMatch_A = GetScavengeMatchScore(2);
+		g_iScoresMatch_B = GetScavengeMatchScore(3);
 		g_bCMapTransitioned = true;
 		CreateTimer(9.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
 	}
@@ -445,6 +435,8 @@ public Action Timed_NextMapInfo(Handle timer)
 	{
 		g_iScoresTeam_A = GetScavengeTeamScore(2, GetScavengeRoundNumber());
 		g_iScoresTeam_B = GetScavengeTeamScore(3, GetScavengeRoundNumber());
+		g_iScoresMatch_A = GetScavengeMatchScore(2);
+		g_iScoresMatch_B = GetScavengeMatchScore(3);
 		g_bCMapTransitioned = true;
 		CreateTimer(10.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
 	}
