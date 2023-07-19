@@ -22,9 +22,16 @@ public Plugin myinfo =
 	name = "[L4D2] Mixmap Scavenge",
 	author = "Bred, blueblur",
 	description = "Randomly select five maps for scavenge. Adding for fun and reference from CMT",
-	version = "1.0",
+	version = "1.1",
 	url = ""
 };
+
+/*
+* changelog
+* v1.1: 7/19/23
+* - reformatted.
+*   - constructing methods to set rounds, round scores, match scores.
+*/
 
 #define DIR_CFGS 			"mixmap/"
 #define PATH_KV  			"cfg/mixmap/mapnames.txt"
@@ -72,6 +79,8 @@ Handle g_hArrayTags;				// Stores tags for indexing g_hTriePools 存放地图池
 Handle g_hTriePools;				// Stores pool array handles by tag name 存放由标签分类的地图
 Handle g_hArrayTagOrder;			// Stores tags by rank 存放标签顺序
 Handle g_hArrayMapOrder;			// Stores finalised map list in order 存放抽取完成后的地图顺序
+Handle g_hArrayTeamA_RoundScore;	// Stores team A round score
+Handle g_hArrayTeamB_RoundScore;	// Stores team B round score
 
 
 bool g_bMaplistFinalized;
@@ -80,8 +89,8 @@ int g_iMapsPlayed;
 int g_iMapCount;
 
 int
-	g_iPointsTeam_A = 0,
-	g_iPointsTeam_B = 0;
+	g_iScoresTeam_A = 0,
+	g_iScoresTeam_B = 0;
 
 //bool bLeftStartArea;
 //bool bReadyUpAvailable;
@@ -140,6 +149,8 @@ public void OnPluginStart()
 
 	// HookEvent("player_left_start_area", LeftStartArea_Event, EventHookMode_PostNoCopy);
 	// HookEvent("round_start", RoundStart_Event, EventHookMode_PostNoCopy);
+	HookEvent("scavenge_round_start", Event_ScavRoundStart, EventHookMode_PostNoCopy);
+	HookEvent("scavenge_round_finished", Event_ScavRoundFinished, EventHookMode_PostNoCopy);
 	
 
 	PluginStartInit();
@@ -154,6 +165,8 @@ void PluginStartInit()
 	g_hTriePools = CreateTrie();
 	g_hArrayTagOrder = CreateArray(BUF_SZ/4);
 	g_hArrayMapOrder = CreateArray(BUF_SZ/4);
+	g_hArrayTeamA_RoundScore = CreateArray(5);
+	g_hArrayTeamB_RoundScore = CreateArray(5);
 
 	g_bMapsetInitialized = false;
 	g_bMaplistFinalized = false;
@@ -191,6 +204,20 @@ void LoadSDK()
 // ----------------------------------------------------------
 // 		Hooks
 // ----------------------------------------------------------
+
+public void Event_ScavRoundStart(Event event, char[] name, bool dontBroadcast)
+{
+
+}
+
+public void Event_ScavRoundFinished(Event event, char[] name, bool dontBroadcast)
+{
+	for (int i = 1; i < GetScavengeRoundNumber(); i++)
+	{
+		PushArrayCell(g_hArrayTeamA_RoundScore, GetScavengeTeamScore(2, i))
+		PushArrayCell(g_hArrayTeamB_RoundScore, GetScavengeTeamScore(3, i))
+	}
+}
 
 // Otherwise nextmap would be stuck and people wouldn't be able to play normal campaigns without the plugin 结束后初始化sm_nextmap的值
 public void OnPluginEnd() {
@@ -263,16 +290,91 @@ public Action Timer_OnMapStartDelay(Handle hTimer)
 void SetScores()
 {
 	//If team B is winning, swap teams. Does not change how scores are set
-	if (g_iPointsTeam_A < g_iPointsTeam_B) {
+	if (g_iScoresTeam_A < g_iScoresTeam_B) {
 		L4D2_SwapTeams();
 	}
 
 	//Set scores on scoreboard
-	SDKCall(g_hCMapSetCampaignScores, g_iPointsTeam_A, g_iPointsTeam_B);
+	//SDKCall(g_hCMapSetCampaignScores, g_iScoresTeam_A, g_iScoresTeam_B);
 
 	//Set actual scores
-	L4D2Direct_SetVSCampaignScore(0, g_iPointsTeam_A);
-	L4D2Direct_SetVSCampaignScore(1, g_iPointsTeam_B);
+	switch (GetScavengeRoundNumber())
+	{
+		case 1:
+		{
+			SetScavengeTeamScore(2, 1, score);
+			SetScavengeMatchScore(2, g_iScoresTeam_A);
+		}
+		case 2:
+		{
+			SetScavengeTeamScore(2, 1, score);
+			SetScavengeTeamScore(2, 2, score);
+			SetScavengeMatchScore(2, g_iScoresTeam_A);
+		}
+		case 3:
+		{
+			SetScavengeTeamScore(2, 1, score);
+			SetScavengeTeamScore(2, 2, score);
+			SetScavengeTeamScore(2, 3, score);
+			SetScavengeMatchScore(2, g_iScoresTeam_A);
+		}
+		case 4:
+		{
+			SetScavengeTeamScore(2, 1, score);
+			SetScavengeTeamScore(2, 2, score);
+			SetScavengeTeamScore(2, 3, score);
+			SetScavengeTeamScore(2, 4, score);
+			SetScavengeMatchScore(2, g_iScoresTeam_A);
+		}
+		case 5:
+		{
+			SetScavengeTeamScore(2, 1, score);
+			SetScavengeTeamScore(2, 2, score);
+			SetScavengeTeamScore(2, 3, score);
+			SetScavengeTeamScore(2, 4, score);
+			SetScavengeTeamScore(2, 5, score);
+			SetScavengeMatchScore(2, g_iScoresTeam_A);
+		}
+	}
+
+	switch (GetScavengeRoundNumber())
+	{
+		case 1:
+		{
+			SetScavengeTeamScore(3, 1, score);
+			SetScavengeMatchScore(3, g_iScoresTeam_B);
+		}
+		case 2:
+		{
+			SetScavengeTeamScore(3, 1, score);
+			SetScavengeTeamScore(3, 2, score);
+			SetScavengeMatchScore(3, g_iScoresTeam_B);
+		}
+		case 3:
+		{
+			SetScavengeTeamScore(3, 1, score);
+			SetScavengeTeamScore(3, 2, score);
+			SetScavengeTeamScore(3, 3, score);
+			SetScavengeMatchScore(3, g_iScoresTeam_B);
+		}
+		case 4:
+		{
+			SetScavengeTeamScore(3, 1, score);
+			SetScavengeTeamScore(3, 2, score);
+			SetScavengeTeamScore(3, 3, score);
+			SetScavengeTeamScore(3, 4, score);
+			SetScavengeMatchScore(3, g_iScoresTeam_B);
+		}
+		case 5:
+		{
+			SetScavengeTeamScore(3, 1, score);
+			SetScavengeTeamScore(3, 2, score);
+			SetScavengeTeamScore(3, 3, score);
+			SetScavengeTeamScore(3, 4, score);
+			SetScavengeTeamScore(3, 5, score);
+			SetScavengeMatchScore(3, g_iScoresTeam_B);
+		}
+	}
 }
 
 public void L4D2_OnEndVersusModeRound_Post() 
@@ -334,15 +436,15 @@ public Action Timed_NextMapInfo(Handle timer)
 	
 	if ((StrEqual(sMapName_Old, "c6m2_bedlam") && !StrEqual(sMapName_New, "c7m1_docks")) || (StrEqual(sMapName_Old, "c9m2_lots") && !StrEqual(sMapName_New, "c14m1_junkyard")))
 	{
-		g_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
-		g_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
+		g_iScoresTeam_A = GetScavengeTeamScore(2, GetScavengeRoundNumber());
+		g_iScoresTeam_B = GetScavengeTeamScore(3, GetScavengeRoundNumber());
 		g_bCMapTransitioned = true;
 		CreateTimer(9.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
 	}
 	else if ((!StrEqual(sMapName_Old, "c6m2_bedlam") && StrEqual(sMapName_New, "c7m1_docks")) || (!StrEqual(sMapName_Old, "c9m2_lots") && StrEqual(sMapName_New, "c14m1_junkyard")))
 	{
-		g_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
-		g_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
+		g_iScoresTeam_A = GetScavengeTeamScore(2, GetScavengeRoundNumber());
+		g_iScoresTeam_B = GetScavengeTeamScore(3, GetScavengeRoundNumber());
 		g_bCMapTransitioned = true;
 		CreateTimer(10.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
 	}
