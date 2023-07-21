@@ -6,6 +6,7 @@
 #include <sdktools>
 #include <l4d2util>
 #include <left4dhooks>
+#include <l4d2_changelevel>
 #include <colors>
 #include <scavenge_func>
 #undef REQUIRE_PLUGIN
@@ -28,6 +29,10 @@ public Plugin myinfo =
 
 /*
 * changelog
+* v1.3: 7/20/23
+* - Changed method to change map since sm_nextmap isn't working in scavenge mode.
+*   - use L4D2_ChangeLevel instead. 
+*
 * v1.2: 7/20/23
 * - initial version.
 *
@@ -68,7 +73,6 @@ Handle g_hArrayMapOrder;			// Stores finalised map list in order 存放抽取完
 Handle g_hArrayTeamA_RoundScore;	// Stores team A round score
 Handle g_hArrayTeamB_RoundScore;	// Stores team B round score
 
-
 bool g_bMaplistFinalized;
 bool g_bMapsetInitialized;
 int g_iMapsPlayed;
@@ -79,6 +83,8 @@ int
 	g_iScoresTeam_B = 0,
 	g_iScoresMatch_A = 0,
 	g_iScoresMatch_B = 0;
+
+int g_RoundNumber;
 
 //bool bLeftStartArea;
 //bool bReadyUpAvailable;
@@ -163,6 +169,8 @@ void PluginStartInit()
 	
 	g_iMapsPlayed = 0;
 	g_iMapCount = 0;
+
+	g_RoundNumber = 0;
 }
 
 void LoadSDK()
@@ -195,6 +203,7 @@ void LoadSDK()
 
 public void Event_ScavRoundStart(Event event, char[] name, bool dontBroadcast)
 {
+	g_RoundNumber++;
 	ClearArray(g_hArrayTeamA_RoundScore);
 	ClearArray(g_hArrayTeamB_RoundScore);
 }
@@ -214,9 +223,12 @@ public void Event_ScavRoundFinished(Event event, char[] name, bool dontBroadcast
 }
 
 // Otherwise nextmap would be stuck and people wouldn't be able to play normal campaigns without the plugin 结束后初始化sm_nextmap的值
+
+/*
 public void OnPluginEnd() {
 	ServerCommand("sm_nextmap ''");
 }
+*/
 
 public void OnClientPutInServer(int client)
 {	
@@ -243,7 +255,7 @@ public void OnMapStart() {
 		g_bCMapTransitioned = false;
 	}
 
-	ServerCommand("sm_nextmap ''");
+	//ServerCommand("sm_nextmap ''");
 	
 	char buffer[BUF_SZ];
 	
@@ -292,7 +304,7 @@ void SetScores()
 	//SDKCall(g_hCMapSetCampaignScores, g_iScoresTeam_A, g_iScoresTeam_B);
 
 	//Set actual scores
-	switch (GetScavengeRoundNumber())
+	switch (g_RoundNumber)
 	{
 		case 1:
 		{
@@ -333,7 +345,7 @@ void SetScores()
 		}
 	}
 
-	switch (GetScavengeRoundNumber())
+	switch (g_RoundNumber)
 	{
 		case 1:
 		{
@@ -410,8 +422,14 @@ void GotoMap(const char[] sMapName, bool force = false)
 		ForceChangeLevel(sMapName, "Mixmap");
 		return;
 	}
-	ServerCommand("sm_nextmap %s", sMapName);
-	CreateTimer(5.0, Timed_NextMapInfo);
+	L4D2_ChangeLevel(sMapName, false);
+//L 07/20/2023 - 09:11:59: World triggered "L4D_Scenario_Restart" (Infected "0") (Survivor "0")
+//L 07/20/2023 - 09:11:59: Team "Infected" scored "0" with "1" players
+//L 07/20/2023 - 09:11:59: Team "Survivor" scored "0" with "4" players
+//L 07/20/2023 - 09:11:59: World triggered "Round_End"
+//L 07/20/2023 - 09:12:00: Staying on original map c6m1_riverbank
+
+	CreateTimer(1.5, Timed_NextMapInfo);
 } 
 
 public Action Timed_NextMapInfo(Handle timer)
