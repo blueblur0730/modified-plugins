@@ -9,7 +9,7 @@
 
 float   g_fMapStartTime;
 
-ConVar  
+ConVar
     g_hGamemode,
     g_hRoundLimits,
     g_secret,
@@ -55,7 +55,6 @@ public void Event_ScavRoundStart(Event event, const char[] name, bool dontBroadc
         SetScavengeRoundLimit(g_hscav_rounds.IntValue);
     }
 }
-
 
 public Action Timer_Fix(Handle hTimer)
 {

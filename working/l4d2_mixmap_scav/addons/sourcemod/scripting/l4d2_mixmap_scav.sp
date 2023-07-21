@@ -6,7 +6,7 @@
 #include <sdktools>
 #include <l4d2util>
 #include <left4dhooks>
-#include <l4d2_changelevel>
+//#include <l4d2_changelevel>
 #include <colors>
 #include <scavenge_func>
 #undef REQUIRE_PLUGIN
@@ -218,7 +218,7 @@ public void Event_ScavRoundFinished(Event event, char[] name, bool dontBroadcast
 
 	if (InSecondHalfOfRound() && g_bMapsetInitialized)
 	{
-		PerformMapProgression();
+		CreateTimer(5.0, PerformMapProgression);
 	}
 }
 
@@ -391,7 +391,7 @@ void SetScores()
 // 		Map switching logic
 // ----------------------------------------------------------
 
-stock Action PerformMapProgression() 
+Action PerformMapProgression(Handle timer) 
 {
 	if (++g_iMapsPlayed < g_iMapCount) 
 	{
@@ -422,13 +422,18 @@ void GotoMap(const char[] sMapName, bool force = false)
 		ForceChangeLevel(sMapName, "Mixmap");
 		return;
 	}
-	L4D2_ChangeLevel(sMapName, false);
-//L 07/20/2023 - 09:11:59: World triggered "L4D_Scenario_Restart" (Infected "0") (Survivor "0")
-//L 07/20/2023 - 09:11:59: Team "Infected" scored "0" with "1" players
-//L 07/20/2023 - 09:11:59: Team "Survivor" scored "0" with "4" players
-//L 07/20/2023 - 09:11:59: World triggered "Round_End"
-//L 07/20/2023 - 09:12:00: Staying on original map c6m1_riverbank
 
+	//ServerCommand("sm_nextmap %s", sMapName);
+	/*
+	L 07/20/2023 - 09:11:59: World triggered "L4D_Scenario_Restart" (Infected "0") (Survivor "0")
+	L 07/20/2023 - 09:11:59: Team "Infected" scored "0" with "1" players
+	L 07/20/2023 - 09:11:59: Team "Survivor" scored "0" with "4" players
+	L 07/20/2023 - 09:11:59: World triggered "Round_End"
+	L 07/20/2023 - 09:12:00: Staying on original map c6m1_riverbank
+
+	can not ues nextmap.
+	*/	
+	ServerCommand("sm_map %s", sMapName);		// since no gas can in first round issue is solved in left4dhooks 1.134, we can simply use sm_map instead of using L4D2_ChangeLevel
 	CreateTimer(1.5, Timed_NextMapInfo);
 } 
 
