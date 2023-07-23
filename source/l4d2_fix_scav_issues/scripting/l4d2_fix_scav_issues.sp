@@ -54,6 +54,11 @@ public void Event_ScavRoundStart(Event event, const char[] name, bool dontBroadc
     {
         SetScavengeRoundLimit(g_hscav_rounds.IntValue);
     }
+
+    if(GetGasCanCount() == 0)
+    {
+        L4D2_SpawnAllScavengeItems();
+    }
 }
 
 public Action Timer_Fix(Handle hTimer)

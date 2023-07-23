@@ -102,7 +102,7 @@ stock int GetScavengeItemsGoal()
  * @param count		amount to set
  * @noreturn
  */
-stock void SetScavengeGoal(int count)
+stock void SetScavengeItemsGoal(int count)
 {
 	GameRules_SetProp("m_nScavengeItemsGoal", count)
 }
@@ -205,7 +205,7 @@ stock int GetScavengeTeamScore(int team, int round = -1)
 		-Member: 009 (offset 36) (type integer) (bits 6)
 	*/
 
-	// '(2*(round-1))+team' can just be the result from 0 to 9. each number represents the round score a survivor team secured.
+	// '(2*(round-1))+team' can just be the result from 0 to 9. each number represents the round score a team secured.
 	// In this formula, interger round = 1 to 5, interger team = 1 or 0.
 }
 
