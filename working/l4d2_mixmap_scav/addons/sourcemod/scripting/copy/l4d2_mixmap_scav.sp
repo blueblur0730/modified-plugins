@@ -23,16 +23,12 @@ public Plugin myinfo =
 	name = "[L4D2] Mixmap Scavenge",
 	author = "Bred, blueblur",
 	description = "Randomly select five maps for scavenge. Adding for fun and reference from CMT",
-	version = "b1.0",
+	version = "a1.5",
 	url = ""
 };
 
 /*
 * changelog
-* v b1.0: 7/26/23
-* - change the method to store scores. yes i dont actually know how to use ArrayList so i just use more varibles xd.
-* - need further enhancement.
-*
 * v a1.5: 7/25/23
 * - remove the forward from readyup. replaced with event round_start.
 * - update the logic to store scores.
@@ -84,6 +80,8 @@ Handle g_hArrayTags;				// Stores tags for indexing g_hTriePools 存放地图池
 Handle g_hTriePools;				// Stores pool array handles by tag name 存放由标签分类的地图
 Handle g_hArrayTagOrder;			// Stores tags by rank 存放标签顺序
 Handle g_hArrayMapOrder;			// Stores finalised map list in order 存放抽取完成后的地图顺序
+Handle g_hArrayTeamA_RoundScore;	// Stores team A round score
+Handle g_hArrayTeamB_RoundScore;	// Stores team B round score
 
 bool g_bMaplistFinalized;
 bool g_bMapsetInitialized;
@@ -95,18 +93,6 @@ int
 	g_iScoresTeam_B,
 	g_iScoresMatch_A,
 	g_iScoresMatch_B;
-
-int
-	g_RecordedScoreA_1,
-	g_RecordedScoreA_2,
-	g_RecordedScoreA_3,
-	g_RecordedScoreA_4;
-
-int
-	g_RecordedScoreB_1,
-	g_RecordedScoreB_2,
-	g_RecordedScoreB_3,
-	g_RecordedScoreB_4;
 
 int g_RoundNumberPlayed;
 
@@ -182,6 +168,8 @@ void PluginStartInit()
 	g_hTriePools = CreateTrie();
 	g_hArrayTagOrder = CreateArray(BUF_SZ/4);
 	g_hArrayMapOrder = CreateArray(BUF_SZ/4);
+	g_hArrayTeamA_RoundScore = CreateArray(BUF_SZ/4);
+	g_hArrayTeamB_RoundScore = CreateArray(BUF_SZ/4);
 
 	g_bMapsetInitialized = false;
 	g_bMaplistFinalized = false;
@@ -224,7 +212,6 @@ void LoadSDK()
 
 public void Event_ScavRoundFinished(Event event, char[] name, bool dontBroadcast)
 {
-	/*
 	if(GetScavengeRoundNumber() != 1)
 	{
 		for (int i = 1; i < GetScavengeRoundNumber(); i++)
@@ -237,33 +224,6 @@ public void Event_ScavRoundFinished(Event event, char[] name, bool dontBroadcast
 	{
 		PushArrayCell(g_hArrayTeamA_RoundScore, GetScavengeTeamScore(2, 1));
 		PushArrayCell(g_hArrayTeamB_RoundScore, GetScavengeTeamScore(3, 1));
-	}
-	*/
-	switch (GetScavengeRoundNumber())
-	{
-		case 1:
-		{
-			g_RecordedScoreA_1 = GetScavengeTeamScore(2, 1);
-			g_RecordedScoreB_1 = GetScavengeTeamScore(3, 1);
-		}
-
-		case 2:
-		{
-			g_RecordedScoreA_2 = GetScavengeTeamScore(2, 2);
-			g_RecordedScoreB_2 = GetScavengeTeamScore(3, 2);
-		}
-
-		case 3:
-		{
-			g_RecordedScoreA_3 = GetScavengeTeamScore(2, 3);
-			g_RecordedScoreB_3 = GetScavengeTeamScore(3, 3);
-		}
-
-		case 4:
-		{
-			g_RecordedScoreA_4 = GetScavengeTeamScore(2, 4);
-			g_RecordedScoreB_4 = GetScavengeTeamScore(3, 4);
-		}
 	}
 	
 	g_iScoresTeam_A = GetScavengeTeamScore(2, GetScavengeRoundNumber());
@@ -386,9 +346,8 @@ void SetScoresAndRoundNumber()
 
 			SetScavengeMatchScore(2, g_iScoresMatch_A);
 			SetScavengeMatchScore(3, g_iScoresMatch_B);
-
-			SetScavengeTeamScore(2, 1, g_RecordedScoreA_1);
-			SetScavengeTeamScore(3, 1, g_RecordedScoreB_1);
+			SetScavengeTeamScore(2, 1, GetArrayCell(g_hArrayTeamA_RoundScore, GetArraySize(g_hArrayTeamA_RoundScore)));
+			SetScavengeTeamScore(3, 1, GetArrayCell(g_hArrayTeamB_RoundScore, GetArraySize(g_hArrayTeamB_RoundScore)));
 		}
 
 		case 2:
@@ -398,8 +357,15 @@ void SetScoresAndRoundNumber()
 			SetScavengeMatchScore(2, g_iScoresMatch_A);
 			SetScavengeMatchScore(3, g_iScoresMatch_B);
 
-			SetScavengeTeamScore(2, 2, g_RecordedScoreA_2);
-			SetScavengeTeamScore(3, 2, g_RecordedScoreB_2);
+			for (int i = 0; i < GetArraySize(g_hArrayTeamA_RoundScore); i++)
+			{
+				SetScavengeTeamScore(2, i, GetArrayCell(g_hArrayTeamA_RoundScore, i));
+			}
+
+			for (int i = 0; i < GetArraySize(g_hArrayTeamA_RoundScore); i++)
+			{
+				SetScavengeTeamScore(2, i, GetArrayCell(g_hArrayTeamA_RoundScore, i));
+			}
 		}
 
 		case 3:
@@ -408,9 +374,15 @@ void SetScoresAndRoundNumber()
 
 			SetScavengeMatchScore(2, g_iScoresMatch_A);
 			SetScavengeMatchScore(3, g_iScoresMatch_B);
+			for (int i = 0; i < GetArraySize(g_hArrayTeamA_RoundScore); i++)
+			{
+				SetScavengeTeamScore(2, i, GetArrayCell(g_hArrayTeamA_RoundScore, i));
+			}
 
-			SetScavengeTeamScore(2, 3, g_RecordedScoreA_3);
-			SetScavengeTeamScore(3, 3, g_RecordedScoreB_3);
+			for (int i = 0; i < GetArraySize(g_hArrayTeamA_RoundScore); i++)
+			{
+				SetScavengeTeamScore(2, i, GetArrayCell(g_hArrayTeamA_RoundScore, i));
+			}
 		}
 
 		case 4:
@@ -419,11 +391,25 @@ void SetScoresAndRoundNumber()
 
 			SetScavengeMatchScore(2, g_iScoresMatch_A);
 			SetScavengeMatchScore(3, g_iScoresMatch_B);
+			for (int i = 0; i < GetArraySize(g_hArrayTeamA_RoundScore); i++)
+			{
+				SetScavengeTeamScore(2, i, GetArrayCell(g_hArrayTeamA_RoundScore, i));
+			}
 
-			SetScavengeTeamScore(2, 4, g_RecordedScoreA_4);
-			SetScavengeTeamScore(3, 4, g_RecordedScoreB_4);
+			for (int i = 0; i < GetArraySize(g_hArrayTeamA_RoundScore); i++)
+			{
+				SetScavengeTeamScore(2, i, GetArrayCell(g_hArrayTeamA_RoundScore, i));
+			}
+		}
+
+		case 5:
+		{
+			return;		// we have finished a match.
 		}
 	}
+
+	ClearArray(g_hArrayTeamA_RoundScore);
+	ClearArray(g_hArrayTeamB_RoundScore);
 
 	g_iScoresMatch_A = 0;
 	g_iScoresMatch_B = 0;

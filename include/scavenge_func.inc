@@ -203,10 +203,29 @@ stock int GetScavengeTeamScore(int team, int round = -1)
 		-Member: 007 (offset 28) (type integer) (bits 6)
 		-Member: 008 (offset 32) (type integer) (bits 6)
 		-Member: 009 (offset 36) (type integer) (bits 6)
+
+	  the property has 10 elements.
+	*/
+
+	/*
+	 team index has been converted to 0 and 1 from 2 and 3.
+	 Tooth table:
+	 	team | round | result
+	   	  2	  	 1 	  	 0
+		  2		 2		 2
+		  2		 3	 	 4
+		  2		 4		 6
+		  2		 5		 8
+		---------------------
+		  3		 1		 1
+		  3		 2		 3
+		  3		 3		 5
+		  3		 4		 7
+		  3		 5		 9
 	*/
 
 	// '(2*(round-1))+team' can just be the result from 0 to 9. each number represents the round score a team secured.
-	// In this formula, interger round = 1 to 5, interger team = 1 or 0.
+	// In this formula, interger round = 1 to 5, interger team = 2 or 3.
 }
 
 /*
@@ -216,7 +235,7 @@ stock int GetScavengeTeamScore(int team, int round = -1)
  * @param round		round index to set the score, valid index is 1 to 5
  * @param score		round score to set
  */
-stock void SetScavengeTeamScore(int team, int round = -1, int score)
+stock void SetScavengeTeamScore(int team, int round, int score)
 {
 	team = L4D2_TeamNumberToTeamIndex(team);
 

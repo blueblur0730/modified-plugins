@@ -6,17 +6,29 @@
 #include <sdkhooks>
 #include <scavenge_func>
 
-/*
-* A plugin to test wether you can set scavenge round, scavenge round scores, scavenge match scores.
-* (perhaps scavenge item remaining and scavenge goal is ok too)
-* result is all ok.
-*/
+public Plugin myinfo =
+{
+	name = "[L4D2] Set Scores Scavenge",
+	author = "blueblur",
+	description = "Provide votes and commander to set scavenge scores, round numbers and other info.",
+	version = "1.0",
+	url = ""
+}
 
 public void OnPluginStart()
 {
     RegAdminCmd("sm_setrounds", SetRounds, ADMFLAG_SLAY);
     RegAdminCmd("sm_setroundscores", SetRoundScores, ADMFLAG_SLAY);
     RegAdminCmd("sm_setmatchscores", SetMatchScores, ADMFLAG_SLAY);
+
+    CheckGame();
+}
+
+void CheckGame()
+{
+	if (GetEngineVersion() != Engine_Left4Dead2) {
+		SetFailState("Plugin 'SetScores' supports Left 4 Dead 2 only!");
+	}
 }
 
 Action SetRounds(int client, int args)
