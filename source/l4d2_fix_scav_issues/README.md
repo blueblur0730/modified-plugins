@@ -12,6 +12,7 @@ https://github.com/nagadomi/l4d2_scavenge_1st_round_skip/issues/1
 ### Requirment
 - Left4Dhooks 1.134+
 - Readyup (Optional)
+- 编译库 scavenge_func
 
 <hr>
 ### Admin Cmd
