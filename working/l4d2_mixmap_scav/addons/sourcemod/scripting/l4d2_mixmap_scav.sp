@@ -15,9 +15,6 @@
 #include <sdkhooks>
 //#include <readyup>
 
-#define SECTION_NAME "CTerrorGameRules::SetCampaignScores"
-#define LEFT4FRAMEWORK_GAMEDATA "left4dhooks.l4d2"
-
 public Plugin myinfo =
 {
 	name = "[L4D2] Mixmap Scavenge",
@@ -110,8 +107,6 @@ int
 
 int g_RoundNumberPlayed;
 
-//bool bLeftStartArea;
-//bool bReadyUpAvailable;
 bool 	g_bCMapTransitioned = false,
 		g_bServerForceStart = false;
 
@@ -129,11 +124,11 @@ Handle g_hCMapSetCampaignScores;
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	// Right before loading first map; params: 1 = maplist size; 2 = name of first map
-	g_hForwardStart = CreateGlobalForward("OnCMTStart", ET_Ignore, Param_Cell, Param_String );
+	g_hForwardStart = CreateGlobalForward("OnCMTScavStart", ET_Ignore, Param_Cell, Param_String );
 	// After loading a map (to let other plugins know what the next map will be ahead of time); 1 = name of next map
-	g_hForwardNext = CreateGlobalForward("OnCMTNextKnown", ET_Ignore, Param_String );
+	g_hForwardNext = CreateGlobalForward("OnCMTScavNextKnown", ET_Ignore, Param_String );
 	// After last map is played; no params
-	g_hForwardEnd = CreateGlobalForward("OnCMTEnd", ET_Ignore );
+	g_hForwardEnd = CreateGlobalForward("OnCMTScavEnd", ET_Ignore );
 
 	MarkNativeAsOptional("PLAYSTATS_BroadcastRoundStats");
 	MarkNativeAsOptional("PLAYSTATS_BroadcastGameStats");
@@ -143,27 +138,25 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart() 
 {
-	LoadSDK();
-	
-	g_cvNextMapPrint	= CreateConVar("l4d2mm_nextmap_print",		"1",	"Determine whether to show what the next map will be", _, true, 0.0, true, 1.0);
-	g_cvMaxMapsNum		= CreateConVar("l4d2mm_max_maps_num",		"2",	"Determine how many maps of one campaign can be selected; 0 = no limits;", _, true, 0.0, true, 5.0);
-	g_cvFinaleEndStart	= CreateConVar("l4d2mm_finale_end_start",	"1",	"Determine whether to remixmap in the end of finale; 0 = disable;1 = enable", _, true, 0.0, true, 1.0);
+	g_cvNextMapPrint	= CreateConVar("l4d2mm_scav_nextmap_print",		"1",	"Determine whether to show what the next map will be", _, true, 0.0, true, 1.0);
+	g_cvMaxMapsNum		= CreateConVar("l4d2mm_scav_max_maps_num",		"2",	"Determine how many maps of one campaign can be selected; 0 = no limits;", _, true, 0.0, true, 5.0);
+	g_cvFinaleEndStart	= CreateConVar("l4d2mm_scav_finale_end_start",	"1",	"Determine whether to remixmap in the end of finale; 0 = disable;1 = enable", _, true, 0.0, true, 1.0);
 
 	//Servercmd 服务器指令（用于cfg文件）
-	RegServerCmd( "sm_addmap", AddMap);
-	RegServerCmd( "sm_tagrank", TagRank);
+	RegServerCmd( "sm_addmap_scav", AddMap);
+	RegServerCmd( "sm_tagrank_scav", TagRank);
 
 	//Start/Stop 启用/中止指令
-	RegAdminCmd( "sm_manualmixmap", ManualMixmap, ADMFLAG_ROOT, "Start mixmap with specified maps 启用mixmap加载特定地图顺序的地图组");
-	RegAdminCmd( "sm_fmixmap", ForceMixmap, ADMFLAG_ROOT, "Force start mixmap (arg1 empty for 'default' maps pool) 强制启用mixmap（随机官方地图）");
-	RegConsoleCmd( "sm_mixmap", Mixmap_Cmd, "Vote to start a mixmap (arg1 empty for 'default' maps pool);通过投票启用Mixmap，并可加载特定的地图池；无参数则启用官图顺序随机");
-	RegConsoleCmd( "sm_stopmixmap",	StopMixmap_Cmd, "Stop a mixmap;中止mixmap，并初始化地图列表");
-	RegAdminCmd( "sm_fstopmixmap",	StopMixmap, ADMFLAG_ROOT, "Force stop a mixmap ;强制中止mixmap，并初始化地图列表");
+	RegAdminCmd( "sm_manualmixmap_scav", ManualMixmap, ADMFLAG_ROOT, "Start mixmap with specified maps 启用mixmap加载特定地图顺序的地图组");
+	RegAdminCmd( "sm_fmixmap_scav", ForceMixmap, ADMFLAG_ROOT, "Force start mixmap (arg1 empty for 'default' maps pool) 强制启用mixmap（随机官方地图）");
+	RegConsoleCmd( "sm_mixmap_scav", Mixmap_Cmd, "Vote to start a mixmap (arg1 empty for 'default' maps pool);通过投票启用Mixmap，并可加载特定的地图池；无参数则启用官图顺序随机");
+	RegConsoleCmd( "sm_stopmixmap_scav",	StopMixmap_Cmd, "Stop a mixmap;中止mixmap，并初始化地图列表");
+	RegAdminCmd( "sm_fstopmixmap_scav",	StopMixmap, ADMFLAG_ROOT, "Force stop a mixmap ;强制中止mixmap，并初始化地图列表");
 
 	//Midcommand 插件启用后可使用的指令
-	RegConsoleCmd( "sm_maplist", Maplist, "Show the map list; 展示mixmap最终抽取出的地图列表");
-	RegAdminCmd( "sm_allmap", ShowAllMaps, ADMFLAG_ROOT, "Show all official maps code; 展示所有官方地图的地图代码");
-	RegAdminCmd( "sm_allmaps", ShowAllMaps, ADMFLAG_ROOT, "Show all official maps code; 展示所有官方地图的地图代码");
+	RegConsoleCmd( "sm_maplist_scav", Maplist, "Show the map list; 展示mixmap最终抽取出的地图列表");
+	RegAdminCmd( "sm_allmap_sacv", ShowAllMaps, ADMFLAG_ROOT, "Show all official maps code; 展示所有官方地图的地图代码");
+	RegAdminCmd( "sm_allmaps_scav", ShowAllMaps, ADMFLAG_ROOT, "Show all official maps code; 展示所有官方地图的地图代码");
 
 	// HookEvent("player_left_start_area", LeftStartArea_Event, EventHookMode_PostNoCopy);
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Post);
@@ -193,30 +186,6 @@ void PluginStartInit()
 
 	g_RoundNumberPlayed = 0;
 }
-
-void LoadSDK()
-{
-	Handle hGameData = LoadGameConfigFile(LEFT4FRAMEWORK_GAMEDATA);
-	if (hGameData == null) {
-		SetFailState("Could not load gamedata/%s.txt", LEFT4FRAMEWORK_GAMEDATA);
-	}
-
-	StartPrepSDKCall(SDKCall_GameRules);
-	if (!PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, SECTION_NAME)) {
-		SetFailState("Function '%s' not found.", SECTION_NAME);
-	}
-
-	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-	g_hCMapSetCampaignScores = EndPrepSDKCall();
-
-	if (g_hCMapSetCampaignScores == null) {
-		SetFailState("Function '%s' found, but something went wrong.", SECTION_NAME);
-	}
-
-	delete hGameData;
-}
-
 
 // ----------------------------------------------------------
 // 		Hooks
@@ -288,21 +257,6 @@ public void Event_RoundStart(Event event, char[] name, bool dontBroadcast)
 	}
 }
 
-/*
-public void OnReadyUpInitiatePre()
-{
-
-}
-*/
-
-// Otherwise nextmap would be stuck and people wouldn't be able to play normal campaigns without the plugin 结束后初始化sm_nextmap的值
-
-/*
-public void OnPluginEnd() {
-	ServerCommand("sm_nextmap ''");
-}
-*/
-
 public void OnClientPutInServer(int client)
 {	
 	if (g_bMapsetInitialized)
@@ -326,8 +280,6 @@ public void OnMapStart() {
 	if (g_bCMapTransitioned) {
 		g_bCMapTransitioned = false;
 	}
-
-	//ServerCommand("sm_nextmap ''");
 	
 	char buffer[BUF_SZ];
 	
@@ -373,9 +325,6 @@ void SetScoresAndRoundNumber()
 		L4D2_SwapTeams();
 	}
 	*/
-
-	//Set scores on scoreboard
-	//SDKCall(g_hCMapSetCampaignScores, g_iScoresTeam_A, g_iScoresTeam_B);
 
 	//Set actual scores
 	switch (g_RoundNumberPlayed)
@@ -473,7 +422,7 @@ void GotoMap(const char[] sMapName, bool force = false)
 	L 07/20/2023 - 09:11:59: World triggered "Round_End"
 	L 07/20/2023 - 09:12:00: Staying on original map c6m1_riverbank
 
-	can not ues nextmap in scavenge.
+	can not use nextmap in scavenge.
 	*/	
 	ServerCommand("sm_map %s", sMapName);		// since no gas can in first round issue is solved in left4dhooks 1.134, we can simply use sm_map instead of using L4D2_ChangeLevel
 	CreateTimer(0.1, Timed_NextMapInfo);

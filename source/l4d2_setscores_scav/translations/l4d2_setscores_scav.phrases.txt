@@ -1,0 +1,213 @@
+"Phrases"
+{   
+    // ----------------
+    // Commanders
+    // ----------------
+    
+    // cant use color tags.
+
+    "Usage1"
+    {
+        "en"        "[SM] Usage: sm_setrounds <num>"
+        "chi"       "[SM] 用法: sm_setrounds <局数>"
+    }
+
+    "Usage2"
+    {
+        "en"        "[SM] Usage: sm_setroundscores <team> <round num> <score>"
+        "chi"       "[SM] 用法: sm_setroundscores <团队> <局数> <分数>"
+    }
+
+    "Usage3"
+    {
+        "en"        "[SM] Usage: sm_setmatchscores <team> <score>"
+        "chi"       "[SM] 用法: sm_setmatchscores <团队> <分数>"
+    }
+
+    "Usage4"
+    {
+        "en"        "[SM] Usage: sm_setgoal <goal>"
+        "chi"       "[SM] 用法: sm_setgoal <目标数>"
+    }
+
+    "OutOfBounds1"
+    {
+        "en"        "[SM]: Round number can only inside the corridor [1, 5]."
+        "chi"       "[SM]: 局数只能在区间 [1, 5] 内."
+    }
+
+    "OutOfBounds2"
+    {
+        "en"        "[SM]: Team index can only be 2 (Survivors) or 3 (Infected)."
+        "chi"       "[SM]: 团队索引只能为数字 2 (生还者) 或 3 (感染者)."
+    }
+
+    "ReadyupStatusRequired"
+    {
+        "en"        "[SM]: Scores can only be changed during readyup before the round starts."
+        "chi"       "[SM]: 只有在轮回开始前的准备阶段才能设置分数."
+    }
+
+    // ----------------
+    //  Chat Messages
+    // ----------------
+
+    "NoSpec"
+    {
+        "en"        "[{orange}Set Scores{default}] Score voting isn't allowed for {lightgreen}spectators{default}."
+        "chi"       "[{orange}分数设置{default}] {lightgreen}旁观者{default} 不允许投票设置分数."
+    }
+
+    "EnoughPlayersRequired"
+    {
+        "en"        "[{orange}Set Scores{default}] Score vote cannot be started. {olive}Not enough{default} players."
+        "chi"       "[{orange}分数设置{default}] 分数投票不能进行. 没有{olive}足够的{default}玩家."
+    }
+
+    "CannotVoteNow"
+    {
+        "en"        "[{orange}Set Scores{default}] Score vote cannot be started now."
+        "chi"       "[{orange}分数设置{default}] 分数投票不能现在进行."
+    }
+
+    "WhoSetRound"
+    {
+        "#format"   "{1:s},{2:d},{3:d}"     // 1: initiator, 2: old round, 3: new round
+        "en"        "[{orange}Set Scores{default}] {olive}{1}{default} has changed round number from {orange}{2}{default} to {orange}{3}{default}."
+        "chi"       "[{orange}分数设置{default}] {olive}{1}{default} 已将局数从 {orange}{2}{default} 设置为 {orange}{3}{default}."
+    }
+
+    "VoteSetRound"
+    {
+        "#format"   "{1:d},{2:d}"                 //1: old round, 2: new round
+        "en"        "[{orange}Set Scores{default}] Round number has changed from {orange}{1}{default} to {orange}{2}{default} by vote."
+        "chi"       "[{orange}分数设置{default}] 局数已被投票从 {orange}{1}{default} 设置为 {orange}{2}{default}."
+    }
+
+    "WhoSetTeamScoresSurvivor"
+    {
+        "#format"   "{1:s},{2:d},{3:d},{4:d}"     // 1: initiator, 2: round specified, 3: old score, 4: new score
+        "en"        "[{orange}Set Scores{default}] {olive}{1}{default} has changed survivors' round score on round {orange}{2}{default} from {blue}{3}{default} to {blue}{4}{default}."
+        "chi"       "[{orange}分数设置{default}] {olive}{1}{default} 已将生还者在第 {orange}{2}{default} 局的小局分数从 {blue}{3}{default} 设置为 {blue}{4}{default}."
+    }
+
+    "WhoSetTeamScoresInfected"
+    {
+        "#format"   "{1:s},{2:d},{3:d},{4:d}"     // 1: initiator, 2: round specified, 3: old score, 4: new score
+        "en"        "[{orange}Set Scores{default}] {olive}{1}{default} has changed infected's round score on round {orange}{2}{default} from {red}{3}{default} to {red}{4}{default}."
+        "chi"       "[{orange}分数设置{default}] {olive}{1}{default} 已将感染者在第 {orange}{2}{default} 局的小局分数从 {red}{3}{default} 设置为 {red}{4}{default}."
+    }
+
+    "VoteSetTeamScoresSurvivor"
+    {
+        "#format"   "{1:d},{2:d},{3:d}"           // 1: round specified, 2: old score, 3: new score
+        "en"        "[{orange}Set Scores{default}] Survivors' round score on round {orange}{1}{default} has been changed from {blue}{2}{default} to {blue}{3}{default} by vote."
+        "chi"       "[{orange}分数设置{default}] 生还者在第 {orange}{1}{default} 局的小局分数已由投票从 {blue}{2}{default} 设置为 {blue}{3}{default}."
+    }
+
+    "VoteSetTeamScoresInfected"
+    {
+        "#format"   "{1:d},{2:d},{3:d}"           // 1: round specified, 2: old score, 3: new score
+        "en"        "[{orange}Set Scores{default}] Infected's round score on round {orange}{1}{default} has been changed from {red}{2}{default} to {red}{3}{default} by vote."
+        "chi"       "[{orange}分数设置{default}] 感染者在第 {orange}{1}{default} 局的小局分数已由投票从 {red}{2}{default} 设置为 {red}{3}{default}."
+    }
+
+    "WhoSetMatchScoresSurvivor"
+    {
+        "#format"   "{1:s},{2:d},{3:d}"           // 1: initiator, 2: old score, 3: new score
+        "en"        "[{orange}Set Scores{default}] {olive}{1}{default} has changed survivors' match score from {blue}{2}{default} to {blue}{3}{default}."
+        "chi"       "[{orange}分数设置{default}] {olive}{1}{default} 已将生还者的比赛得分从 {blue}{2}{default} 设置为 {blue}{3}{default}."
+    }
+
+    "WhoSetMatchScoresInfected"
+    {
+        "#format"   "{1:s},{2:d},{3:d}"           // 1: initiator, 2: old score, 3: new score
+        "en"        "[{orange}Set Scores{default}] {olive}{1}{default} has changed infected's match score from {red}{2}{default} to {red}{3}{default} by vote."
+        "chi"       "[{orange}分数设置{default}] {olive}{1}{default} 已将感染者的比赛得分从 {red}{2}{default} 设置为 {red}{3}{default}."
+    }
+
+    "VoteSetMatchScoresSurvivor"
+    {
+        "#format"   "{1:d},{2:d}"                 // 1: old score, 2: new score
+        "en"        "[{orange}Set Scores{default}] Survivors' match score has been changed from {blue}{1}{default} to {blue}{2}{default} by vote."
+        "chi"       "[{orange}分数设置{default}] 生还者的比赛得分已由投票从 {blue}{1}{default} 设置为 {blue}{2}{default}."
+    }
+
+    "VoteSetMatchScoresInfected"
+    {
+        "#format"   "{1:d},{2:d}"                 // 1: old score, 2: new score
+        "en"        "[{orange}Set Scores{default}] Infected's match score has been changed from {red}{1}{default} to {red}{2}{default} by vote."
+        "chi"       "[{orange}分数设置{default}] 感染者的比赛得分已由投票从 {red}{1}{default} 设置为 {red}{2}{default}."
+    }
+
+    "WhoSetGoal"
+    {
+        "#format"   "{1:s},{2:d},{3:d}"           // 1: initiator, 2: old goal, 3: new goal
+        "en"        "[{orange}Set Scores{default}] {olive}{1}{default} has changed gascan goal from {orange}{2}{default} to {orange}{3}{default}."
+        "chi"       "[{orange}分数设置{default}] {olive}{1}{default} 已将油桶目标数从 {orange}{2}{default} 设置为 {orange}{3}{default}."
+    }
+
+    "VoteSetGoal"
+    {
+        "#format"   "{1:d},{2:d}"                 // 1: old goal, 2: new goal
+        "en"        "[{orange}Set Scores{default}] Gascan goal has been changed from {orange}{1}{default} to {orange}{2}{default} by vote."
+        "chi"       "[{orange}分数设置{default}] 油桶目标数已由投票从 {orange}{1}{default} 设置为 {orange}{2}{default}."
+    }
+
+    //-----------------
+    //  Vote Panel
+    //-----------------
+
+    // cant use color tags.
+    "ChangeRound"
+    {
+        "#format"   "{1:d},{2:d}"                           // 1: old round, 2: new round
+        "en"        "Change round from {1} to {2}?"
+        "chi"       "设置局数由 {1} 变为 {2}?"
+    }
+
+    "ChangeTeamScore"
+    {
+        "#format"   "{1:d},{2:d},{3:d},{4:d}"               // 1: team index, 2: old score, 3: new score, 4: round specified
+        "en"        "Change team{1}'s round score from {2} to {3} on round {4}?"
+        "chi"       "将队伍 {1} 在第 {4} 局的小局分数从 {2} 设置为 {3}?"
+    }
+
+    "ChangeMatchScore"
+    {
+        "#format"   "{1:d},{2:d},{3:d}"                     // 1: team index, 2: old score, 3: new score
+        "en"        "Change team{1}'s match score from {2} to {3}?"
+        "chi"       "将队伍 {1} 的比赛分数从 {2} 设置为 {3}?"
+    }
+
+    "ChangeGoal"
+    {
+        "#format"   "{1:d},{2:d}"                           // 1: old goal, 2: new goal
+        "en"        "Change gascan goal from {1} to {2}?"
+        "chi"       "将油桶目标数从 {1} 设置为 {2}?"
+    }
+
+    "ChangingRound"
+    {
+        "en"        "Changing round..."
+        "chi"       "正在改变局数..."
+    }
+
+    "ChangingTeamScores"
+    {
+        "en"        "Changing team score..."
+        "chi"       "正在改变队伍小轮得分..."
+    }
+
+    "ChangingMatchScores"
+    {
+        "en"        "Changing satch score..."
+        "chi"       "正在改变比赛得分..."
+    }
+
+    "ChangingGoal"
+    {
+        "en"        "Changing gascan goal..."
+        "chi"       "正在改变油桶目标数..."
+    }
+}
