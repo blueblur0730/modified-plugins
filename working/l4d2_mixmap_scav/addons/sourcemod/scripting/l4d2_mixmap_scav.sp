@@ -124,11 +124,11 @@ Handle g_hCMapSetCampaignScores;
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	// Right before loading first map; params: 1 = maplist size; 2 = name of first map
-	g_hForwardStart = CreateGlobalForward("OnCMTScavStart", ET_Ignore, Param_Cell, Param_String );
+	g_hForwardStart = CreateGlobalForward("OnCMTStart", ET_Ignore, Param_Cell, Param_String );
 	// After loading a map (to let other plugins know what the next map will be ahead of time); 1 = name of next map
-	g_hForwardNext = CreateGlobalForward("OnCMTScavNextKnown", ET_Ignore, Param_String );
+	g_hForwardNext = CreateGlobalForward("OnCMTNextKnown", ET_Ignore, Param_String );
 	// After last map is played; no params
-	g_hForwardEnd = CreateGlobalForward("OnCMTScavEnd", ET_Ignore );
+	g_hForwardEnd = CreateGlobalForward("OnCMTEnd", ET_Ignore );
 
 	MarkNativeAsOptional("PLAYSTATS_BroadcastRoundStats");
 	MarkNativeAsOptional("PLAYSTATS_BroadcastGameStats");

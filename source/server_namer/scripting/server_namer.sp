@@ -1,4 +1,7 @@
 /* -------------------CHANGELOG--------------------
+4.3
+ - when using l4d2_mixmap, show others we are using it. 
+
 4.2
  - Optimized some merged AnneHappy related codes
 
@@ -66,31 +69,30 @@
 #include <sdktools>
 //#include <left4dhooks>
 #define REQUIRE_PLUGIN
-#define PL_VERSION "4.2"
+#define PL_VERSION "4.3"
 
-bool CustomName;
-bool IsConfoglAvailable;
-bool isempty;
+bool 
+	CustomName,
+	IsConfoglAvailable,
+	isempty,
+	b_mixmap;
 
-ConVar cvarHostNum;
-ConVar cvarMainName;
-ConVar cvarMainNameFile;
-ConVar cvarServerNameFormatCase1;
-ConVar cvarServerNameFormatCase2;
-ConVar cvarServerNameFormatCase3;
-ConVar cvarServerNameFormatCase4;
-ConVar cvarMpGameMin;
-ConVar cvarSI;
-ConVar cvarMpGameMode;
-ConVar cvarZDifficulty;
-ConVar cvarHostname;
-ConVar cvarReadyUpCfgName;
+ConVar 
+	cvarHostNum,
+	cvarMainName,
+	cvarMainNameFile,
+	cvarServerNameFormatCase1,
+	cvarServerNameFormatCase2,
+	cvarServerNameFormatCase3,
+	cvarServerNameFormatCase4,
+	cvarMpGameMin,
+	cvarSI,
+	cvarMpGameMode,
+	cvarZDifficulty,
+	cvarHostname,
+	cvarReadyUpCfgName;
 
 char AnneHappy[128];
-
-//float GetMapMaxFlow;
-
-//int RoundFailCounts;
 
 KeyValues kv;
 
@@ -100,7 +102,7 @@ public Plugin myinfo =
 	version = PL_VERSION,
 	description = "Changes server hostname according to the current game mode",
 	author = "sheo, Forgetest, 东, merged and modified by blueblur",
-	url = "https://github.com/Target5150/MoYu_Server_Stupid_Plugins/tree/master/The%20Last%20Stand/server_namer (Original) || https://github.com/fantasylidong/CompetitiveWithAnne/blob/master/addons/sourcemod/scripting/extend/server_name.sp (AnneHappy ServerName)"
+	url = "https://github.com/blueblur0730/modified-plugins/tree/main/source/server_namer"
 };
 
 public void OnPluginStart()
@@ -125,7 +127,7 @@ public void OnPluginStart()
 	cvarHostNum = CreateConVar("sn_host_num", "0", "Server number, usually set at lauch command line.");
 	cvarMainName = CreateConVar("sn_main_name", "Hostname", "Main server name.");
 	cvarMainNameFile = CreateConVar("sn_main_name_path", "", "Path to text file where main server name is (for using UTF-8 characters) (bases \"sourcemod/configs/\").");
-	cvarServerNameFormatCase1 = CreateConVar("sn_hostname_format1", "[{hostname} #{servernum}] {gamemode}", "Hostname format. Case: Confogl or Vanilla without difficulty levels, such as Versus.");
+	cvarServerNameFormatCase1 = CreateConVar("sn_hostname_format1", "[{hostname} #{servernum}] {gamemode} {Mixmap}", "Hostname format. Case: Confogl or Vanilla without difficulty levels, such as Versus.");
 	cvarServerNameFormatCase2 = CreateConVar("sn_hostname_format2", "[{hostname} #{servernum}] {gamemode} - {difficulty}", "Hostname format. Case: Vanilla with difficulty levels, such as Campaign.");
 	cvarServerNameFormatCase3 = CreateConVar("sn_hostname_format3", "[{hostname} #{servernum}]", "Hostname format. Case: empty server.");
 	cvarServerNameFormatCase4 = CreateConVar("sn_hostname_format4", "[{hostname} #{servernum}] {hardcoop}{AnneHappy}{Full}", "Hostname format. Case: AnneHappy Special.");
@@ -144,6 +146,9 @@ public void OnPluginStart()
 	HookConVarChange(cvarServerNameFormatCase3, OnCvarChanged);
 	HookConVarChange(cvarServerNameFormatCase4, OnCvarChanged);
 	IsConfoglAvailable = LibraryExists("confogl");
+
+	b_mixmap = false;
+
 	SetName();
 }
 
@@ -203,6 +208,16 @@ public void OnClientDisconnect_Post(int client)
 public void OnCvarChanged(ConVar cvar, const char[] oldVal, const char[] newVal)
 {
 	SetName();
+}
+
+public void OnCMTStart()
+{
+	b_mixmap = true;
+}
+
+public void OnCMTEnd()
+{
+	b_mixmap = false;
 }
 
 public Action Cmd_Hostname(int client, int args)
@@ -330,7 +345,7 @@ public void SetConfoglName()
 			}	
 			else 
 			{
-				if(StrContains(AnneHappy, "AnneHunters", false)!=-1)
+				if(StrContains(AnneHappy, "1vHunters", false)!=-1)
 				{
 				ReplaceString(AnneHappy, sizeof(FinalHostname), "{hardcoop}","[HT训练]");
 				ParseNameAndSendToMainConVar(FinalHostname);
@@ -338,7 +353,7 @@ public void SetConfoglName()
 				}
 				else 
 				{
-					if(StrContains(AnneHappy, "WitchPartyAnne", false)!=-1)
+					if(StrContains(AnneHappy, "WitchParty", false)!=-1)
 					{
 						ReplaceString(FinalHostname, sizeof(FinalHostname), "{hardcoop}","[女巫派对]");
 						ParseNameAndSendToMainConVar(FinalHostname);
@@ -383,6 +398,17 @@ public void SetConfoglName()
 	else
 	{
 		ReplaceString(FinalHostname, sizeof(FinalHostname), "{Full}", "[缺人]");
+		ParseNameAndSendToMainConVar(FinalHostname);
+	}
+
+	if (b_mixmap == true)
+	{
+		ReplaceString(FinalHostname, sizeof(FinalHostname), "{Mixmap}", "Mixmap");
+		ParseNameAndSendToMainConVar(FinalHostname);
+	}
+	else
+	{
+		ReplaceString(FinalHostname, sizeof(FinalHostname), "{Mixmap}", "");
 		ParseNameAndSendToMainConVar(FinalHostname);
 	}
 }
