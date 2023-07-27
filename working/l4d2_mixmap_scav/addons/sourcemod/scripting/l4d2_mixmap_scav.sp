@@ -20,12 +20,17 @@ public Plugin myinfo =
 	name = "[L4D2] Mixmap Scavenge",
 	author = "Bred, blueblur",
 	description = "Randomly select five maps for scavenge. Adding for fun and reference from CMT",
-	version = "b1.0",
+	version = "b1.1",
 	url = ""
 };
 
 /*
 * changelog
+* v b1.1: 7/27/23
+* - fix the problem when setting scores our teams got mixed up with their scores.
+* - added detection to check if the winner has showed up then end mixmap.
+* - reformatted varibles' name.
+*
 * v b1.0: 7/26/23
 * - change the method to store scores. yes i dont actually know how to use ArrayList so i just use more varibles xd.
 * - need further enhancement.
@@ -88,34 +93,33 @@ int g_iMapsPlayed;
 int g_iMapCount;
 
 int
-	g_iScoresTeam_A,
-	g_iScoresTeam_B,
 	g_iScoresMatch_A,
 	g_iScoresMatch_B;
 
 int
-	g_RecordedScoreA_1,
-	g_RecordedScoreA_2,
-	g_RecordedScoreA_3,
-	g_RecordedScoreA_4;
+	g_iRecordedScoreA_1,
+	g_iRecordedScoreA_2,
+	g_iRecordedScoreA_3,
+	g_iRecordedScoreA_4;
 
 int
-	g_RecordedScoreB_1,
-	g_RecordedScoreB_2,
-	g_RecordedScoreB_3,
-	g_RecordedScoreB_4;
+	g_iRecordedScoreB_1,
+	g_iRecordedScoreB_2,
+	g_iRecordedScoreB_3,
+	g_iRecordedScoreB_4;
 
-int g_RoundNumberPlayed;
+int g_iRoundNumberPlayed;
 
 bool 	g_bCMapTransitioned = false,
-		g_bServerForceStart = false;
+		g_bServerForceStart = false,
+		g_bIsMatchEnded;
 
-Handle g_hForwardStart;
-Handle g_hForwardNext;
-Handle g_hForwardEnd;
+Handle 
+	g_hForwardStart,
+ 	g_hForwardNext,
+	g_hForwardEnd;
 
 Handle g_hCountDownTimer;
-Handle g_hCMapSetCampaignScores;
 
 // ----------------------------------------------------------
 // 		Setup
@@ -143,20 +147,20 @@ public void OnPluginStart()
 	g_cvFinaleEndStart	= CreateConVar("l4d2mm_scav_finale_end_start",	"1",	"Determine whether to remixmap in the end of finale; 0 = disable;1 = enable", _, true, 0.0, true, 1.0);
 
 	//Servercmd 服务器指令（用于cfg文件）
-	RegServerCmd( "sm_addmap_scav", AddMap);
-	RegServerCmd( "sm_tagrank_scav", TagRank);
+	RegServerCmd( "sm_addmap", AddMap);
+	RegServerCmd( "sm_tagrank", TagRank);
 
 	//Start/Stop 启用/中止指令
-	RegAdminCmd( "sm_manualmixmap_scav", ManualMixmap, ADMFLAG_ROOT, "Start mixmap with specified maps 启用mixmap加载特定地图顺序的地图组");
-	RegAdminCmd( "sm_fmixmap_scav", ForceMixmap, ADMFLAG_ROOT, "Force start mixmap (arg1 empty for 'default' maps pool) 强制启用mixmap（随机官方地图）");
-	RegConsoleCmd( "sm_mixmap_scav", Mixmap_Cmd, "Vote to start a mixmap (arg1 empty for 'default' maps pool);通过投票启用Mixmap，并可加载特定的地图池；无参数则启用官图顺序随机");
-	RegConsoleCmd( "sm_stopmixmap_scav",	StopMixmap_Cmd, "Stop a mixmap;中止mixmap，并初始化地图列表");
-	RegAdminCmd( "sm_fstopmixmap_scav",	StopMixmap, ADMFLAG_ROOT, "Force stop a mixmap ;强制中止mixmap，并初始化地图列表");
+	RegAdminCmd( "sm_manualmixmap", ManualMixmap, ADMFLAG_ROOT, "Start mixmap with specified maps 启用mixmap加载特定地图顺序的地图组");
+	RegAdminCmd( "sm_fmixmap", ForceMixmap, ADMFLAG_ROOT, "Force start mixmap (arg1 empty for 'default' maps pool) 强制启用mixmap（随机官方地图）");
+	RegConsoleCmd( "sm_mixmap", Mixmap_Cmd, "Vote to start a mixmap (arg1 empty for 'default' maps pool);通过投票启用Mixmap，并可加载特定的地图池；无参数则启用官图顺序随机");
+	RegConsoleCmd( "sm_stopmixmap",	StopMixmap_Cmd, "Stop a mixmap;中止mixmap，并初始化地图列表");
+	RegAdminCmd( "sm_fstopmixmap",	StopMixmap, ADMFLAG_ROOT, "Force stop a mixmap ;强制中止mixmap，并初始化地图列表");
 
 	//Midcommand 插件启用后可使用的指令
-	RegConsoleCmd( "sm_maplist_scav", Maplist, "Show the map list; 展示mixmap最终抽取出的地图列表");
-	RegAdminCmd( "sm_allmap_sacv", ShowAllMaps, ADMFLAG_ROOT, "Show all official maps code; 展示所有官方地图的地图代码");
-	RegAdminCmd( "sm_allmaps_scav", ShowAllMaps, ADMFLAG_ROOT, "Show all official maps code; 展示所有官方地图的地图代码");
+	RegConsoleCmd( "sm_maplist", Maplist, "Show the map list; 展示mixmap最终抽取出的地图列表");
+	RegAdminCmd( "sm_allmap", ShowAllMaps, ADMFLAG_ROOT, "Show all official maps code; 展示所有官方地图的地图代码");
+	RegAdminCmd( "sm_allmaps", ShowAllMaps, ADMFLAG_ROOT, "Show all official maps code; 展示所有官方地图的地图代码");
 
 	// HookEvent("player_left_start_area", LeftStartArea_Event, EventHookMode_PostNoCopy);
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Post);
@@ -184,7 +188,20 @@ void PluginStartInit()
 	g_iMapsPlayed = 0;
 	g_iMapCount = 0;
 
-	g_RoundNumberPlayed = 0;
+	g_iRoundNumberPlayed = 0;
+
+	g_iScoresMatch_A = 0;
+	g_iScoresMatch_B = 0;
+
+	g_iRecordedScoreA_1 = 0;
+	g_iRecordedScoreA_2 = 0;
+	g_iRecordedScoreA_3 = 0;
+	g_iRecordedScoreA_4 = 0;
+
+	g_iRecordedScoreB_1 = 0;
+	g_iRecordedScoreB_2 = 0;
+	g_iRecordedScoreB_3 = 0;
+	g_iRecordedScoreB_4 = 0;
 }
 
 // ----------------------------------------------------------
@@ -194,58 +211,54 @@ void PluginStartInit()
 public void Event_ScavRoundFinished(Event event, char[] name, bool dontBroadcast)
 {
 	/*
-	if(GetScavengeRoundNumber() != 1)
+	 	on scavenge round ends, the teams have flipped.
+		at this point, the survivors' team index represented by 2 is now 1,
+		infected's team index represented by 3 is now 0.
+		these scores are team-flipped.
+	*/ 
+	if (WhoWonTheMatch() == 1 || WhoWonTheMatch() == 0)		// check if a team has won the match.
 	{
-		for (int i = 1; i < GetScavengeRoundNumber(); i++)
-		{
-			PushArrayCell(g_hArrayTeamA_RoundScore, GetScavengeTeamScore(2, i));
-			PushArrayCell(g_hArrayTeamB_RoundScore, GetScavengeTeamScore(3, i));
-		}
+		g_bIsMatchEnded = true;
+		ServerCommand("sm_fstopmixmap");		// if ture, we stop mixmap and re-initialize it.
 	}
-	else
+	else		// else we continue to mixmap
 	{
-		PushArrayCell(g_hArrayTeamA_RoundScore, GetScavengeTeamScore(2, 1));
-		PushArrayCell(g_hArrayTeamB_RoundScore, GetScavengeTeamScore(3, 1));
-	}
-	*/
-	switch (GetScavengeRoundNumber())
-	{
-		case 1:
+		switch (GetScavengeRoundNumber())
 		{
-			g_RecordedScoreA_1 = GetScavengeTeamScore(2, 1);
-			g_RecordedScoreB_1 = GetScavengeTeamScore(3, 1);
+			case 1:
+			{
+				g_iRecordedScoreA_1 = GetScavengeTeamScore(2, 1);
+				g_iRecordedScoreB_1 = GetScavengeTeamScore(3, 1);
+			}
+
+			case 2:
+			{
+				g_iRecordedScoreA_2 = GetScavengeTeamScore(2, 2);
+				g_iRecordedScoreB_2 = GetScavengeTeamScore(3, 2);
+			}
+
+			case 3:
+			{
+				g_iRecordedScoreA_3 = GetScavengeTeamScore(2, 3);
+				g_iRecordedScoreB_3 = GetScavengeTeamScore(3, 3);
+			}
+
+			case 4:
+			{
+				g_iRecordedScoreA_4 = GetScavengeTeamScore(2, 4);
+				g_iRecordedScoreB_4 = GetScavengeTeamScore(3, 4);
+			}
 		}
 
-		case 2:
+		g_iScoresMatch_A = GetScavengeMatchScore(2);
+		g_iScoresMatch_B = GetScavengeMatchScore(3);
+
+		g_iRoundNumberPlayed++;
+
+		if (InSecondHalfOfRound() && g_bMapsetInitialized)
 		{
-			g_RecordedScoreA_2 = GetScavengeTeamScore(2, 2);
-			g_RecordedScoreB_2 = GetScavengeTeamScore(3, 2);
+			CreateTimer(5.0, PerformMapProgression);
 		}
-
-		case 3:
-		{
-			g_RecordedScoreA_3 = GetScavengeTeamScore(2, 3);
-			g_RecordedScoreB_3 = GetScavengeTeamScore(3, 3);
-		}
-
-		case 4:
-		{
-			g_RecordedScoreA_4 = GetScavengeTeamScore(2, 4);
-			g_RecordedScoreB_4 = GetScavengeTeamScore(3, 4);
-		}
-	}
-	
-	g_iScoresTeam_A = GetScavengeTeamScore(2, GetScavengeRoundNumber());
-	g_iScoresTeam_B = GetScavengeTeamScore(3, GetScavengeRoundNumber());
-
-	g_iScoresMatch_A = GetScavengeMatchScore(2);
-	g_iScoresMatch_B = GetScavengeMatchScore(3);
-
-	g_RoundNumberPlayed++;
-
-	if (InSecondHalfOfRound() && g_bMapsetInitialized)
-	{
-		CreateTimer(5.0, PerformMapProgression);
 	}
 }
 
@@ -320,57 +333,75 @@ public Action Timer_OnRoundStartDelay(Handle hTimer)
 void SetScoresAndRoundNumber()
 {
 	/*
-	// compare the last round scores. need further reaserch.
-	if (g_iScoresTeam_A < g_iScoresTeam_B || g_iScoresTeam_A > g_iScoresTeam_B) {
-		L4D2_SwapTeams();
-	}
+	*	this occurs on the event round_start, which only works on first half round.
+	*	when map changed, entering a new map, teams are not flipped. but the scores we retrived on last scavenge round ending is flipped.
+	*	to set the scores correctly, the flipped-team-score should be set and seen as unflipped.
+	*	on this case, when we were retriving the scores previously, converted survivors' team index was 1, infected's was 0
+	*	so on the new round, we use unflipped team index to match 1 and 0.
+	*	so when we are trying to set the last round survivors' score, set it on infected team this round, which is represented as 3. trying to set infected's score? set it on survivor team on this round, which is represented as 2.
 	*/
-
-	//Set actual scores
-	switch (g_RoundNumberPlayed)
+	switch (g_iRoundNumberPlayed)
 	{
 		case 1:
 		{
 			SetScavengeRoundNumber(2);
 
-			SetScavengeMatchScore(2, g_iScoresMatch_A);
-			SetScavengeMatchScore(3, g_iScoresMatch_B);
+			SetScavengeMatchScore(3, g_iScoresMatch_A);
+			SetScavengeMatchScore(2, g_iScoresMatch_B);
 
-			SetScavengeTeamScore(2, 1, g_RecordedScoreA_1);
-			SetScavengeTeamScore(3, 1, g_RecordedScoreB_1);
+			SetScavengeTeamScore(3, 1, g_iRecordedScoreA_1);
+			SetScavengeTeamScore(2, 1, g_iRecordedScoreB_1);
 		}
 
 		case 2:
 		{
 			SetScavengeRoundNumber(3);
 
-			SetScavengeMatchScore(2, g_iScoresMatch_A);
-			SetScavengeMatchScore(3, g_iScoresMatch_B);
+			SetScavengeMatchScore(3, g_iScoresMatch_A);
+			SetScavengeMatchScore(2, g_iScoresMatch_B);
 
-			SetScavengeTeamScore(2, 2, g_RecordedScoreA_2);
-			SetScavengeTeamScore(3, 2, g_RecordedScoreB_2);
+			SetScavengeTeamScore(3, 1, g_iRecordedScoreA_1);
+			SetScavengeTeamScore(2, 1, g_iRecordedScoreB_1);
+
+			SetScavengeTeamScore(3, 2, g_iRecordedScoreA_2);
+			SetScavengeTeamScore(2, 2, g_iRecordedScoreB_2);
 		}
 
 		case 3:
 		{
 			SetScavengeRoundNumber(4);
 
-			SetScavengeMatchScore(2, g_iScoresMatch_A);
-			SetScavengeMatchScore(3, g_iScoresMatch_B);
+			SetScavengeMatchScore(3, g_iScoresMatch_A);
+			SetScavengeMatchScore(2, g_iScoresMatch_B);
 
-			SetScavengeTeamScore(2, 3, g_RecordedScoreA_3);
-			SetScavengeTeamScore(3, 3, g_RecordedScoreB_3);
+			SetScavengeTeamScore(3, 1, g_iRecordedScoreA_1);
+			SetScavengeTeamScore(2, 1, g_iRecordedScoreB_1);
+
+			SetScavengeTeamScore(3, 2, g_iRecordedScoreA_2);
+			SetScavengeTeamScore(2, 2, g_iRecordedScoreB_2);
+
+			SetScavengeTeamScore(3, 3, g_iRecordedScoreA_3);
+			SetScavengeTeamScore(2, 3, g_iRecordedScoreB_3);
 		}
 
 		case 4:
 		{
 			SetScavengeRoundNumber(5);
 
-			SetScavengeMatchScore(2, g_iScoresMatch_A);
-			SetScavengeMatchScore(3, g_iScoresMatch_B);
+			SetScavengeMatchScore(3, g_iScoresMatch_A);
+			SetScavengeMatchScore(2, g_iScoresMatch_B);
 
-			SetScavengeTeamScore(2, 4, g_RecordedScoreA_4);
-			SetScavengeTeamScore(3, 4, g_RecordedScoreB_4);
+			SetScavengeTeamScore(3, 1, g_iRecordedScoreA_1);
+			SetScavengeTeamScore(2, 1, g_iRecordedScoreB_1);
+
+			SetScavengeTeamScore(3, 2, g_iRecordedScoreA_2);
+			SetScavengeTeamScore(2, 2, g_iRecordedScoreB_2);
+
+			SetScavengeTeamScore(3, 3, g_iRecordedScoreA_3);
+			SetScavengeTeamScore(2, 3, g_iRecordedScoreB_3);
+
+			SetScavengeTeamScore(3, 4, g_iRecordedScoreA_4);
+			SetScavengeTeamScore(2, 4, g_iRecordedScoreB_4);
 		}
 	}
 
@@ -880,7 +911,15 @@ public Action StopMixmap(int client, any args)
 
 	PluginStartInit();
 
-	CPrintToChatAllEx(client, "%t", "Stop_Mixmap_Admin", client);
+	if (g_bIsMatchEnded)
+	{
+		CPrintToChatAll("%t", "Stop_Mixmap_Match_Ended");
+	}
+	else
+	{
+		CPrintToChatAllEx(client, "%t", "Stop_Mixmap_Admin", client);
+	}
+	
 	return Plugin_Handled;
 }
 

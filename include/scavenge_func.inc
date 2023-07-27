@@ -78,7 +78,7 @@ stock int GetScavengeItemsRemaining()
 /*
  * Sets the amount of current round's items(gas cans) remaining
  *
- * @param count		amount to set 
+ * @param count		amount to set
  * @noreturn
  */
 stock void SetScavengeItemsRemaining(int count)
@@ -102,8 +102,7 @@ stock int GetScavengeItemsGoal()
  * @param count		amount to set
  * @noreturn
  */
-stock void SetScavengeItemsGoal(int count)
-{
+stock void SetScavengeItemsGoal(int count){
 	GameRules_SetProp("m_nScavengeItemsGoal", count)
 }
 
@@ -210,8 +209,8 @@ stock int GetScavengeTeamScore(int team, int round = -1)
 	/*
 	 team index has been converted to 0 and 1 from 2 and 3.
 	 Tooth table:
-	 	team | round | result
-	   	  2	  	 1 	  	 0
+		team | round | result
+		  2	  	 1 	  	 0
 		  2		 2		 2
 		  2		 3	 	 4
 		  2		 4		 6
@@ -323,4 +322,63 @@ stock int GetGasCanCount()
 	}
 
 	return count;
+}
+
+/*
+ * On second half of round, which team won the match?
+ *
+ * @return		return 1 if the survivor team won the match.
+ *				return 0 if the infected team won the match.
+ *				return -1 if we are currently not in second half of the round.
+ *				return -2 if currently no winner showing up on this match
+ */
+stock int WhoWonTheMatch()
+{
+	if (view_as<bool>(GameRules_GetProp("m_bInSecondHalfOfRound", 1)) == true)
+	{
+		int TeamSurvivor = GetScavengeMatchScore(2);	// converted team index is 1
+		int TeamInfected = GetScavengeMatchScore(3);	// converted team index is 0
+
+		switch (GetScavengeRoundLimit())
+		{
+			case 5:
+			{
+				if (TeamSurvivor == 3)
+					return 1;
+				else
+					return -2;
+
+				if (TeamInfected == 3)
+					return 0;
+				else
+					return -2;
+			}
+
+			case 3:
+			{
+				if (TeamSurvivor == 2)
+					return 1;
+				else
+					return -2;
+
+				if (TeamInfected == 2)
+					return 0;
+				else
+					return -2;
+			}
+
+			case 1:			// one round draw the winner out.
+			{
+				if (TeamSurvivor == 1)
+					return 1;
+					
+				if (TeamInfected == 1)
+					return 0;
+			}
+		}
+	}
+	else
+	{
+		return -1;
+	}
 }
