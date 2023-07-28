@@ -7,14 +7,14 @@
 #include <scavenge_func>
 #include <colors>
 
-// We must wait longer because of cases where the game doesn't 
+// We must wait longer because of cases where the game doesn't
 // do the compare at the same time as us.
 #define SAFETY_BUFFER_TIME 1.0
 
-float 
+float
 	g_flDefaultLossTime;
 
-bool 
+bool
 	g_bInScavengeRound,
 	g_bInSecondHalf;
 
@@ -26,19 +26,21 @@ ConVar
 
 #define boolalpha(%0) (%0 ? "true" : "false")
 
-public Plugin myinfo = 
+public Plugin myinfo =
 {
-	name = "Scavenge Quick End",
-	author = "ProdigySim, modified by blueblur",
+	name		= "Scavenge Quick End",
+	author		= "ProdigySim, modified by blueblur",
 	description = "Checks various tiebreaker win conditions mid-round and ends the round as necessary.",
-	version = "2.1.1",
-	url = "http://bitbucket.org/ProdigySim/misc-sourcemod-plugins/"
+	version		= "2.1.2",
+	url			= "http://bitbucket.org/ProdigySim/misc-sourcemod-plugins/"
+
 }
 
-public void OnPluginStart()
+public void
+	OnPluginStart()
 {
 	HookEvent("gascan_pour_completed", OnCanPoured, EventHookMode_PostNoCopy);
-	HookEvent("scavenge_round_start", RoundStart,EventHookMode_PostNoCopy);
+	HookEvent("scavenge_round_start", RoundStart, EventHookMode_PostNoCopy);
 	HookEvent("round_end", RoundEnd, EventHookMode_PostNoCopy);
 	LoadTranslations("scavenge_quick_end.phrases");
 	RegConsoleCmd("sm_time", TimeCmd);
@@ -48,76 +50,76 @@ public void OnPluginStart()
 
 public Action TimeCmd(int client, any args)
 {
-	if(!g_bInScavengeRound) return Plugin_Handled;
-	
-	if(g_bInSecondHalf)
+	if (!g_bInScavengeRound) return Plugin_Handled;
+
+	if (g_bInSecondHalf)
 	{
 		float lastRoundTime;
-		int lastRoundMinutes;
-		GetRoundTime(lastRoundMinutes,lastRoundTime,3);
-		
-		CPrintToChat(client, "%t", "PrintRoundTime", GetScavengeRoundNumber(), GetScavengeTeamScore(3), lastRoundMinutes, lastRoundTime);
-	}
-	
-	float thisRoundTime;
-	int thisRoundMinutes;
-	GetRoundTime(thisRoundMinutes,thisRoundTime,2);
+		int	  lastRoundMinutes;
+		GetRoundTime(lastRoundMinutes, lastRoundTime, 3);
 
-	if(g_bInSecondHalf)
+		CPrintToChat(client, "%t", "PrintRoundTime", GetScavengeRoundNumber(), GetScavengeTeamScore(3, GetScavengeRoundNumber()), lastRoundMinutes, lastRoundTime);
+	}
+
+	float thisRoundTime;
+	int	  thisRoundMinutes;
+	GetRoundTime(thisRoundMinutes, thisRoundTime, 2);
+
+	if (g_bInSecondHalf)
 	{
-		CPrintToChat(client, "%t", "PrintRoundTimeInHalf", GetScavengeRoundNumber(), GetScavengeTeamScore(2), thisRoundMinutes, thisRoundTime);
+		CPrintToChat(client, "%t", "PrintRoundTimeInHalf", GetScavengeRoundNumber(), GetScavengeTeamScore(2, GetScavengeRoundNumber()), thisRoundMinutes, thisRoundTime);
 	}
 	else
 	{
-		CPrintToChat(client, "%t", "PrintRoundTime", GetScavengeRoundNumber(), GetScavengeTeamScore(2), thisRoundMinutes, thisRoundTime);
+		CPrintToChat(client, "%t", "PrintRoundTime", GetScavengeRoundNumber(), GetScavengeTeamScore(2, GetScavengeRoundNumber()), thisRoundMinutes, thisRoundTime);
 	}
-	
+
 	return Plugin_Handled;
 }
 
 public void OnGameFrame()
 {
-	if(g_flDefaultLossTime != 0.0 && GetGameTime() > g_flDefaultLossTime)
+	if (g_flDefaultLossTime != 0.0 && GetGameTime() > g_flDefaultLossTime)
 	{
 		EndRoundEarlyOnTime(1);
-		g_flDefaultLossTime=0.0;
+		g_flDefaultLossTime = 0.0;
 	}
 }
 
-public void RoundEnd(Event event, const char[]name, bool dontBroadcast)
+public void RoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
-	if(g_bInScavengeRound) PrintRoundEndTimeData(g_bInSecondHalf);
-	
-	g_flDefaultLossTime=0.0;	
-	g_bInScavengeRound=false;
-	g_bInSecondHalf=false;
+	if (g_bInScavengeRound) PrintRoundEndTimeData(g_bInSecondHalf);
+
+	g_flDefaultLossTime = 0.0;
+	g_bInScavengeRound	= false;
+	g_bInSecondHalf		= false;
 }
 
-public void RoundStart(Event event, const char[]name, bool dontBroadcast)
+public void RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
-	g_bInSecondHalf = !GetEventBool(event, "firsthalf");
-	g_bInScavengeRound=true;
+	g_bInSecondHalf		= !GetEventBool(event, "firsthalf");
+	g_bInScavengeRound	= true;
 	g_flDefaultLossTime = 0.0;
-	if(g_bInScavengeRound && g_bInSecondHalf)
+	if (g_bInScavengeRound && g_bInSecondHalf)
 	{
 		int lastRoundScore = GetScavengeTeamScore(3);
-		if(lastRoundScore == 0 || lastRoundScore == GameRules_GetProp("m_nScavengeItemsGoal"))
+		if (lastRoundScore == 0 || lastRoundScore == GameRules_GetProp("m_nScavengeItemsGoal"))
 		{
 			g_flDefaultLossTime = GameRules_GetPropFloat("m_flRoundStartTime") + GetScavengeRoundDuration(3) + SAFETY_BUFFER_TIME;
 		}
 	}
 }
 
-public void OnCanPoured(Event event, const char[]name, bool dontBroadcast)
+public void OnCanPoured(Event event, const char[] name, bool dontBroadcast)
 {
-	if(g_bInScavengeRound && g_bInSecondHalf)
+	if (g_bInScavengeRound && g_bInSecondHalf)
 	{
 		int remaining = GameRules_GetProp("m_nScavengeItemsRemaining");
-		if(remaining > 0)
+		if (remaining > 0)
 		{
 			int scoreA = GetScavengeTeamScore(2);
 			int scoreB = GetScavengeTeamScore(3);
-			if(scoreA == scoreB && GetScavengeRoundDuration(2) < GetScavengeRoundDuration(3))
+			if (scoreA == scoreB && GetScavengeRoundDuration(2) < GetScavengeRoundDuration(3))
 			{
 				EndRoundEarlyOnTime(1);
 			}
@@ -128,30 +130,29 @@ public void OnCanPoured(Event event, const char[]name, bool dontBroadcast)
 public void PrintRoundEndTimeData(bool secondHalf)
 {
 	float LastRoundTime;
-	int LastRoundMinutes;
-	if(secondHalf)
+	int	  LastRoundMinutes;
+	if (secondHalf)
 	{
 		GetRoundTime(LastRoundMinutes, LastRoundTime, 3);
-		CPrintToChatAll("%t", "PrintRoundEndTime", GetScavengeRoundNumber(), GetScavengeTeamScore(3), LastRoundMinutes, LastRoundTime);
+		CPrintToChatAll("%t", "PrintRoundEndTime", GetScavengeRoundNumber(), GetScavengeTeamScore(3, GetScavengeRoundNumber()), LastRoundMinutes, LastRoundTime);
 	}
 
 	float ThisRoundTime;
-	int ThisRoundMinutes;
+	int	  ThisRoundMinutes;
 	GetRoundTime(ThisRoundMinutes, ThisRoundTime, 2);
-	if(secondHalf)
+	if (secondHalf)
 	{
-		CPrintToChatAll("%t", "PrintRoundEndTimeInHalf", GetScavengeRoundNumber(), GetScavengeTeamScore(2), ThisRoundMinutes, ThisRoundTime);
+		CPrintToChatAll("%t", "PrintRoundEndTimeInHalf", GetScavengeRoundNumber(), GetScavengeTeamScore(2, GetScavengeRoundNumber()), ThisRoundMinutes, ThisRoundTime);
 	}
 	else
 	{
-		CPrintToChatAll("%t", "PrintRoundEndTime", GetScavengeRoundNumber(), GetScavengeTeamScore(2), ThisRoundMinutes, ThisRoundTime);
+		CPrintToChatAll("%t", "PrintRoundEndTime", GetScavengeRoundNumber(), GetScavengeTeamScore(2, GetScavengeRoundNumber()), ThisRoundMinutes, ThisRoundTime);
 	}
-
 }
 
 public Action EndRoundEarlyOnTime(int client)
 {
-	if (!GetConVarBool(g_hQuickEndSwitch)) 		//check enabled quick end or not
+	if (!GetConVarBool(g_hQuickEndSwitch))	  // check enabled quick end or not
 	{
 		return Plugin_Handled;
 	}
@@ -159,7 +160,7 @@ public Action EndRoundEarlyOnTime(int client)
 	int oldFlags;
 	oldFlags = GetCommandFlags("scenario_end");
 	// FCVAR_LAUNCHER is actually FCVAR_DEVONLY`
-	SetCommandFlags("scenario_end", oldFlags & ~(FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY));
+	SetCommandFlags("scenario_end", oldFlags & ~(FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY));
 	ServerCommand("scenario_end");
 	ServerExecute();
 	SetCommandFlags("scenario_end", oldFlags);

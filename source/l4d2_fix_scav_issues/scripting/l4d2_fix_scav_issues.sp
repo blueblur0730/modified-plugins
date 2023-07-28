@@ -21,9 +21,9 @@ bool g_bReadyUpAvailable;
 public Plugin myinfo =
 {
 	name		= "[L4D2] Fix Scavenge Issues",
-	author		= "blueblur, Credit to Eyal282",
-	description = "Fix bug when first round start there are no gascans and set the round number",
-	version		= "1.5",
+	author		= "blueblur, Credit to Eyal282, Lechuga16",
+	description = "Fix bug when first round start there are no gascans and set the round number, resets the game on match end.",
+	version		= "1.6",
 	url			= "https://github.com/blueblur0730/modified-plugins/tree/main/source/l4d2_fix_scav_issues"
 }
 
@@ -37,10 +37,15 @@ public void
 
 	// Hook
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Post);
+	HookEvent("scavenge_match_finished", Event_ScavMatchFinished, EventHookMode_Post);
 
 	// Cmd
 	RegAdminCmd("sm_enrichgascan", SpawnGasCan, ADMFLAG_SLAY, "enrich gas cans. warning! ues it fun and carefull!!");
 }
+
+//-----------------
+//		Events
+//-----------------
 
 public void OnAllPluginsLoaded()
 {
@@ -84,39 +89,27 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 	}
 }
 
+public void Event_ScavMatchFinished(Event event, const char[] name, bool dontBroadcast)
+{
+	// give them time to see the scores.
+	CreateTimer(7.0, Timer_RestartRound);
+}
+
+//---------------------
+// Readyup Forwards
+//---------------------
+
 public void OnReadyUpInitiate()
 {
-	SpawnGascanDuringReadyup();
+	// Delay for a while to do it.
+	// Because when triggering OnMapStart, in some cases the gascans have already spawned but players haven't entered the game,
+	// GetScavengeItemsRemaining() == 0 && GetScavengeItemsGoal() == 0 && GetGasCanCount() == 0 dont work. then gascans enriched double.
+	CreateTimer(15.0, Timer_DelayedToSpawnGasCan);
 }
 
-public void OnRoundLiveCountdownPre()	  // if OnReadyUpInitiate() dose not work.
-{
-	SpawnGascanDuringReadyup();
-}
-
-void SpawnGascanDuringReadyup()
-{
-	char sValue[32];
-	g_hGamemode.GetString(sValue, sizeof(sValue));
-
-	if (StrEqual(sValue, "scavenge") && GetGasCanCount() == 0 && GetScavengeItemsRemaining() == 0)
-	{
-		L4D2_SpawnAllScavengeItems();
-	}
-}
-
-Action Timer_Fix(Handle hTimer)
-{
-	char sValue[32];
-	g_hGamemode.GetString(sValue, sizeof(sValue));
-
-	if (StrEqual(sValue, "scavenge") && GetGameTime() - g_fMapStartTime > 5.0 && GetScavengeItemsRemaining() == 0 && GetScavengeItemsGoal() == 0 && GetGasCanCount() == 0)
-	{
-		L4D2_SpawnAllScavengeItems();
-	}
-
-	return Plugin_Handled;
-}
+//----------------------
+//		Commander
+//----------------------
 
 public Action SpawnGasCan(int client, int args)
 {
@@ -132,7 +125,83 @@ public Action SpawnGasCan(int client, int args)
 	return Plugin_Handled;
 }
 
+//----------------------
+//		Actions
+//----------------------
+
+Action Timer_DelayedToSpawnGasCan(Handle htimer)
+{
+	SpawnGascanDuringReadyup();
+
+	return Plugin_Handled;
+}
+
+void SpawnGascanDuringReadyup()
+{
+	char sValue[32];
+	g_hGamemode.GetString(sValue, sizeof(sValue));
+
+	if (StrEqual(sValue, "scavenge") && GetGasCanCount() == 0)
+	{
+		L4D2_SpawnAllScavengeItems();
+	}
+}
+
+Action Timer_RestartRound(Handle htimer)
+{
+	RestartRound();
+
+	return Plugin_Handled;
+}
+
+Action Timer_Fix(Handle hTimer)
+{
+	char sValue[32];
+	g_hGamemode.GetString(sValue, sizeof(sValue));
+
+	if (StrEqual(sValue, "scavenge") && GetGameTime() - g_fMapStartTime > 5.0 && GetScavengeItemsRemaining() == 0 && GetScavengeItemsGoal() == 0 && GetGasCanCount() == 0)
+	{
+		L4D2_SpawnAllScavengeItems();
+	}
+
+	return Plugin_Handled;
+}
+
+void RestartRound()		// Thanks to lechuga16
+{
+	StartPrepSDKCall(SDKCall_GameRules);
+	PrepSDKCall_SetFromConf(LoadGameConfigFile("left4dhooks.l4d2"), SDKConf_Signature, "CTerrorGameRules_ResetRoundNumber");
+	Handle func = EndPrepSDKCall();
+
+	if (func == INVALID_HANDLE)
+	{
+		ThrowError("Failed to end prep sdk call");
+	}
+
+	SDKCall(func);
+	CloseHandle(func);
+	CreateTimer(2.0, Timer_RestartCampaign);
+}
+
+Action Timer_RestartCampaign(Handle htimer)
+{
+	char currentmap[128];
+	GetCurrentMap(currentmap, sizeof(currentmap));
+	
+	Call_StartForward(CreateGlobalForward("OnReadyRoundRestarted", ET_Event));
+	Call_Finish();
+	
+	L4D_RestartScenarioFromVote(currentmap);
+
+	return Plugin_Handled;
+}
+
+//-----------------
+//	Stock to use
+//-----------------
+
 stock bool InSecondHalfOfRound()
 {
 	return view_as<bool>(GameRules_GetProp("m_bInSecondHalfOfRound", 1));
 }
+

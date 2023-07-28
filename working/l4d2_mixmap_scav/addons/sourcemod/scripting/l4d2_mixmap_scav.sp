@@ -25,7 +25,10 @@ public Plugin myinfo =
 
 /*
 * changelog
-* v b1.3: 7/24/23
+* v b1.4: 7/28/23
+* - Added a forward to tell other plugins the mixmap was interrupted and force to stop.
+*
+* v b1.3: 7/28/23
 * - Optimized the tags when switching maps.
 * - see ForceChangeLevel as optional. it is same as sm_map.
 *
@@ -130,7 +133,8 @@ bool 	g_bCMapTransitioned = false,
 Handle 
 	g_hForwardStart,
  	g_hForwardNext,
-	g_hForwardEnd;
+	g_hForwardEnd,
+	g_hForwardInterrupt;
 
 Handle g_hCountDownTimer;
 
@@ -146,6 +150,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	g_hForwardNext = CreateGlobalForward("OnCMTNextKnown", ET_Ignore, Param_String );
 	// After last map is played; no params
 	g_hForwardEnd = CreateGlobalForward("OnCMTEnd", ET_Ignore );
+	// When mixmap was interrupted and forced to stop; no params.
+	g_hForwardInterrupt = CreateGlobalForward("OnCMTInterrupt", ET_Ignore);
 
 	MarkNativeAsOptional("PLAYSTATS_BroadcastRoundStats");
 	MarkNativeAsOptional("PLAYSTATS_BroadcastGameStats");
@@ -333,6 +339,8 @@ public void OnMapStart() {
 		{
 			PluginStartInit();
 			CPrintToChatAll("%t", "Differ_Abort");
+			Call_StartForward(g_hForwardInterrupt);
+			Call_Finish();
 			return;
 		}
 	}
