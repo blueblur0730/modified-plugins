@@ -1,6 +1,9 @@
 /* -------------------CHANGELOG--------------------
+4.3.1
+ - Added a new forward to check l4d2_mixmap.
+
 4.3
- - when using l4d2_mixmap, show others we are using it. 
+ - When using l4d2_mixmap, show others we are using it. 
 
 4.2
  - Optimized some merged AnneHappy related codes
@@ -69,7 +72,7 @@
 #include <sdktools>
 //#include <left4dhooks>
 #define REQUIRE_PLUGIN
-#define PL_VERSION "4.3"
+#define PL_VERSION "4.3.1"
 
 bool 
 	CustomName,
@@ -216,6 +219,11 @@ public void OnCMTStart()
 }
 
 public void OnCMTEnd()
+{
+	b_mixmap = false;
+}
+
+public void OnCMTInterrupt()
 {
 	b_mixmap = false;
 }
