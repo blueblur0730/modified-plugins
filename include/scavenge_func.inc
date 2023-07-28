@@ -102,7 +102,8 @@ stock int GetScavengeItemsGoal()
  * @param count		amount to set
  * @noreturn
  */
-stock void SetScavengeItemsGoal(int count){
+stock void SetScavengeItemsGoal(int count)
+{
 	GameRules_SetProp("m_nScavengeItemsGoal", count)
 }
 
@@ -346,27 +347,35 @@ stock int WhoWonTheMatch()
 			case 5:
 			{
 				if (TeamSurvivor == 3)
+				{
 					IsSurvWin = true;
-				else
-					IsNoWinner = true;
-
-				if (TeamInfected == 3)
+				}
+					
+				else if (TeamInfected == 3)
+				{
 					IsInfecWin = true;
+				}
 				else
+				{
 					IsNoWinner = true;
+				}
 			}
 
 			case 3:
 			{
 				if (TeamSurvivor == 2)
+				{
 					IsSurvWin = true;
-				else
-					IsNoWinner = true;
-
-				if (TeamInfected == 2)
+				}
+					
+				else if (TeamInfected == 2)
+				{
 					IsInfecWin = true;
+				}
 				else
+				{
 					IsNoWinner = true;
+				}
 			}
 
 			case 1:			// one round draw the winner out.
