@@ -6,33 +6,42 @@
 #include <sdktools>
 #include <l4d2util>
 #include <left4dhooks>
-//#include <l4d2_changelevel>
+#include <l4d2_changelevel>
 #include <colors>
 #include <scavenge_func>
 #undef REQUIRE_PLUGIN
 #include <l4d2_playstats>
 #undef REQUIRE_PLUGIN
 #include <sdkhooks>
-//#include <readyup>
 
 public Plugin myinfo =
 {
 	name = "[L4D2] Mixmap Scavenge",
 	author = "Bred, blueblur",
 	description = "Randomly select five maps for scavenge. Adding for fun and reference from CMT",
-	version = "b1.1",
+	version = "b1.3",
 	url = ""
 };
 
 /*
 * changelog
+* v b1.3: 7/24/23
+* - Optimized the tags when switching maps.
+* - see ForceChangeLevel as optional. it is same as sm_map.
+*
+* v b1.2: 7/27/23
+* - Optimized some logic to print message.
+* - added cvar to control the method to change map. (now we need l4d2_changelevel)
+* - now after a match finished, we return to the map we used mixmap before.
+* - (to do): we need to figure out a way to place players correctly on entering a new map, thier scores should belong to them.
+*
 * v b1.1: 7/27/23
-* - fix the problem when setting scores our teams got mixed up with their scores.
+* - fix the problem when setting scores our teams got mixed up with their scores. (no it's fake)
 * - added detection to check if the winner has showed up then end mixmap.
 * - reformatted varibles' name.
 *
 * v b1.0: 7/26/23
-* - change the method to store scores. yes i dont actually know how to use ArrayList so i just use more varibles xd.
+* - change the method to store and set scores. now we can set scores. (yes i dont actually know how to use ArrayList so i just use more varibles xd.)
 * - need further enhancement.
 *
 * v a1.5: 7/25/23
@@ -74,7 +83,8 @@ public Plugin myinfo =
 
 ConVar 	g_cvNextMapPrint,
 		g_cvMaxMapsNum,
-		g_cvFinaleEndStart;
+		g_cvFinaleEndStart,
+		g_cvMapChangeMethod;
 
 char cfg_exec[BUF_SZ];
 
@@ -89,6 +99,9 @@ Handle g_hArrayMapOrder;			// Stores finalised map list in order 存放抽取完
 
 bool g_bMaplistFinalized;
 bool g_bMapsetInitialized;
+
+char g_InitialMapName[BUF_SZ];
+
 int g_iMapsPlayed;
 int g_iMapCount;
 
@@ -112,7 +125,7 @@ int g_iRoundNumberPlayed;
 
 bool 	g_bCMapTransitioned = false,
 		g_bServerForceStart = false,
-		g_bIsMatchEnded;
+		g_bIsMatchEnded = false;
 
 Handle 
 	g_hForwardStart,
@@ -145,6 +158,7 @@ public void OnPluginStart()
 	g_cvNextMapPrint	= CreateConVar("l4d2mm_scav_nextmap_print",		"1",	"Determine whether to show what the next map will be", _, true, 0.0, true, 1.0);
 	g_cvMaxMapsNum		= CreateConVar("l4d2mm_scav_max_maps_num",		"2",	"Determine how many maps of one campaign can be selected; 0 = no limits;", _, true, 0.0, true, 5.0);
 	g_cvFinaleEndStart	= CreateConVar("l4d2mm_scav_finale_end_start",	"1",	"Determine whether to remixmap in the end of finale; 0 = disable;1 = enable", _, true, 0.0, true, 1.0);
+	g_cvMapChangeMethod	= CreateConVar("l4d2mm_scav_map_change_method",	"1", 	"Determine which map changing method we use. 1 = L4D2_ChangeLevel, 0 = sm_map.", _, true, 0.0, true, 1.0);
 
 	//Servercmd 服务器指令（用于cfg文件）
 	RegServerCmd( "sm_addmap", AddMap);
@@ -165,7 +179,7 @@ public void OnPluginStart()
 	// HookEvent("player_left_start_area", LeftStartArea_Event, EventHookMode_PostNoCopy);
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Post);
 	HookEvent("scavenge_round_finished", Event_ScavRoundFinished, EventHookMode_Post);
-	
+	HookEvent("scavenge_match_finished", Event_ScavMatchFinished, EventHookMode_Post);
 
 	PluginStartInit();
 	LoadTranslations("l4d2_mixmap_scav.phrases");
@@ -208,6 +222,16 @@ void PluginStartInit()
 // 		Hooks
 // ----------------------------------------------------------
 
+public void Event_ScavMatchFinished(Event event, char[] name, bool dontBroadcast)		
+{
+	// change to original map before mixmapping.
+	// this was in case we get stuck on the scoreboard or just get annoying lobby-returning votes showing up.
+	// wait for the scoreboard and message to be send.
+	CreateTimer(5.0, Timer_ReturnToOriginalMap);
+
+	g_InitialMapName = "";		// re-initialize the value after changed the map.
+}
+
 public void Event_ScavRoundFinished(Event event, char[] name, bool dontBroadcast)
 {
 	/*
@@ -219,7 +243,7 @@ public void Event_ScavRoundFinished(Event event, char[] name, bool dontBroadcast
 	if (WhoWonTheMatch() == 1 || WhoWonTheMatch() == 0)		// check if a team has won the match.
 	{
 		g_bIsMatchEnded = true;
-		ServerCommand("sm_fstopmixmap");		// if ture, we stop mixmap and re-initialize it.
+		ServerCommand("sm_fstopmixmap");		// if ture, we stop mixmap and re-initialize.
 	}
 	else		// else we continue to mixmap
 	{
@@ -249,6 +273,8 @@ public void Event_ScavRoundFinished(Event event, char[] name, bool dontBroadcast
 				g_iRecordedScoreB_4 = GetScavengeTeamScore(3, 4);
 			}
 		}
+
+		NextMapInfo();		// tell them the next map to play.
 
 		g_iScoresMatch_A = GetScavengeMatchScore(2);
 		g_iScoresMatch_B = GetScavengeMatchScore(3);
@@ -309,6 +335,12 @@ public void OnMapStart() {
 			CPrintToChatAll("%t", "Differ_Abort");
 			return;
 		}
+	}
+
+	// store the map name to use on the end of the mixmap match.
+	if (!g_bMapsetInitialized)
+	{
+		GetCurrentMap(g_InitialMapName, BUF_SZ);
 	}
 
 	// let other plugins know what the map *after* this one will be (unless it is the last map)
@@ -441,8 +473,16 @@ void GotoMap(const char[] sMapName, bool force = false)
 {
 	if (force) 
 	{
-		ForceChangeLevel(sMapName, "Mixmap");
-		return;
+		if (g_cvMapChangeMethod.IntValue == 1)
+		{
+			L4D2_ChangeLevel(sMapName);
+			return;
+		}
+		else
+		{
+			ForceChangeLevel(sMapName, "Mixmap");
+			return;
+		}
 	}
 
 	//ServerCommand("sm_nextmap %s", sMapName);
@@ -453,15 +493,19 @@ void GotoMap(const char[] sMapName, bool force = false)
 	L 07/20/2023 - 09:11:59: World triggered "Round_End"
 	L 07/20/2023 - 09:12:00: Staying on original map c6m1_riverbank
 
-	can not use nextmap in scavenge.
-	*/	
-	ServerCommand("sm_map %s", sMapName);		// since no gas can in first round issue is solved in left4dhooks 1.134, we can simply use sm_map instead of using L4D2_ChangeLevel
-	CreateTimer(0.1, Timed_NextMapInfo);
+	can not use nextmap in scavenge rounds.
+	*/
+	if (g_cvMapChangeMethod.IntValue == 1)
+	{
+		L4D2_ChangeLevel(sMapName);
+	}
+	else
+	{
+		ServerCommand("sm_map %s", sMapName);		// since no gas can in first round issue is solved in left4dhooks 1.134, we can simply use sm_map instead of using L4D2_ChangeLevel
+	}
 }
 
-
-
-public Action Timed_NextMapInfo(Handle timer)
+void NextMapInfo()
 {
 	char sMapName_New[BUF_SZ]; //sMapName_Old[BUF_SZ];
 	GetArrayString(g_hArrayMapOrder, g_iMapsPlayed, sMapName_New, BUF_SZ);
@@ -489,7 +533,6 @@ public Action Timed_NextMapInfo(Handle timer)
 		CreateTimer(10.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
 	}
 	*/
-	return Plugin_Handled;
 }
 
 /*
@@ -508,7 +551,20 @@ public Action Timed_ContinueMixmap(Handle timer)
 	ServerCommand("sm_fmixmap %s", cfg_exec);
 	return Plugin_Handled;
 }
-	
+
+Action Timer_ReturnToOriginalMap(Handle Timer)
+{
+	if (g_cvMapChangeMethod.IntValue == 1)
+	{
+		L4D2_ChangeLevel(g_InitialMapName);
+	}
+	else
+	{
+		ServerCommand("sm_map %s", g_InitialMapName);
+	}
+
+	return Plugin_Handled;
+}
 
 // ----------------------------------------------------------
 // 		Commands: Console/Admin
@@ -911,7 +967,7 @@ public Action StopMixmap(int client, any args)
 
 	PluginStartInit();
 
-	if (g_bIsMatchEnded)
+	if (g_bIsMatchEnded == true)
 	{
 		CPrintToChatAll("%t", "Stop_Mixmap_Match_Ended");
 	}
