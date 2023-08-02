@@ -1,0 +1,68 @@
+﻿"Phrases"
+{
+	"over cheer limit"
+	{
+		"#format"	"{1:i}"		// 1: times you can cheer
+		"en"		"[{orange}!{default}] You have already reached your maximum number of cheers for this round. ({lightgreen}{1}{default} times)"
+		"chi"		"[{orange}!{default}] 你已经达到本轮最大cheer次数限制. ({lightgreen}{1}{default} 次)"
+	}
+	"over jeer limit"
+	{
+		"#format"	"{1:i}"		// 1: times you can jeer
+		"en"		"[{orange}!{default}] You can only jeer {lightgreen}{1}{default} times per round."
+		"chi"		"[{orange}!{default}] 你只能在每轮jeer {lightgreen}{1}{default} 次."
+	}
+	"round is live"
+	{
+		"en"		"[{orange}!{default}] Can not use Cheers or Jeers while round is live."
+		"chi"		"[{orange}!{default}] 回合开始时不允许使用Cheers或Jeers."
+	}
+
+	// 因为求生只能用default olive orange(等于green) lightgreen(且lightgreen不能和teamcolor, red, blue冲突), 尽管colors.inc或multicolor.inc提供了许多颜色, 也做不到csgo的五彩斑斓.
+
+	"C Cheered!!!"
+	{
+		"#format"	"{1:s},{2:s}"		// 1: team, 2: name
+		"en"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {olive}C{default}h{green}e{default}e{olive}r{default}e{orange}d{olive}!{default}!{orange}!"
+		"chi"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {olive}C{default}h{green}e{default}e{olive}r{default}e{orange}d{olive}!{default}!{orange}!"
+	}
+
+	"Cheered!!!"
+	{
+		"#format"	"{1:s},{2:s}"		// 1: team, 2: name
+		"en"		"*{1}* {2}: Cheered!!!"
+		"chi"		"*{1}* {2}: Cheered!!!"
+	}
+
+	"C Jeered!!!"
+	{
+		"#format"	"{1:s},{2:s}"		// 1: team, 2: name
+		"en"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {olive}J{default}e{green}e{default}r{olive}e{default}d{olive}!{default}!{orange}!"
+		"chi"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {olive}J{default}e{green}e{default}r{olive}e{default}d{olive}!{default}!{orange}!"
+	}
+
+	"Jeered!!!"
+	{
+		"#format"	"{1:s},{2:s}"		// 1: team, 2: name
+		"en"		"*{1}* {2}: Jeered!!!"
+		"chi"		"*{1}* {2}: Jeered!!!"
+	}
+
+	"Spectator"
+	{
+		"en"		"Spec"
+		"chi"		"旁观"
+	}
+
+	"Survivor"
+	{
+		"en"		"Sur"
+		"chi"		"生还"
+	}
+
+	"Infected"
+	{
+		"en"		"Inf"
+		"chi"		"特感"
+	}
+}

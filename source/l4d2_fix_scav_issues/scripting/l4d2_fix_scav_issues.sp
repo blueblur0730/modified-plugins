@@ -180,9 +180,10 @@ void RestartRound()		// Thanks to lechuga16
 
 	SDKCall(func);
 	CloseHandle(func);
-	CreateTimer(2.0, Timer_RestartCampaign);
+	//CreateTimer(2.0, Timer_RestartCampaign);
 }
 
+/*
 Action Timer_RestartCampaign(Handle htimer)
 {
 	char currentmap[128];
@@ -195,6 +196,7 @@ Action Timer_RestartCampaign(Handle htimer)
 
 	return Plugin_Handled;
 }
+*/
 
 //-----------------
 //	Stock to use
