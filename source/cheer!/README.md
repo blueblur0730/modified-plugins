@@ -13,9 +13,9 @@
  - 自定义声音文件
 
 <hr>
+
 ### Server ConVars
 以下cvar可在cfg/sourcemod/cheer.cfg中编辑.
-
 ```
 // 开启插件
 // 默认值: 1 
