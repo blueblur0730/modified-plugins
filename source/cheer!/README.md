@@ -55,9 +55,10 @@ sm_cheer_jeer_volume "1.0"
 // 默认值: 1.0
 // 数值应在0.0至1.0之间
 sm_cheer_volume "1.0"
+```
 
 ### Client Cmd
-
+```
 // 播放Cheer音效
 sm_cheer
 
