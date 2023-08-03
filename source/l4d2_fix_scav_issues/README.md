@@ -4,20 +4,20 @@
 - 解决清道夫第一轮不生成油桶的问题.
 - 允许设置局数限制.
 - 提供管理员指令手动一次性生成所有油桶
-- 检测是否安装readyup插件, 若安装, 采用另一种油桶生成方案, 否则使用原解决方案 (Credit to Eyal282)
 
 ### Source: 
-https://github.com/nagadomi/l4d2_scavenge_1st_round_skip/issues/1
+- https://github.com/nagadomi/l4d2_scavenge_1st_round_skip/issues/1 (L4D2_SpawnAllScavengeItems()所使用的签名的发现者)
+- https://github.com/lechuga16/scavogl_rework/blob/master/addons/sourcemod/scripting/readyup_scav.sp (重置局数函数来源)
 
 ### Requirment
 - Left4Dhooks 1.134+
 - Readyup (Optional)
-- 编译库 scavenge_func
+- 编译库 scavenge_func.inc
 
 <hr>
 ### Admin Cmd
 ```
-// 手动生成所有油桶 (注意, 可以叠加生成), 需要cvar为开.
+// 手动生成所有油桶 (注意, 可以叠加多次生成), 需要cvar为开.
 sm_enrichgascan
 
 ```
