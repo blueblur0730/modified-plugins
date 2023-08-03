@@ -22,7 +22,7 @@
 
 	"c4m2_sugarmill_a"
 	{
-		"height_zlimit_min"		"0.0"
+		"height_zlimit_min"		"-1.0"
 		"height_zlimit_max"		"864.2"			// rooftop of sugarmill
 		"width_xlimit_max"		"690.0"
 		"width_ylimit_max"		"-5470.0"
