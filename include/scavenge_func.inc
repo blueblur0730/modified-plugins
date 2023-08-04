@@ -1,3 +1,9 @@
+//////////////////////////////////////////////////////////////////////////
+//							Scavenge Functions							//
+//		A useful collection of functions related to L4D2 Scavenge		//
+//				Collected and authorized by blueblur					//
+//////////////////////////////////////////////////////////////////////////
+
 #if defined _scavenge_func_included
 	#endinput
 #endif
@@ -107,7 +113,32 @@ stock void SetScavengeItemsGoal(int count)
 	GameRules_SetProp("m_nScavengeItemsGoal", count)
 }
 
-/* InSecondHalfOfRound() and FormatScavengeRoundTime() */
+/*
+ * Returns the winning team index of a specific round.
+ *
+ * @param round		round to return. valide number is 1 to 5
+ * @return 			the winning team index of a specific round
+ */
+stock int GetWinningTeamNumber(int round)
+{
+	return GameRules_GetProp("m_iWinningTeamNumber", round - 1);
+}
+
+/*
+ * Set a winning team index of a specific round.
+ *
+ * @param round		round to set
+ * @param team		team number to set. valid values are 2 or 3
+ * @noreturn
+ */
+stock void SetWinningTeamNumber(int round, int team)
+{
+	team = L4D2_TeamNumberToTeamIndex(team);
+
+	GameRules_SetProp("m_iWinningTeamNumber", team, _, round - 1);
+}
+
+/* FormatScavengeRoundTime() */
 /* Credit to Forgetest from plugin 'Hyper-V HUD Manager(spechud)' */
 
 /*
@@ -128,11 +159,11 @@ stock bool InSecondHalfOfRound()
  *
  * @param buffer				buffer to store the round and time
  * @param maxlen				maxlenth of buffer
- * @param team				team index, valide value is 2 and 3
- * @param nodecimalpoint		if true, returns time of first half of the round
- *							if false, returns time of second half of the round
+ * @param team					team number, valide value is 2 and 3
+ * @param nodecimalpoint		if true, returns time of first half of the round. 
+ *								if false, returns time of second half of the round
  *
- * @return 					number of characters of scavenge format time
+ * @return 						number of characters of scavenge format time
  */
 stock int FormatScavengeRoundTime(char[] buffer, int maxlen, int team, bool nodecimalpoint = false)
 {
@@ -151,9 +182,9 @@ stock int FormatScavengeRoundTime(char[] buffer, int maxlen, int team, bool node
  * Returns the float value of the this round duration.
  * If the round has not ended yet, returns the current duration.
  *
- * @param team		team index. valid value is 2 or 3
+ * @param team		team number. valid value is 2 or 3
  * @return			float value of this round duration.
- * @return			if the team index is not 2 or 3, return -1.0
+ * @return			if the team number is not 2 or 3, return -1.0
  */
 stock float GetScavengeRoundDuration(int team)
 {
@@ -173,10 +204,10 @@ stock float GetScavengeRoundDuration(int team)
 /*
  * Returns the team score of this round.
  *
- * @param team 		team index. valid value is 2 and 3
+ * @param team 		team number to return. valid value is 2 and 3
  * @param round		current round number. default value is -1
  * @return 			the team score of this round.
- * @return			if the team index is not 2 or 3, return -1
+ * @return			if the team number is not 2 or 3, return -1
  */
 stock int GetScavengeTeamScore(int team, int round = -1)
 {
@@ -231,7 +262,7 @@ stock int GetScavengeTeamScore(int team, int round = -1)
 /*
  * Sets the round score on specific round.
  *
- * @param team 		team index, valid index is 2 or 3
+ * @param team 		team number, valid index is 2 or 3
  * @param round		round index to set the score, valid index is 1 to 5
  * @param score		round score to set
  */
@@ -245,9 +276,9 @@ stock void SetScavengeTeamScore(int team, int round, int score)
 /*
  * Returns the team match score of this match.
  *
- * @param team 		team index. valid value is 2 and 3
+ * @param team 		team number. valid value is 2 and 3
  * @return 			the team match score of this match.
- * @return			if the team index is not 2 or 3, return -1
+ * @return			if the team number is not 2 or 3, return -1
  */
 stock int GetScavengeMatchScore(int team)
 {
@@ -260,7 +291,7 @@ stock int GetScavengeMatchScore(int team)
 /*
  * Sets the match score of one team.
  *
- * @param team 		team index. valid value is 2 and 3
+ * @param team 		team number. valid value is 2 and 3
  * @param score		score to set
  */
 stock void SetScavengeMatchScore(int team, int score)
@@ -274,10 +305,10 @@ stock void SetScavengeMatchScore(int team, int score)
  * Convert "2" or "3" to "0" or "1" for global static indices.
  * Defaultly recongnise 2 as team survivors and 3 as team infected.
  *
- * @param team 		team index. valid value is 2 and 3.
+ * @param team 		team number. valid value is 2 and 3.
  * @return 			1 if the team survivors flipped or team is infected
  * @return			0 if the team is survivors or team infected flipped
- * @return			-1 if the team index value is not 2 or 3
+ * @return			-1 if the team number value is not 2 or 3
  */
 stock int L4D2_TeamNumberToTeamIndex(int team)
 {
