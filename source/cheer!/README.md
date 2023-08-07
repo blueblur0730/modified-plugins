@@ -74,9 +74,9 @@ sm_cheer_in_round_jeer_limit "5"
 // 1开0关
 sm_cheer_download_enable "0"
 ```
-<hr>
 
 <hr>
+
 ### Client Cmd
 ```
 // 播放Cheer音效
@@ -100,8 +100,6 @@ sm_jeer
 "cheer sound x"为固定句式, 请不要修改.
 "cheers/xxx.wav"为你的自定义文件路径. 文件或文件夹应位于`left4dead2/sound`中
 ```
-
-<hr>
 
 ### Notice
  - 为了使玩家有更好的进服体验, 请部署自己的[FastDl](https://developer.valvesoftware.com/w/index.php?title=FastDL:zh-cn&uselang=zh)或按照其他[下载辅助插件](https://github.com/fbef0102/L4D1_2-Plugins/tree/master/sm_downloader)步骤进行操作.
