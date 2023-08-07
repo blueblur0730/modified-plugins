@@ -115,4 +115,4 @@ sm_jeer
  - 为了使玩家有更好的进服体验, 请部署自己的[FastDl](https://developer.valvesoftware.com/w/index.php?title=FastDL:zh-cn&uselang=zh)或按照其他[下载辅助插件](https://github.com/fbef0102/L4D1_2-Plugins/tree/master/sm_downloader)步骤进行操作.
  - 若不使用FasDl或其他插件进行自动下载操作, 则请先提前在server.cfg中设置好 sv_allowdownload 1, 或让客户端和服务端提前装好相同的文件.
  - Cheer和Jeer每个最多只支持12个音频文件, 如果需要扩增请依据源码修改.
- - 音频文件应该为.mp3格式 (建议) 或.wav格式, 且码率要求为44100Hz, 采样率要求为64kbps. [否则游戏内没声音](https://forums.alliedmods.net/archive/index.php/t-331070.html#:~:text=This%20is%20usually%20an%20error%20in%20the%20audio,to%20change%20the%20audio%20name%20and%20update%20FastDL.).
+ - 音频文件应该为.mp3格式 (建议) 或.wav格式, 且码率要求为44100Hz, 比特率要求为64kbps以上. [否则游戏内没声音](https://forums.alliedmods.net/archive/index.php/t-331070.html#:~:text=This%20is%20usually%20an%20error%20in%20the%20audio,to%20change%20the%20audio%20name%20and%20update%20FastDL.).
