@@ -111,6 +111,7 @@ sm_jeer
 ```
 
 ### Notice
+ - 注意: 不需要第三方音频文件也是可以运作的, 可以将路径设置为游戏原有的音频文件.
  - 为了使玩家有更好的进服体验, 请部署自己的[FastDl](https://developer.valvesoftware.com/w/index.php?title=FastDL:zh-cn&uselang=zh)或按照其他[下载辅助插件](https://github.com/fbef0102/L4D1_2-Plugins/tree/master/sm_downloader)步骤进行操作.
  - 若不使用FasDl或其他插件进行自动下载操作, 则请先提前在server.cfg中设置好 sv_allowdownload 1, 或让客户端和服务端提前装好相同的文件.
  - Cheer和Jeer每个最多只支持12个音频文件, 如果需要扩增请依据源码修改.
