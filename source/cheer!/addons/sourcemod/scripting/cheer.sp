@@ -373,7 +373,7 @@ Action CommandJeer(int client, int args)
 		else if (GetEngineTime() - g_fLastTimeJeer[client] < fDelayTime)
 		{
 			int iTimeLeft = RoundToNearest(fDelayTime - (GetEngineTime() - g_fLastTimeJeer[client]));
-			CPrintToChat(client, "%t", "Jeer interval limited", iTimeLeft);
+			CPrintToChat(client, "%t", "jeer interval limited", iTimeLeft);
 			return Plugin_Handled;
 		}
 	}
