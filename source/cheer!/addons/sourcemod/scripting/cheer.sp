@@ -55,9 +55,6 @@ Versions:
 		* Added a cvar to control the interval we can cheer or jeer next time, preventing chat spamming.
 		* more mutation gamemode detections.
 
-	r1.3.3: 8/7/23
-		* Now spectators can also hear the sound.
-
 	to do:
 		* unlock the limit sound files we can load. edit the number through a new added cvar.
 */
@@ -68,7 +65,7 @@ Versions:
 #include <sdktools>
 #include <colors>
 
-#define PLUGIN_VERSION	   "r1.3.3"
+#define PLUGIN_VERSION	   "r1.3.2"
 #define NUM_SOUNDS		   12	 // GetConVarInt(g_hCvarSoundNumber)
 
 #define L4D_TEAM_SPECTATOR 1
@@ -376,7 +373,7 @@ Action CommandJeer(int client, int args)
 		else if (GetEngineTime() - g_fLastTimeJeer[client] < fDelayTime)
 		{
 			int iTimeLeft = RoundToNearest(fDelayTime - (GetEngineTime() - g_fLastTimeJeer[client]));
-			CPrintToChat(client, "%t", "jeer interval limited", iTimeLeft);
+			CPrintToChat(client, "%t", "Jeer interval limited", iTimeLeft);
 			return Plugin_Handled;
 		}
 	}
@@ -423,7 +420,7 @@ void ExcuteCheer(int client)
 {
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsFakeClient(i))
+		if (IsClientInGame(i) && !IsFakeClient(i))
 		{
 			EmitSoundToClient(i, g_soundsList[GetRandomInt(0, NUM_SOUNDS - 1)], _, _, _, _, g_hCvarCheerVolume.FloatValue);
 		}
@@ -478,7 +475,7 @@ void ExcuteJeer(int client)
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (!IsFakeClient(i))
+			if (IsClientInGame(i) && !IsFakeClient(i))
 			{
 				EmitSoundToClient(i, g_soundsListJeer[GetRandomInt(0, NUM_SOUNDS - 1)], _, _, _, _, g_hCvarJeerVolume.FloatValue);
 			}
