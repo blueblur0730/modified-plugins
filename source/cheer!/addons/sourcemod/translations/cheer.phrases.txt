@@ -3,29 +3,43 @@
 	"over cheer limit"
 	{
 		"#format"	"{1:i}"		// 1: times you can cheer
-		"en"		"[{orange}!{default}] You have already reached your maximum number of cheers for this round. ({lightgreen}{1}{default} times)."
-		"chi"		"[{orange}!{default}] 你已经达到本轮最大cheer次数限制. ({lightgreen}{1}{default} 次)."
+		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}cheers{default} for this round. ({lightgreen}{1}{default} times)."
+		"chi"		"[{orange}!{default}] 你已经达到本轮最大 {orange}cheer{default} 次数限制. ({lightgreen}{1}{default} 次)."
 	}
 
 	"over in round cheer limit"
 	{
 		"#format"	"{1:i}"		// 1: times you can cheer
-		"en"		"[{orange}!{default}] You have already reached your maximum number of cheers in round. ({lightgreen}{1}{default} times)."
-		"chi"		"[{orange}!{default}] 你已经达到轮中最大cheer次数限制. ({lightgreen}{1}{default} 次)."
+		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}cheers{default} in round. ({lightgreen}{1}{default} times)."
+		"chi"		"[{orange}!{default}] 你已经达到轮中最大 {orange}cheer{default} 次数限制. ({lightgreen}{1}{default} 次)."
 	}
 
 	"over jeer limit"
 	{
 		"#format"	"{1:i}"		// 1: times you can jeer
-		"en"		"[{orange}!{default}] You have already reached your maximum number of jeers for this round. ({lightgreen}{1}{default} times)"
-		"chi"		"[{orange}!{default}] 你已经达到了本轮最大jeer次数限制. ({lightgreen}{1}{default} 次)"
+		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}jeers{default} for this round. ({lightgreen}{1}{default} times)"
+		"chi"		"[{orange}!{default}] 你已经达到了本轮最大 {orange}jeer{default} 次数限制. ({lightgreen}{1}{default} 次)"
 	}
 
 	"over in round Jeer limit"
 	{
 		"#format"	"{1:i}"		// 1: times you can jeer
-		"en"		"[{orange}!{default}] You have already reached your maximum number of jeers in round. ({lightgreen}{1}{default} times)"
-		"chi"		"[{orange}!{default}] 你已经达到了轮中最大jeer次数限制. ({lightgreen}{1}{default} 次)"
+		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}jeers{default} in round. ({lightgreen}{1}{default} times)"
+		"chi"		"[{orange}!{default}] 你已经达到了轮中最大 {orange}jeer{default} 次数限制. ({lightgreen}{1}{default} 次)"
+	}
+
+	"cheer interval limited"
+	{
+		"#format"	"{1:i}"		// 1: time left to cheer
+		"en"		"[{orange}!{default}] You have to wait at least ({lightgreen}{1}{default}s) to command next {orange}cheer{default}."
+		"chi"		"[{orange}!{default}] 你必须等待至少 ({lightgreen}{1}{default}秒) 来进行下一次 {orange}cheer{default}."
+	}
+
+	"jeer interval limited"
+	{
+		"#format"	"{1:i}"		// 1: time left to jeer
+		"en"		"[{orange}!{default}] You have to wait at least ({lightgreen}{1}{default}s) to command next {orange}jeer{default}."
+		"chi"		"[{orange}!{default}] 你必须等待至少 ({lightgreen}{1}{default}秒) 来进行下一次 {orange}jeer{default}."
 	}
 
 	"round is live"

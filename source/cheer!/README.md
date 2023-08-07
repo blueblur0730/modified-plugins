@@ -4,7 +4,7 @@
  - 原作者dalto. 我翻新了语法并修改逻辑使得插件更适合在L4D2使用.
  - 玩家可以使用命令来进行Cheer或者Jeer进行随机音效播放和文本输出.
  - 若游戏模式为对抗模式或清道夫模式, 可以选择是否在局内进行Cheer或Jeer.
- - 增加一系列cvar对原有功能进行控制.
+ - 增加一系列cvar对原有或新增功能进行控制.
 
 ### Source
  - https://forums.alliedmods.net/showthread.php?t=59952&highlight=cheer%21
@@ -22,10 +22,10 @@
 // 0关1开
 sm_cheer_enable "1"
 
-// 每轮Cheer次数限制
-// 默认值: 3
-// min:0
-sm_cheer_limit "3"
+// 开启jeer
+// 默认值:1
+// 0关1开, 2仅限管理员
+sm_cheer_jeer "1"
 
 // 1开启文本彩色输出, 0无色输出
 // 默认值: 1
@@ -36,15 +36,15 @@ sm_cheer_colors "1"
 // 0关1开
 sm_cheer_chat "1"
 
-// 开启jeer
-// 默认值:1
-// 0关1开, 2仅限管理员
-sm_cheer_jeer "1"
+// 每轮Cheer次数限制
+// 默认值: 10
+// min:0
+sm_cheer_limit "10"
 
 // 每轮jeer次数限制
-// 默认值: 1
+// 默认值: 10
 // min:0
-sm_cheer_jeer_limit "1"
+sm_cheer_jeer_limit "10"
 
 // 播放Jeer音效时的音量
 // 默认值: 1.0
@@ -56,7 +56,16 @@ sm_cheer_jeer_volume "1.0"
 // 数值应在0.0至1.0之间
 sm_cheer_volume "1.0"
 
-// 游戏模式为对抗或清道夫时, 是否允许对局开始后使用插件?
+// 是否开启指令时间间隔? (有效阻止刷屏)
+// 默认值: 1
+// 0关1开
+sm_cheer_cmd_interval_enable "1"
+
+// 每次Cheer或Jeer的时间间隔
+// 默认值:5.0
+sm_cheer_cmd_interval "5.0"
+
+// 游戏模式为对抗或清道夫时 (包括同类型突变), 是否允许对局开始后使用插件?
 // 默认值: 1
 // 1开0关
 sm_cheer_in_round_enable "1"
@@ -98,7 +107,7 @@ sm_jeer
 
 "cheer sounds"代表以下方括号的音效仅给sm_cheer播放.
 "cheer sound x"为固定句式, 请不要修改.
-"cheers/xxx.wav"为你的自定义文件路径. 文件或文件夹应位于`left4dead2/sound`中
+"cheers/xxx.mp3"为你的自定义文件路径. 文件或文件夹应位于`left4dead2/sound`中
 ```
 
 ### Notice
