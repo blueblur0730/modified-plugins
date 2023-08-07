@@ -3,22 +3,38 @@
 	"over cheer limit"
 	{
 		"#format"	"{1:i}"		// 1: times you can cheer
-		"en"		"[{orange}!{default}] You have already reached your maximum number of cheers for this round. ({lightgreen}{1}{default} times)"
-		"chi"		"[{orange}!{default}] 你已经达到本轮最大cheer次数限制. ({lightgreen}{1}{default} 次)"
+		"en"		"[{orange}!{default}] You have already reached your maximum number of cheers for this round. ({lightgreen}{1}{default} times)."
+		"chi"		"[{orange}!{default}] 你已经达到本轮最大cheer次数限制. ({lightgreen}{1}{default} 次)."
 	}
+
+	"over in round cheer limit"
+	{
+		"#format"	"{1:i}"		// 1: times you can cheer
+		"en"		"[{orange}!{default}] You have already reached your maximum number of cheers in round. ({lightgreen}{1}{default} times)."
+		"chi"		"[{orange}!{default}] 你已经达到轮中最大cheer次数限制. ({lightgreen}{1}{default} 次)."
+	}
+
 	"over jeer limit"
 	{
 		"#format"	"{1:i}"		// 1: times you can jeer
-		"en"		"[{orange}!{default}] You can only jeer {lightgreen}{1}{default} times per round."
-		"chi"		"[{orange}!{default}] 你只能在每轮jeer {lightgreen}{1}{default} 次."
+		"en"		"[{orange}!{default}] You have already reached your maximum number of jeers for this round. ({lightgreen}{1}{default} times)"
+		"chi"		"[{orange}!{default}] 你已经达到了本轮最大jeer次数限制. ({lightgreen}{1}{default} 次)"
 	}
+
+	"over in round Jeer limit"
+	{
+		"#format"	"{1:i}"		// 1: times you can jeer
+		"en"		"[{orange}!{default}] You have already reached your maximum number of jeers in round. ({lightgreen}{1}{default} times)"
+		"chi"		"[{orange}!{default}] 你已经达到了轮中最大jeer次数限制. ({lightgreen}{1}{default} 次)"
+	}
+
 	"round is live"
 	{
 		"en"		"[{orange}!{default}] Can not use Cheers or Jeers while round is live."
 		"chi"		"[{orange}!{default}] 回合开始时不允许使用Cheers或Jeers."
 	}
 
-	// 因为求生只能用default olive orange(等于green) lightgreen(且lightgreen不能和teamcolor, red, blue冲突), 尽管colors.inc或multicolor.inc提供了许多颜色, 也做不到csgo的五彩斑斓.
+	// 因为求生只能用default, olive, orange(等于green), green, lightgreen(且lightgreen不能和teamcolor, red, blue冲突), 尽管colors.inc或multicolor.inc提供了许多颜色, 也做不到csgo的五彩斑斓.
 
 	"C Cheered!!!"
 	{

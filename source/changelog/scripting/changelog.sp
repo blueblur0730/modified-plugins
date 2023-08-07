@@ -31,7 +31,7 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	char g_sBuffer[128];
+	char sBuffer[128];
 	// Cmd
 	RegConsoleCmd("sm_info", ChangeLog_CMD);
 
@@ -46,9 +46,9 @@ public void OnPluginStart()
 
 	// KeyValue
 	kv = CreateKeyValues("MOTD", "", "");
-	BuildPath(Path_SM, g_sBuffer, 128, CONFIG_PATH);
+	BuildPath(Path_SM, sBuffer, 128, CONFIG_PATH);
 
-	if (!FileToKeyValues(kv, g_sBuffer))
+	if (!FileToKeyValues(kv, sBuffer))
 	{
 		SetFailState("File %s may be missed!", CONFIG_PATH);
 	}
