@@ -6,15 +6,14 @@
 #include <sdkhooks>
 #include <left4dhooks>
 #include <scavenge_func>
-#undef REQUIRE_PLUGIN
-#include <readyup>
 
 float g_fMapStartTime;
 
 ConVar
-	g_hGamemode,
-	g_hAllowEnrich,
-	g_hscav_rounds;
+	g_hCvarGamemode,
+	g_hCvarAllowEnrich,
+	g_hCvarScavengeRound,
+	g_hCvarRestartRound;
 
 bool g_bReadyUpAvailable;
 
@@ -23,17 +22,18 @@ public Plugin myinfo =
 	name		= "[L4D2] Fix Scavenge Issues",
 	author		= "blueblur, Credit to Eyal282, Lechuga16",
 	description = "Fix bug when first round start there are no gascans and set the round number, resets the game on match end.",
-	version		= "1.7",
-	url			= "https://github.com/blueblur0730/modified-plugins/tree/main/source/l4d2_fix_scav_issues"
+	version		= "1.8",
+	url			= "https://github.com/blueblur0730/modified-plugins"
 }
 
 public void
 	OnPluginStart()
 {
 	// ConVars
-	g_hGamemode	  		= FindConVar("mp_gamemode");
-	g_hAllowEnrich	  	= CreateConVar("l4d2_allow_enrich_gascan", "0", "Allow Enriching Gascan", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_hscav_rounds 		= CreateConVar("l4d2_scavenge_rounds", "5", "Set the number of rounds", FCVAR_NOTIFY, true, 1.0, true, 5.0);
+	g_hCvarGamemode			= FindConVar("mp_gamemode");
+	g_hCvarAllowEnrich		= CreateConVar("l4d2_scavenge_allow_enrich_gascan", "0", "Allow admin to enriching gascan", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hCvarScavengeRound 	= CreateConVar("l4d2_scavenge_rounds", "5", "Set the total number of rounds", FCVAR_NOTIFY, true, 1.0, true, 5.0);
+	g_hCvarRestartRound 	= CreateConVar("l4d2_scavenge_match_end_restart", "1", "Enable auto end match restart? (in case we use vanilla rematch vote)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	// Hook
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Post);
@@ -85,7 +85,7 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 	int iRound = GetScavengeRoundNumber();
 	if (iRound == 1 && !InSecondHalfOfRound())
 	{
-		SetScavengeRoundLimit(g_hscav_rounds.IntValue);
+		SetScavengeRoundLimit(g_hCvarScavengeRound.IntValue);
 	}
 }
 
@@ -103,7 +103,7 @@ public void OnReadyUpInitiate()
 {
 	// Delay for a while to do it.
 	// becasue for no reason gascans enriched double OnMapStart immediately.
-	CreateTimer(12.0, Timer_DelayedToSpawnGasCan);
+	CreateTimer(12.0, Timer_DelayToSpawnGasCan);
 }
 
 //----------------------
@@ -112,7 +112,7 @@ public void OnReadyUpInitiate()
 
 public Action SpawnGasCan(int client, int args)
 {
-	if (g_hAllowEnrich.IntValue == 1)
+	if (g_hCvarAllowEnrich.IntValue == 1)
 	{
 		L4D2_SpawnAllScavengeItems();
 	}
@@ -128,7 +128,7 @@ public Action SpawnGasCan(int client, int args)
 //		Actions
 //----------------------
 
-Action Timer_DelayedToSpawnGasCan(Handle htimer)
+Action Timer_DelayToSpawnGasCan(Handle Timer)
 {
 	SpawnGascanDuringReadyup();
 
@@ -138,7 +138,7 @@ Action Timer_DelayedToSpawnGasCan(Handle htimer)
 void SpawnGascanDuringReadyup()
 {
 	char sValue[32];
-	g_hGamemode.GetString(sValue, sizeof(sValue));
+	g_hCvarGamemode.GetString(sValue, sizeof(sValue));
 
 	if (StrEqual(sValue, "scavenge") && GetScavengeItemsRemaining() == 0 && GetScavengeItemsGoal() == 0 && GetGasCanCount() == 0)
 	{
@@ -146,10 +146,10 @@ void SpawnGascanDuringReadyup()
 	}
 }
 
-Action Timer_Fix(Handle hTimer)
+Action Timer_Fix(Handle Timer)
 {
 	char sValue[32];
-	g_hGamemode.GetString(sValue, sizeof(sValue));
+	g_hCvarGamemode.GetString(sValue, sizeof(sValue));
 
 	if (StrEqual(sValue, "scavenge") && GetGameTime() - g_fMapStartTime > 5.0 && GetScavengeItemsRemaining() == 0 && GetScavengeItemsGoal() == 0 && GetGasCanCount() == 0 && !g_bReadyUpAvailable)
 	{
@@ -159,14 +159,15 @@ Action Timer_Fix(Handle hTimer)
 	return Plugin_Handled;
 }
 
-Action Timer_RestartRound(Handle hTimer)
+Action Timer_RestartRound(Handle Timer)
 {
 	RestartRound();
 
 	return Plugin_Handled;
 }
 
-void RestartRound()		// Credits to lechuga16
+/* belows are from plugin readyup_scav, Credits to lechuga16 */
+void RestartRound()
 {
 	StartPrepSDKCall(SDKCall_GameRules);
 	PrepSDKCall_SetFromConf(LoadGameConfigFile("left4dhooks.l4d2"), SDKConf_Signature, "CTerrorGameRules_ResetRoundNumber");
@@ -179,7 +180,33 @@ void RestartRound()		// Credits to lechuga16
 
 	SDKCall(func);
 	CloseHandle(func);
-	//CreateTimer(2.0, Timer_RestartCampaign);
+
+	if (g_hCvarRestartRound.BoolValue)		// do we use vanilla rematch vote?
+	{
+		CreateTimer(2.0, Timer_RestartCampaign);
+	}
+}
+
+
+Action Timer_RestartCampaign(Handle Timer)		// restart twice. because the first one freezes the survivors.
+{
+	char currentmap[128];
+	GetCurrentMap(currentmap, sizeof(currentmap));
+	
+	L4D_RestartScenarioFromVote(currentmap);
+	CreateTimer(2.0, Timer_RestartCampaign_Second, _);
+
+	return Plugin_Handled;
+}
+
+Action Timer_RestartCampaign_Second(Handle Timer)
+{
+	char currentmap[128];
+	GetCurrentMap(currentmap, sizeof(currentmap));
+	
+	L4D_RestartScenarioFromVote(currentmap);
+
+	return Plugin_Handled;
 }
 
 //-----------------
@@ -190,4 +217,3 @@ stock bool InSecondHalfOfRound()
 {
 	return view_as<bool>(GameRules_GetProp("m_bInSecondHalfOfRound", 1));
 }
-
