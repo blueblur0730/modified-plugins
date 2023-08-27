@@ -1,8 +1,8 @@
-//////////////////////////////////////////////////////////////////////////
-//							Scavenge Functions							//
-//		A useful collection of functions related to L4D2 Scavenge		//
-//				Collected and authorized by blueblur					//
-//////////////////////////////////////////////////////////////////////////
+/*
+	Scavenge Functions
+	- A useful collection of functions related to L4D2 Scavenge
+	- Collected and authorized by blueblur
+*/
 
 #if defined _scavenge_func_included
 	#endinput
@@ -364,7 +364,7 @@ stock int GetGasCanCount()
  * @return	    -1 if we are currently not in second half of the round. 
  * @return	    -2 if currently no winner showing up on this match. 
  */
-stock int WhoWonTheMatch()
+stock int GetMatchWinner()
 {
 	bool IsSurvWin, IsInfecWin, IsNoWinner, IsSecondHalfOfRound;
 
@@ -386,6 +386,7 @@ stock int WhoWonTheMatch()
 				{
 					IsInfecWin = true;
 				}
+
 				else
 				{
 					IsNoWinner = true;
@@ -403,6 +404,7 @@ stock int WhoWonTheMatch()
 				{
 					IsInfecWin = true;
 				}
+				
 				else
 				{
 					IsNoWinner = true;
