@@ -14,8 +14,9 @@
 - https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/l4d_tank_control_eq.sp [l4d_tank_control_eq]
 
 <hr>
-```
+
 ### Server ConVars
+```
 
 // 开启插件
 // 默认值:1
@@ -34,9 +35,10 @@ tankcontrol_print_all "0"
 
 // 插件版本
 l4d2_tank_control_scav_version PLUGIN_VERSION (见源码)
+```
 
 ### Client Cmd
-
+```
 // 谁会成为tank? 油桶点数为多少?
 sm_tank
 ```
