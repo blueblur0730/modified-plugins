@@ -11,7 +11,7 @@
  * v1.2: 8/27/23
  *  - code optimization.
  *  - initial release.
- *  - (to do) since number of pills and adrenalines are restricted by confogl, need some improvment to store and spawn these items properly 
+ * 
  */
 
 #pragma semicolon 1
@@ -35,17 +35,15 @@ enum struct WeaponInfo
 
 static const char sRemoveWeaponNames[][] = {
 	"spawn",
-	"pain_pills_spawn",
-	"adrenaline_spawn"
 };
 
 public Plugin myinfo =
 {
-	name		= "[L4D2] Scavenge Weapon Consistency",
-	description = "Makes scavenge weapons, pills, adrenaline spawn at the same position and (weapons)same tier in one scavenge round.",
-	author		= "blueblur",
-	version		= "1.2",
-	url			= "https://github.com/blueblur0730/modified-plugins"
+	name 		= "[L4D2] Scavenge Weapon Consistency",
+	description = "Makes scavenge weapons spawn at the same position and same tier in one scavenge round.",
+	author 		= "blueblur",
+	version 	= "1.2",
+	url 		= "https://github.com/blueblur0730/modified-plugins"
 };
 
 public void OnPluginStart()
@@ -153,13 +151,15 @@ void StoreWeapons(int ent)
 void ReplaceWeapons()
 {
 	int iWeaponSize = g_hWeaponArray.Length;
-
 	WeaponInfo esWeaponInfo;
 
 	for (int i = 0; i < iWeaponSize; i++)
 	{
 		g_hWeaponArray.GetArray(i, esWeaponInfo, sizeof(WeaponInfo));
-		SpawnWeapon(esWeaponInfo.wepid, esWeaponInfo.origin, esWeaponInfo.angle, 5);
+		if (esWeaponInfo.wepid != WEPID_NONE)
+		{
+			SpawnWeapon(esWeaponInfo.wepid, esWeaponInfo.origin, esWeaponInfo.angle, 5);
+		}
 	}
 }
 
@@ -170,8 +170,8 @@ void SpawnWeapon(int wepid, float origin[3], float angles[3], int count)
 		int iEntity = CreateEntityByName("weapon_spawn");
 		if (IsValidEntity(iEntity))
 		{
-			SetEntProp(iEntity, Prop_Send, "m_weaponID", wepid);
 			char buf[256];
+			SetEntProp(iEntity, Prop_Send, "m_weaponID", wepid);
 			GetWeaponModel(wepid, buf, 64);
 			DispatchKeyValue(iEntity, "solid", "6");
 			DispatchKeyValue(iEntity, "model", buf);
