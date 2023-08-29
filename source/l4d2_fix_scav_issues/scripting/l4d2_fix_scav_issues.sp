@@ -19,10 +19,10 @@ bool g_bReadyUpAvailable;
 
 public Plugin myinfo =
 {
-	name		= "[L4D2] Fix Scavenge Issues",
-	author		= "blueblur, Credit to Eyal282, Lechuga16",
-	description = "Fix bug when first round start there are no gascans and set the round number, resets the game on match end.",
-	version		= "1.8",
+	name 		= "[L4D2] Fix Scavenge Issues",
+	author 		= "blueblur, Credit to Eyal282",
+	description = "Fixes bug when first round started there were no gascans, sets the round number and resets the game on match end.",
+	version		= "1.9",
 	url			= "https://github.com/blueblur0730/modified-plugins"
 }
 
@@ -92,7 +92,7 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 public void Event_ScavMatchFinished(Event event, const char[] name, bool dontBroadcast)
 {
 	// give them time to see the scores.
-	CreateTimer(7.0, Timer_RestartRound);
+	CreateTimer(10.0, Timer_RestartMatch);
 }
 
 //---------------------
@@ -103,7 +103,7 @@ public void OnReadyUpInitiate()
 {
 	// Delay for a while to do it.
 	// becasue for no reason gascans enriched double OnMapStart immediately.
-	CreateTimer(12.0, Timer_DelayToSpawnGasCan);
+	CreateTimer(10.0, Timer_DelayToSpawnGasCan);
 }
 
 //----------------------
@@ -159,53 +159,12 @@ Action Timer_Fix(Handle Timer)
 	return Plugin_Handled;
 }
 
-Action Timer_RestartRound(Handle Timer)
+Action Timer_RestartMatch(Handle Timer)
 {
-	RestartRound();
-
-	return Plugin_Handled;
-}
-
-/* belows are from plugin readyup_scav, Credits to lechuga16 */
-void RestartRound()
-{
-	StartPrepSDKCall(SDKCall_GameRules);
-	PrepSDKCall_SetFromConf(LoadGameConfigFile("left4dhooks.l4d2"), SDKConf_Signature, "CTerrorGameRules_ResetRoundNumber");
-	Handle func = EndPrepSDKCall();
-
-	if (func == INVALID_HANDLE)
+	if (g_hCvarRestartRound.BoolValue)
 	{
-		ThrowError("Failed to end prep sdk call");
+		L4D2_Rematch();
 	}
-
-	SDKCall(func);
-	CloseHandle(func);
-
-	if (g_hCvarRestartRound.BoolValue)		// do we use vanilla rematch vote?
-	{
-		CreateTimer(2.0, Timer_RestartCampaign);
-	}
-}
-
-
-Action Timer_RestartCampaign(Handle Timer)		// restart twice. because the first one freezes the survivors.
-{
-	char currentmap[128];
-	GetCurrentMap(currentmap, sizeof(currentmap));
-	
-	L4D_RestartScenarioFromVote(currentmap);
-	CreateTimer(2.0, Timer_RestartCampaign_Second, _);
-
-	return Plugin_Handled;
-}
-
-Action Timer_RestartCampaign_Second(Handle Timer)
-{
-	char currentmap[128];
-	GetCurrentMap(currentmap, sizeof(currentmap));
-	
-	L4D_RestartScenarioFromVote(currentmap);
-
 	return Plugin_Handled;
 }
 
