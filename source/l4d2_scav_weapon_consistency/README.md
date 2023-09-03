@@ -3,6 +3,9 @@
 ### Introduction
  - 修复清道夫同一轮下上下半轮地图武器不一致的问题.
 
+### Alliedmodders
+ - https://forums.alliedmods.net/showthread.php?t=343771
+
 ### Requirement
  - none.
 

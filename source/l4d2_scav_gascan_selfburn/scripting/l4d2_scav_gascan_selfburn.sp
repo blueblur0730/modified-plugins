@@ -1,4 +1,6 @@
 /* Change log:
+ * - 2.8.1
+ *  - optimized logic and codes.
  * 
  * - 2.8
  *  - Fixed some issues in 2.7.1 the gascans dont get burned.
@@ -20,7 +22,7 @@
  *
  * - 2.6.3
  *	- Optimized the logic.
- *		- Fixed when currg_iEntityGascan map name can not parse with coodinate, it caused players' death.
+ *		- Fixed when current map name can not parse with coodinate, it caused players' death.
  *		- Coordinate parsing functions are no longer public. KillPlayer() function are no longer public.
  *
  * - 2.6.2
@@ -77,7 +79,7 @@
 #include <sdktools>
 #include <colors>
 
-#define PLUGIN_VERSION "2.8"
+#define PLUGIN_VERSION "2.8.1"
 #define CONFIG_PATH	   "configs/l4d2_scav_gascan_selfburn.txt"
 #define MAXENTITY 		2048
 
@@ -108,8 +110,7 @@ char
 
 int
 	g_iBurnedGascanCount,
-	g_iDetectCount[MAXENTITY],
-	g_iEntityGascan;
+	g_iDetectCount[MAXENTITY];
 
 float
 	g_fheight_min, g_fheight_max,
@@ -149,7 +150,7 @@ public void OnPluginStart()
 	/******************************/
 
 	// KeyValue
-	kv							   = CreateKeyValues("Positions", "", "");
+	kv = CreateKeyValues("Positions", "", "");
 	BuildPath(Path_SM, buffer, 128, CONFIG_PATH);
 	if (!FileToKeyValues(kv, buffer))
 	{
@@ -230,19 +231,19 @@ Action Timer_KillPlayer(Handle Timer)
 
 stock void FindMisplacedCans()
 {
-	g_iEntityGascan = -1;
+	int iEntityGascan = -1;
 
-	while ((g_iEntityGascan = FindEntityByClassname(g_iEntityGascan, "weapon_gascan")) != -1)
+	while ((iEntityGascan = FindEntityByClassname(iEntityGascan, "weapon_gascan")) != -1)
 	{
-		if (!IsValidEntity(g_iEntityGascan))
+		if (!IsValidEntity(iEntityGascan))
 			continue;
 
 		if (g_hCvarEnableCountLimit.BoolValue && IsReachedLimit() == true)
 			break;	  // burned gascan has reached its max limit we set, stop the loop.
 
 		float fPosition[3];
-		g_iDetectCount[g_iEntityGascan] = 0;		// initialize the detect count in every loop.
-		GetEntPropVector(g_iEntityGascan, Prop_Send, "m_vecOrigin", fPosition);
+		g_iDetectCount[iEntityGascan] = 0;		// initialize the detect count in every loop.
+		GetEntPropVector(iEntityGascan, Prop_Send, "m_vecOrigin", fPosition);
 
 		/*
 		 * if gascan reached a place that is lower than the coordinate the g_fheight_min given on z axie, ignite gascan.
@@ -257,18 +258,18 @@ stock void FindMisplacedCans()
 
 		if (g_hCvarEnableHeightDetectz_max.BoolValue)
 		{
-			if (g_fheight_max == 0.0)
+			if (g_fheight_max != 0.0 && g_fheight_max <= fPosition[2])
 			{
-				return;
-			}
-			else
-			{
-				if (g_fheight_max <= fPosition[2])
+				if (fPosition[2])	// Has gascan not hold by survivor? or has gascan become static?
 				{
-					if (fPosition[2])	// Has gascan not hold by survivor? or has gascan become static?
+					if (IsDetectCountOverflow(iEntityGascan))
 					{
-						g_iDetectCount[g_iEntityGascan]++;		// +1 detect count
-						CheckDetectCountThenIgnite();
+						g_iDetectCount[iEntityGascan]++;		// +1 detect count
+						CheckDetectCountThenIgnite(iEntityGascan);
+					}
+					else
+					{
+						continue;
 					}
 				}
 			}
@@ -276,18 +277,18 @@ stock void FindMisplacedCans()
 
 		if (g_hCvarEnableHeightDetectz_min.BoolValue)
 		{
-			if (g_fheight_min == 0.0)
+			if (g_fheight_min != 0.0 && fPosition[2] <= g_fheight_min)
 			{
-				return;
-			}
-			else
-			{
-				if (fPosition[2] <= g_fheight_min)
+				if (fPosition[2])
 				{
-					if (fPosition[2])
+					if (IsDetectCountOverflow(iEntityGascan))
 					{
-						g_iDetectCount[g_iEntityGascan]++;
-						CheckDetectCountThenIgnite();
+						g_iDetectCount[iEntityGascan]++;
+						CheckDetectCountThenIgnite(iEntityGascan);
+					}
+					else
+					{
+						continue;
 					}
 				}
 			}
@@ -295,18 +296,18 @@ stock void FindMisplacedCans()
 
 		if (g_hCvarEnableSquareDetectx_max.BoolValue)
 		{
-			if (g_fwidth_x_max == 0.0)
+			if (g_fwidth_x_max != 0.0 && g_fwidth_x_max <= fPosition[0])
 			{
-				return;
-			}
-			else
-			{
-				if (g_fwidth_x_max <= fPosition[0])
+				if (fPosition[0])
 				{
-					if (fPosition[0])
+					if (IsDetectCountOverflow(iEntityGascan))
 					{
-						g_iDetectCount[g_iEntityGascan]++;
-						CheckDetectCountThenIgnite();
+						g_iDetectCount[iEntityGascan]++;
+						CheckDetectCountThenIgnite(iEntityGascan);
+					}
+					else
+					{
+						continue;
 					}
 				}
 			}
@@ -314,18 +315,18 @@ stock void FindMisplacedCans()
 
 		if (g_hCvarEnableSquareDetectx_min.BoolValue)
 		{
-			if (g_fwidth_x_min == 0.0)
+			if (g_fwidth_x_min != 0.0 && fPosition[0] <= g_fwidth_x_min)
 			{
-				return;
-			}
-			else
-			{
-				if (fPosition[0] <= g_fwidth_x_min)
+				if (fPosition[0])
 				{
-					if (fPosition[0])
+					if (IsDetectCountOverflow(iEntityGascan))
 					{
-						g_iDetectCount[g_iEntityGascan]++;
-						CheckDetectCountThenIgnite();
+						g_iDetectCount[iEntityGascan]++;
+						CheckDetectCountThenIgnite(iEntityGascan);
+					}
+					else
+					{
+						continue;
 					}
 				}
 			}
@@ -333,18 +334,18 @@ stock void FindMisplacedCans()
 
 		if (g_hCvarEnableSquareDetecty_max.BoolValue)
 		{
-			if (g_fwidth_y_max == 0.0)
+			if (g_fwidth_y_max != 0.0 && g_fwidth_y_max <= fPosition[1])
 			{
-				return;
-			}
-			else
-			{
-				if (g_fwidth_y_max <= fPosition[1])
+				if (fPosition[1])
 				{
-					if (fPosition[1])
+					if (IsDetectCountOverflow(iEntityGascan))
 					{
-						g_iDetectCount[g_iEntityGascan]++;
-						CheckDetectCountThenIgnite();
+						g_iDetectCount[iEntityGascan]++;
+						CheckDetectCountThenIgnite(iEntityGascan);
+					}
+					else
+					{
+						continue;
 					}
 				}
 			}
@@ -352,18 +353,18 @@ stock void FindMisplacedCans()
 
 		if (g_hCvarEnableSquareDetecty_min.BoolValue)
 		{
-			if (g_fwidth_y_min == 0.0)
+			if (g_fwidth_y_min != 0.0 && fPosition[1] <= g_fwidth_y_min)
 			{
-				return;
-			}
-			else
-			{
-				if (fPosition[1] <= g_fwidth_y_min)
+				if (fPosition[1])
 				{
-					if (fPosition[1])
+					if (IsDetectCountOverflow(iEntityGascan))
 					{
-						g_iDetectCount[g_iEntityGascan]++;
-						CheckDetectCountThenIgnite();
+						g_iDetectCount[iEntityGascan]++;
+						CheckDetectCountThenIgnite(iEntityGascan);
+					}
+					else
+					{
+						continue;
 					}
 				}
 			}
@@ -371,24 +372,13 @@ stock void FindMisplacedCans()
 	}
 }
 
-void CheckDetectCountThenIgnite()
+void CheckDetectCountThenIgnite(int ent)
 {
+	Ignite(ent);
+
 	if (g_hCvarEnableCountLimit.BoolValue)
 	{
-		if (IsDetectCountOverflow())
-		{
-			g_iBurnedGascanCount++;	   // +1 burned gascan count.
-			Ignite(g_iEntityGascan);			   // do ignition.
-			return;		// retrun to check if there is a detect count overflow.
-		}   
-	}
-	else
-	{
-		if (IsDetectCountOverflow())
-		{
-			Ignite(g_iEntityGascan);
-			return;
-		}
+		g_iBurnedGascanCount++;	   // +1 burned gascan count.
 	}
 }
 
@@ -419,7 +409,7 @@ void ParseMapnameAndHeight(float height_min, float height_max)
 		height_max = KvGetFloat(kv, "height_zlimit_max");
 		if (g_hCvarEnableDebug.BoolValue)
 		{
-			PrintToConsoleAll("--------------------------\nparsed mapname and value.\n mapname = %s\n g_fheight_min = %f\n g_fheight_max = %f", g_sMapName, height_min, height_max);
+			PrintToServer("--------------------------\nparsed mapname and value.\n mapname = %s\n g_fheight_min = %f\n g_fheight_max = %f", g_sMapName, height_min, height_max);
 		}
 	}
 	else
@@ -437,7 +427,7 @@ void ParseMapnameAndWidthMax(float width_x_max, float width_y_max)
 		width_y_max = KvGetFloat(kv, "width_ylimit_max");
 		if (g_hCvarEnableDebug.BoolValue)
 		{
-			PrintToConsoleAll("\nparsed mapname and value.\n mapname = %s\n g_fwidth_x_max = %f\n g_fwidth_y_max = %f", g_sMapName, width_x_max, width_y_max);
+			PrintToServer("\nparsed mapname and value.\n mapname = %s\n g_fwidth_x_max = %f\n g_fwidth_y_max = %f", g_sMapName, width_x_max, width_y_max);
 		}
 	}
 	else
@@ -455,7 +445,7 @@ void ParseMapnameAndWidthMin(float width_x_min, float width_y_min)
 		width_y_min = KvGetFloat(kv, "width_ylimit_min");
 		if (g_hCvarEnableDebug.BoolValue)
 		{
-			PrintToConsoleAll("\nparsed mapname and value.\n mapname = %s\n g_fwidth_x_max = %f\n g_fwidth_y_max = %f\n --------------------------", g_sMapName, width_x_min, width_y_min);
+			PrintToServer("\nparsed mapname and value.\n mapname = %s\n g_fwidth_x_max = %f\n g_fwidth_y_max = %f\n --------------------------", g_sMapName, width_x_min, width_y_min);
 		}
 	}
 	else
@@ -464,7 +454,7 @@ void ParseMapnameAndWidthMin(float width_x_min, float width_y_min)
 	}
 }
 
-Action Ignite(int ent)
+void Ignite(int ent)
 {
 	AcceptEntityInput(ent, "ignite");
 	if (g_hCvarEnableCountLimit.BoolValue)
@@ -479,8 +469,6 @@ Action Ignite(int ent)
 	{
 		CPrintToChatAll("%t", "Ignite");
 	}
-
-	return Plugin_Handled;
 }
 
 stock bool IsReachedLimit()
@@ -492,9 +480,9 @@ stock bool IsReachedLimit()
 }
 
 
-stock bool IsDetectCountOverflow()
+stock bool IsDetectCountOverflow(int ent)
 {
-	if (g_iDetectCount[g_iEntityGascan] >= 2)
+	if (g_iDetectCount[ent] >= 1)
 		return true;
 	else
 		return false;
