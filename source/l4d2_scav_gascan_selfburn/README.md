@@ -18,35 +18,20 @@
 // min: 0, max: 1
 l4d2_scav_gascan_selfburn_enable "1"
 
-// 开启x轴检测 (最大边界值)
+// 开启x轴检测
 // 默认值: 1
 // min: 0, max:1
-l4d2_scav_gascan_selfburn_detect_x_max "1"
+l4d2_scav_gascan_selfburn_detect_x "1"
 
-// 开启x轴检测 (最小边界值)
+// 开启y轴检测
 // 默认值: 1
 // min: 0, max:1
-l4d2_scav_gascan_selfburn_detect_x_min "1"
+l4d2_scav_gascan_selfburn_detect_y "1"
 
-// 开启y轴检测 (最大边界值)
-// 默认值: 1
-// min: 0, max:1
-l4d2_scav_gascan_selfburn_detect_y_max "1"
-
-// 开启y轴检测 (最小边界值)
-// 默认值: 1
-// min: 0, max:1
-l4d2_scav_gascan_selfburn_detect_y_min "1"
-
-// 开启z轴检测 (最大边界值)
+// 开启z轴检测
 // 默认值: 1
 // min: 0, max: 1
-l4d2_scav_gascan_selfburn_detect_z_max "1"
-
-// 开启z轴检测 (最小边界值)
-// 默认值: 1
-// min: 0, max: 1
-l4d2_scav_gascan_selfburn_detect_z_min "1"
+l4d2_scav_gascan_selfburn_detect_z "1"
 
 // 开启插件Debug
 // 默认值: 0
@@ -85,9 +70,8 @@ l4d2_scav_gascan_burned_limit "4"
 
 ### Config File
 
-在sourcemod/configs/l4d2_scav_gascan_selfburn.txt里, 你需要做如下编辑:
 ```
-
+在sourcemod/configs/l4d2_scav_gascan_selfburn.txt里, 你需要做如下编辑:
 
 	"c8m5_rooftop"		//这里是你需要进行边界设置的清道夫地图名
 	{
@@ -108,14 +92,9 @@ l4d2_scav_gascan_burned_limit "4"
  - width_ylimit_max指油桶在y轴上不能大于的水平边界, 大于这个水平边界油桶会被点燃.
  - width_xlimit_min指油桶在x轴上不能小于的水平边界, 小于这个水平边界油桶会被点燃.
  - width_ylimit_min指油桶在y轴上不能小于的水平边界, 小于这个水平边界油桶会被点燃.
-
+ - 所有引索后面的参数如果在特定轴检测开启的情况下不填, 即没有数值, 其他数值也不会检测, 即插件相当于未开启.
+ - 如果坐标是负的该怎么办? 只要遵循负数比大小法则就行.
+   例如:y轴上有两个我想设置的界限坐标-9000.0和-5000.0, 因为-9000.0 < -5000.0, 所以我会把-9000.0填在"width_ylimit_min"内, 把-5000.0填在"width_ylimit_max"内, 其他轴类似.
 
 ```
 <hr>
-
-### Notice
- - 每一个边界由单独的cvar控制是否开启.
- - 注意! 如果坐标值填入0.0, 插件不会在这一边界进行油桶自燃.
- - 所有引索后面的参数如果在特定轴检测开启的情况下不填, 即没有数值, 数值默认设置为0.0, 插件不会在这一边界进行油桶自燃.
- - 如果坐标是负的该怎么办? 只要遵循负数比大小法则就行.
-   例如:y轴上有两个我想设置的界限坐标-9000.0和-5000.0, 因为-9000.0 < -5000.0, 所以我会把-9000.0填在"width_ylimit_min"内, 把-5000.0填在"width_ylimit_max"内, 其他轴类似.
