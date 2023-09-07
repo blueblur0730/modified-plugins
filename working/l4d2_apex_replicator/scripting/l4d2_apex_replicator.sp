@@ -1,9 +1,14 @@
 /**
  * changelog.
  * 
+ * a1.3: 9/7/23
+ *  - Entity removal construction. 
+ *  - Metarial obtaining construction (not completed yet).
+ *  - More gloabal management on OnMapStart() and OnMapEnd().
+ * 
  * a1.2: 9/5/23
  *  - Commander menu construction.
- *  - Optimized part code of Initializations
+ *  - Optimized part code of Initializations.
  * 
  * a1.1: 9/3/23
  *  - initial constuctions of file loading and varibles definitions.
@@ -35,7 +40,7 @@ enum struct ItemInfo
 }
 
 int
-	g_iTotalItems = 0;
+	g_iTotalItems = 0,
 	g_iRequestAmount[MAXPLAYERS + 1],
 	g_iMetarialAmount[MAXPLAYERS + 1];
 
@@ -44,10 +49,6 @@ char
 	g_sSoundEnter[256],
 	g_sSoundAnnounce[256],
 	g_sSoundMaking[256];
-
-bool
-	g_bIsMapSwitched = false,
-	g_bCanReplicatorSpawn = false;
 
 ArrayList
 	g_harrayItemList;
@@ -67,7 +68,7 @@ public Plugin myinfo =
 	name = "[L4D2] Apex Replicator",
 	author = "blueblur",
 	description = "Bring apex replicator to l4d2.",
-	version = "a1.2",
+	version = "a1.3",
 	url = "https://github.com/blueblur0730/modified-plugins"
 };
 
@@ -84,7 +85,7 @@ public void OnPluginStart()
 	// ConVars
 	g_hcvarEnablePlugin = CreateConVar("l4d2_apex_replicator_enable", "1", "Enable the plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	g_hcvarEnableSounds = CreateConVar("l4d2_apex_replicator_sound_enable", "1", "Should we use extra sound resource ?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_hcvarAllowedGameMode = CreateConVar("l4d2_apex_replicator_gamemode", "", "Game mode to enable. 1 = coop, 2 = realism, 4 = versus, 8 = scavenge, 16 = survival", FCVAR_NOTIFY, true, 1.0);
+	g_hcvarAllowedGameMode = CreateConVar("l4d2_apex_replicator_gamemode", "", "Game mode to enable. 1 = coop, 2 = realism, 4 = versus, 8 = scavenge, 16 = survival, 32 = mutations, 64 = All", FCVAR_NOTIFY, true, 1.0);
 	g_hcvarMinMetarial = CreateConVar("l4d2_apex_replicator_min_metarial", "5", "Minimum metarials we obtain by killing SIs");
 	g_hcvarMaxMetarial = CreateConVar("l4d2_apex_replicator_max_metarial", "20", "Maximum metarials we obtain by killing SIs");
 	g_hcvarKillItemSwitch = CreateConVar("l4d2_apex_replicator_kill_entity", "1", "Should we kill the entity we listed in the replicator ?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
@@ -96,7 +97,7 @@ public void OnPluginStart()
 
 	// KeyValue Config
 	char sBuffer[128];
-	KeyValue kv = new KeyValues("Path");
+	KeyValues kv = new KeyValues("Path");
 	BuildPath(Path_SM, sBuffer, sizeof(sBuffer), CONFIG_PATH);
 	if (!FileToKeyValues(kv, sBuffer))
 	{
@@ -109,9 +110,29 @@ public void OnPluginStart()
 
 	// Translations
 	LoadTranslations("l4d2_apex_replicator.phrases");
+
+	// Check Enable Status
+	CheckStatus();
 }
 
-void IniConfig(KeyValue kv)
+Action CheckStatus()
+{
+	if (g_hcvarEnablePlugin.BoolValue)
+	{
+		if (!IsAllowedGameMode())
+		{
+			return Plugin_Handled;
+		}
+	}
+	else
+	{
+		return Plugin_Handled;
+	}
+
+	return Plugin_Continue;
+}
+
+void IniConfig(KeyValues kv)
 {
 	kv.Rewind();
 
@@ -224,27 +245,35 @@ void IniResources()
 	}
 }
 
-//------------------------------
-// Events and Global Managment
-//------------------------------
+//-------------------
+// Global Managment
+//-------------------
 public void Event_PlayerLeftStartArea(Event hEvent, const char[] sEventName, bool bDontBroadcast)
 {
-	g_bCanReplicatorSpawn = true;
 	CreateTimer(g_hcvarTimeToSpawn.IntValue, Timer_SpawnReplicator);
 }
 
 public void Event_RoundStart(Event hEvent, const char[] sEventName, bool bDontBroadcast)
 {
-	// delay for a while to do it
-	CreateTimer(1.0, Timer_RemoveEntity);
+	if (g_hcvarKillItemSwitch.BoolValue)
+	{
+		// delay for a while to do it
+		CreateTimer(1.0, Timer_RemoveEntity);
+	}
 }
 
-// if a survivor died, clear his data.
-public void Event_PlayerDeath(Event hEvent, const char[] sEventName, bool bDontBroadcast)
+public void OnMapStart()
 {
-	for (int i = 0; i <= MaxClients; i++)
+	// Check every map start
+	CheckStatus();
+}
+
+public void OnMapEnd()
+{
+	// clear all players' data on map end
+	for (int i = 0; i < MaxClients; i++)
 	{
-		if (!IsPlayerAlive(i) && IsSurvivor(i))
+		if (IsValidClient(i) && IsSurvivor(i))
 		{
 			g_iRequestAmount[i] = 0;
 			g_iMetarialAmount[i] = 0;
@@ -252,19 +281,9 @@ public void Event_PlayerDeath(Event hEvent, const char[] sEventName, bool bDontB
 	}
 }
 
-public void OnMapStart()
-{
-
-}
-
-public void OnMapEnd()
-{
-	g_bIsMapSwitched = true;
-}
-
-//-------------
-// Commander
-//-------------
+//----------------
+// Commander Menu
+//----------------
 public Action Commander_ReplicateList(int client, int args)
 {
 	char sBuffer[64];
@@ -275,7 +294,7 @@ public Action Commander_ReplicateList(int client, int args)
 	hMenu.SetTitle(sBuffer);
 	
 	ItemInfo esItemInfo;
-	for (i = 0; i < iSize; i++)
+	for (int i = 0; i < iSize; i++)
 	{
 		g_harrayItemList.GetArray(i, esItemInfo, sizeof(esItemInfo));
 		hMenu.AddItem(esItemInfo.info);
@@ -297,15 +316,15 @@ public int CmdMenuHandler(Menu menu, MenuAction action, int param1, int param2)
 			Panel hPanel = new Panel();
 			menu.GetItem(param2, sInfo, sizeof(sInfo));
 
-			for (i = 0; i < g_iTotalItems; i++)
+			for (int i = 0; i < g_iTotalItems; i++)
 			{
-				g_harrayItemList.GetArray(i, esItemInfo, sizeof(esItemInfo))
+				g_harrayItemList.GetArray(i, esItemInfo, sizeof(esItemInfo));
 				if (StrEqual(sInfo, esItemInfo.info))
 				{
 					char sBuffer1[128], sBuffer2[128], sBuffer3[128];
 					Format(sBuffer1, sizeof(sBuffer1), "%t", "PanelTitle");
 					Format(sBuffer2, sizeof(sBuffer2), "%t: %i", "MetarialNeed", esItemInfo.metarial);
-					Format(sBuffer3, sizeof(sBuffer3), "%t", "Return")
+					Format(sBuffer3, sizeof(sBuffer3), "%t", "Return");
 					hPanel.SetTitle(sBuffer1);
 					hPanel.DrawItem(esItemInfo.info);
 					hPanel.DrawText(sBuffer2);
@@ -335,7 +354,65 @@ public int PanelHandler(Menu hMenu, MenuAction action, int param1, int param2) {
 //---------------
 public Action Timer_RemoveEntity(Handle Timer)
 {
+	int iEntity = INVALID_ENT_REFERENCE;
+	ItemInfo esItemInfo;
 
+	for (int i = 0; i < g_iTotalItems; i++)
+	{
+		g_harrayItemList.GetArray(i, esItemInfo, sizeof(esItemInfo));
+		while (iEntity = FindEntityByClassname(iEntity, esItemInfo.name) != INVALID_ENT_REFERENCE)
+		{
+			if (iEntity <= MaxClients || !IsValidEntity(iEntity)) 
+			{
+				continue;
+			}
+
+			RemoveEntity(iEntity);
+			break;
+		}
+	}
+
+	return Plugin_Handled;
+}
+
+//---------------------
+// Metarial Obtaining
+//---------------------
+public void Event_PlayerDeath(Event hEvent, const char[] sEventName, bool bDontBroadcast)
+{
+	/* from l4d_stats.sp */
+	int iAttackerTeam = -1; iVictimTeam = -1;
+	int iAttacker = GetClientOfUserId(GetEventInt(hEvent, "attacker"));
+	int iVictim = GetClientOfUserId(GetEventInt(hEvent, "userid"));
+	bool bIsAttackerBot = GetEventBool(hEvent, "attackerisbot");
+	//bool bIsVictimBot = GetEventBool(hEvent, "victimisbot");		// for futuer pvp use
+
+	iAttackerTeam = GetClientTeam(iAttacker);
+	iVictimTeam = GetClientTeam(iVictim);
+
+	// if a survivor died, no matter if the killer is a bot or player
+	if (iVictimTeam == 2)
+	{
+		// clear his/her data
+		g_iRequestAmount[iAttacker] = 0;
+		g_iMetarialAmount[iAttacker] = 0;
+	}
+
+	// if a survivor killed a SI
+	if (iAttackerTeam == 2 && iVictimTeam == 3 && !bIsAttackerBot)
+	{
+		if (iAttacker > 0)
+		{
+			ObtainMetarial(iAttacker);
+		}
+	}
+}
+
+void ObtainMetarial(int iAttacker)
+{
+	// get a value between this zone
+	int iAmount = GetRandomInt(g_hcvarMinMetarial.IntValue, g_hcvarMaxMetarial.IntValue);
+	g_iMetarialAmount[iAttacker] += iAmount;
 }
 
 //-------------------
@@ -346,18 +423,38 @@ public Action Timer_SpawnReplicator(Handle Timer)
 
 }
 
-//------------
+//-----------
 // Interact
-//------------
+//-----------
 
-//---------------------
-// Metarial Obtaintion
-//---------------------
-
-//----------
-// Menu
-//----------
+//------------------
+// Replicator Menu
+//------------------
 
 //---------
 // Stocks
 //---------
+stock bool IsAllowedGameMode()
+{
+	int 	iNumber = 0;
+	char 	sBuffer[128];
+	ConVar 	hcvarGameMode = FindConVar("mp_gamemode");
+	sBuffer = hcvarGameMode.GetString;
+	if (StrEqual(sBuffer, "coop"))			{iNumber = 1;}
+	else if (StrEqual(sBuffer, "realism"))	{iNumber = 2;}
+	else if (StrEqual(sBuffer, "versus"))	{iNumber = 4;}
+	else if (StrEqual(sBuffer, "scavenge"))	{iNumber = 8;}
+	else if (StrEqual(sBuffer, "survival"))	{iNumber = 16;}
+	else									{iNumber = 32;}
+
+	if (g_hcvarAllowedGameMode.IntValue == iNumber || g_hcvarAllowedGameMode.IntValue == 64)
+		return true;
+	else
+		return false;
+}
+
+stock bool IsValidClient(int client)
+{ 
+    if (client <= 0 || client > MaxClients || !IsClientConnected(client) || !IsClientInGame(client)) return false; 
+    return true;
+}
