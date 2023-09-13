@@ -154,13 +154,13 @@ void IniConfig(KeyValues kv)
 	if (kv.JumpToKey("Total_Items"))
 		kv.GetNum("number", g_iTotalItems);
 
-	g_harrayItemList = new ArrayList(ItemInfo);
+	g_harrayItemList = new ArrayList(sizeof(ItemInfo));
 	ItemInfo esItemInfo;
 
 	if (kv.JumpToKey("Weapon_List"))
 	{
 		char sBuffer[16];
-		for (i = 1; i < g_iTotalItems; i++)
+		for (int i = 1; i < g_iTotalItems; i++)
 		{
 			Format(sBuffer, sizeof(sBuffer), "item%i", i);
 			kv.GetString(sBuffer, esItemInfo.name, sizeof(esItemInfo.name));
@@ -171,7 +171,7 @@ void IniConfig(KeyValues kv)
 	if (kv.JumpToKey("Weapon_Info"))
 	{
 		char sBuffer[16];
-		for (i = 1; i < g_iTotalItems; i++)
+		for (int i = 1; i < g_iTotalItems; i++)
 		{
 			Format(sBuffer, sizeof(sBuffer), "item%i", i);
 			kv.GetString(sBuffer, esItemInfo.info, sizeof(esItemInfo.info));
@@ -181,10 +181,10 @@ void IniConfig(KeyValues kv)
 	if (kv.JumpToKey("Weapon_Metarial"))
 	{
 		char sBuffer[16];
-		for (i = 1; i < g_iTotalItems; i++)
+		for (int i = 1; i < g_iTotalItems; i++)
 		{
 			Format(sBuffer, sizeof(sBuffer), "item%i", i);
-			kv.GetNum(sBuffer, esItemInfo.metarial, sizeof(esItemInfo.metarial));
+			kv.GetNum(sBuffer, esItemInfo.metarial);
 		}
 	}
 
@@ -381,7 +381,7 @@ public Action Timer_RemoveEntity(Handle Timer)
 public void Event_PlayerDeath(Event hEvent, const char[] sEventName, bool bDontBroadcast)
 {
 	/* from l4d_stats.sp */
-	int iAttackerTeam = -1; iVictimTeam = -1;
+	int iAttackerTeam = -1, iVictimTeam = -1;
 	int iAttacker = GetClientOfUserId(GetEventInt(hEvent, "attacker"));
 	int iVictim = GetClientOfUserId(GetEventInt(hEvent, "userid"));
 	bool bIsAttackerBot = GetEventBool(hEvent, "attackerisbot");
@@ -420,7 +420,12 @@ void ObtainMetarial(int iAttacker)
 //-------------------
 public Action Timer_SpawnReplicator(Handle Timer)
 {
-
+	// native void L4D_FindRandomSpot(int NavArea, float vecPos[3]);
+	// native float L4D2Direct_GetFlowDistance(int client);
+	// native float L4D2Direct_GetMapMaxFlowDistance()
+	// native Address L4D2Direct_GetTerrorNavArea(float pos[3], float beneathLimit = 120.0);
+	// native float L4D2Direct_GetTerrorNavAreaFlow(Address pTerrorNavArea)
+	// native Address L4D_GetPointer(PointerType ptr_type);
 }
 
 //-----------
@@ -436,10 +441,11 @@ public Action Timer_SpawnReplicator(Handle Timer)
 //---------
 stock bool IsAllowedGameMode()
 {
+	// forward void L4D_OnGameModeChange(int gamemode);
 	int 	iNumber = 0;
 	char 	sBuffer[128];
 	ConVar 	hcvarGameMode = FindConVar("mp_gamemode");
-	sBuffer = hcvarGameMode.GetString;
+	hcvarGameMode.GetString(sBuffer, sizeof(sBuffer));
 	if (StrEqual(sBuffer, "coop"))			{iNumber = 1;}
 	else if (StrEqual(sBuffer, "realism"))	{iNumber = 2;}
 	else if (StrEqual(sBuffer, "versus"))	{iNumber = 4;}
