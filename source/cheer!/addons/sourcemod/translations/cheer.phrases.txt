@@ -48,13 +48,13 @@
 		"chi"		"[{orange}!{default}] 回合开始时不允许使用Cheers或Jeers."
 	}
 
-	// 因为求生只能用default, olive, orange(等于green), green, lightgreen(且lightgreen不能和teamcolor, red, blue冲突), 尽管colors.inc或multicolor.inc提供了许多颜色, 也做不到csgo的五彩斑斓.
+	// 求生只能用default, olive, orange(等于green), green, lightgreen(且lightgreen不能和teamcolor, red, blue冲突), 尽管colors.inc或multicolor.inc提供了许多颜色, 所以求生做不到csgo的五彩斑斓.
 
 	"C Cheered!!!"
 	{
 		"#format"	"{1:s},{2:s}"		// 1: team, 2: name
-		"en"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {olive}C{default}h{green}e{default}e{olive}r{default}e{orange}d{olive}!{default}!{orange}!"
-		"chi"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {olive}C{default}h{green}e{default}e{olive}r{default}e{orange}d{olive}!{default}!{orange}!"
+		"en"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {teamcolor}Cheered!!!"
+		"chi"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {teamcolor}Cheered!!!"
 	}
 
 	"Cheered!!!"
@@ -67,8 +67,8 @@
 	"C Jeered!!!"
 	{
 		"#format"	"{1:s},{2:s}"		// 1: team, 2: name
-		"en"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {olive}J{default}e{green}e{default}r{olive}e{default}d{olive}!{default}!{orange}!"
-		"chi"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {olive}J{default}e{green}e{default}r{olive}e{default}d{olive}!{default}!{orange}!"
+		"en"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {teamcolor}Jeered!!!"
+		"chi"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {teamcolor}Jeered!!!"
 	}
 
 	"Jeered!!!"
