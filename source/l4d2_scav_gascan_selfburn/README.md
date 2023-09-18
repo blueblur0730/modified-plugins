@@ -33,30 +33,15 @@ l4d2_scav_gascan_selfburn_detect_y "1"
 // min: 0, max: 1
 l4d2_scav_gascan_selfburn_detect_z "1"
 
-// 开启插件Debug
-// 默认值: 0
-// min: 0, max: 1
-l4d2_scav_gascan_selfburn_debug "0"
-
 // 开启油桶自燃数量限制
 // 默认值: 1
 // min: 0, max: 1
 l4d2_scav_gascan_burned_limit_enable "1"
 
-// 开启检测玩家超界使其死亡的功能(只检测z轴)
-// 默认值: 0
-// min: 0, max: 1
-l4d2_scav_kill_player "0"
-
 // 每一次油桶检测所需的时间间隔
 // 默认值: 10.0
 // min: 0.0, max: 不限
 l4d2_scav_gascan_selfburn_interval "10.0"
-
-// 每一次玩家超界使其死亡检测的时间间隔(只检测z轴)
-// 默认值: 3.0
-// min: 0.0, max: 不限
-l4d2_scav_kill_player_interval "3.0"
 
 // 最大自燃油桶数量限制?
 // 默认值: 4
