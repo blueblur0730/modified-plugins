@@ -22,11 +22,8 @@ stock bool IsScavengeMode()
 {
 	char   sCurGameMode[64];
 	ConVar CurGameMode = FindConVar("mp_gamemode");
-	GetConVarString(CurGameMode, sCurGameMode, sizeof(sCurGameMode));
-	if (strcmp(sCurGameMode, "scavenge") == 0)
-		return true;
-	else
-		return false;
+	CurGameMode.GetString(sCurGameMode, sizeof(sCurGameMode));
+	return (strcmp(sCurGameMode, "scavenge") == 0) ? true : false;
 }
 
 /*

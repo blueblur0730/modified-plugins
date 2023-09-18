@@ -15,8 +15,6 @@
 
 ### Requirment
 - Left4Dhooks 1.134+
-- Readyup (Optional)
-- 编译库 scavenge_func.inc
 
 <hr>
 
