@@ -28,10 +28,21 @@
 		"chi"		"[{olive}轮回结算{default}] 第{orange}{1}{default}局, 下半轮: {orange}{2}桶 {default}用时: {orange}{3}:{4}"
 	}
 
-	"RoundEndEarly"
+	"RoundEndEarly_Type1"
 	{
-		"#format"	"{1:d},{2:d},{3:d},{4:.2f}"
-		"en"		"[{olive}Quick End{default}] {blue}Round Ended Early: Win condition decided on time."
-		"chi"		"[{olive}提前结束{default}] {blue}该回合提前结束:胜利条件已由时间决定"
+		"en"		"[{olive}Quick End{default}] Round Ended Early: A team reached the their opponents' score with less time used."
+		"chi"		"[{olive}提前结束{default}] 该回合提前结束: 一方达到对方分数所用时间更少."
+	}
+
+	"RoundEndEarly_Type2"
+	{
+		"en"		"[{olive}Quick End{default}] Round Ended Early: A team finished the round with less time used."
+		"chi"		"[{olive}提前结束{default}] 该回合提前结束: 一方完成该轮所用时间更少."
+	}
+
+	"RoundEndEarly_Type3"
+	{
+		"en"		"[{olive}Quick End{default}] Round Ended Early: A team survived longer."
+		"chi"		"[{olive}提前结束{default}] 该回合提前结束: 一方生存了更长的时间."
 	}
 }

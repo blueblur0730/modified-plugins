@@ -180,8 +180,7 @@ stock int FormatScavengeRoundTime(char[] buffer, int maxlen, int team, bool node
  * If the round has not ended yet, returns the current duration.
  *
  * @param team		team number. valid value is 2 or 3
- * @return			float value of this round duration.
- * @return			if the team number is not 2 or 3, return -1.0
+ * @return			float value of this round duration. invalide team number will return -1.0
  */
 stock float GetScavengeRoundDuration(int team)
 {
@@ -203,8 +202,7 @@ stock float GetScavengeRoundDuration(int team)
  *
  * @param team 		team number to return. valid value is 2 and 3
  * @param round		current round number. default value is -1
- * @return 			the team score of this round.
- * @return			if the team number is not 2 or 3, return -1
+ * @return 			the team score of this round. invalide team number will return -1.
  */
 stock int GetScavengeTeamScore(int team, int round = -1)
 {
@@ -303,9 +301,9 @@ stock void SetScavengeMatchScore(int team, int score)
  * Defaultly recongnise 2 as team survivors and 3 as team infected.
  *
  * @param team 		team number. valid value is 2 and 3.
- * @return 			1 if the team survivors flipped or team is infected
- * @return			0 if the team is survivors or team infected flipped
- * @return			-1 if the team number value is not 2 or 3
+ * @return 			1 if the team survivors flipped or team is infected,
+ *  				0 if the team is survivors or team infected flipped,
+ *  				-1 if the team number in invalide.
  */
 stock int L4D2_TeamNumberToTeamIndex(int team)
 {
