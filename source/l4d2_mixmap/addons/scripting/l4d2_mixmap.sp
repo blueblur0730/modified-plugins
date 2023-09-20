@@ -5,8 +5,33 @@
  * 		- reformatted.
  * 
  * r2.6: 9/20/23
- * 		- structure reformed. now we use modules to store functions.
- * 		- add include for forward api. (to do: more forwards, add natives.)
+ * 		- structure reformed. now we use modules to place functions.
+ * 		- added include for forward api. (to do: more forwards, add natives.)
+ */
+
+/*
+ * Plugin info:
+ * * Original plugin source:
+ * 		- Name: Custom Map Transitions
+ * 		- Author: Stabby (2013)
+ * 		- Further versus work: czim (2020)
+ * 		- Url: https://github.com/Stabbath/L4D2-Stuff
+ * 		- Description: Makes games more fun and varied! Yay! By allowing players to select a custom map sequence, replacing the normal campaign map sequence.
+ * 		- Version: 15
+ *
+ * * New Syntax and more feature support:
+ * 		- Name: l4d2_mixmap
+ * 		- Author: Bred (2023)
+ * 		- Url: https://gitee.com/honghl5/open-source-plug-in
+ * 		- Description: Randomly select five maps for versus. Adding for fun and reference from CMT
+ * 		- Version: 2.5
+ * 
+ * * Extended feature support:
+ * 		- Name: [L4D2] Mixmap
+ * 		- Author: blueblur (2023)
+ * 		- Url: https://github.com/blueblur0730/modified-plugins
+ * 		- Description: Randomly select five maps to build a mixed campaign or match.
+ * 		- Version: r2.6
  */
 
 #pragma semicolon 1
@@ -27,10 +52,10 @@
 public Plugin myinfo =
 {
 	name = "[L4D2] Mixmap",
-	author = "Bred, blueblur",
-	description = "Randomly select five maps for versus and scavenge. Adding for fun and reference from CMT",
+	author = "Stabby, Bred, blueblur",
+	description = "Randomly select five maps to build a mixed campaign or match.",
 	version = "r2.6",
-	url = "https://gitee.com/honghl5/open-source-plug-in/tree/main/l4d2_mixmap"
+	url = "https://github.com/blueblur0730/modified-plugins"
 };
 
 #define DIR_CFGS 			"mixmap/"
