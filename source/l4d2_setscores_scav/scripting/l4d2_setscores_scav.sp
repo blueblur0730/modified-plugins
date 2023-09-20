@@ -3,8 +3,6 @@
 
 #include <sourcemod>
 #include <sdktools>
-#include <sdkhooks>
-#include <scavenge_func>
 #include <builtinvotes>
 #include <colors>
 
@@ -36,10 +34,10 @@ ConVar
 public Plugin myinfo =
 {
 	name		= "[L4D2] Set Scores Scavenge",
-	author		= "blueblur, Authors form plugin 'l4d2_setscores'",
+	author		= "blueblur, inspired by plugin 'l4d2_setscores'",
 	description = "Provide votes and commanders to set scavenge scores, round numbers and total goal.",
 	version		= "1.0",
-	url			= "https://github.com/blueblur0730/modified-plugins/tree/main/source/l4d2_setscores_scav"
+	url			= "https://github.com/blueblur0730/modified-plugins"
 
 }
 
