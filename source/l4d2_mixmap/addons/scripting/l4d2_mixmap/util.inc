@@ -4,7 +4,7 @@
 #define _l4d2_mixmap_util_included
 
 // ----------------------------------------------------------
-// 		Basic helpers
+// 		Basic logic helpers
 // ----------------------------------------------------------
 // Return false if pretty name not found, ture otherwise
 stock bool GetPrettyName(char[] map) 
@@ -85,7 +85,84 @@ stock ArrayList GetPoolThatContainsMap(char[] map, int index, char[] tag)
 	return null;
 }
 
+// ----------------------------------------------------------
+// 		Basic scavenge helpers
+// ----------------------------------------------------------
 stock bool InSecondHalfOfRound()
 {
     return view_as<bool>(GameRules_GetProp("m_bInSecondHalfOfRound", 1));
+}
+
+stock int GetScavengeRoundNumber()
+{
+	return GameRules_GetProp("m_nRoundNumber");
+}
+
+stock void SetScavengeRoundNumber(int round)
+{
+	if (round <= 0 || round > 5)
+		return;
+
+	GameRules_SetProp("m_nRoundNumber", round);
+}
+
+stock int GetWinningTeamNumber(int round)
+{
+	return GameRules_GetProp("m_iWinningTeamNumber", _, round - 1);
+}
+
+stock void SetWinningTeamNumber(int round, int team)
+{
+	if (team != 2 || team != 3)
+		return;
+
+	if (round <= 0 || round > 5)
+		return;
+
+	GameRules_SetProp("m_iWinningTeamNumber", L4D2_TeamNumberToTeamIndex(team), _, round - 1);
+}
+
+stock int GetScavengeMatchScore(int team)
+{
+	if (team != 2 || team != 3) return -1;
+
+	return GameRules_GetProp("m_iScavengeMatchScore", _, L4D2_TeamNumberToTeamIndex(team));
+}
+
+stock void SetScavengeMatchScore(int team, int score)
+{
+	if (team != 2 || team != 3)
+		return;
+
+	GameRules_SetProp("m_iScavengeMatchScore", score, 4, L4D2_TeamNumberToTeamIndex(team));
+}
+
+stock int GetScavengeTeamScore(int team, int round = -1)
+{
+	if (team == -1) return -1;
+
+	if (round <= 0 || round > 5)
+		round = GameRules_GetProp("m_nRoundNumber");
+
+	return GameRules_GetProp("m_iScavengeTeamScore", _, (2 * (round - 1)) + L4D2_TeamNumberToTeamIndex(team));
+}
+
+stock void SetScavengeTeamScore(int team, int round, int score)
+{
+	if (team != 2 || team != 3)
+		return;
+
+	if (round <= 0 || round > 5)
+		return;
+
+	GameRules_SetProp("m_iScavengeTeamScore", score, 4, (2 * (round - 1)) + L4D2_TeamNumberToTeamIndex(team));
+}
+
+stock int L4D2_TeamNumberToTeamIndex(int team)
+{
+	if (team != 2 && team != 3) return -1;
+
+	bool flipped = view_as<bool>(GameRules_GetProp("m_bAreTeamsFlipped", 1));
+	if (flipped) ++team;
+	return team % 2;
 }

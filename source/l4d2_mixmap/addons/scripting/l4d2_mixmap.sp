@@ -7,6 +7,12 @@
  * r2.6: 9/20/23
  * 		- structure reformed. now we use modules to place functions.
  * 		- added include for forward api. (to do: more forwards, add natives.)
+ * 
+ * r2.7: 9/22/23
+ * 		- added support for scavenge.
+ * 			* set scores every map start
+ * 			* independent map pool cfgs
+ * 		- optimized translations.
  */
 
 /*
@@ -39,7 +45,6 @@
 
 #include <sourcemod>
 #include <sdktools>
-#include <sdkhooks>
 #include <left4dhooks>
 #include <builtinvotes>
 #include <colors>
@@ -54,24 +59,38 @@ public Plugin myinfo =
 	name = "[L4D2] Mixmap",
 	author = "Stabby, Bred, blueblur",
 	description = "Randomly select five maps to build a mixed campaign or match.",
-	version = "r2.6",
+	version = "r2.7",
 	url = "https://github.com/blueblur0730/modified-plugins"
 };
 
-#define DIR_CFGS 			"mixmap/"
-#define PATH_KV  			"cfg/mixmap/mapnames.txt"
-#define CFG_DEFAULT			"default"
-#define CFG_DODEFAULT		"disorderdefault"
-#define CFG_DODEFAULT_ST	"do"
-#define CFG_ALLOF			"official"
-#define CFG_ALLOF_ST		"of"
-#define	CFG_DOALLOF			"disorderofficial"
-#define	CFG_DOALLOF_ST		"doof"
-#define	CFG_UNOF			"unofficial"
-#define	CFG_UNOF_ST			"uof"
-#define	CFG_DOUNOF			"disorderunofficial"
-#define	CFG_DOUNOF_ST		"douof"
-#define BUF_SZ   			64
+// Map info and basic path to load
+#define DIR_CFGS 				"mixmap/"
+#define DIR_CFGS_SCAV			"mixmap/scav/"
+#define PATH_KV  				"cfg/mixmap/mapnames.txt"
+
+// Versus/Coop/Realism map pool
+#define CFG_DEFAULT				"default"
+#define CFG_DODEFAULT			"disorderdefault"
+#define CFG_DODEFAULT_ST		"do"
+#define CFG_ALLOF				"official_versus"
+#define CFG_ALLOF_ST			"of"
+#define	CFG_DOALLOF				"disorderofficial"
+#define	CFG_DOALLOF_ST			"doof"
+#define	CFG_UNOF				"unofficial"
+#define	CFG_UNOF_ST				"uof"
+#define	CFG_DOUNOF				"disorderunofficial"
+#define	CFG_DOUNOF_ST			"douof"
+
+// Scavenge map pool
+#define CFG_DEFAULT_SCAV		"default_scav"
+#define CFG_DODEFAULT_SCAV		"disorderdefault_scav"
+#define CFG_DODEFAULT_ST_SCAV	"do_scav"
+#define	CFG_UNOF_SCAV			"unofficial_scav"
+#define	CFG_UNOF_ST_SCAV		"uof_scav"
+#define	CFG_DOUNOF_SCAV			"disorderunofficial_scav"
+#define	CFG_DOUNOF_ST_SCAV		"douof_scav"
+
+#define BUF_SZ   				64
 
 ConVar 	
 	g_cvNextMapPrint,
@@ -81,6 +100,7 @@ ConVar
 GlobalForward
 	g_hForwardStart,
 	g_hForwardNext,
+	g_hForwardInterrupt,
 	g_hForwardEnd;
 
 //与随机抽签相关的变量
@@ -90,13 +110,15 @@ StringMap
 ArrayList
 	g_hArrayTags,				// Stores tags for indexing g_hTriePools 存放地图池标签
 	g_hArrayTagOrder,			// Stores tags by rank 存放标签顺序
-	g_hArrayMapOrder;			// Stores finalised map list in order 存放抽取完成后的地图顺序
+	g_hArrayMapOrder,			// Stores finalised map list in order 存放抽取完成后的地图顺序
+
+	g_hArrayMatchInfo;			// Stores whole scavenge match info
 
 Handle 
-	g_hCountDownTimer,
-	g_hVoteMixmap,
-	g_hVoteStopMixmap,
-	g_hCMapSetCampaignScores;
+	g_hCountDownTimer,			// timer
+	g_hVoteMixmap,				// vote handler
+	g_hVoteStopMixmap,			// vote handler
+	g_hCMapSetCampaignScores;	// gamedata
 
 bool 
 	g_bMaplistFinalized,
@@ -110,6 +132,17 @@ int
 	g_iPointsTeam_B = 0;
 
 char cfg_exec[BUF_SZ];
+
+enum struct MatchInfo
+{
+	int rs_TeamA;
+	int rs_TeamB;
+
+	int ms_TeamA;
+	int ms_TeamB;
+
+	int winner;
+}
 
 // Modules
 #include <l4d2_mixmap/actions.inc>
@@ -141,6 +174,9 @@ public void OnPluginStart()
 	LoadSDK();
 
 	LoadTranslations("l4d2_mixmap.phrases");
+
+	// maybe someday we can replace these by un-created forwards.
+	HookEvent("scavenge_round_finished", Event_ScavRoundFinished, EventHookMode_Post);
 	
 	AutoExecConfig(true, "l4d2_mixmap");
 }
@@ -192,6 +228,8 @@ public void OnMapStart()
 		{
 			PluginStartInit();
 			CPrintToChatAll("%t", "Differ_Abort");
+			Call_StartForward(g_hForwardInterrupt);
+			Call_Finish();
 			return;
 		}
 	}
@@ -207,14 +245,24 @@ public void OnMapStart()
 	Call_Finish();
 }
 
+public void Event_ScavRoundFinished(Event hEvent, char[] sName, bool dontBroadcast)
+{
+	if (InSecondHalfOfRound() && g_bMapsetInitialized)
+		PerformMapProgression();
+}
+
 public Action Timer_OnMapStartDelay(Handle hTimer)
 {
-	SetScores();
+	if (L4D_IsVersusMode())
+		SetVersusScores();
+	else if (L4D2_IsScavengeMode())
+		SetScavengeScores();
 
 	return Plugin_Handled;
 }
 
 public void L4D2_OnEndVersusModeRound_Post() 
 {
-	if (InSecondHalfOfRound() && g_bMapsetInitialized) {PerformMapProgression();}
+	if (InSecondHalfOfRound() && g_bMapsetInitialized)
+		PerformMapProgression();
 }

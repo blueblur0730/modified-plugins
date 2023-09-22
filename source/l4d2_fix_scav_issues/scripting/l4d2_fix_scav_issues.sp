@@ -22,7 +22,7 @@ public Plugin myinfo =
 	name 		= "[L4D2] Fix Scavenge Issues",
 	author 		= "blueblur, Credit to Eyal282",
 	description = "Fixes bug when first round started there were no gascans, sets the round number and resets the game on match end.",
-	version		= "1.10",
+	version		= "1.10.1",
 	url			= "https://github.com/blueblur0730/modified-plugins"
 }
 
@@ -47,6 +47,8 @@ public void
 //-----------------
 public void OnMapStart()
 {
+	g_bIsOutputFired = false;
+
 	g_fMapStartTime = GetGameTime();
 
 	// the reason gascans dont spawn is that OnGameplayStart was not called.
@@ -54,11 +56,6 @@ public void OnMapStart()
 #if DEBUG
 	PrintToServer("[Fix Scavenge Issues] info_director Hooked.");
 #endif
-}
-
-public void OnMapEnd()
-{
-	g_bIsOutputFired = false;
 }
 
 // wait for the lazy OnGamePlayStart :(

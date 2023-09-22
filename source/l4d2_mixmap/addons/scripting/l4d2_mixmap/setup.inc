@@ -5,9 +5,10 @@
 
 void SetupForwards()
 {
-	g_hForwardStart = new GlobalForward("OnCMTStart", ET_Ignore, Param_Cell, Param_String);
-	g_hForwardNext	= new GlobalForward("OnCMTNextKnown", ET_Ignore, Param_String);
-	g_hForwardEnd	= new GlobalForward("OnCMTEnd", ET_Ignore);
+	g_hForwardStart 		= new GlobalForward("OnCMTStart", ET_Ignore, Param_Cell, Param_String);
+	g_hForwardNext			= new GlobalForward("OnCMTNextKnown", ET_Ignore, Param_String);
+	g_hForwardInterrupt 	= new GlobalForward("OnCMTInterrupted", ET_Ignore);
+	g_hForwardEnd			= new GlobalForward("OnCMTEnd", ET_Ignore);
 }
 
 void MarkNatives()
@@ -39,7 +40,7 @@ void SetupCommands()
 	// Midcommand 插件启用后可使用的指令
 	RegConsoleCmd(  "sm_maplist",       Maplist,                        "Show the map list; 展示mixmap最终抽取出的地图列表");
 	RegAdminCmd(    "sm_allmap",        ShowAllMaps,    ADMFLAG_ROOT,   "Show all official maps code; 展示所有官方地图的地图代码");
-	RegAdminCmd(    "sm_allmaps",       ShowAllMaps,   ADMFLAG_ROOT,   "Show all official maps code; 展示所有官方地图的地图代码");
+	RegAdminCmd(    "sm_allmaps",       ShowAllMaps,   	ADMFLAG_ROOT,   "Show all official maps code; 展示所有官方地图的地图代码");
 }
 
 void PluginStartInit()
@@ -48,6 +49,7 @@ void PluginStartInit()
 	g_hTriePools		 = new StringMap();
 	g_hArrayTagOrder	 = new ArrayList(BUF_SZ / 4);
 	g_hArrayMapOrder	 = new ArrayList(BUF_SZ / 4);
+	g_hArrayMatchInfo	 = new ArrayList(sizeof(MatchInfo));
 
 	g_bMapsetInitialized = false;
 	g_bMaplistFinalized	 = false;
@@ -60,26 +62,20 @@ void PluginStartInit()
 
 void LoadSDK()
 {
-	Handle hGameData = LoadGameConfigFile(LEFT4FRAMEWORK_GAMEDATA);
+	GameData hGameData = LoadGameConfigFile(LEFT4FRAMEWORK_GAMEDATA);
 	if (hGameData == null)
-	{
 		SetFailState("Could not load gamedata/%s.txt", LEFT4FRAMEWORK_GAMEDATA);
-	}
 
 	StartPrepSDKCall(SDKCall_GameRules);
 	if (!PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, SECTION_NAME))
-	{
 		SetFailState("Function '%s' not found.", SECTION_NAME);
-	}
 
 	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
 	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
 	g_hCMapSetCampaignScores = EndPrepSDKCall();
 
 	if (g_hCMapSetCampaignScores == null)
-	{
 		SetFailState("Function '%s' found, but something went wrong.", SECTION_NAME);
-	}
 
 	delete hGameData;
 }

@@ -9,7 +9,6 @@
  * @param iMapListSize      maplist array size
  * @param sMapName          name of first map
  * 
- * @noreturn
  **/
 forward void OnCMTStart(int iMapListSize, char[] sFirstMapName);
 
@@ -18,14 +17,18 @@ forward void OnCMTStart(int iMapListSize, char[] sFirstMapName);
  *
  * @param sNextMapName      next map name
  * 
- * @noreturn
  **/
 forward void OnCMTNextKnown(char[] sNextMapName);
 
 /*
+ * Called when mixmap was interupted
+ *
+ */
+forward void OnCMTInterrupted()
+
+/*
  * Called after the last map is played.
  *
- * @noreturn 
  */
 forward void OnCMTEnd();
 

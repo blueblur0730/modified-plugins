@@ -2,43 +2,45 @@
 {
 	"Auto_Show_Maplist"
 	{
-		"en"		"{olive}<Mixmap>{default}Using Mixmap plugin (show maplist{orange}!maplist{default})."
-		"chi"		"{olive}<Mixmap>{default}正在使用Mixmap插件（地图一览指令{orange}!maplist{default})。"
+		"en"		"{olive}<Mixmap>{default}Using Mixmap plugin (show maplist {orange}!maplist{default})."
+		"chi"		"{olive}<Mixmap>{default}正在使用Mixmap插件（地图一览指令 {orange}!maplist{default})。"
 	}
 
 	"Differ_Abort"
 	{
-		"en"		"{olive}<Mixmap>{default}Current map differs from disigned map，abort……"
-		"chi"		"{olive}<Mixmap>{default}当前地图与设计地图不一致，插件中止……"
+		"en"		"{olive}<Mixmap>{default}Current map differs from selected map，progress aborted……"
+		"chi"		"{olive}<Mixmap>{default}当前地图与挑选地图不一致，插件中止……"
 	}
 
 	"Show_Next_Map"
 	{
-		"en"		"{olive}<Mixmap>{default}Changing next map: %s"
-		"chi"		"{olive}<Mixmap>{default}切换下一张地图: %s"
+		"#format"	"{1:s}"
+		"en"		"{olive}<Mixmap>{default}Changing to next map: {1}"
+		"chi"		"{olive}<Mixmap>{default}切换下一张地图: {1}"
 	}
 
 	"Already_Start_Admin"
 	{
-		"en"		"{olive}<Mixmap>{default}Plugin already starts, type !fstopmixmap first if need to restart."
+		"en"		"{olive}<Mixmap>{default}Plugin already started, type !fstopmixmap first to restart if necessary."
 		"chi"		"{olive}<Mixmap>{default}插件已经启用，如需重新启用请先输入 !fstopmixmap 中止。"
 	}
 
 	"Force_Start"
 	{
-		"en"		"{olive}<Mixmap>{default}Admin {teamcolor}%N {default}forces to start Mixmap{orange}(%s)."
-		"chi"		"{olive}<Mixmap>{default}管理员 {teamcolor}%N {default}强制启用Mixmap{orange}(%s)。"
+		"#format"	"{1:N},{2:s}"
+		"en"		"{olive}<Mixmap>{default}Admin {teamcolor}{1}{default} forced to start a Mixmap{orange}({2})."
+		"chi"		"{olive}<Mixmap>{default}管理员 {teamcolor}{1}{default} 强制启用Mixmap{orange}({2})。"
 	}
 
 	"Manualmixmap_Syntax"
 	{
-		"en"		"Syntax: !manualmixmap <map1> <map2> <map3> <...>"
-		"chi"		"用法: !manualmixmap <map1> <map2> <map3> <...>"
+		"en"		"[SM] Usage: !manualmixmap <map1> <map2> <map3> <...>"
+		"chi"		"[SM] 用法: !manualmixmap <map1> <map2> <map3> <...>"
 	}
 
 	"Invalid_Cfg"
 	{
-		"en"		"{olive}<Mixmap>{default}Invalid map pool！"
+		"en"		"{olive}<Mixmap>{default}Invalid map pool!"
 		"chi"		"{olive}<Mixmap>{default}无效地图池！"
 	}
 
@@ -50,8 +52,9 @@
 
 	"Vote_Stop"
 	{
-		"en"		"{olive}<Mixmap>{default}Player {teamcolor}%N{default} initiates a vote to stop Mixmap."
-		"chi"		"{olive}<Mixmap>{default}玩家 {teamcolor}%N{default} 发起投票关闭Mixmap。"
+		"#format"	"{1:N}"
+		"en"		"{olive}<Mixmap>{default}Player {teamcolor}{1}{default} initiated a vote to stop Mixmap."
+		"chi"		"{olive}<Mixmap>{default}玩家 {teamcolor}{1}{default} 发起投票关闭Mixmap。"
 	}
 
 	"Vote_Progress"
@@ -62,50 +65,53 @@
 
 	"Vote_Progress_delay"
 	{
-		"en"		"{olive}<Mixmap>{default}There is a vote in progress! Changing map delays {orange} 15 {default}seconds! "
+		"en"		"{olive}<Mixmap>{default}There is a vote in progress! Changing map delays for{orange} 15 {default}seconds! "
 		"chi"		"{olive}<Mixmap>{default}有投票正在进行！地图切换延迟{orange} 20 {default}秒！ "
 	}
 
 	"Stop_Mixmap"
 	{
-		"en"		"{olive}<Mixmap>{default}Maps initiated, abort……"
-		"chi"		"{olive}<Mixmap>{default}地图初始化，插件中止……"
+		"en"		"{olive}<Mixmap>{default}Maps initialized, progress aborted……"
+		"chi"		"{olive}<Mixmap>{default}地图初始化，流程中止……"
 	}
 
 	"Stop_Mixmap_Admin"
 	{
-		"en"		"{olive}<Mixmap>{default} Admin{teamcolor} %N {default}force-stop Mixmap and Maps initiate，abort……"
-		"chi"		"{olive}<Mixmap>{default} 管理员{teamcolor} %N {default}强制关闭Mixmap，地图初始化，插件中止……"
+		"#format"	"{1:N}"
+		"en"		"{olive}<Mixmap>{default} Admin{teamcolor} {1} {default}force-stopped Mixmap, maps initialized，progress aborted……"
+		"chi"		"{olive}<Mixmap>{default} 管理员{teamcolor} {1} {default}强制关闭Mixmap，地图初始化，流程中止……"
 	}
 
 	"Start_Mixmap"
 	{
-		"en"		"{olive}<Mixmap>{default}Player {teamcolor}%N{default} initiates a vote to start Mixmap{orange}(%s)."
-		"chi"		"{olive}<Mixmap>{default}玩家  {teamcolor}%N{default} 发起投票启用Mixmap{orange}(%s)。"
+		"#format"	"{1:N},{2:s}"
+		"en"		"{olive}<Mixmap>{default}Player{teamcolor} {1} {default}initiated a vote to start a Mixmap{orange}({2})."
+		"chi"		"{olive}<Mixmap>{default}玩家{teamcolor} {1} {default}发起投票启用Mixmap{orange}({2})。"
 	}
 
 	"Show_Maplist_Not_Start"
 	{
-		"en"		"{olive}<Mixmap>{default}Plugin did not start, there is not a maplist."
+		"en"		"{olive}<Mixmap>{default}Plugin did not start, there is no maplist exists."
 		"chi"		"{olive}<Mixmap>{default}插件未启用，无法查看地图列表。"
 	}
 	
 	"Show_Maplist_Cmd"
 	{
-		"en"		"{olive}Show maplist {orange}!maplist {default}| {olive}Abort Cmd{orange}!stopmixmap"
+		"en"		"{olive}Show maplist {orange}!maplist {default}| {olive}Abort Cmd{orange} !stopmixmap"
 		"chi"		"{olive}地图一览指令 {orange}!maplist {default}| {olive}中止指令{orange} !stopmixmap"
 	}
 
 	"Select_Maps_Succeed"
 	{
-		"en"		"{olive}<Mixmap>{default}Selecting maps randomly succeeds."
+		"en"		"{olive}<Mixmap>{default}Selecting maps randomly succeeded!"
 		"chi"		"{olive}<Mixmap>{default}地图已成功抽取！"
 	}
 
 	"Change_Map_First"
 	{
-		"en"		"{olive}<Mixmap>{default}Changing map after {orange} %d {default}seconds."
-		"chi"		"{olive}<Mixmap>{default}将在{orange} %d {default}秒后开始切换地图。"
+		"#format"	"{1:d}"
+		"en"		"{olive}<Mixmap>{default}Changing map after{orange} {1} {default}seconds."
+		"chi"		"{olive}<Mixmap>{default}将在{orange} {1} {default}秒后开始切换地图。"
 	}
 	"AllMaps_Official"
 	{
@@ -129,8 +135,9 @@
 	}
 	"Cvote_Title"
 	{
-		"en"		"Start a Mixmap? (%s)"
-		"chi"		"启用Mixmap插件？（%s）"
+		"#format"	"{1:s}"
+		"en"		"Start a Mixmap? ({1})"
+		"chi"		"启用Mixmap插件？（{1}）"
 	}
 	"Cvote_Title_Off"
 	{

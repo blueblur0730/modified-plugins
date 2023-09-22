@@ -10,38 +10,71 @@
 // Loads a specified set of maps
 public Action ForceMixmap(int client, any args) 
 {
-	Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT);
+	if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())	// for coop/reliasm and versus only
+		Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT);
+	else if (L4D2_IsScavengeMode())
+		Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT_SCAV);
+
 	
 	if (args >=1)
 	{
-		char sBuffer[BUF_SZ];
-		char arg[BUF_SZ];
-		GetCmdArg(1, arg, BUF_SZ);
-		Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS, arg);
-		if (FileExists(sBuffer)) Format(cfg_exec, sizeof(cfg_exec), arg);
-		else
+		char sBuffer[BUF_SZ], arg[BUF_SZ];
+
+		if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())
 		{
-			if (StrEqual(arg,CFG_DODEFAULT_ST))
-				Format(cfg_exec, sizeof(cfg_exec), CFG_DODEFAULT);
-			else if (StrEqual(arg, CFG_ALLOF_ST))
-				Format(cfg_exec, sizeof(cfg_exec), CFG_ALLOF);
-			else if (StrEqual(arg, CFG_DOALLOF_ST))
-				Format(cfg_exec, sizeof(cfg_exec), CFG_DOALLOF);
-			else if (StrEqual(arg, CFG_UNOF_ST))
-					Format(cfg_exec, sizeof(cfg_exec), CFG_UNOF);
-			else if (StrEqual(arg, CFG_DOUNOF_ST))
-				Format(cfg_exec, sizeof(cfg_exec), CFG_DOUNOF);
+			GetCmdArg(1, arg, BUF_SZ);
+			Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS, arg);
+			if (FileExists(sBuffer)) Format(cfg_exec, sizeof(cfg_exec), arg);
 			else
 			{
-				CReplyToCommand(client, "%t", "Invalid_Cfg");
-				return Plugin_Handled;
+				if (StrEqual(arg, CFG_DODEFAULT_ST))
+					Format(cfg_exec, sizeof(cfg_exec), CFG_DODEFAULT);
+				else if (StrEqual(arg, CFG_ALLOF_ST))
+					Format(cfg_exec, sizeof(cfg_exec), CFG_ALLOF);
+				else if (StrEqual(arg, CFG_DOALLOF_ST))
+					Format(cfg_exec, sizeof(cfg_exec), CFG_DOALLOF);
+				else if (StrEqual(arg, CFG_UNOF_ST))
+					Format(cfg_exec, sizeof(cfg_exec), CFG_UNOF);
+				else if (StrEqual(arg, CFG_DOUNOF_ST))
+					Format(cfg_exec, sizeof(cfg_exec), CFG_DOUNOF);
+				else
+				{
+					CReplyToCommand(client, "%t", "Invalid_Cfg");
+					return Plugin_Handled;
+				}
+			}
+		}
+		else if (L4D2_IsScavengeMode())
+		{
+			GetCmdArg(1, arg, BUF_SZ);
+			Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS_SCAV, arg);
+			if (FileExists(sBuffer)) Format(cfg_exec, sizeof(cfg_exec), arg);
+			else
+			{
+				if (StrEqual(arg, CFG_DODEFAULT_ST_SCAV))
+					Format(cfg_exec, sizeof(cfg_exec), CFG_DODEFAULT_SCAV);
+				else if (StrEqual(arg, CFG_UNOF_ST_SCAV))
+					Format(cfg_exec, sizeof(cfg_exec), CFG_UNOF_SCAV);
+				else if (StrEqual(arg, CFG_DOUNOF_ST_SCAV))
+					Format(cfg_exec, sizeof(cfg_exec), CFG_DOUNOF_SCAV);
+				else
+				{
+					CReplyToCommand(client, "%t", "Invalid_Cfg");
+					return Plugin_Handled;
+				}
 			}
 		}
 	}
+
 	if (client) CPrintToChatAllEx(client, "%t", "Force_Start", client, cfg_exec);
 	PluginStartInit();
 	if (client == 0) g_bServerForceStart = true;
-	ServerCommand("exec %s%s.cfg", DIR_CFGS, cfg_exec);
+
+	if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())
+		ServerCommand("exec %s%s.cfg", DIR_CFGS, cfg_exec);
+	else if (L4D2_IsScavengeMode())
+		ServerCommand("exec %s%s.cfg", DIR_CFGS_SCAV, cfg_exec);
+
 	g_bMapsetInitialized = true;
 	CreateTimer(0.1, Timed_PostMapSet);
 
@@ -70,21 +103,41 @@ public Action ManualMixmap(int client, any args)
 
 public Action ShowAllMaps(int client, any Args)
 {
-	CPrintToChat(client, "%t", "AllMaps_Official");
-	CPrintToChat(client, "c1m1_hotel,c1m2_streets,c1m3_mall,c1m4_atrium");
-	CPrintToChat(client, "c2m1_highway,c2m2_fairgrounds,c2m3_coaster,c2m4_barns,c2m5_concert");
-	CPrintToChat(client, "c3m1_plankcountry,c3m2_swamp,c3m3_shantytown,c3m4_plantation");
-	CPrintToChat(client, "c4m1_milltown_a,c4m2_sugarmill_a,c4m3_sugarmill_b,c4m4_milltown_b,c4m5_milltown_escape");
-	CPrintToChat(client, "c5m1_waterfront,c5m2_park,c5m3_cemetery,c5m4_quarter,c5m5_bridge");
-	CPrintToChat(client, "c6m1_riverbank,c6m2_bedlam,c7m1_docks,c7m2_barge,c7m3_port");
-	CPrintToChat(client, "c8m1_apartment,c8m2_subway,c8m3_sewers,c8m4_interior,c8m5_rooftop");
-	CPrintToChat(client, "c9m1_alleys,c9m2_lots,c14m1_junkyard,c14m2_lighthouse");
-	CPrintToChat(client, "c10m1_caves,c10m2_drainage,c10m3_ranchhouse,c10m4_mainstreet,c10m5_houseboat");
-	CPrintToChat(client, "c11m1_greenhouse,c11m2_offices,c11m3_garage,c11m4_terminal,c11m5_runway");
-	CPrintToChat(client, "c12m1_hilltop,c12m2_traintunnel,c12m3_bridge,c12m4_barn,c12m5_cornfield");
-	CPrintToChat(client, "c13m1_alpinecreek,c13m2_southpinestream,c13m3_memorialbridge,c13m4_cutthroatcreek");
-	CPrintToChat(client, "%t", "AllMaps_Usage");
-	
+	if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())
+	{
+		CPrintToChat(client, "%t", "AllMaps_Official");
+		CPrintToChat(client, "c1m1_hotel,c1m2_streets,c1m3_mall,c1m4_atrium");
+		CPrintToChat(client, "c2m1_highway,c2m2_fairgrounds,c2m3_coaster,c2m4_barns,c2m5_concert");
+		CPrintToChat(client, "c3m1_plankcountry,c3m2_swamp,c3m3_shantytown,c3m4_plantation");
+		CPrintToChat(client, "c4m1_milltown_a,c4m2_sugarmill_a,c4m3_sugarmill_b,c4m4_milltown_b,c4m5_milltown_escape");
+		CPrintToChat(client, "c5m1_waterfront,c5m2_park,c5m3_cemetery,c5m4_quarter,c5m5_bridge");
+		CPrintToChat(client, "c6m1_riverbank,c6m2_bedlam,c7m1_docks,c7m2_barge,c7m3_port");
+		CPrintToChat(client, "c8m1_apartment,c8m2_subway,c8m3_sewers,c8m4_interior,c8m5_rooftop");
+		CPrintToChat(client, "c9m1_alleys,c9m2_lots,c14m1_junkyard,c14m2_lighthouse");
+		CPrintToChat(client, "c10m1_caves,c10m2_drainage,c10m3_ranchhouse,c10m4_mainstreet,c10m5_houseboat");
+		CPrintToChat(client, "c11m1_greenhouse,c11m2_offices,c11m3_garage,c11m4_terminal,c11m5_runway");
+		CPrintToChat(client, "c12m1_hilltop,c12m2_traintunnel,c12m3_bridge,c12m4_barn,c12m5_cornfield");
+		CPrintToChat(client, "c13m1_alpinecreek,c13m2_southpinestream,c13m3_memorialbridge,c13m4_cutthroatcreek");
+		CPrintToChat(client, "%t", "AllMaps_Usage");
+	}
+	else if (L4D2_IsScavengeMode())
+	{
+		CPrintToChat(client, "%t", "AllMaps_Official");
+		CPrintToChat(client, "c1m4_atrium");
+		CPrintToChat(client, "c2m1_highway");
+		CPrintToChat(client, "c3m1_plankcountry");
+		CPrintToChat(client, "c4m1_milltown_a, c4m2_sugarmill_a, c4m3_sugarmill_b");
+		CPrintToChat(client, "c5m2_park");
+		CPrintToChat(client, "c6m1_riverbank, c6m2_bedlam, c6m3_port, c7m1_docks, c7m2_barge, c7m3_port");
+		CPrintToChat(client, "c8m1_apartment, c8m5_rooftop");
+		CPrintToChat(client, "c9m1_alleys, c14m1_junkyard, c14m2_lighthouse");
+		CPrintToChat(client, "c10m3_ranchhouse");
+		CPrintToChat(client, "c11m4_terminal");
+		CPrintToChat(client, "c12m5_cornfield");
+		CPrintToChat(client, "c14m1_junkyard, c14m2_lighthouse");
+		CPrintToChat(client, "%t", "AllMaps_Usage");
+	}
+
 	return Plugin_Handled;
 }
 
@@ -98,31 +151,56 @@ public Action Mixmap_Cmd(int client, any args)
 	{
 		if (!IsBuiltinVoteInProgress())
 		{
-			Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT);
+			if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())	// for coop/reliasm and versus only
+				Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT);
+			else if (L4D2_IsScavengeMode())
+				Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT_SCAV);
 	
 			if (args >=1)
 			{
-				char sBuffer[BUF_SZ];
-				char arg[BUF_SZ];
-				GetCmdArg(1, arg, BUF_SZ);
-				Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS, arg);
-				if (FileExists(sBuffer)) Format(cfg_exec, sizeof(cfg_exec), arg);
-				else
+				char sBuffer[BUF_SZ], arg[BUF_SZ];
+				if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())
 				{
-					if (StrEqual(arg,CFG_DODEFAULT_ST))
-						Format(cfg_exec, sizeof(cfg_exec), CFG_DODEFAULT);
-					else if (StrEqual(arg, CFG_ALLOF_ST))
-						Format(cfg_exec, sizeof(cfg_exec), CFG_ALLOF);
-					else if (StrEqual(arg, CFG_DOALLOF_ST))
-						Format(cfg_exec, sizeof(cfg_exec), CFG_DOALLOF);
-					else if (StrEqual(arg, CFG_UNOF_ST))
-						Format(cfg_exec, sizeof(cfg_exec), CFG_UNOF);
-					else if (StrEqual(arg, CFG_DOUNOF_ST))
-						Format(cfg_exec, sizeof(cfg_exec), CFG_DOUNOF);
+					GetCmdArg(1, arg, BUF_SZ);
+					Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS, arg);
+					if (FileExists(sBuffer)) Format(cfg_exec, sizeof(cfg_exec), arg);
 					else
 					{
-						CPrintToChat(client, "%t", "Invalid_Cfg");
-						return Plugin_Handled;
+						if (StrEqual(arg, CFG_DODEFAULT_ST))
+							Format(cfg_exec, sizeof(cfg_exec), CFG_DODEFAULT);
+						else if (StrEqual(arg, CFG_ALLOF_ST))
+							Format(cfg_exec, sizeof(cfg_exec), CFG_ALLOF);
+						else if (StrEqual(arg, CFG_DOALLOF_ST))
+							Format(cfg_exec, sizeof(cfg_exec), CFG_DOALLOF);
+						else if (StrEqual(arg, CFG_UNOF_ST))
+							Format(cfg_exec, sizeof(cfg_exec), CFG_UNOF);
+						else if (StrEqual(arg, CFG_DOUNOF_ST))
+							Format(cfg_exec, sizeof(cfg_exec), CFG_DOUNOF);
+						else
+						{
+							CReplyToCommand(client, "%t", "Invalid_Cfg");
+							return Plugin_Handled;
+						}
+					}
+				}
+				else if (L4D2_IsScavengeMode())
+				{
+					GetCmdArg(1, arg, BUF_SZ);
+					Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS_SCAV, arg);
+					if (FileExists(sBuffer)) Format(cfg_exec, sizeof(cfg_exec), arg);
+					else
+					{
+						if (StrEqual(arg, CFG_DODEFAULT_ST_SCAV))
+							Format(cfg_exec, sizeof(cfg_exec), CFG_DODEFAULT_SCAV);
+						else if (StrEqual(arg, CFG_UNOF_ST_SCAV))
+							Format(cfg_exec, sizeof(cfg_exec), CFG_UNOF_SCAV);
+						else if (StrEqual(arg, CFG_DOUNOF_ST_SCAV))
+							Format(cfg_exec, sizeof(cfg_exec), CFG_DOUNOF_SCAV);
+						else
+						{
+							CReplyToCommand(client, "%t", "Invalid_Cfg");
+							return Plugin_Handled;
+						}
 					}
 				}
 			}

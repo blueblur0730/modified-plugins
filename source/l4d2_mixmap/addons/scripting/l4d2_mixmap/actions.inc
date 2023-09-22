@@ -2,25 +2,9 @@
  #endinput
 #endif
 #define _l4d2_mixmap_actions_included
-
-void SetScores()
-{
-	//If team B is winning, swap teams. Does not change how scores are set
-	if (g_iPointsTeam_A < g_iPointsTeam_B) 
-		L4D2_SwapTeams();
-
-	//Set scores on scoreboard
-	SDKCall(g_hCMapSetCampaignScores, g_iPointsTeam_A, g_iPointsTeam_B);
-
-	//Set actual scores
-	L4D2Direct_SetVSCampaignScore(0, g_iPointsTeam_A);
-	L4D2Direct_SetVSCampaignScore(1, g_iPointsTeam_B);
-}
-
 // ----------------------------------------------------------
 // 		Map switching logic
 // ----------------------------------------------------------
-
 Action PerformMapProgression() 
 {
 	if (++g_iMapsPlayed < g_iMapCount) 
@@ -64,23 +48,39 @@ public Action Timed_NextMapInfo(Handle timer)
 	
 	g_cvNextMapPrint.BoolValue ? CPrintToChatAll("%t", "Show_Next_Map",  sMapName_New) : CPrintToChatAll("%t%t", "Show_Next_Map",  "", "Secret");
 	
-	if ((StrEqual(sMapName_Old, "c6m2_bedlam") && !StrEqual(sMapName_New, "c7m1_docks")) 
-	|| (StrEqual(sMapName_Old, "c9m2_lots") && !StrEqual(sMapName_New, "c14m1_junkyard")))
+	if (L4D_IsVersusMode())
 	{
-		g_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
-		g_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
-		g_bCMapTransitioned = true;
-		CreateTimer(9.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
+		if ((StrEqual(sMapName_Old, "c6m2_bedlam") && !StrEqual(sMapName_New, "c7m1_docks")) 
+		|| (StrEqual(sMapName_Old, "c9m2_lots") && !StrEqual(sMapName_New, "c14m1_junkyard")))
+		{
+			g_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
+			g_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
+			g_bCMapTransitioned = true;
+			CreateTimer(9.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
+		}
+		else if ((!StrEqual(sMapName_Old, "c6m2_bedlam") && StrEqual(sMapName_New, "c7m1_docks")) 
+		|| (!StrEqual(sMapName_Old, "c9m2_lots") && StrEqual(sMapName_New, "c14m1_junkyard")))
+		{
+			g_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
+			g_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
+			g_bCMapTransitioned = true;
+			CreateTimer(10.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
+		}
 	}
-	else if ((!StrEqual(sMapName_Old, "c6m2_bedlam") && StrEqual(sMapName_New, "c7m1_docks")) 
-	|| (!StrEqual(sMapName_Old, "c9m2_lots") && StrEqual(sMapName_New, "c14m1_junkyard")))
+	else if (L4D2_IsScavengeMode())
 	{
-		g_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
-		g_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
+		MatchInfo esMatchInfo;
+		esMatchInfo.rs_TeamA = GetScavengeTeamScore(2, GetScavengeRoundNumber());
+		esMatchInfo.rs_TeamB = GetScavengeTeamScore(3, GetScavengeRoundNumber());
+		esMatchInfo.ms_TeamA = GetScavengeMatchScore(2);
+		esMatchInfo.ms_TeamB = GetScavengeMatchScore(3);
+		esMatchInfo.winner	 = GetWinningTeamNumber(GetScavengeRoundNumber());
+
 		g_bCMapTransitioned = true;
-		CreateTimer(10.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
+		g_hArrayMatchInfo.PushArray(esMatchInfo);
+		CreateTimer(5.0, Timed_Gotomap);
 	}
-	
+
 	return Plugin_Handled;
 }
 
@@ -121,4 +121,45 @@ public Action Timed_GiveThemTimeToReadTheMapList(Handle timer)
 
 	GotoNextMap(true);
 	return Plugin_Handled;
+}
+
+//-----------------------------------------------------------
+//			Set Info
+//-----------------------------------------------------------
+void SetVersusScores()
+{
+	//If team B is winning, swap teams. Does not change how scores are set
+	if (g_iPointsTeam_A < g_iPointsTeam_B) 
+		L4D2_SwapTeams();
+
+	//Set scores on scoreboard
+	SDKCall(g_hCMapSetCampaignScores, g_iPointsTeam_A, g_iPointsTeam_B);
+
+	//Set actual scores
+	L4D2Direct_SetVSCampaignScore(0, g_iPointsTeam_A);
+	L4D2Direct_SetVSCampaignScore(1, g_iPointsTeam_B);
+}
+
+void SetScavengeScores()
+{
+	MatchInfo esMatchInfo;
+	for (int i = 0; i < g_iMapsPlayed; i++)
+	{
+		g_hArrayMatchInfo.GetArray(i, esMatchInfo);
+
+		SetScavengeRoundNumber(g_iMapsPlayed + 1);
+		SetScavengeTeamScore(2, i, esMatchInfo.rs_TeamA);
+		SetScavengeTeamScore(3, i, esMatchInfo.rs_TeamB);
+
+		if (i == g_iMapsPlayed)		// we only set the score at the end of array
+		{
+			SetScavengeMatchScore(2, esMatchInfo.ms_TeamA);
+			SetScavengeMatchScore(3, esMatchInfo.ms_TeamB);
+		}
+
+		if (esMatchInfo.rs_TeamA < esMatchInfo.rs_TeamB)
+			SetWinningTeamNumber(i, 3);
+		else
+			SetWinningTeamNumber(i, 2);
+	}
 }
