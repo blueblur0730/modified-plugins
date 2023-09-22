@@ -11,7 +11,6 @@
 
 #include <sourcemod>
 #include <sdktools>
-#include <sdkhooks>
 
 /*
  * Returns if the current gamemode is scavenge.
@@ -40,10 +39,14 @@ stock int GetScavengeRoundNumber()
  * Set the round number.
  *
  * @param round		round number to set. valid round number is from 1 to 5
- * @noreturn
+ * 
+ * @return			if 0 >= round > 5.
  */
 stock void SetScavengeRoundNumber(int round)
 {
+	if (round <= 0 || round > 5)
+		return;
+
 	GameRules_SetProp("m_nRoundNumber", round);
 }
 
@@ -61,10 +64,14 @@ stock int GetScavengeRoundLimit()
  * Sets the round limit.
  *
  * @param round		round limit to set. valid round number is 1, 3, 5.
- * @noreturn
+ * 
+ * @return			if 0 >= round > 5.
  */
 stock void SetScavengeRoundLimit(int round)
 {
+	if (round <= 0 || round > 5)
+		return;
+
 	GameRules_SetProp("m_nRoundLimit", round);
 }
 
@@ -82,6 +89,7 @@ stock int GetScavengeItemsRemaining()
  * Sets the amount of current round's items(gas cans) remaining
  *
  * @param count		amount to set
+ * 
  * @noreturn
  */
 stock void SetScavengeItemsRemaining(int count)
@@ -103,6 +111,7 @@ stock int GetScavengeItemsGoal()
  * Sets the goal amount of current round.
  *
  * @param count		amount to set
+ * 
  * @noreturn
  */
 stock void SetScavengeItemsGoal(int count)
@@ -118,7 +127,7 @@ stock void SetScavengeItemsGoal(int count)
  */
 stock int GetWinningTeamNumber(int round)
 {
-	return GameRules_GetProp("m_iWinningTeamNumber", round - 1);
+	return GameRules_GetProp("m_iWinningTeamNumber", _, round - 1);
 }
 
 /*
@@ -126,13 +135,18 @@ stock int GetWinningTeamNumber(int round)
  *
  * @param round		round to set
  * @param team		team number to set. valid values are 2 or 3
- * @noreturn
+ * 
+ * @return			if team != 2 or 3, 0 >= round > 5.
  */
 stock void SetWinningTeamNumber(int round, int team)
 {
-	team = L4D2_TeamNumberToTeamIndex(team);
+	if (team != 2 || team != 3)
+		return;
 
-	GameRules_SetProp("m_iWinningTeamNumber", team, _, round - 1);
+	if (round <= 0 || round > 5)
+		return;
+
+	GameRules_SetProp("m_iWinningTeamNumber", L4D2_TeamNumberToTeamIndex(team), _, round - 1);
 }
 
 /* FormatScavengeRoundTime() */
@@ -180,41 +194,40 @@ stock int FormatScavengeRoundTime(char[] buffer, int maxlen, int team, bool node
  * If the round has not ended yet, returns the current duration.
  *
  * @param team		team number. valid value is 2 or 3
+ * 
  * @return			float value of this round duration. invalide team number will return -1.0
  */
 stock float GetScavengeRoundDuration(int team)
 {
 	float flRoundStartTime = GameRules_GetPropFloat("m_flRoundStartTime");
-	if (team == 2 && flRoundStartTime != 0.0 && GameRules_GetPropFloat("m_flRoundEndTime") == 0.0)
-	{
-		// Survivor team still playing round.
-		return GetGameTime() - flRoundStartTime;
-	}
 
-	team = L4D2_TeamNumberToTeamIndex(team);
+	if (team == 2 && flRoundStartTime != 0.0 && GameRules_GetPropFloat("m_flRoundEndTime") == 0.0)
+		return GetGameTime() - flRoundStartTime; // Survivor team still playing round.
+
 	if (team == -1) return -1.0;
 
-	return GameRules_GetPropFloat("m_flRoundDuration", team);
+	return GameRules_GetPropFloat("m_flRoundDuration", L4D2_TeamNumberToTeamIndex(team));
 }
 
 /*
  * Returns the team score of this round.
  *
  * @param team 		team number to return. valid value is 2 and 3
- * @param round		current round number. default value is -1
+ * @param round		current round number.
+ * 
  * @return 			the team score of this round. invalide team number will return -1.
  */
-stock int GetScavengeTeamScore(int team, int round = -1)
+stock int GetScavengeTeamScore(int team, int round)
 {
-	team = L4D2_TeamNumberToTeamIndex(team);
-	if (team == -1) return -1;
+	if (team != 2 || team != 3)
+		return -1;
 
 	if (round <= 0 || round > 5)
 	{
 		round = GameRules_GetProp("m_nRoundNumber");
 	}
 
-	return GameRules_GetProp("m_iScavengeTeamScore", _, (2 * (round - 1)) + team);
+	return GameRules_GetProp("m_iScavengeTeamScore", _, (2 * (round - 1)) + L4D2_TeamNumberToTeamIndex(team));
 	// this is because:
 
 	/*
@@ -260,27 +273,33 @@ stock int GetScavengeTeamScore(int team, int round = -1)
  * @param team 		team number, valid index is 2 or 3
  * @param round		round index to set the score, valid index is 1 to 5
  * @param score		round score to set
+ * 
+ * @return			if team != 2 or 3,  0 >= round or round> 5.
  */
 stock void SetScavengeTeamScore(int team, int round, int score)
 {
-	team = L4D2_TeamNumberToTeamIndex(team);
+	if (team != 2 || team != 3)
+		return;
 
-	GameRules_SetProp("m_iScavengeTeamScore", score, 4, (2 * (round - 1)) + team);
+	if (round <= 0 || round > 5)
+		return;
+
+	GameRules_SetProp("m_iScavengeTeamScore", score, 4, (2 * (round - 1)) + L4D2_TeamNumberToTeamIndex(team));
 }
 
 /*
  * Returns the team match score of this match.
  *
  * @param team 		team number. valid value is 2 and 3
- * @return 			the team match score of this match.
- * @return			if the team number is not 2 or 3, return -1
+ * 
+ * @return 			the team match score of this match. 
+ *					if the team number is not 2 or 3, return -1
  */
 stock int GetScavengeMatchScore(int team)
 {
-	team = L4D2_TeamNumberToTeamIndex(team);
-	if (team == -1) return -1;
+	if (team != 2 || team != 3) return -1;
 
-	return GameRules_GetProp("m_iScavengeMatchScore", _, team);
+	return GameRules_GetProp("m_iScavengeMatchScore", _, L4D2_TeamNumberToTeamIndex(team));
 }
 
 /*
@@ -288,12 +307,15 @@ stock int GetScavengeMatchScore(int team)
  *
  * @param team 		team number. valid value is 2 and 3
  * @param score		score to set
+ * 
+ * @return			if team != 2 or 3.
  */
 stock void SetScavengeMatchScore(int team, int score)
 {
-	team = L4D2_TeamNumberToTeamIndex(team);
+	if (team != 2 || team != 3)
+		return;
 
-	GameRules_SetProp("m_iScavengeMatchScore", score, 4, team);
+	GameRules_SetProp("m_iScavengeMatchScore", score, 4, L4D2_TeamNumberToTeamIndex(team));
 }
 
 /*
@@ -301,6 +323,7 @@ stock void SetScavengeMatchScore(int team, int score)
  * Defaultly recongnise 2 as team survivors and 3 as team infected.
  *
  * @param team 		team number. valid value is 2 and 3.
+ * 
  * @return 			1 if the team survivors flipped or team is infected,
  *  				0 if the team is survivors or team infected flipped,
  *  				-1 if the team number in invalide.
@@ -329,6 +352,7 @@ stock int L4D2_TeamNumberToTeamIndex(int team)
  * Returns current gascan count.
  *
  * @param count		index to return
+ * 
  * @return			gascan count
  */
 stock int GetGasCanCount()
@@ -355,9 +379,9 @@ stock int GetGasCanCount()
  * On second half of round, which team won the match?
  *
  * @return      1 if the survivor team won the match. 
- * @return	    0 if the infected team won the match. 
- * @return	    -1 if we are currently not in second half of the round. 
- * @return	    -2 if currently no winner showing up on this match. 
+ * 	    		0 if the infected team won the match. 
+ * 	    		-1 if we are currently not in second half of the round. 
+ * 			    -2 if currently no winner showing up on this match. 
  */
 stock int GetMatchWinner()
 {
@@ -372,47 +396,22 @@ stock int GetMatchWinner()
 		{
 			case 5:
 			{
-				if (TeamSurvivor == 3)
-				{
-					IsSurvWin = true;
-				}
-					
-				else if (TeamInfected == 3)
-				{
-					IsInfecWin = true;
-				}
-
-				else
-				{
-					IsNoWinner = true;
-				}
+				if (TeamSurvivor == 3) IsSurvWin = true;
+				else if (TeamInfected == 3) IsInfecWin = true;
+				else IsNoWinner = true;
 			}
 
 			case 3:
 			{
-				if (TeamSurvivor == 2)
-				{
-					IsSurvWin = true;
-				}
-					
-				else if (TeamInfected == 2)
-				{
-					IsInfecWin = true;
-				}
-				
-				else
-				{
-					IsNoWinner = true;
-				}
+				if (TeamSurvivor == 2) IsSurvWin = true;	
+				else if (TeamInfected == 2) IsInfecWin = true;
+				else IsNoWinner = true;
 			}
 
 			case 1:			// one round draw the winner out.
 			{
-				if (TeamSurvivor == 1)
-					IsSurvWin = true;
-					
-				if (TeamInfected == 1)
-					IsInfecWin = true;
+				if (TeamSurvivor == 1) IsSurvWin = true;
+				if (TeamInfected == 1) IsInfecWin = true;
 			}
 		}
 	}
