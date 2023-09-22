@@ -3,16 +3,17 @@
  *
  * r2.5.1: 9/19/23 rework
  * 		- reformatted.
- * 
+ *
  * r2.6: 9/20/23
  * 		- structure reformed. now we use modules to place functions.
  * 		- added include for forward api. (to do: more forwards, add natives.)
- * 
+ *
  * r2.7: 9/22/23
  * 		- added support for scavenge.
  * 			* set scores every map start
  * 			* independent map pool cfgs
  * 		- optimized translations.
+ * 		- added a new forward OnCMTInterrupted()
  */
 
 /*
@@ -31,7 +32,7 @@
  * 		- Url: https://gitee.com/honghl5/open-source-plug-in
  * 		- Description: Randomly select five maps for versus. Adding for fun and reference from CMT
  * 		- Version: 2.5
- * 
+ *
  * * Extended feature support:
  * 		- Name: [L4D2] Mixmap
  * 		- Author: blueblur (2023)
@@ -54,6 +55,8 @@
 #define SECTION_NAME "CTerrorGameRules::SetCampaignScores"
 #define LEFT4FRAMEWORK_GAMEDATA "left4dhooks.l4d2"
 
+#define DEBUG 1
+
 public Plugin myinfo =
 {
 	name = "[L4D2] Mixmap",
@@ -67,6 +70,7 @@ public Plugin myinfo =
 #define DIR_CFGS 				"mixmap/"
 #define DIR_CFGS_SCAV			"mixmap/scav/"
 #define PATH_KV  				"cfg/mixmap/mapnames.txt"
+#define PATH_KV_SCAV			"cfg/mixmap/scav/mapnames.txt"
 
 // Versus/Coop/Realism map pool
 #define CFG_DEFAULT				"default"
@@ -92,7 +96,7 @@ public Plugin myinfo =
 
 #define BUF_SZ   				64
 
-ConVar 	
+ConVar
 	g_cvNextMapPrint,
 	g_cvMaxMapsNum,
 	g_cvFinaleEndStart;
@@ -103,7 +107,6 @@ GlobalForward
 	g_hForwardInterrupt,
 	g_hForwardEnd;
 
-//与随机抽签相关的变量
 StringMap
 	g_hTriePools;				// Stores pool array handles by tag name 存放由标签分类的地图
 
@@ -114,18 +117,18 @@ ArrayList
 
 	g_hArrayMatchInfo;			// Stores whole scavenge match info
 
-Handle 
+Handle
 	g_hCountDownTimer,			// timer
 	g_hVoteMixmap,				// vote handler
 	g_hVoteStopMixmap,			// vote handler
 	g_hCMapSetCampaignScores;	// gamedata
 
-bool 
+bool
 	g_bMaplistFinalized,
 	g_bMapsetInitialized,
 	g_bCMapTransitioned = false,
 	g_bServerForceStart = false;
-int 
+int
 	g_iMapsPlayed,
 	g_iMapCount,
 	g_iPointsTeam_A = 0,
@@ -165,7 +168,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	return APLRes_Success;
 }
 
-public void OnPluginStart() 
+public void OnPluginStart()
 {
 	SetupConVars();
 	SetupCommands();
@@ -177,7 +180,7 @@ public void OnPluginStart()
 
 	// maybe someday we can replace these by un-created forwards.
 	HookEvent("scavenge_round_finished", Event_ScavRoundFinished, EventHookMode_Post);
-	
+
 	AutoExecConfig(true, "l4d2_mixmap");
 }
 
@@ -186,13 +189,13 @@ public void OnPluginStart()
 // ----------------------------------------------------------
 
 // Otherwise nextmap would be stuck and people wouldn't be able to play normal campaigns without the plugin 结束后初始化sm_nextmap的值
-public void OnPluginEnd() 
+public void OnPluginEnd()
 {
 	ServerCommand("sm_nextmap ''");
 }
 
 public void OnClientPutInServer(int client)
-{	
+{
 	if (g_bMapsetInitialized)
 		CreateTimer(10.0, Timer_ShowMaplist, client);//玩家加入服务器后，10s后提示正在使用mixmap插件。
 }
@@ -201,29 +204,29 @@ public Action Timer_ShowMaplist(Handle timer, int client)
 {
 	if (IsClientInGame(client))
 		CPrintToChat(client, "%t", "Auto_Show_Maplist");
-	
+
 	return Plugin_Handled;
 }
 
-public void OnMapStart() 
+public void OnMapStart()
 {
-	if (g_bCMapTransitioned) 
+	if (g_bCMapTransitioned)
 	{
 		CreateTimer(1.0, Timer_OnMapStartDelay, _, TIMER_FLAG_NO_MAPCHANGE); //Clients have issues connecting if team swap happens exactly on map start, so we delay it
 		g_bCMapTransitioned = false;
 	}
 
 	ServerCommand("sm_nextmap ''");
-	
+
 	char sBuffer[BUF_SZ];
-	
+
 	//判断currentmap与预计的map的name是否一致，如果不一致就stopmixmap
 	if (g_bMapsetInitialized)
 	{
 		char sOriginalSetMapName[BUF_SZ];
 		GetCurrentMap(sBuffer, BUF_SZ);
 		g_hArrayMapOrder.GetString(g_iMapsPlayed, sOriginalSetMapName, BUF_SZ);
-	
+
 		if (!StrEqual(sBuffer,sOriginalSetMapName) && g_bMaplistFinalized)
 		{
 			PluginStartInit();
@@ -235,7 +238,7 @@ public void OnMapStart()
 	}
 
 	// let other plugins know what the map *after* this one will be (unless it is the last map)
-	if (!g_bMaplistFinalized || g_iMapsPlayed >= g_iMapCount - 1) 
+	if (!g_bMaplistFinalized || g_iMapsPlayed >= g_iMapCount - 1)
 		return;
 
 	g_hArrayMapOrder.GetString(g_iMapsPlayed + 1, sBuffer, BUF_SZ);
@@ -261,7 +264,7 @@ public Action Timer_OnMapStartDelay(Handle hTimer)
 	return Plugin_Handled;
 }
 
-public void L4D2_OnEndVersusModeRound_Post() 
+public void L4D2_OnEndVersusModeRound_Post()
 {
 	if (InSecondHalfOfRound() && g_bMapsetInitialized)
 		PerformMapProgression();

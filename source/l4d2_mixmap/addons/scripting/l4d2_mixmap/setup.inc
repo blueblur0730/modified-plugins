@@ -45,8 +45,8 @@ void SetupCommands()
 
 void PluginStartInit()
 {
-	g_hArrayTags		 = new ArrayList(BUF_SZ / 4);	 // 1 block = 4 characters => X characters = X/4 blocks
 	g_hTriePools		 = new StringMap();
+	g_hArrayTags		 = new ArrayList(BUF_SZ / 4);	 // 1 block = 4 characters => X characters = X/4 blocks
 	g_hArrayTagOrder	 = new ArrayList(BUF_SZ / 4);
 	g_hArrayMapOrder	 = new ArrayList(BUF_SZ / 4);
 	g_hArrayMatchInfo	 = new ArrayList(sizeof(MatchInfo));
@@ -62,7 +62,8 @@ void PluginStartInit()
 
 void LoadSDK()
 {
-	GameData hGameData = LoadGameConfigFile(LEFT4FRAMEWORK_GAMEDATA);
+	GameData hGameData = new GameData(LEFT4FRAMEWORK_GAMEDATA);
+
 	if (hGameData == null)
 		SetFailState("Could not load gamedata/%s.txt", LEFT4FRAMEWORK_GAMEDATA);
 
