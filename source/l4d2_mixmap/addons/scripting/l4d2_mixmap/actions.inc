@@ -2,6 +2,15 @@
  #endinput
 #endif
 #define _l4d2_mixmap_actions_included
+
+static ArrayList
+	s_hArrayWinner = null,
+	s_hArrayLoser = null;
+
+static int
+	g_iPointsTeam_A = 0,
+	g_iPointsTeam_B = 0;
+	
 // ----------------------------------------------------------
 // 		Map switching logic
 // ----------------------------------------------------------
@@ -13,7 +22,12 @@ Action PerformMapProgression()
 		return Plugin_Handled;
 	}
 	else if (g_cvFinaleEndStart.IntValue)
+	{
+		CPrintToChatAll("%t", "Plugin_Continue");
 		CreateTimer(9.0, Timed_ContinueMixmap);
+	}
+
+	CPrintToChatAll("%t", "Plugin_End");
 
 	Call_StartForward(g_hForwardEnd);
 	Call_Finish();
@@ -71,12 +85,52 @@ public Action Timed_NextMapInfo(Handle timer)
 	{
 		MatchInfo esMatchInfo;
 
+		if (s_hArrayWinner == null && s_hArrayLoser == null)
+		{
+			s_hArrayWinner = new ArrayList();
+			s_hArrayLoser = new ArrayList();
+		}
+
 		// currently we are flipped.
 		esMatchInfo.rs_TeamA = GetScavengeTeamScore(2, GetScavengeRoundNumber());		// team index 1, score 2, match score 0
 		esMatchInfo.rs_TeamB = GetScavengeTeamScore(3, GetScavengeRoundNumber());		// team index 0, score 8, match score 1
 		esMatchInfo.ms_TeamA = GetScavengeMatchScore(2);
 		esMatchInfo.ms_TeamB = GetScavengeMatchScore(3);
 		esMatchInfo.winner	 = GetWinningTeamNumber(GetScavengeRoundNumber());
+
+		char sBuffer[128];
+		for (int i = 1; i < MaxClients; i++)
+		{
+			if (!IsClientAndInGame(i))
+				continue;
+
+			if (GetClientTeam(i) == 2)
+			{
+				if (esMatchInfo.rs_TeamA < esMatchInfo.rs_TeamB)
+				{
+					GetClientName(i, sBuffer, sizeof(sBuffer));
+					s_hArrayLoser.PushString(sBuffer);
+				}
+				else
+				{
+					GetClientName(i, sBuffer, sizeof(sBuffer));
+					s_hArrayWinner.PushString(sBuffer);
+				}
+			}
+			else if (GetClientTeam(i) == 3)
+			{
+				if (esMatchInfo.rs_TeamA > esMatchInfo.rs_TeamB)
+				{
+					GetClientName(i, sBuffer, sizeof(sBuffer));
+					s_hArrayLoser.PushString(sBuffer);
+				}
+				else
+				{
+					GetClientName(i, sBuffer, sizeof(sBuffer));
+					s_hArrayWinner.PushString(sBuffer);
+				}
+			}
+		}
 
 #if DEBUG
 		PrintToServer("[Mixmap] Survivor Round Score: %d", esMatchInfo.rs_TeamA);
@@ -120,12 +174,12 @@ public Action Timed_GiveThemTimeToReadTheMapList(Handle timer)
 	g_hCountDownTimer = null;
 
 	// call starting forward
-	char buffer[BUF_SZ];
-	g_hArrayMapOrder.GetString(0, buffer, BUF_SZ);
+	char sBuffer[BUF_SZ];
+	g_hArrayMapOrder.GetString(0, sBuffer, BUF_SZ);
 
 	Call_StartForward(g_hForwardStart);
 	Call_PushCell(g_iMapCount);
-	Call_PushString(buffer);
+	Call_PushString(sBuffer);
 	Call_Finish();
 
 	GotoNextMap(true);
@@ -137,14 +191,14 @@ public Action Timed_GiveThemTimeToReadTheMapList(Handle timer)
 //-----------------------------------------------------------
 void SetVersusScores()
 {
-	//If team B is winning, swap teams. Does not change how scores are set
+	// If team B is winning, swap teams. Does not change how scores are set.
 	if (g_iPointsTeam_A < g_iPointsTeam_B)
 		L4D2_SwapTeams();
 
-	//Set scores on scoreboard
+	// Set scores on scoreboard.
 	SDKCall(g_hCMapSetCampaignScores, g_iPointsTeam_A, g_iPointsTeam_B);
 
-	//Set actual scores
+	// Set actual scores.
 	L4D2Direct_SetVSCampaignScore(0, g_iPointsTeam_A);
 	L4D2Direct_SetVSCampaignScore(1, g_iPointsTeam_B);
 }
@@ -163,11 +217,54 @@ void SetScavengeScores()
 
 		if (i == g_iMapsPlayed - 1)		// we only set the score at the end of array
 		{
-			SetScavengeMatchScore(3, esMatchInfo.ms_TeamA);		// team index 0
-			SetScavengeMatchScore(2, esMatchInfo.ms_TeamB);		// team index 1
+			SetScavengeMatchScore(3, esMatchInfo.ms_TeamA);		// team index 1			
+			SetScavengeMatchScore(2, esMatchInfo.ms_TeamB);		// team index 0
 		}
-
-		// to do: are teams swapped after map changed? if not, we need another way to swap teams.
-		SetWinningTeamNumber(i + 1, esMatchInfo.winner);
 	}
+}
+
+void SetWinningTeam()
+{
+	MatchInfo esMatchInfo;
+
+	for (int i = 0; i < GetScavengeRoundNumber(); i++)
+	{
+		g_hArrayMatchInfo.GetArray(i, esMatchInfo);
+
+		if (i == GetScavengeRoundNumber() - 1)
+			break;
+#if DEBUG
+		PrintToServer("[Mixmap] SetWinningTeam: i = %d, esMatchInfo.winner = %d", i, esMatchInfo.winner);
+#endif
+		SetWinningTeamNumber(i, esMatchInfo.winner);
+	}
+}
+
+void SetTeam(int client, const char[] sName)
+{
+	// winner go ghost, loser grab guns.
+	for (int i = 1; i < s_hArrayWinner.Length; i++)
+	{
+		char sBuffer[128];
+		s_hArrayWinner.GetString(i, sBuffer, sizeof(sBuffer));
+		if (strcmp(sBuffer, sName) == 0)
+		{
+			ChangeClientTeamEx(client, 1, true);
+			ChangeClientTeamEx(client, 3, true);
+		}
+	}
+
+	for (int i = 1; i < s_hArrayLoser.Length; i++)
+	{
+		char sBuffer[128];
+		s_hArrayLoser.GetString(i, sBuffer, sizeof(sBuffer));
+		if (strcmp(sBuffer, sName) == 0)
+		{
+			ChangeClientTeamEx(client, 1, true);
+			ChangeClientTeamEx(client, 2, true);
+		}
+	}
+
+	delete s_hArrayWinner;
+	delete s_hArrayLoser;
 }

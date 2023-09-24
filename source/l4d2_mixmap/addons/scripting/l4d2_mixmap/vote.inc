@@ -3,6 +3,10 @@
 #endif
 #define _l4d2_mixmap_vote_included
 
+static Handle
+	g_hVoteMixmap,				// vote handler
+	g_hVoteStopMixmap;			// vote handler
+
 void CreateMixmapVote(int client)
 {
 	int iNumPlayers;

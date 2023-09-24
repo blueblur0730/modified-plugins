@@ -122,7 +122,8 @@ stock void SetScavengeItemsGoal(int count)
 /*
  * Returns the winning team index of a specific round.
  *
- * @param round		round to return. valide number is 1 to 5
+ * @param round		round to return. valide number is 1 to 5.
+ * 
  * @return 			the winning team index of a specific round, 1 or 2.
  */
 stock int GetWinningTeamNumber(int round)
@@ -136,14 +137,11 @@ stock int GetWinningTeamNumber(int round)
  * @param round		round to set
  * @param team		team number to set. valid values is 1 or 2
  *
- * @return			if team != 2 or 3, 0 >= round > 5.
+ * @return			if 0 >= round > 5.
  */
 stock void SetWinningTeamNumber(int round, int team)
 {
 	if (round <= 0 || round > 5)
-		return;
-
-	if (team != 1 || team != 2)
 		return;
 
 	GameRules_SetProp("m_iWinningTeamNumber", team, _, round - 1);

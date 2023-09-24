@@ -44,11 +44,6 @@ stock bool GetPrettyName(char[] map)
 	return false;
 }
 
-stock bool IsClientAndInGame(int index)
-{
-	return (index > 0 && index <= MaxClients && IsClientInGame(index) && IsClientConnected(index) && !IsFakeClient(index) && GetClientTeam(index) != 1);
-}
-
 stock int CheckSameCampaignNum(char[] map)
 {
 	int count = 0;
@@ -97,6 +92,89 @@ stock ArrayList GetPoolThatContainsMap(char[] map, int index, char[] tag)
 	return null;
 }
 
+stock bool ChangeClientTeamEx(int client, int team, bool force)
+{
+	if (GetClientTeam(client) == team)
+		return true;
+
+	else if (!force && GetTeamHumanCount(team) == GetTeamMaxHumans(team))
+		return false;
+
+	if (team != 2)
+	{
+		ChangeClientTeam(client, team);
+		return true;
+	}
+	else
+	{
+		int bot = FindSurvivorBot();
+		if (bot > 0)
+		{
+			int flags = GetCommandFlags("sb_takecontrol");
+			SetCommandFlags("sb_takecontrol", flags & ~FCVAR_CHEAT);
+			FakeClientCommand(client, "sb_takecontrol");
+			SetCommandFlags("sb_takecontrol", flags);
+			return true;
+		}
+	}
+	return false;
+}
+
+stock int GetHumanCount()
+{
+	int humans = 0;
+	
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		if (IsClientConnected(client) && !IsFakeClient(client))
+			humans++;
+	}
+	
+	return humans;
+}
+
+stock int GetTeamMaxHumans(int team)
+{
+	ConVar survivor_limit = FindConVar("survivor_limit");
+	ConVar z_max_player_zombies = FindConVar("z_max_player_zombies");
+
+	if (team == 2)
+		return survivor_limit.IntValue;
+	else if (team == 3)
+		return z_max_player_zombies.IntValue;
+
+	return MaxClients;
+}
+
+stock int GetTeamHumanCount(int team)
+{
+	int humans = 0;
+	
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		if (IsClientInGame(client) && !IsFakeClient(client) && GetClientTeam(client) == team)
+			humans++;
+	}
+	
+	return humans;
+}
+
+/* return -1 if no bot found, clientid otherwise */
+stock int FindSurvivorBot()
+{
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		if(IsClientInGame(client) && IsFakeClient(client) && GetClientTeam(client) == 2)
+			return client;
+	}
+	return -1;
+}
+
+stock bool IsClientAndInGame(int index)
+{
+	return (index > 0 && index <= MaxClients && IsClientInGame(index) && !IsFakeClient(index) && GetClientTeam(index) != 1);
+}
+
 // ----------------------------------------------------------
 // 		Basic scavenge helpers
 // ----------------------------------------------------------
@@ -125,13 +203,8 @@ stock int GetWinningTeamNumber(int round)
 
 stock void SetWinningTeamNumber(int round, int team)
 {
-	if (round <= 0 || round > 5)
-		return;
-
-	if (team != 1 || team != 2)
-		return;
-
-	GameRules_SetProp("m_iWinningTeamNumber", team, _, round - 1);
+	// we use array whose index starts from 0, so we dont do round - 1 here.
+	GameRules_SetProp("m_iWinningTeamNumber", team, 4, round);
 }
 
 stock int GetScavengeMatchScore(int team)

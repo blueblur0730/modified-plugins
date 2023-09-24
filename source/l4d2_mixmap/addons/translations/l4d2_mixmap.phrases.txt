@@ -66,7 +66,7 @@
 	"Vote_Progress_delay"
 	{
 		"en"		"{olive}<Mixmap>{default}There is a vote in progress! Changing map delays for{orange} 15 {default}seconds! "
-		"chi"		"{olive}<Mixmap>{default}有投票正在进行！地图切换延迟{orange} 20 {default}秒！ "
+		"chi"		"{olive}<Mixmap>{default}有投票正在进行！地图切换延迟{orange} 20 {default}秒！"
 	}
 
 	"Stop_Mixmap"
@@ -80,6 +80,12 @@
 		"#format"	"{1:N}"
 		"en"		"{olive}<Mixmap>{default} Admin{teamcolor} {1} {default}force-stopped Mixmap, maps initialized，progress aborted……"
 		"chi"		"{olive}<Mixmap>{default} 管理员{teamcolor} {1} {default}强制关闭Mixmap，地图初始化，流程中止……"
+	}
+
+	"Scav_Match_End"
+	{
+		"en"		"{olive}<Mixmap>{default} Scavenge match is finished, Mixmap initialized."
+		"chi"		"{olive}<Mixmap>{default} 清道夫对局已结束，Mixmap初始化。"
 	}
 
 	"Start_Mixmap"
@@ -97,7 +103,7 @@
 	
 	"Show_Maplist_Cmd"
 	{
-		"en"		"{olive}Show maplist {orange}!maplist {default}| {olive}Abort Cmd{orange} !stopmixmap"
+		"en"		"{olive}Show Maplist {orange}!maplist {default}| {olive}Abort Cmd{orange} !stopmixmap"
 		"chi"		"{olive}地图一览指令 {orange}!maplist {default}| {olive}中止指令{orange} !stopmixmap"
 	}
 
@@ -105,6 +111,18 @@
 	{
 		"en"		"{olive}<Mixmap>{default}Selecting maps randomly succeeded!"
 		"chi"		"{olive}<Mixmap>{default}地图已成功抽取！"
+	}
+
+	"Plugin_Continue"
+	{
+		"en"		"{olive}<Mixmap>{default} Next Mixmap progress will automatically continue in 9 seconds."
+		"chi"		"{olive}<Mixmap>{default} 下一次Mixmap将在9秒后自动继续。"
+	}
+
+	"Plugin_End"
+	{
+		"en"		"{olive}<Mixmap>{default} All selected maps have been played, Mixmap finished."
+		"chi"		"{olive}<Mixmap>{default} 所有被选择的地图已完成游玩，Mixmap结束。"
 	}
 
 	"Change_Map_First"

@@ -21,7 +21,7 @@ void SetupConVars()
 {
 	g_cvNextMapPrint   = CreateConVar("l4d2mm_nextmap_print",       "1", "Determine whether to show what the next map will be", _, true, 0.0, true, 1.0);
 	g_cvMaxMapsNum	   = CreateConVar("l4d2mm_max_maps_num",        "2", "Determine how many maps of one campaign can be selected; 0 = no limits;", _, true, 0.0, true, 5.0);
-	g_cvFinaleEndStart = CreateConVar("l4d2mm_finale_end_start",    "1", "Determine whether to remixmap in the end of finale; 0 = disable;1 = enable", _, true, 0.0, true, 1.0);
+	g_cvFinaleEndStart = CreateConVar("l4d2mm_finale_end_start",    "0", "Determine whether to remixmap in the end of finale; 0 = disable;1 = enable", _, true, 0.0, true, 1.0);
 }
 
 void SetupCommands()
