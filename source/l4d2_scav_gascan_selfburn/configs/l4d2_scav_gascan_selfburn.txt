@@ -3,11 +3,11 @@
 	"c8m5_rooftop"
 	{
 		"height_zlimit_min"		"500.0"
-		"height_zlimit_max"		"10000.0"
-		"width_xlimit_max"		"8100.0"
-		"width_ylimit_max"		"9800.0"
-		"width_xlimit_min"		"4700.0"
-		"width_ylimit_min"		"7200.0"
+		"height_zlimit_max"		"0.0"
+		"width_xlimit_max"		"0.0"
+		"width_ylimit_max"		"0.0"
+		"width_xlimit_min"		"0.0"
+		"width_ylimit_min"		"0.0"
 	}
 
 	"c8m1_apartment"
@@ -24,9 +24,9 @@
 	{
 		"height_zlimit_min"		"0.0"
 		"height_zlimit_max"		"864.2"			// rooftop of sugarmill
-		"width_xlimit_max"		"690.0"
-		"width_ylimit_max"		"-5470.0"
-		"width_xlimit_min"		"-1946.0"
+		"width_xlimit_max"		"0.0"
+		"width_ylimit_max"		"0.0"
+		"width_xlimit_min"		"0.0"
 		"width_ylimit_min"		"-9510.0"		// sugar field
 	}
 

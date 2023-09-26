@@ -1,4 +1,10 @@
 /* Change log:
+ *
+ * - 2.7.1: 9/26/23
+ *  - Fixed a bug on comparing two float coordinates.
+ *  - Sperated cvars.
+ *  - Enable status adjusted.
+ * 
  * - 2.7: 9/18/23
  *	- Reconstructed codes.
  *   - Remove player auto suicide.
@@ -69,7 +75,7 @@
 #include <sdktools>
 #include <colors>
 
-#define PLUGIN_VERSION "2.7"
+#define PLUGIN_VERSION "2.7.1"
 #define CONFIG_PATH	   "configs/l4d2_scav_gascan_selfburn.txt"
 
 #define DEBUG		   0
@@ -80,9 +86,12 @@ KeyValues
 ConVar
 	g_hcvarEnablePlugin,
 
-	g_hcvarEnableSquareDetectx,
-	g_hcvarEnableSquareDetecty,
-	g_hcvarEnableHeightDetectz,
+	g_hcvarEnableSquareDetectxMin,
+	g_hcvarEnableSquareDetectxMax,
+	g_hcvarEnableSquareDetectyMin,
+	g_hcvarEnableSquareDetectyMax,
+	g_hcvarEnableHeightDetectzMin,
+	g_hcvarEnableHeightDetectzMax,
 
 	g_hcvarEnableCountLimit,
 	g_hcvarIntervalBurnGascan,
@@ -108,11 +117,11 @@ CoordinateInfo g_esInfo;
 
 public Plugin myinfo =
 {
-	name		= "[L4D2] Scavenge Gascan Self Burn",
-	author		= "Ratchet, blueblur",
+	name = "[L4D2] Scavenge Gascan Self Burn",
+	author = "Ratchet, blueblur",
 	description = "Burn unreachable gascans with custom settings in scavenge mode.",
-	version		= PLUGIN_VERSION,
-	url			= "https://github.com/blueblur0730/modified-plugins"
+	version	= PLUGIN_VERSION,
+	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
 public void OnPluginStart()
@@ -120,23 +129,24 @@ public void OnPluginStart()
 	char sBuffer[128];
 
 	// ConVars
-	g_hcvarEnablePlugin			= CreateConVar("l4d2_scav_gascan_selfburn_enable", "1", "Enable Plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnablePlugin				= CreateConVar("l4d2_scav_gascan_selfburn_enable", "1", "Enable Plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
-	g_hcvarEnableSquareDetectx	= CreateConVar("l4d2_scav_gascan_selfburn_detect_x", "1", "Enable square coordinate detection(detect x)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_hcvarEnableSquareDetecty	= CreateConVar("l4d2_scav_gascan_selfburn_detect_y", "1", "Enable square coordinate detection(detect y)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_hcvarEnableHeightDetectz	= CreateConVar("l4d2_scav_gascan_selfburn_detect_z", "1", "Enable height coordinate detection(detect z)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnableSquareDetectxMin	= CreateConVar("l4d2_scav_gascan_selfburn_detect_x_min", "1", "Enable square coordinate detection(detect x min)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnableSquareDetectxMax	= CreateConVar("l4d2_scav_gascan_selfburn_detect_x_max", "1", "Enable square coordinate detection(detect x max)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnableSquareDetectyMin	= CreateConVar("l4d2_scav_gascan_selfburn_detect_y_min", "1", "Enable square coordinate detection(detect y min)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnableSquareDetectyMax	= CreateConVar("l4d2_scav_gascan_selfburn_detect_y_max", "1", "Enable square coordinate detection(detect y max)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnableHeightDetectzMin	= CreateConVar("l4d2_scav_gascan_selfburn_detect_z_min", "1", "Enable height coordinate detection(detect z min)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnableHeightDetectzMax	= CreateConVar("l4d2_scav_gascan_selfburn_detect_z_max", "1", "Enable height coordinate detection(detect z max)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
-	g_hcvarEnableCountLimit		= CreateConVar("l4d2_scav_gascan_burned_limit_enable", "1", "Enable Limited Gascan burn", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_hcvarIntervalBurnGascan	= CreateConVar("l4d2_scav_gascan_selfburn_interval", "10.0", "Interval every gascan detection dose", FCVAR_NOTIFY, true, 0.0);
-	g_hcvarBurnedGascanMaxLimit = CreateConVar("l4d2_scav_gascan_burned_limit", "4", "Limits the max gascan can get burned if they are out of bounds.", FCVAR_NOTIFY, true, 0.0);
+	g_hcvarEnableCountLimit			= CreateConVar("l4d2_scav_gascan_burned_limit_enable", "1", "Enable Limited Gascan burn", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarIntervalBurnGascan		= CreateConVar("l4d2_scav_gascan_selfburn_interval", "10.0", "Interval every gascan detection dose", FCVAR_NOTIFY, true, 0.0);
+	g_hcvarBurnedGascanMaxLimit 	= CreateConVar("l4d2_scav_gascan_burned_limit", "4", "Limits the max gascan can get burned if they are out of bounds.", FCVAR_NOTIFY, true, 0.0);
 
 	// KeyValue
-	kv							= new KeyValues("Positions");
+	kv = new KeyValues("Positions");
 	BuildPath(Path_SM, sBuffer, 128, CONFIG_PATH);
 	if (!kv.ImportFromFile(sBuffer))
-	{
 		SetFailState("File %s may be missed!", CONFIG_PATH);
-	}
 
 	// Hooks
 	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
@@ -144,25 +154,18 @@ public void OnPluginStart()
 
 	// Translations
 	LoadTranslations("l4d2_scav_gascan_selfburn.phrases");
-
-	// Check scavenge mode and enable status
-	CheckStatus();
-}
-
-public Action CheckStatus()
-{
-	return (!g_hcvarEnablePlugin.BoolValue || !IsScavengeMode()) ? Plugin_Handled : Plugin_Continue;
 }
 
 public void OnMapStart()
 {
-	char sMapName[128];
-	GetCurrentMap(sMapName, sizeof(sMapName));
-
-	CreateTimer(g_hcvarIntervalBurnGascan.FloatValue, Timer_DetectGascan, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-
-	kv.Rewind();
-	ParseMapCoordinateInfo(g_esInfo, sMapName);
+	if (g_hcvarEnablePlugin.BoolValue && IsScavengeMode())
+	{
+		char sMapName[128];
+		kv.Rewind();
+		GetCurrentMap(sMapName, sizeof(sMapName));
+		ParseMapCoordinateInfo(g_esInfo, sMapName);
+		CreateTimer(g_hcvarIntervalBurnGascan.FloatValue, Timer_DetectGascan, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	}
 }
 
 public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
@@ -196,7 +199,7 @@ void FindMisplacedCans()
 #if DEBUG
 		PrintToConsoleAll("Found entity weapon_gascan: %d", ent);
 #endif
-		if (g_hcvarEnableCountLimit.BoolValue && IsReachedLimit())
+		if (IsReachedLimit())
 			break;	  // burned gascan has reached its max limit we set, stop the loop (stop igniting the gascan).
 
 		float fPosition[3];
@@ -204,9 +207,9 @@ void FindMisplacedCans()
 
 		g_iDetectCount = 0;
 
-		if (g_hcvarEnableHeightDetectz.BoolValue)
+		if (g_hcvarEnableHeightDetectzMin.BoolValue)
 		{
-			if (g_esInfo.z_min == 0.0 || g_esInfo.z_max == 0.0) return;
+			if (FloatCompare(g_esInfo.z_min, 0.0) == 0) return;
 			else if (fPosition[2] <= g_esInfo.z_min)
 			{
 				if (fPosition[2])	 // if you dont have this gascan will ignite if you grab it.
@@ -215,8 +218,12 @@ void FindMisplacedCans()
 					CheckDetectCountThenIgnite(ent);
 				}
 			}
+		}
 
-			if (g_esInfo.z_max <= fPosition[2])
+		if (g_hcvarEnableHeightDetectzMax.BoolValue)
+		{
+			if (FloatCompare(g_esInfo.z_max, 0.0) == 0) return;
+			else if (g_esInfo.z_max <= fPosition[2])
 			{
 				if (fPosition[2])
 				{
@@ -226,19 +233,10 @@ void FindMisplacedCans()
 			}
 		}
 
-		if (g_hcvarEnableSquareDetectx.BoolValue)
+		if (g_hcvarEnableSquareDetectxMin.BoolValue)
 		{
-			if (g_esInfo.x_max == 0.0 || g_esInfo.x_min == 0.0) return;
+			if (FloatCompare(g_esInfo.x_min, 0.0) == 0) return;
 			else if (g_esInfo.x_max <= fPosition[0])
-			{
-				if (fPosition[0])
-				{
-					g_iDetectCount++;
-					CheckDetectCountThenIgnite(ent);
-				}
-			}
-
-			if (fPosition[0] <= g_esInfo.x_min)
 			{
 				if (fPosition[0])
 				{
@@ -248,10 +246,23 @@ void FindMisplacedCans()
 			}
 		}
 
-		if (g_hcvarEnableSquareDetecty.BoolValue)
+		if (g_hcvarEnableSquareDetectxMax.BoolValue)
 		{
-			if (g_esInfo.y_max == 0.0 || g_esInfo.y_min == 0.0) return;
-			else if (g_esInfo.y_max <= fPosition[1])
+			if (FloatCompare(g_esInfo.x_max, 0.0) == 0) return;
+			else if (fPosition[0] <= g_esInfo.x_max)
+			{
+				if (fPosition[0])
+				{
+					g_iDetectCount++;
+					CheckDetectCountThenIgnite(ent);
+				}
+			}
+		}
+
+		if (g_hcvarEnableSquareDetectyMin.BoolValue)
+		{
+			if (FloatCompare(g_esInfo.y_min, 0.0) == 0) return;
+			else if (g_esInfo.y_min <= fPosition[1])
 			{
 				if (fPosition[1])
 				{
@@ -259,8 +270,12 @@ void FindMisplacedCans()
 					CheckDetectCountThenIgnite(ent);
 				}
 			}
+		}
 
-			if (fPosition[1] <= g_esInfo.y_min && fPosition[1])
+		if (g_hcvarEnableSquareDetectyMax.BoolValue)
+		{
+			if (FloatCompare(g_esInfo.y_max, 0.0) == 0) return;
+			else if (fPosition[1] <= g_esInfo.y_max)
 			{
 				if (fPosition[1])
 				{
@@ -341,7 +356,10 @@ void ParseMapCoordinateInfo(CoordinateInfo esInfo, char[] sMapName)
 
 stock bool IsReachedLimit()
 {
-	return (g_iBurnedGascanCount >= g_hcvarBurnedGascanMaxLimit.IntValue) ? true : false;
+	if (g_hcvarEnableCountLimit.BoolValue)
+		return (g_iBurnedGascanCount >= g_hcvarBurnedGascanMaxLimit.IntValue) ? true : false;
+
+	return true;
 }
 
 stock bool IsDetectCountOverflow()
