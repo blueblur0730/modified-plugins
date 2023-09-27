@@ -3,6 +3,8 @@
 #endif
 #define _l4d2_mixmap_util_included
 
+#define DEBUG 1
+
 // ----------------------------------------------------------
 // 		Basic logic helpers
 // ----------------------------------------------------------
@@ -13,7 +15,7 @@ stock bool GetPrettyName(char[] map)
 	if (hKvMapNames == null)
 	{
 		hKvMapNames = new KeyValues("Mixmap Map Names");
-		if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())
+		if (!L4D2_IsScavengeMode())
 		{
 			if (!hKvMapNames.ImportFromFile(PATH_KV))
 			{
@@ -22,7 +24,7 @@ stock bool GetPrettyName(char[] map)
 				return false;
 			}
 		}
-		else if (L4D2_IsScavengeMode())
+		else
 		{
 			if (!hKvMapNames.ImportFromFile(PATH_KV_SCAV))
 			{
@@ -92,6 +94,25 @@ stock ArrayList GetPoolThatContainsMap(char[] map, int index, char[] tag)
 	return null;
 }
 
+stock bool IsClientAndInGame(int client)
+{
+	return (client > 0 && client <= MaxClients && IsClientInGame(client) && !IsFakeClient(client) && GetClientTeam(client) != 1);
+}
+
+stock bool IsClientOrBotAndInGame(int client)
+{
+	return (client > 0 && client <= MaxClients && IsClientInGame(client) && GetClientTeam(client) != 1);
+}
+
+stock bool IsBotAndInGame(int client)
+{
+	return (client > 0 && client <= MaxClients && IsClientInGame(client) && IsFakeClient(client) && GetClientTeam(client) != 1);
+}
+
+/* from playermanagment.sp . current unused.
+// ----------------------------------------------------------
+// 		Basic change client team helpers
+// ----------------------------------------------------------
 stock bool ChangeClientTeamEx(int client, int team, bool force)
 {
 	if (GetClientTeam(client) == team)
@@ -159,7 +180,6 @@ stock int GetTeamHumanCount(int team)
 	return humans;
 }
 
-/* return -1 if no bot found, clientid otherwise */
 stock int FindSurvivorBot()
 {
 	for (int client = 1; client <= MaxClients; client++)
@@ -169,20 +189,11 @@ stock int FindSurvivorBot()
 	}
 	return -1;
 }
-
-stock bool IsClientAndInGame(int index)
-{
-	return (index > 0 && index <= MaxClients && IsClientInGame(index) && !IsFakeClient(index) && GetClientTeam(index) != 1);
-}
+*/
 
 // ----------------------------------------------------------
 // 		Basic scavenge helpers
 // ----------------------------------------------------------
-stock bool InSecondHalfOfRound()
-{
-    return view_as<bool>(GameRules_GetProp("m_bInSecondHalfOfRound", 1));
-}
-
 stock int GetScavengeRoundNumber()
 {
 	return GameRules_GetProp("m_nRoundNumber");
@@ -248,4 +259,61 @@ stock int L4D2_TeamNumberToTeamIndex(int team)
 	bool flipped = view_as<bool>(GameRules_GetProp("m_bAreTeamsFlipped", 1));
 	if (flipped) ++team;
 	return team % 2;
+}
+
+/**
+ * from spechud 
+ * */
+stock int GetWeaponClipAmmo(int weapon)
+{
+	return (weapon > 0 ? GetEntProp(weapon, Prop_Send, "m_iClip1") : -1);
+}
+
+stock void SetWeaponClipAmmo(int weapon, int amount)
+{
+	if (weapon > 0) 
+		SetEntProp(weapon, Prop_Send, "m_iClip1", amount);
+}
+/** 
+ * Coop game check
+ */
+stock bool AreAllLivingSurivorsInEndSafeRoom() 
+{
+	ConVar hLimit = FindConVar("survivor_limit");
+	int iLimit = hLimit.IntValue; int iPlayer = 0; int iDead = 0; int iBot = 0;
+
+	for (int i = 1; i <= MaxClients; i++) 
+	{
+		if (!IsSurvivorClient(i))
+			continue;
+
+		if (!IsPlayerAlive(i))
+		{
+			iDead++;
+			continue;
+		}
+
+		if (IsBotAndInGame(i) && SAFEDETECT_IsEntityInEndSaferoom(i)) 	// client index is actually another form of entity index...emm
+		{
+			iBot++;
+			continue;
+		}	
+
+		if (IsClientAndInGame(i) && SAFEDETECT_IsPlayerInEndSaferoom(i))
+			iPlayer++;
+	}
+
+#if DEBUG
+		PrintToServer("[Mixmap] iLimit: %d, iPlayer: %d, iBot: %d, iDead: %d", iLimit, iPlayer, iBot, iDead);
+#endif
+
+	if (iPlayer + iBot == iLimit - iDead)
+		return true;
+
+	return false;
+}
+
+stock bool IsSurvivorClient(int client)
+{
+    return (client > 0 && client <= MaxClients && IsClientConnected(client) && GetClientTeam(client) == TEAM_SURVIVOR);
 }

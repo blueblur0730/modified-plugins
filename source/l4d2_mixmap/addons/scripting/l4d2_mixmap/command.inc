@@ -10,9 +10,9 @@
 // Loads a specified set of maps
 public Action ForceMixmap(int client, any args) 
 {
-	if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())	// for coop/reliasm and versus only
+	if (!L4D2_IsScavengeMode())	// for coop/reliasm and versus only
 		Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT);
-	else if (L4D2_IsScavengeMode())
+	else
 		Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT_SCAV);
 
 	
@@ -20,7 +20,7 @@ public Action ForceMixmap(int client, any args)
 	{
 		char sBuffer[BUF_SZ], arg[BUF_SZ];
 
-		if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())
+		if (!L4D2_IsScavengeMode())
 		{
 			GetCmdArg(1, arg, BUF_SZ);
 			Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS, arg);
@@ -44,7 +44,7 @@ public Action ForceMixmap(int client, any args)
 				}
 			}
 		}
-		else if (L4D2_IsScavengeMode())
+		else
 		{
 			GetCmdArg(1, arg, BUF_SZ);
 			Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS_SCAV, arg);
@@ -70,9 +70,9 @@ public Action ForceMixmap(int client, any args)
 	PluginStartInit();
 	if (client == 0) g_bServerForceStart = true;
 
-	if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())
+	if (!L4D2_IsScavengeMode())
 		ServerCommand("exec %s%s.cfg", DIR_CFGS, cfg_exec);
-	else if (L4D2_IsScavengeMode())
+	else
 		ServerCommand("exec %s%s.cfg", DIR_CFGS_SCAV, cfg_exec);
 
 	g_bMapsetInitialized = true;
@@ -103,7 +103,7 @@ public Action ManualMixmap(int client, any args)
 
 public Action ShowAllMaps(int client, any Args)
 {
-	if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())
+	if (!L4D2_IsScavengeMode())
 	{
 		CPrintToChat(client, "%t", "AllMaps_Official");
 		CPrintToChat(client, "c1m1_hotel,c1m2_streets,c1m3_mall,c1m4_atrium");
@@ -120,7 +120,7 @@ public Action ShowAllMaps(int client, any Args)
 		CPrintToChat(client, "c13m1_alpinecreek,c13m2_southpinestream,c13m3_memorialbridge,c13m4_cutthroatcreek");
 		CPrintToChat(client, "%t", "AllMaps_Usage");
 	}
-	else if (L4D2_IsScavengeMode())
+	else
 	{
 		CPrintToChat(client, "%t", "AllMaps_Official");
 		CPrintToChat(client, "c1m4_atrium");
@@ -151,15 +151,15 @@ public Action Mixmap_Cmd(int client, any args)
 	{
 		if (!IsBuiltinVoteInProgress())
 		{
-			if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())	// for coop/reliasm and versus only
+			if (!L4D2_IsScavengeMode())	// for coop/reliasm and versus only
 				Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT);
-			else if (L4D2_IsScavengeMode())
+			else
 				Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT_SCAV);
 	
 			if (args >=1)
 			{
 				char sBuffer[BUF_SZ], arg[BUF_SZ];
-				if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())
+				if (!L4D2_IsScavengeMode())
 				{
 					GetCmdArg(1, arg, BUF_SZ);
 					Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS, arg);
@@ -183,7 +183,7 @@ public Action Mixmap_Cmd(int client, any args)
 						}
 					}
 				}
-				else if (L4D2_IsScavengeMode())
+				else
 				{
 					GetCmdArg(1, arg, BUF_SZ);
 					Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS_SCAV, arg);

@@ -6,11 +6,11 @@
 /* 
  * Called right before mixmap loading first map.
  *
- * @param iMapListSize      maplist array size
+ * @param iMapCount      	total selected map count
  * @param sMapName          name of first map
  * 
  **/
-forward void OnCMTStart(int iMapListSize, char[] sFirstMapName);
+forward void OnMixmapStart(int iMapCount, char[] sFirstMapName);
 
 /*
  * Called after mixmap loading a map.
@@ -18,19 +18,40 @@ forward void OnCMTStart(int iMapListSize, char[] sFirstMapName);
  * @param sNextMapName      next map name
  * 
  **/
-forward void OnCMTNextKnown(char[] sNextMapName);
+forward void OnMixmapNextKnown(char[] sNextMapName);
 
 /*
  * Called when mixmap was interupted
  *
  */
-forward void OnCMTInterrupted()
+forward void OnMixmapInterrupted()
 
 /*
  * Called after the last map is played.
  *
  */
-forward void OnCMTEnd();
+forward void OnMixmapEnd();
+
+/*
+ * Retrieves the map string sequence to an arraylist
+ * 
+ * @param hArray 			arraylist to store the string sequence
+ */
+native void GetMixmapMapSequence(ArrayList hArray)
+
+/*
+ * Get total map count a mixmap game has played
+ * 
+ * @return					total played map count
+ */
+native int GetMixmapPlayedMapCount()
+
+/*
+ * If currently we are in mixmap
+ *
+ * @return					true if we are in mixmap, false otherwise
+ */
+native bool IsInMixmap()
 
 public SharedPlugin __pl_l4d2_mixmap =
 {

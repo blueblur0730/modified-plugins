@@ -94,3 +94,27 @@ void ReSelectMapOrder(char[] confirm)	//hope this will work
 		}
 	}
 }
+
+public Action Timed_GiveThemTimeToReadTheMapList(Handle timer)
+{
+	if (IsBuiltinVoteInProgress() && !g_bServerForceStart)
+	{
+		CPrintToChatAll("%t", "Vote_Progress_delay");
+		g_hCountDownTimer = CreateTimer(20.0, Timed_GiveThemTimeToReadTheMapList);
+		return Plugin_Handled;
+	}
+	if (g_bServerForceStart) g_bServerForceStart = false;
+	g_hCountDownTimer = null;
+
+	// call starting forward
+	char sBuffer[BUF_SZ];
+	g_hArrayMapOrder.GetString(0, sBuffer, BUF_SZ);
+
+	Call_StartForward(g_hForwardStart);
+	Call_PushCell(g_iMapCount);
+	Call_PushString(sBuffer);
+	Call_Finish();
+
+	GotoNextMap(true);
+	return Plugin_Handled;
+}

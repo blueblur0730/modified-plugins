@@ -163,9 +163,9 @@ Action StartVoteMixmap_Timer(Handle timer)
 // Load a mixmap cfg
 Action Mixmap()
 {
-	if (!L4D2_IsScavengeMode() && !L4D_IsSurvivalMode())
+	if (!L4D2_IsScavengeMode())
 		ServerCommand("exec %s%s.cfg", DIR_CFGS, cfg_exec);
-	else if (L4D2_IsScavengeMode())
+	else
 		ServerCommand("exec %s%s.cfg", DIR_CFGS_SCAV, cfg_exec);
 
 	g_bMapsetInitialized = true;

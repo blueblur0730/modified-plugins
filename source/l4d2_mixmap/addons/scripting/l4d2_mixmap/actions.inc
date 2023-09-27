@@ -3,13 +3,19 @@
 #endif
 #define _l4d2_mixmap_actions_included
 
+#define DEBUG 1
+
 static ArrayList
-	s_hArrayWinner = null,
-	s_hArrayLoser = null;
+	s_hArrayPlayerInfo = null;
 
 static int
-	g_iPointsTeam_A = 0,
-	g_iPointsTeam_B = 0;
+	s_iPointsTeam_A = 0,
+	s_iPointsTeam_B = 0,
+	s_iEntityIndex[MAXPLAYERS + 1];
+
+static bool
+	s_IsMeleeWeapon[MAXPLAYERS + 1];
+
 	
 // ----------------------------------------------------------
 // 		Map switching logic
@@ -47,13 +53,15 @@ void GotoMap(const char[] sMapName, bool force = false)
 {
 	if (force)
 	{
-		ForceChangeLevel(sMapName, "Mixmap");
+		L4D2_ChangeLevel(sMapName, false);		// set false to not reset the scores.
 		return;
 	}
-	ServerCommand("sm_nextmap %s", sMapName);
-	CreateTimer(5.0, Timed_NextMapInfo);
+
+	// go faster in coop mode. you know how speedy the game is.
+	CreateTimer(((L4D_IsVersusMode() && L4D2_IsScavengeMode()) ? 5.0 : 0.1), Timed_NextMapInfo);
 }
 
+// here we store the match or game info for the next map.
 public Action Timed_NextMapInfo(Handle timer)
 {
 	char sMapName_New[BUF_SZ], sMapName_Old[BUF_SZ];
@@ -67,16 +75,16 @@ public Action Timed_NextMapInfo(Handle timer)
 		if ((StrEqual(sMapName_Old, "c6m2_bedlam") && !StrEqual(sMapName_New, "c7m1_docks"))
 		|| (StrEqual(sMapName_Old, "c9m2_lots") && !StrEqual(sMapName_New, "c14m1_junkyard")))
 		{
-			g_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
-			g_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
+			s_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
+			s_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
 			g_bCMapTransitioned = true;
 			CreateTimer(9.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
 		}
 		else if ((!StrEqual(sMapName_Old, "c6m2_bedlam") && StrEqual(sMapName_New, "c7m1_docks"))
 		|| (!StrEqual(sMapName_Old, "c9m2_lots") && StrEqual(sMapName_New, "c14m1_junkyard")))
 		{
-			g_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
-			g_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
+			s_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
+			s_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
 			g_bCMapTransitioned = true;
 			CreateTimer(10.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
 		}
@@ -85,12 +93,6 @@ public Action Timed_NextMapInfo(Handle timer)
 	{
 		MatchInfo esMatchInfo;
 
-		if (s_hArrayWinner == null && s_hArrayLoser == null)
-		{
-			s_hArrayWinner = new ArrayList();
-			s_hArrayLoser = new ArrayList();
-		}
-
 		// currently we are flipped.
 		esMatchInfo.rs_TeamA = GetScavengeTeamScore(2, GetScavengeRoundNumber());		// team index 1, score 2, match score 0
 		esMatchInfo.rs_TeamB = GetScavengeTeamScore(3, GetScavengeRoundNumber());		// team index 0, score 8, match score 1
@@ -98,39 +100,7 @@ public Action Timed_NextMapInfo(Handle timer)
 		esMatchInfo.ms_TeamB = GetScavengeMatchScore(3);
 		esMatchInfo.winner	 = GetWinningTeamNumber(GetScavengeRoundNumber());
 
-		char sBuffer[128];
-		for (int i = 1; i < MaxClients; i++)
-		{
-			if (!IsClientAndInGame(i))
-				continue;
-
-			if (GetClientTeam(i) == 2)
-			{
-				if (esMatchInfo.rs_TeamA < esMatchInfo.rs_TeamB)
-				{
-					GetClientName(i, sBuffer, sizeof(sBuffer));
-					s_hArrayLoser.PushString(sBuffer);
-				}
-				else
-				{
-					GetClientName(i, sBuffer, sizeof(sBuffer));
-					s_hArrayWinner.PushString(sBuffer);
-				}
-			}
-			else if (GetClientTeam(i) == 3)
-			{
-				if (esMatchInfo.rs_TeamA > esMatchInfo.rs_TeamB)
-				{
-					GetClientName(i, sBuffer, sizeof(sBuffer));
-					s_hArrayLoser.PushString(sBuffer);
-				}
-				else
-				{
-					GetClientName(i, sBuffer, sizeof(sBuffer));
-					s_hArrayWinner.PushString(sBuffer);
-				}
-			}
-		}
+		g_hArrayMatchInfo.PushArray(esMatchInfo);
 
 #if DEBUG
 		PrintToServer("[Mixmap] Survivor Round Score: %d", esMatchInfo.rs_TeamA);
@@ -140,8 +110,66 @@ public Action Timed_NextMapInfo(Handle timer)
 		PrintToServer("[Mixmap] Winner Team Index: %d", esMatchInfo.winner);
 #endif
 		g_bCMapTransitioned = true;
-		g_hArrayMatchInfo.PushArray(esMatchInfo);
 		CreateTimer(5.0, Timed_Gotomap);
+	}
+	else if (L4D2_IsGenericCooperativeMode())
+	{
+		if (g_cvSaveStatus.BoolValue)
+		{
+			PlayerInfo esPlayerInfo;
+
+			if (s_hArrayPlayerInfo == null)
+				s_hArrayPlayerInfo = new ArrayList(sizeof(PlayerInfo));
+
+			for (int i = 1; i < MaxClients; i++)
+			{
+				if (g_cvSaveStatusBot.BoolValue)
+				{
+					if(!IsClientOrBotAndInGame(i))
+						continue;
+				}
+				else if (!IsClientAndInGame(i))
+						continue;
+
+				if (!IsPlayerAlive(i))
+				{
+					esPlayerInfo.health 	 = 50;
+					esPlayerInfo.alive 		 = false;
+					continue;
+				}
+					
+				esPlayerInfo.health		 	 = GetClientHealth(i);
+				esPlayerInfo.temp_health 	 = L4D_GetTempHealth(i);
+				esPlayerInfo.revive_count 	 = GetEntProp(i, Prop_Send, "m_currentReviveCount");
+				esPlayerInfo.alive 			 = true;
+
+				esPlayerInfo.slot0 			 = IdentifyWeapon(			GetPlayerWeaponSlot(i, L4D2WeaponSlot_Primary));
+				esPlayerInfo.ammo 			 = GetWeaponClipAmmo(		GetPlayerWeaponSlot(i, L4D2WeaponSlot_Primary));
+				esPlayerInfo.ammo_reserved 	 = L4D_GetReserveAmmo(i, 	GetPlayerWeaponSlot(i, L4D2WeaponSlot_Primary));
+				esPlayerInfo.ammo_type		 = GetEntProp(				GetPlayerWeaponSlot(i, L4D2WeaponSlot_Primary), Prop_Data, "m_iPrimaryAmmoType");
+
+				s_iEntityIndex[i]			 =							GetPlayerWeaponSlot(i, L4D2WeaponSlot_Primary);
+
+				esPlayerInfo.slot1 			 = IdentifyWeapon(			GetPlayerWeaponSlot(i, L4D2WeaponSlot_Secondary));
+				if (esPlayerInfo.slot1 == WEPID_MELEE)
+				{
+					esPlayerInfo.slot1		 = IdentifyMeleeWeapon(		GetPlayerWeaponSlot(i, L4D2WeaponSlot_Secondary));
+					s_IsMeleeWeapon[i] 		 = true;
+					esPlayerInfo.ammo_pistol = 0;
+				}
+				else
+					esPlayerInfo.ammo_pistol = GetWeaponClipAmmo(		GetPlayerWeaponSlot(i, L4D2WeaponSlot_Secondary));
+					
+				esPlayerInfo.slot2 			 = IdentifyWeapon(			GetPlayerWeaponSlot(i, L4D2WeaponSlot_Throwable));
+				esPlayerInfo.slot3 			 = IdentifyWeapon(			GetPlayerWeaponSlot(i, L4D2WeaponSlot_HeavyHealthItem));
+				esPlayerInfo.slot4 			 = IdentifyWeapon(			GetPlayerWeaponSlot(i, L4D2WeaponSlot_LightHealthItem));
+
+				s_hArrayPlayerInfo.PushArray(esPlayerInfo);
+			}
+
+			g_bCMapTransitioned = true;
+			CreateTimer(1.0, Timed_Gotomap);
+		}
 	}
 
 	return Plugin_Handled;
@@ -162,45 +190,21 @@ public Action Timed_ContinueMixmap(Handle timer)
 	return Plugin_Handled;
 }
 
-public Action Timed_GiveThemTimeToReadTheMapList(Handle timer)
-{
-	if (IsBuiltinVoteInProgress() && !g_bServerForceStart)
-	{
-		CPrintToChatAll("%t", "Vote_Progress_delay");
-		g_hCountDownTimer = CreateTimer(20.0, Timed_GiveThemTimeToReadTheMapList);
-		return Plugin_Handled;
-	}
-	if (g_bServerForceStart) g_bServerForceStart = false;
-	g_hCountDownTimer = null;
-
-	// call starting forward
-	char sBuffer[BUF_SZ];
-	g_hArrayMapOrder.GetString(0, sBuffer, BUF_SZ);
-
-	Call_StartForward(g_hForwardStart);
-	Call_PushCell(g_iMapCount);
-	Call_PushString(sBuffer);
-	Call_Finish();
-
-	GotoNextMap(true);
-	return Plugin_Handled;
-}
-
 //-----------------------------------------------------------
 //			Set Info
 //-----------------------------------------------------------
 void SetVersusScores()
 {
 	// If team B is winning, swap teams. Does not change how scores are set.
-	if (g_iPointsTeam_A < g_iPointsTeam_B)
+	if (s_iPointsTeam_A < s_iPointsTeam_B)
 		L4D2_SwapTeams();
 
 	// Set scores on scoreboard.
-	SDKCall(g_hCMapSetCampaignScores, g_iPointsTeam_A, g_iPointsTeam_B);
+	SDKCall(g_hCMapSetCampaignScores, s_iPointsTeam_A, s_iPointsTeam_B);
 
 	// Set actual scores.
-	L4D2Direct_SetVSCampaignScore(0, g_iPointsTeam_A);
-	L4D2Direct_SetVSCampaignScore(1, g_iPointsTeam_B);
+	L4D2Direct_SetVSCampaignScore(0, s_iPointsTeam_A);
+	L4D2Direct_SetVSCampaignScore(1, s_iPointsTeam_B);
 }
 
 void SetScavengeScores()
@@ -210,15 +214,14 @@ void SetScavengeScores()
 	{
 		g_hArrayMatchInfo.GetArray(i, esMatchInfo);
 
-		// currently we are unflipped
 		SetScavengeRoundNumber(g_iMapsPlayed + 1);
-		SetScavengeTeamScore(3, i + 1, esMatchInfo.rs_TeamA);		// team index 1
-		SetScavengeTeamScore(2, i + 1, esMatchInfo.rs_TeamB);		// team index 0
+		SetScavengeTeamScore(2, i + 1, esMatchInfo.rs_TeamA);
+		SetScavengeTeamScore(3, i + 1, esMatchInfo.rs_TeamB);
 
 		if (i == g_iMapsPlayed - 1)		// we only set the score at the end of array
 		{
-			SetScavengeMatchScore(3, esMatchInfo.ms_TeamA);		// team index 1			
-			SetScavengeMatchScore(2, esMatchInfo.ms_TeamB);		// team index 0
+			SetScavengeMatchScore(2, esMatchInfo.ms_TeamA);			
+			SetScavengeMatchScore(3, esMatchInfo.ms_TeamB);
 		}
 	}
 }
@@ -229,42 +232,72 @@ void SetWinningTeam()
 
 	for (int i = 0; i < GetScavengeRoundNumber(); i++)
 	{
-		g_hArrayMatchInfo.GetArray(i, esMatchInfo);
-
 		if (i == GetScavengeRoundNumber() - 1)
 			break;
-#if DEBUG
-		PrintToServer("[Mixmap] SetWinningTeam: i = %d, esMatchInfo.winner = %d", i, esMatchInfo.winner);
-#endif
+
+		g_hArrayMatchInfo.GetArray(i, esMatchInfo);
+
 		SetWinningTeamNumber(i, esMatchInfo.winner);
 	}
 }
 
-void SetTeam(int client, const char[] sName)
+void SetTeam()
 {
+	MatchInfo esMatchInfo;
+	g_hArrayMatchInfo.GetArray(GetScavengeRoundNumber() - 2, esMatchInfo);
+
 	// winner go ghost, loser grab guns.
-	for (int i = 1; i < s_hArrayWinner.Length; i++)
+	if (esMatchInfo.rs_TeamA > esMatchInfo.rs_TeamB)
+		L4D2_SwapTeams();
+}
+
+void SetCompaignInfo()
+{
+	char slot0[64], slot1[64], slot2[64], slot3[64], slot4[64];
+	PlayerInfo esPlayerInfo;
+
+	for (int i = 1; i < MaxClients; i++)
 	{
-		char sBuffer[128];
-		s_hArrayWinner.GetString(i, sBuffer, sizeof(sBuffer));
-		if (strcmp(sBuffer, sName) == 0)
+		if (g_cvSaveStatusBot.BoolValue)
 		{
-			ChangeClientTeamEx(client, 1, true);
-			ChangeClientTeamEx(client, 3, true);
+			if(!IsClientOrBotAndInGame(i))
+				continue;
 		}
+		else if (!IsClientAndInGame(i))
+				continue;
+				
+		s_hArrayPlayerInfo.GetArray(i, esPlayerInfo);
+
+		if (!esPlayerInfo.alive)
+		{
+			SetEntProp(i, Prop_Send, "m_iHealth", esPlayerInfo.health);
+			continue;
+		}
+
+		SetEntProp(i, Prop_Send, "m_iHealth", esPlayerInfo.health);
+		L4D_SetTempHealth(i, esPlayerInfo.temp_health);
+		SetEntProp(i, Prop_Send, "m_currentReviveCount", esPlayerInfo.revive_count);
+
+		GetWeaponName(esPlayerInfo.slot0, slot0, sizeof(slot0));
+
+		if (s_IsMeleeWeapon[i])
+			GetMeleeWeaponName(esPlayerInfo.slot1, slot1, sizeof(slot1));
+		else
+			GetWeaponName(esPlayerInfo.slot1, slot1, sizeof(slot1));
+
+		GetWeaponName(esPlayerInfo.slot2, slot2, sizeof(slot2));
+		GetWeaponName(esPlayerInfo.slot3, slot3, sizeof(slot3));
+		GetWeaponName(esPlayerInfo.slot4, slot4, sizeof(slot4));
+
+		GivePlayerItem(i, slot0);
+		GivePlayerItem(i, slot1);
+		GivePlayerItem(i, slot2);
+		GivePlayerItem(i, slot3);
+		GivePlayerItem(i, slot4);
+
+		SetWeaponClipAmmo(s_iEntityIndex[i], esPlayerInfo.ammo);
+		L4D_SetReserveAmmo(i, s_iEntityIndex[i], esPlayerInfo.ammo_reserved);
 	}
 
-	for (int i = 1; i < s_hArrayLoser.Length; i++)
-	{
-		char sBuffer[128];
-		s_hArrayLoser.GetString(i, sBuffer, sizeof(sBuffer));
-		if (strcmp(sBuffer, sName) == 0)
-		{
-			ChangeClientTeamEx(client, 1, true);
-			ChangeClientTeamEx(client, 2, true);
-		}
-	}
-
-	delete s_hArrayWinner;
-	delete s_hArrayLoser;
+	delete s_hArrayPlayerInfo;
 }

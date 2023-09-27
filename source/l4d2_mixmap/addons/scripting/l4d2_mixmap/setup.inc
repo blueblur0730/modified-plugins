@@ -5,22 +5,25 @@
 
 void SetupForwards()
 {
-	g_hForwardStart 		= new GlobalForward("OnCMTStart", ET_Ignore, Param_Cell, Param_String);
-	g_hForwardNext			= new GlobalForward("OnCMTNextKnown", ET_Ignore, Param_String);
-	g_hForwardInterrupt 	= new GlobalForward("OnCMTInterrupted", ET_Ignore);
-	g_hForwardEnd			= new GlobalForward("OnCMTEnd", ET_Ignore);
+	g_hForwardStart 		= new GlobalForward("OnMixmapStart", ET_Ignore, Param_Cell, Param_String);
+	g_hForwardNext			= new GlobalForward("OnMixmapNextKnown", ET_Ignore, Param_String);
+	g_hForwardInterrupt 	= new GlobalForward("OnMixmapInterrupted", ET_Ignore);
+	g_hForwardEnd			= new GlobalForward("OnMixmapEnd", ET_Ignore);
 }
 
-void MarkNatives()
+void SetupNatives()
 {
-	MarkNativeAsOptional("PLAYSTATS_BroadcastRoundStats");
-	MarkNativeAsOptional("PLAYSTATS_BroadcastGameStats");
+	CreateNative("GetMixmapMapSequence", Native_GetMixmapMapSequence);
+	CreateNative("GetMixmapPlayedMapCount", Native_GetMixmapPlayedMapCount);
+	CreateNative("IsInMixmap", Native_IsInMixmap);
 }
 
 void SetupConVars()
 {
 	g_cvNextMapPrint   = CreateConVar("l4d2mm_nextmap_print",       "1", "Determine whether to show what the next map will be", _, true, 0.0, true, 1.0);
 	g_cvMaxMapsNum	   = CreateConVar("l4d2mm_max_maps_num",        "2", "Determine how many maps of one campaign can be selected; 0 = no limits;", _, true, 0.0, true, 5.0);
+	g_cvSaveStatus     = CreateConVar("l4d2mm_save_status", 		"1", "Determine whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
+	g_cvSaveStatusBot  = CreateConVar("l4d2mm_save_status_bot", 	"1", "Determine whether to save bot satuts in coop or realism mode", _, true, 0.0, true, 1.0);
 	g_cvFinaleEndStart = CreateConVar("l4d2mm_finale_end_start",    "0", "Determine whether to remixmap in the end of finale; 0 = disable;1 = enable", _, true, 0.0, true, 1.0);
 }
 
@@ -79,4 +82,36 @@ void LoadSDK()
 		SetFailState("Function '%s' found, but something went wrong.", SECTION_NAME);
 
 	delete hGameData;
+}
+
+public int Native_GetMixmapMapSequence(Handle plugin, int numParams)
+{
+	char sBuffer[BUF_SZ];
+	ArrayList hArray = view_as<ArrayList>(GetNativeCell(1));
+
+	if (!g_bMaplistFinalized)
+		ThrowError("Mixmap hasn't started yet.");
+	else
+	{
+		if (hArray == null)
+			return 0
+
+		for (int i = 0; i < g_hArrayMapOrder.Length; i++) 
+		{
+			g_hArrayMapOrder.GetString(i, sBuffer, BUF_SZ);
+			hArray.PushString(sBuffer);
+		}
+	}
+
+	return 0;
+}
+
+public int Native_GetMixmapPlayedMapCount(Handle plugin, int numParams)
+{
+	return g_iMapsPlayed;
+}
+
+public int Native_IsInMixmap(Handle plugin, int numParams)
+{
+	return g_bMapsetInitialized ? true : false;
 }
