@@ -2,7 +2,6 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#include <sdktools>
 #include <colors>
 
 #define CONFIG_PATH "configs/changelog.txt"
@@ -25,8 +24,8 @@ public Plugin myinfo =
 	name = "L4D2 Change Log Command",
 	description = "Does things :) and show changelog message for each confogl configs.",
 	author = "Spoon, blueblur",
-	version = "4.3",
-	url = "https://github.com/spoon-l4d2/"
+	version = "5.0",
+	url = "https://github.com/blueblur0730/modified-plugins"
 };
 
 public void OnPluginStart()
@@ -55,18 +54,6 @@ public void OnPluginStart()
 
 	// Translations
 	LoadTranslations("changelog.phrases");
-
-	// Check Enable Status
-	CheckEnableStatus();
-}
-
-public Action CheckEnableStatus()
-{
-	if(!GetConVarBool(cvarEnableStatus))
-	{
-		return Plugin_Handled;
-	}
-	return Plugin_Continue;
 }
 
 public void OnAllPluginsLoaded()
@@ -76,54 +63,57 @@ public void OnAllPluginsLoaded()
 
 public void OnIntervalChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-	if(GetConVarBool(cvarAdvertisement))
-	{
+	if(cvarAdvertisement.BoolValue && cvarEnableStatus.BoolValue)
 		Timer_Ad();
-	}
-}
-
-public void GetLinkString(char[] link, int maxlength)
-{
-	char buffer[128];
-	GetConVarString(cvarReadyUpCfgName, buffer, sizeof(buffer));
-	KvRewind(kv);
-	if(KvJumpToKey(kv, buffer))
-	{
-		KvGetString(kv, "link", link, maxlength);
-	}
-	else
-	{
-		Format(link, maxlength, "%t", "Empty");
-	}
 }
 
 public Action ChangeLog_CMD(int client, int args)
 {
 	char message[128];
-	GetLinkString(message, sizeof(message));
-	CPrintToChat(client, "%t", "ChatAnnounce", message);
-	// {blue}[{green}ChangeLog{blue}]{default} For more infomation, pleases check out the {orange}link {default}below:\n%s
+	if(GetLinkString(message, sizeof(message)))
+		CPrintToChat(client, "%t", "ChatAnnounce", message);
+	else
+		CPrintToChat(client, "%t", "NoLink");
 
-	// MOTD
-	if(GetConVarBool(cvarShowMOTD))
+	if(cvarShowMOTD.BoolValue)
 	{
 		char title[128];
-		GetConVarString(cvarReadyUpCfgName, title, sizeof(title));
+		cvarReadyUpCfgName.GetString(title, sizeof(title));
 		ShowMOTDPanel(client, title, message, MOTDPANEL_TYPE_URL);
 	}
-	return Plugin_Handled;
-}
 
-public Action ChangeLog_Timer(Handle Timer)
-{
-	char CfgName[128];
-	GetConVarString(cvarReadyUpCfgName, CfgName, sizeof(CfgName));
-	CPrintToChatAll("%t", "PleaseTypeIn", CfgName);
 	return Plugin_Handled;
 }
 
 void Timer_Ad()
 {
     delete AdTimer;
-    AdTimer = CreateTimer(float(cvarAdvertisementInterval.IntValue), ChangeLog_Timer, _, TIMER_REPEAT);
+    AdTimer = CreateTimer(cvarAdvertisementInterval.FloatValue, ChangeLog_Timer, _, TIMER_REPEAT);
+}
+
+public Action ChangeLog_Timer(Handle Timer)
+{
+	if (cvarReadyUpCfgName != null && cvarEnableStatus.BoolValue)
+	{
+		char CfgName[128];
+		cvarReadyUpCfgName.GetString(CfgName, sizeof(CfgName));
+		CPrintToChatAll("%t", "PleaseTypeIn", CfgName);
+	}
+
+	return Plugin_Handled;
+}
+
+stock bool GetLinkString(char[] link, int maxlength)
+{
+	char buffer[128];
+	cvarReadyUpCfgName.GetString(buffer, sizeof(buffer));
+
+	KvRewind(kv);
+	if(KvJumpToKey(kv, buffer))
+	{
+		KvGetString(kv, "link", link, maxlength);
+		return true;
+	}
+
+	return false;
 }
