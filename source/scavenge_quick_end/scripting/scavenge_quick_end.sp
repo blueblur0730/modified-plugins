@@ -30,7 +30,7 @@ enum EndType
 EndType g_eEndType;
 
 // GetRoundTime(&minutes, &seconds, team)
-//#define GetRoundTime(%0,%1,%2) %1 = GetScavengeRoundDuration(%2);%0 = RoundToFloor(%1)/60; %1 -= 60 * %0
+#define GetRoundTime(%0,%1,%2) %1 = GetScavengeRoundDuration(%2); %0 = RoundToFloor(%1)/60; %1 -= 60 * %0
 
 #define boolalpha(%0) (%0 ? "true" : "false")
 
@@ -39,7 +39,7 @@ public Plugin myinfo =
 	name = "[L4D2] Scavenge Quick End",
 	author = "ProdigySim, blueblur",
 	description = "Checks various tiebreaker win conditions mid-round and ends the round as necessary.",
-	version	= "3.1",
+	version	= "3.1.1",
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
@@ -61,20 +61,21 @@ public void OnPluginStart()
 //--------
 public Action Cmd_QuaryTime(int client, any args)
 {
-	if (!g_bInScavengeRound) return Plugin_Handled;
+	if (!g_bInScavengeRound) 
+		return Plugin_Handled;
 
 	if (g_bInSecondHalf)
 	{
-		int   iLastRoundMinutes;
+		int	  iLastRoundMinutes;
 		float fLastRoundTime;
-		GetRoundTime(iLastRoundMinutes, fLastRoundTime, 3);
+		GetRoundTime(iLastRoundMinutes,fLastRoundTime,3);
 
 		CPrintToChat(client, "%t", "PrintRoundTime", GetScavengeRoundNumber(), GetScavengeTeamScore(3, GetScavengeRoundNumber()), iLastRoundMinutes, fLastRoundTime);
 	}
 
-	int   iThisRoundMinutes;
+	int	  iThisRoundMinutes;
 	float fThisRoundTime;
-	GetRoundTime(iThisRoundMinutes, fThisRoundTime, 2);
+	GetRoundTime(iThisRoundMinutes,fThisRoundTime,2);
 
 	if (g_bInSecondHalf) CPrintToChat(client, "%t", "PrintRoundTimeInHalf", GetScavengeRoundNumber(), GetScavengeTeamScore(2, GetScavengeRoundNumber()), iThisRoundMinutes, fThisRoundTime);
 	else CPrintToChat(client, "%t", "PrintRoundTime", GetScavengeRoundNumber(), GetScavengeTeamScore(2, GetScavengeRoundNumber()), iThisRoundMinutes, fThisRoundTime);
@@ -90,8 +91,8 @@ public void Event_RoundEnd(Event hEvent, const char[] name, bool dontBroadcast)
 	if (g_bInScavengeRound) PrintRoundEndTimeData(g_bInSecondHalf);
 
 	g_flDefaultLossTime = 0.0;
-	g_bInScavengeRound = false;
-	g_bInSecondHalf	= false;
+	g_bInScavengeRound	= false;
+	g_bInSecondHalf		= false;
 }
 
 public void Event_ScavRoundStart(Event hEvent, const char[] name, bool dontBroadcast)
@@ -102,7 +103,7 @@ public void Event_ScavRoundStart(Event hEvent, const char[] name, bool dontBroad
 	g_eEndType = QE_None;
 
 	if (g_bInScavengeRound && g_bInSecondHalf)
-	{	
+	{
 		// fully completed or totally lost?
 		if (GetScavengeTeamScore(3) == GetScavengeItemsGoal())
 			g_eEndType = QE_AchievedTargetSetDeadLine;
@@ -145,17 +146,17 @@ public void OnGameFrame()
 
 public void PrintRoundEndTimeData(bool bSecondHalf)
 {
-	int   iLastRoundMinutes;
+	int	  iLastRoundMinutes;
 	float fLastRoundTime;
 	if (bSecondHalf)
 	{
-		GetRoundTime(iLastRoundMinutes, fLastRoundTime, 3);
+		GetRoundTime(iLastRoundMinutes,fLastRoundTime,3);
 		CPrintToChatAll("%t", "PrintRoundEndTime", GetScavengeRoundNumber(), GetScavengeTeamScore(3, GetScavengeRoundNumber()), iLastRoundMinutes, fLastRoundTime);
 	}
 
 	int	  iThisRoundMinutes;
 	float fThisRoundTime;
-	GetRoundTime(iThisRoundMinutes, fThisRoundTime, 2);
+	GetRoundTime(iThisRoundMinutes,fThisRoundTime,2);
 	if (bSecondHalf)
 		CPrintToChatAll("%t", "PrintRoundEndTimeInHalf", GetScavengeRoundNumber(), GetScavengeTeamScore(2, GetScavengeRoundNumber()), iThisRoundMinutes, fThisRoundTime);
 	else
@@ -180,9 +181,18 @@ public Action EndRoundEarlyOnTime(int client)
 
 	switch (g_eEndType)
 	{
-		case QE_SameTargetCompareUsedTime: {CPrintToChatAll("%t", "RoundEndEarly_Type1", GetWinningTeam(GetScavengeRoundNumber()) == 1 ? survivor : infected);}
-		case QE_AchievedTargetSetDeadLine: {CPrintToChatAll("%t", "RoundEndEarly_Type2", GetWinningTeam(GetScavengeRoundNumber()) == 1 ? survivor : infected);}
-		case QE_WhoSurvivedLonger: {CPrintToChatAll("%t", "RoundEndEarly_Type3", GetWinningTeam(GetScavengeRoundNumber()) == 1 ? survivor : infected);}
+		case QE_SameTargetCompareUsedTime:
+		{
+			CPrintToChatAll("%t", "RoundEndEarly_Type1", GetWinningTeam(GetScavengeRoundNumber()) == 1 ? survivor : infected);
+		}
+		case QE_AchievedTargetSetDeadLine:
+		{
+			CPrintToChatAll("%t", "RoundEndEarly_Type2", GetWinningTeam(GetScavengeRoundNumber()) == 1 ? survivor : infected);
+		}
+		case QE_WhoSurvivedLonger:
+		{
+			CPrintToChatAll("%t", "RoundEndEarly_Type3", GetWinningTeam(GetScavengeRoundNumber()) == 1 ? survivor : infected);
+		}
 	}
 
 	return Plugin_Handled;
@@ -263,20 +273,22 @@ stock float GetScavengeRoundDuration(int team)
 
 	return GameRules_GetPropFloat("m_flRoundDuration", team);
 }
+
 /*
  * Caculate a series of numbers
- * 
+ *
  * @param minute	minute to set on a varible
  * @param second	seconds	passed on this minute that set on a varible
  * @param team		team number to get time
- * 
+ *
  * @noreturn
- */
+ *
 stock void GetRoundTime(int minute, float second, int team)
 {
 	minute = RoundToFloor(GetScavengeRoundDuration(team)) / 60;
 	second -= minute * 60;
 }
+*/
 
 /*
  * Convert "2" or "3" to "0" or "1" for global static indices.
@@ -305,11 +317,11 @@ stock int L4D2_TeamNumberToTeamIndex(int team)
 	return team % 2;
 }
 
-/** 
+/**
  * Get winner number
- * 
+ *
  * @param round 		round number to get
- * 
+ *
  * @return 				1 if survivors won this round, 2 otherwise.
  */
 stock int GetWinningTeam(int round)
@@ -317,6 +329,6 @@ stock int GetWinningTeam(int round)
 	int survivor, infected;
 	survivor = GetScavengeTeamScore(2, round);
 	infected = GetScavengeTeamScore(3, round);
-	
+
 	return (survivor > infected) ? 1 : 2;
 }
