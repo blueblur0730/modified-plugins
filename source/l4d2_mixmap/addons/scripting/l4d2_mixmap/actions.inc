@@ -10,12 +10,7 @@ static ArrayList
 
 static int
 	s_iPointsTeam_A = 0,
-	s_iPointsTeam_B = 0,
-	s_iEntityIndex[MAXPLAYERS + 1];
-
-static bool
-	s_IsMeleeWeapon[MAXPLAYERS + 1];
-
+	s_iPointsTeam_B = 0;
 	
 // ----------------------------------------------------------
 // 		Map switching logic
@@ -53,12 +48,16 @@ void GotoMap(const char[] sMapName, bool force = false)
 {
 	if (force)
 	{
+#if DEBUG
+		PrintToServer("[Mixmap] L4D2_ChangeLevel called. sMapName: %s", sMapName);
+#endif
 		L4D2_ChangeLevel(sMapName, false);		// set false to not reset the scores.
 		return;
 	}
+	ServerCommand("sm_nextmap %s", sMapName);
 
 	// go faster in coop mode. you know how speedy the game is.
-	CreateTimer(((L4D_IsVersusMode() && L4D2_IsScavengeMode()) ? 5.0 : 0.1), Timed_NextMapInfo);
+	CreateTimer(((L4D_IsVersusMode() || L4D2_IsScavengeMode()) ? 5.0 : 0.1), Timed_NextMapInfo);
 }
 
 // here we store the match or game info for the next map.
@@ -78,6 +77,9 @@ public Action Timed_NextMapInfo(Handle timer)
 			s_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
 			s_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
 			g_bCMapTransitioned = true;
+#if DEBUG
+			PrintToServer("[Mixmap] Timer_Gotomap creating.");
+#endif
 			CreateTimer(9.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
 		}
 		else if ((!StrEqual(sMapName_Old, "c6m2_bedlam") && StrEqual(sMapName_New, "c7m1_docks"))
@@ -86,6 +88,9 @@ public Action Timed_NextMapInfo(Handle timer)
 			s_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
 			s_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
 			g_bCMapTransitioned = true;
+#if DEBUG
+			PrintToServer("[Mixmap] Timer_Gotomap creating.");
+#endif
 			CreateTimer(10.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
 		}
 	}
@@ -110,6 +115,9 @@ public Action Timed_NextMapInfo(Handle timer)
 		PrintToServer("[Mixmap] Winner Team Index: %d", esMatchInfo.winner);
 #endif
 		g_bCMapTransitioned = true;
+#if DEBUG
+		PrintToServer("[Mixmap] Timer_Gotomap creating.");
+#endif
 		CreateTimer(5.0, Timed_Gotomap);
 	}
 	else if (L4D2_IsGenericCooperativeMode())
@@ -117,18 +125,24 @@ public Action Timed_NextMapInfo(Handle timer)
 		if (g_cvSaveStatus.BoolValue)
 		{
 			PlayerInfo esPlayerInfo;
+			int ent1 = INVALID_ENT_REFERENCE; int ent2 = INVALID_ENT_REFERENCE;
+			int ent3 = INVALID_ENT_REFERENCE; int ent4 = INVALID_ENT_REFERENCE;
+			int ent5 = INVALID_ENT_REFERENCE;
 
 			if (s_hArrayPlayerInfo == null)
 				s_hArrayPlayerInfo = new ArrayList(sizeof(PlayerInfo));
 
+#if DEBUG
+			PrintToServer("[Mixmap] Coop info collecting");
+#endif
 			for (int i = 1; i < MaxClients; i++)
 			{
 				if (g_cvSaveStatusBot.BoolValue)
 				{
-					if(!IsClientOrBotAndInGame(i))
+					if(!IsClientOrBotAndInGame(i) && !IsSurvivorClient(i))
 						continue;
 				}
-				else if (!IsClientAndInGame(i))
+				else if (!IsClientAndInGame(i) && !IsSurvivorClient(i))
 						continue;
 
 				if (!IsPlayerAlive(i))
@@ -142,34 +156,41 @@ public Action Timed_NextMapInfo(Handle timer)
 				esPlayerInfo.temp_health 	 = L4D_GetTempHealth(i);
 				esPlayerInfo.revive_count 	 = GetEntProp(i, Prop_Send, "m_currentReviveCount");
 				esPlayerInfo.alive 			 = true;
+				esPlayerInfo.client_index	 = i;
 
-				esPlayerInfo.slot0 			 = IdentifyWeapon(			GetPlayerWeaponSlot(i, L4D2WeaponSlot_Primary));
-				esPlayerInfo.ammo 			 = GetWeaponClipAmmo(		GetPlayerWeaponSlot(i, L4D2WeaponSlot_Primary));
-				esPlayerInfo.ammo_reserved 	 = L4D_GetReserveAmmo(i, 	GetPlayerWeaponSlot(i, L4D2WeaponSlot_Primary));
-				esPlayerInfo.ammo_type		 = GetEntProp(				GetPlayerWeaponSlot(i, L4D2WeaponSlot_Primary), Prop_Data, "m_iPrimaryAmmoType");
+				ent1 = GetPlayerWeaponSlot(i, L4D2WeaponSlot_Primary);
+				ent2 = GetPlayerWeaponSlot(i, L4D2WeaponSlot_Secondary);
+				ent3 = GetPlayerWeaponSlot(i, L4D2WeaponSlot_Throwable);
+				ent4 = GetPlayerWeaponSlot(i, L4D2WeaponSlot_HeavyHealthItem);
+				ent5 = GetPlayerWeaponSlot(i, L4D2WeaponSlot_LightHealthItem);
 
-				s_iEntityIndex[i]			 =							GetPlayerWeaponSlot(i, L4D2WeaponSlot_Primary);
+				esPlayerInfo.slot0 			 = IdentifyWeapon(ent1);
+				esPlayerInfo.ammo 			 = GetWeaponClipAmmo(ent1);
+				esPlayerInfo.ammo_reserved 	 = L4D_GetReserveAmmo(i, ent1);
+				esPlayerInfo.ammo_type		 = GetEntProp(ent1, Prop_Data, "m_iPrimaryAmmoType");
 
-				esPlayerInfo.slot1 			 = IdentifyWeapon(			GetPlayerWeaponSlot(i, L4D2WeaponSlot_Secondary));
+				esPlayerInfo.slot1 			 = IdentifyWeapon(ent2);
 				if (esPlayerInfo.slot1 == WEPID_MELEE)
 				{
-					esPlayerInfo.slot1		 = IdentifyMeleeWeapon(		GetPlayerWeaponSlot(i, L4D2WeaponSlot_Secondary));
-					s_IsMeleeWeapon[i] 		 = true;
+					esPlayerInfo.slot1		 = IdentifyMeleeWeapon(ent2);
+					esPlayerInfo.IsMelee 	 = true;
 					esPlayerInfo.ammo_pistol = 0;
 				}
-				else
-					esPlayerInfo.ammo_pistol = GetWeaponClipAmmo(		GetPlayerWeaponSlot(i, L4D2WeaponSlot_Secondary));
+				else if (esPlayerInfo.slot1 != WEPID_NONE)
+					esPlayerInfo.ammo_pistol = GetWeaponClipAmmo(ent2);
 					
-				esPlayerInfo.slot2 			 = IdentifyWeapon(			GetPlayerWeaponSlot(i, L4D2WeaponSlot_Throwable));
-				esPlayerInfo.slot3 			 = IdentifyWeapon(			GetPlayerWeaponSlot(i, L4D2WeaponSlot_HeavyHealthItem));
-				esPlayerInfo.slot4 			 = IdentifyWeapon(			GetPlayerWeaponSlot(i, L4D2WeaponSlot_LightHealthItem));
+				esPlayerInfo.slot2 			 = IdentifyWeapon(ent3);
+				esPlayerInfo.slot3 			 = IdentifyWeapon(ent4);
+				esPlayerInfo.slot4 			 = IdentifyWeapon(ent5);
 
 				s_hArrayPlayerInfo.PushArray(esPlayerInfo);
 			}
-
-			g_bCMapTransitioned = true;
-			CreateTimer(1.0, Timed_Gotomap);
 		}
+		g_bCMapTransitioned = true;
+#if DEBUG
+		PrintToServer("[Mixmap] Timer_Gotomap creating.");
+#endif
+		CreateTimer(0.2, Timed_Gotomap);
 	}
 
 	return Plugin_Handled;
@@ -251,7 +272,7 @@ void SetTeam()
 		L4D2_SwapTeams();
 }
 
-void SetCompaignInfo()
+void SetPlayerInfo()
 {
 	char slot0[64], slot1[64], slot2[64], slot3[64], slot4[64];
 	PlayerInfo esPlayerInfo;
@@ -260,43 +281,74 @@ void SetCompaignInfo()
 	{
 		if (g_cvSaveStatusBot.BoolValue)
 		{
-			if(!IsClientOrBotAndInGame(i))
+			if(!IsClientOrBotAndInGame(i) && !IsSurvivorClient(i))
 				continue;
 		}
-		else if (!IsClientAndInGame(i))
+		else if (!IsClientAndInGame(i) && !IsSurvivorClient(i))
 				continue;
-				
+
+		if (s_hArrayPlayerInfo == null)
+		{
+#if DEBUG
+			PrintToServer("[Mixmap] s_hArrayPlayerInfo is null !!");
+#endif
+			break;
+		}
+
 		s_hArrayPlayerInfo.GetArray(i, esPlayerInfo);
 
 		if (!esPlayerInfo.alive)
 		{
-			SetEntProp(i, Prop_Send, "m_iHealth", esPlayerInfo.health);
+			SetEntProp(esPlayerInfo.client_index, Prop_Send, "m_iHealth", esPlayerInfo.health);
 			continue;
 		}
 
-		SetEntProp(i, Prop_Send, "m_iHealth", esPlayerInfo.health);
-		L4D_SetTempHealth(i, esPlayerInfo.temp_health);
-		SetEntProp(i, Prop_Send, "m_currentReviveCount", esPlayerInfo.revive_count);
+		SetEntProp(esPlayerInfo.client_index, Prop_Send, "m_iHealth", esPlayerInfo.health);
+		SetEntProp(esPlayerInfo.client_index, Prop_Send, "m_currentReviveCount", esPlayerInfo.revive_count);
+		L4D_SetTempHealth(esPlayerInfo.client_index, esPlayerInfo.temp_health);
 
-		GetWeaponName(esPlayerInfo.slot0, slot0, sizeof(slot0));
+		if (esPlayerInfo.slot0 != WEPID_NONE)
+		{
+			int ent = INVALID_ENT_REFERENCE;
+			GetWeaponName(esPlayerInfo.slot0, slot0, sizeof(slot0));
+			GivePlayerItem(esPlayerInfo.client_index, slot0);
+			ent = GetPlayerWeaponSlot(esPlayerInfo.client_index, L4D2WeaponSlot_Primary);
+			SetWeaponClipAmmo(ent, esPlayerInfo.ammo);
+			L4D_SetReserveAmmo(esPlayerInfo.client_index, ent, esPlayerInfo.ammo_reserved);
+		}
 
-		if (s_IsMeleeWeapon[i])
-			GetMeleeWeaponName(esPlayerInfo.slot1, slot1, sizeof(slot1));
-		else
-			GetWeaponName(esPlayerInfo.slot1, slot1, sizeof(slot1));
+		if (esPlayerInfo.slot1 != WEPID_NONE)
+		{
+			int ent = INVALID_ENT_REFERENCE;
+			if (esPlayerInfo.IsMelee)
+				GetMeleeWeaponName(esPlayerInfo.slot1, slot1, sizeof(slot1));
+			else
+				GetWeaponName(esPlayerInfo.slot1, slot1, sizeof(slot1));
 
-		GetWeaponName(esPlayerInfo.slot2, slot2, sizeof(slot2));
-		GetWeaponName(esPlayerInfo.slot3, slot3, sizeof(slot3));
-		GetWeaponName(esPlayerInfo.slot4, slot4, sizeof(slot4));
+			GivePlayerItem(esPlayerInfo.client_index, slot1);
+			ent = GetPlayerWeaponSlot(esPlayerInfo.client_index, L4D2WeaponSlot_Secondary);
 
-		GivePlayerItem(i, slot0);
-		GivePlayerItem(i, slot1);
-		GivePlayerItem(i, slot2);
-		GivePlayerItem(i, slot3);
-		GivePlayerItem(i, slot4);
+			if (!esPlayerInfo.IsMelee)
+				SetWeaponClipAmmo(ent, esPlayerInfo.ammo_pistol);
+		}
 
-		SetWeaponClipAmmo(s_iEntityIndex[i], esPlayerInfo.ammo);
-		L4D_SetReserveAmmo(i, s_iEntityIndex[i], esPlayerInfo.ammo_reserved);
+		if (esPlayerInfo.slot2 != WEPID_NONE)
+		{
+			GetWeaponName(esPlayerInfo.slot2, slot2, sizeof(slot2));
+			GivePlayerItem(esPlayerInfo.client_index, slot2);
+		}
+
+		if (esPlayerInfo.slot3 != WEPID_NONE)
+		{
+			GetWeaponName(esPlayerInfo.slot3, slot3, sizeof(slot3));
+			GivePlayerItem(esPlayerInfo.client_index, slot3);
+		}
+
+		if (esPlayerInfo.slot4 != WEPID_NONE)
+		{
+			GetWeaponName(esPlayerInfo.slot4, slot4, sizeof(slot4));
+			GivePlayerItem(esPlayerInfo.client_index, slot4);
+		}		
 	}
 
 	delete s_hArrayPlayerInfo;

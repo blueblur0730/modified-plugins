@@ -307,10 +307,7 @@ stock bool AreAllLivingSurivorsInEndSafeRoom()
 		PrintToServer("[Mixmap] iLimit: %d, iPlayer: %d, iBot: %d, iDead: %d", iLimit, iPlayer, iBot, iDead);
 #endif
 
-	if (iPlayer + iBot == iLimit - iDead)
-		return true;
-
-	return false;
+	return (iPlayer + iBot == iLimit - iDead) ? true : false;
 }
 
 stock bool IsSurvivorClient(int client)

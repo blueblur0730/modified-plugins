@@ -90,7 +90,7 @@ public int Native_GetMixmapMapSequence(Handle plugin, int numParams)
 	ArrayList hArray = view_as<ArrayList>(GetNativeCell(1));
 
 	if (!g_bMaplistFinalized)
-		ThrowError("Mixmap hasn't started yet.");
+		ThrowNativeError(SP_ERROR_NATIVE, "Mixmap hasn't started yet.");
 	else
 	{
 		if (hArray == null)

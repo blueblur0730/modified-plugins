@@ -96,7 +96,16 @@
  * 
  * 		@ to do: support AnneHappy (or any other gauntlet versus-liked modified coop modes).
  * 		@ to do: special ammo type need to be test.
+ * 		@ to do: check in-saferoom gascans or gastanks.
  * 
+ * r2.8.1: 9/30/23
+ * 		- added back sm_nextmap stuff (ok I dont know it is actually a sourcemod internal cvar...)
+ * 			* https://github.com/alliedmodders/sourcemod/blob/master/core/NextMap.cpp#L160
+ * 		- some logic fixed.
+ * 		- moved events to a specific module.
+ * 
+ * r2.8.2: 10/2/23
+ * 		- fixed scavenge_match_end check.
  */
 
 #pragma semicolon 1
@@ -116,14 +125,12 @@
 #define SECTION_NAME "CTerrorGameRules::SetCampaignScores"
 #define LEFT4FRAMEWORK_GAMEDATA "left4dhooks.l4d2"
 
-#define DEBUG_MAIN 1	
-
 public Plugin myinfo =
 {
 	name = "[L4D2] Mixmap",
 	author = "Stabby, Bred, blueblur",
 	description = "Randomly select five maps to build a mixed campaign or match.",
-	version = "r2.8",
+	version = "r2.8.2",
 	url = "https://github.com/blueblur0730/modified-plugins"
 };
 
@@ -206,11 +213,6 @@ bool
 	g_bCMapTransitioned = false,
 	g_bServerForceStart = false;
 
-static bool
-	s_bIsMissionFailed = false,
-	s_bSwitchingForCoop = false,
-	s_bCoopEndSaferoomClosed = false;
-
 int
 	g_iMapsPlayed,
 	g_iMapCount;
@@ -234,6 +236,7 @@ enum struct PlayerInfo
 	float 	temp_health;
 	int  	revive_count;
 	bool 	alive;
+	int 	client_index;
 
 	int 	slot0;
 	int 	ammo;
@@ -242,6 +245,7 @@ enum struct PlayerInfo
 
 	int 	slot1;
 	int 	ammo_pistol;
+	bool	IsMelee;
 
 	int 	slot2;
 	int 	slot3;
@@ -249,10 +253,11 @@ enum struct PlayerInfo
 }
 
 // Modules
-#include <l4d2_mixmap/actions.inc>
-#include <l4d2_mixmap/command.inc>
-#include <l4d2_mixmap/logic.inc>
 #include <l4d2_mixmap/setup.inc>
+#include <l4d2_mixmap/events.inc>
+#include <l4d2_mixmap/actions.inc>
+#include <l4d2_mixmap/commands.inc>
+#include <l4d2_mixmap/logic.inc>
 #include <l4d2_mixmap/util.inc>
 #include <l4d2_mixmap/vote.inc>
 
@@ -273,26 +278,18 @@ public void OnPluginStart()
 {
 	SetupConVars();
 	SetupCommands();
+	HookEvents();
 
 	PluginStartInit();
 	LoadSDK();
 
 	LoadTranslations("l4d2_mixmap.phrases");
 
-	HookEvent("scavenge_round_finished", Event_ScavRoundFinished, EventHookMode_Post);
-	HookEvent("scavenge_match_finished", Event_ScavMatchFinished, EventHookMode_Post);
-
-	// coop game check
-	HookEvent("mission_lost", 			 Event_MissionLost,	  	  EventHookMode_Post);
-	HookEvent("door_close", 			 Event_DoorClose, 		  EventHookMode_Post);
-	HookEvent("door_open", 				 Event_DoorOpen, 		  EventHookMode_Post);
-	HookEvent("player_death", 			 Event_PlayerDeath, 	  EventHookMode_Post);
-
 	AutoExecConfig(true, "l4d2_mixmap");
 }
 
 // ----------------------------------------------------------
-// 		Hooks
+// 		Global Forwards
 // ----------------------------------------------------------
 public void OnClientPutInServer(int client)
 {
@@ -308,6 +305,12 @@ public Action Timer_ShowMaplist(Handle timer, int client)
 	return Plugin_Handled;
 }
 
+// Otherwise nextmap would be stuck and people wouldn't be able to play normal campaigns without the plugin 结束后初始化sm_nextmap的值
+public void OnPluginEnd() 
+{
+	ServerCommand("sm_nextmap ''");
+}
+
 public void OnMapStart()
 {
 	if (g_bCMapTransitioned)
@@ -315,6 +318,13 @@ public void OnMapStart()
 		CreateTimer(1.0, Timer_OnMapStartDelay, _, TIMER_FLAG_NO_MAPCHANGE); //Clients have issues connecting if team swap happens exactly on map start, so we delay it
 		g_bCMapTransitioned = false;
 	}
+#if DEBUG
+	PrintToServer("[Mixmap] OnMapStart called.");
+#endif
+
+	ToggleEvents();
+
+	ServerCommand("sm_nextmap ''");
 
 	char sBuffer[BUF_SZ];
 
@@ -335,8 +345,7 @@ public void OnMapStart()
 		}
 	}
 
-	if (L4D2_IsScavengeMode() && L4D2_IsGenericCooperativeMode())
-		HookEntityOutput("info_director", "OnGameplayStart", EntEvent_OnGameplayStart);
+	HookEntityOutput("info_director", "OnGameplayStart", EntEvent_OnGameplayStart);
 
 	// let other plugins know what the map *after* this one will be (unless it is the last map)
 	if (!g_bMaplistFinalized || g_iMapsPlayed >= g_iMapCount - 1)
@@ -351,130 +360,16 @@ public void OnMapStart()
 
 public Action Timer_OnMapStartDelay(Handle hTimer)
 {
-	if (L4D_IsVersusMode())
+	if (L4D_IsVersusMode() && !InSecondHalfOfRound() && g_bMapsetInitialized)
 		SetVersusScores();
-	else if (L4D2_IsScavengeMode())
+	else if (L4D2_IsScavengeMode() && !InSecondHalfOfRound() && g_bMapsetInitialized && GetScavengeRoundNumber() > 1)
 	{
+		SetWinningTeam();
 		SetScavengeScores();
 		SetTeam();
-	}
+	}	
 
 	return Plugin_Handled;
-}
-
-public void Event_MissionLost(Event hEvent, char[] sName, bool dontBroadcast)
-{
-	s_bIsMissionFailed = true;
-}
-
-public void Event_ScavRoundFinished(Event hEvent, char[] sName, bool dontBroadcast)
-{
-	if (InSecondHalfOfRound() && g_bMapsetInitialized)
-		PerformMapProgression();
-}
-
-public void Event_ScavMatchFinished(Event hEvent, char[] sName, bool dontBroadcast)
-{
-	PluginStartInit();
-	CPrintToChatAll("%t", "Scav_Match_End");
-
-	Call_StartForward(g_hForwardEnd);
-	Call_Finish();
-}
-
-// Coop game fix: when the end saferoom door closes, we instantly move to the next map,
-// avoiding issues that happen in coop when changing maps at the normal time on actual round end.
-public void Event_DoorClose(Event hEvent, char[] sName, bool dontBroadcast)
-{
-	if (L4D2_IsGenericCooperativeMode())
-	{
-		if (!hEvent.GetBool("checkpoint"))
-			return;
-
-		s_bCoopEndSaferoomClosed = true;
-
-		CreateTimer(0.25, Timed_PostOnDoorCloseMapSwitch);
-	}
-}
-
-public Action Timed_PostOnDoorCloseMapSwitch(Handle timer)
-{
-	PerformMapProgressionPre();
-
-	return Plugin_Continue;
-}
-
-// When the end saferoom door opens (again), we shouldn't end the map.
-public void Event_DoorOpen(Event hEvent, char[] sName, bool dontBroadcast)
-{
-	if (L4D2_IsGenericCooperativeMode())
-	{
-		if (!hEvent.GetBool("checkpoint") || s_bSwitchingForCoop)
-			return;
-
-		s_bCoopEndSaferoomClosed = false;
-	}
-}
-
-// If a survivor dies, while the end saferoom door is closed, and all living survivors are in the end saferoom,
-// that's when we should do a mapswitch.
-public Action Event_PlayerDeath(Event hEvent, char[] sName, bool dontBroadcast)
-{
-	if (L4D2_IsGenericCooperativeMode())
-	{
-		if (!s_bCoopEndSaferoomClosed)
-			return Plugin_Continue;
-
-		int victim = GetClientOfUserId(hEvent.GetInt("userid"));
-
-		if (!IsSurvivorClient(victim)) 
-			return Plugin_Continue;
-
-		PerformMapProgressionPre();
-	}
-
-	return Plugin_Continue;
-}
-
-void PerformMapProgressionPre() 
-{
-	if (!AreAllLivingSurivorsInEndSafeRoom())
-	{
-#if DEBUG_MAIN
-		PrintToChatAll("[Mixmap] PerformMapProgressionPre called, resulting return.");
-#endif
-		return;
-	}
-
-#if DEBUG_MAIN
-		PrintToChatAll("[Mixmap] PerformMapProgressionPre called, resulting continue.");
-#endif
-
-	s_bSwitchingForCoop = true;
-	PerformMapProgression();
-}
-
-public void EntEvent_OnGameplayStart(const char[] output, int caller, int activator, float delay)
-{
-#if DEBUG_MAIN
-	PrintToServer("[Mixmap] OnGameplayStart fired.");
-#endif
-	// it need to be delayed, it need to be set after you notice you were in the game.
-	CreateTimer(1.0, Timer_OnGameplayStartDelay);
-}
-
-Action Timer_OnGameplayStartDelay(Handle Timer)
-{
-	if (L4D2_IsScavengeMode() && !InSecondHalfOfRound() && g_bMapsetInitialized && GetScavengeRoundNumber() > 1)
-		SetWinningTeam();
-
-	if (L4D2_IsGenericCooperativeMode() && !s_bIsMissionFailed)
-		if (g_cvSaveStatus.BoolValue)
-			SetCompaignInfo();
-
-	s_bIsMissionFailed = false;
-	
-	return Plugin_Continue;
 }
 
 public void L4D2_OnEndVersusModeRound_Post()
