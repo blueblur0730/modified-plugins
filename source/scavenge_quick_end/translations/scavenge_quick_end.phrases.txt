@@ -3,46 +3,61 @@
 	"PrintRoundTime"
 	{
 		"#format"	"{1:d},{2:d},{3:d},{4:.2f}"
-		"en"		"[{olive}!{default}] Round {orange}{1}{default}, First half: {orange}{2} cans {default}in {orange}{3}:{4}"
+		"en"		"[{olive}!{default}] Round {orange}{1}{default}, 1st half: {orange}{2} cans {default}in {orange}{3}:{4}"
 		"chi"		"[{olive}!{default}] 第{orange}{1}{default}局, 上半轮: {orange}{2}桶 {default}用时: {orange}{3}:{4}"
 	}
 
 	"PrintRoundTimeInHalf"
 	{
 		"#format"	"{1:d},{2:d},{3:d},{4:.2f}"
-		"en"		"[{olive}!{default}] Round {orange}{1}{default}, Second half: {orange}{2} cans {default}in {orange}{3}:{4}"
+		"en"		"[{olive}!{default}] Round {orange}{1}{default}, 2nd half: {orange}{2} cans {default}in {orange}{3}:{4}"
 		"chi"		"[{olive}!{default}] 第{orange}{1}{default}局, 下半轮: {orange}{2}桶 {default}已用时: {orange}{3}:{4}"
 	}
 
 	"PrintRoundEndTime"
 	{
 		"#format"	"{1:d},{2:d},{3:d},{4:.2f}"
-		"en"		"[{olive}Round Summary{default}] Round {orange}{1}{default}, First half: {orange}{2} cans {default}in {orange}{3}:{4}"
-		"chi"		"[{olive}轮回结算{default}] 第{orange}{1}{default}局, 上半轮: {orange}{2}桶 {default}用时: {orange}{3}:{4}"
+		"en"		"<{olive}Round End{default}> Round {orange}{1}{default}, 1st half: {orange}{2} cans {default}in {orange}{3}:{4}"
+		"chi"		"<{olive}轮回结算{default}> 第{orange}{1}{default}局, 上半轮: {orange}{2}桶 {default}用时: {orange}{3}:{4}"
 	}
 
 	"PrintRoundEndTimeInHalf"
 	{
 		"#format"	"{1:d},{2:d},{3:d},{4:.2f}"
-		"en"		"[{olive}Round Summary{default}] Round {orange}{1}{default}, Second half: {orange}{2} cans {default}in {orange}{3}:{4}"
-		"chi"		"[{olive}轮回结算{default}] 第{orange}{1}{default}局, 下半轮: {orange}{2}桶 {default}用时: {orange}{3}:{4}"
+		"en"		"<{olive}Round End{default}> Round {orange}{1}{default}, 2nd half: {orange}{2} cans {default}in {orange}{3}:{4}"
+		"chi"		"<{olive}轮回结算{default}> 第{orange}{1}{default}局, 下半轮: {orange}{2}桶 {default}用时: {orange}{3}:{4}"
 	}
 
 	"RoundEndEarly_Type1"
 	{
+		"#format"	"{1:s}"
 		"en"		"[{olive}Quick End{default}] Round Ended Early: A team reached the their opponents' score with less time used."
-		"chi"		"[{olive}提前结束{default}] 该回合提前结束: 一方达到对方分数所用时间更少."
+		"chi"		"[{olive}提前结束{default}] 该回合提前结束: {teamcolor}{1}{default}达到对方分数所用时间更少."
 	}
 
 	"RoundEndEarly_Type2"
 	{
+		"#format"	"{1:s}"
 		"en"		"[{olive}Quick End{default}] Round Ended Early: A team finished the round with less time used."
-		"chi"		"[{olive}提前结束{default}] 该回合提前结束: 一方完成该轮所用时间更少."
+		"chi"		"[{olive}提前结束{default}] 该回合提前结束: {teamcolor}{1}{default}完成该轮所用时间更少."
 	}
 
 	"RoundEndEarly_Type3"
 	{
+		"#format"	"{1:s}"
 		"en"		"[{olive}Quick End{default}] Round Ended Early: A team survived longer."
-		"chi"		"[{olive}提前结束{default}] 该回合提前结束: 一方生存了更长的时间."
+		"chi"		"[{olive}提前结束{default}] 该回合提前结束: {teamcolor}{1}{default}生存了更长的时间."
+	}
+
+	"Survivor"
+	{
+		"en"		"Survivor"
+		"chi"		"生还者"
+	}
+
+	"Infected"
+	{
+		"en"		"Infected"
+		"chi"		"感染者"
 	}
 }

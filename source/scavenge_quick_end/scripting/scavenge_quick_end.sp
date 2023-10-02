@@ -39,7 +39,7 @@ public Plugin myinfo =
 	name = "[L4D2] Scavenge Quick End",
 	author = "ProdigySim, blueblur",
 	description = "Checks various tiebreaker win conditions mid-round and ends the round as necessary.",
-	version	= "3.0",
+	version	= "3.1",
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
@@ -173,11 +173,16 @@ public Action EndRoundEarlyOnTime(int client)
 	ServerCommand("scenario_end");
 	ServerExecute();
 	SetCommandFlags("scenario_end", oldFlags);
+
+	char survivor[64], infected[64];
+	Format(survivor, sizeof(survivor), "%t", "Survivor");
+	Format(infected, sizeof(infected), "%t", "Infected");
+
 	switch (g_eEndType)
 	{
-		case QE_SameTargetCompareUsedTime: {CPrintToChatAll("%t", "RoundEndEarly_Type1");}
-		case QE_AchievedTargetSetDeadLine: {CPrintToChatAll("%t", "RoundEndEarly_Type2");}
-		case QE_WhoSurvivedLonger: {CPrintToChatAll("%t", "RoundEndEarly_Type3");}
+		case QE_SameTargetCompareUsedTime: {CPrintToChatAll("%t", "RoundEndEarly_Type1", GetWinningTeam(GetScavengeRoundNumber()) == 1 ? survivor : infected);}
+		case QE_AchievedTargetSetDeadLine: {CPrintToChatAll("%t", "RoundEndEarly_Type2", GetWinningTeam(GetScavengeRoundNumber()) == 1 ? survivor : infected);}
+		case QE_WhoSurvivedLonger: {CPrintToChatAll("%t", "RoundEndEarly_Type3", GetWinningTeam(GetScavengeRoundNumber()) == 1 ? survivor : infected);}
 	}
 
 	return Plugin_Handled;
@@ -269,8 +274,7 @@ stock float GetScavengeRoundDuration(int team)
  */
 stock void GetRoundTime(int minute, float second, int team)
 {
-	second = GetScavengeRoundDuration(team);
-	minute = RoundToFloor(second) / 60;
+	minute = RoundToFloor(GetScavengeRoundDuration(team)) / 60;
 	second -= minute * 60;
 }
 
@@ -299,4 +303,20 @@ stock int L4D2_TeamNumberToTeamIndex(int team)
 	bool flipped = view_as<bool>(GameRules_GetProp("m_bAreTeamsFlipped", 1));
 	if (flipped) ++team;
 	return team % 2;
+}
+
+/** 
+ * Get winner number
+ * 
+ * @param round 		round number to get
+ * 
+ * @return 				1 if survivors won this round, 2 otherwise.
+ */
+stock int GetWinningTeam(int round)
+{
+	int survivor, infected;
+	survivor = GetScavengeTeamScore(2, round);
+	infected = GetScavengeTeamScore(3, round);
+	
+	return (survivor > infected) ? 1 : 2;
 }
