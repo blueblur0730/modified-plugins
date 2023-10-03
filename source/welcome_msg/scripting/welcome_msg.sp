@@ -26,7 +26,7 @@ public Plugin myinfo =
 	name = "Server Welcome Message",
 	author = "blueblur",
 	description = "Welcome the user, query the info",
-	version	= "1.3",
+	version	= "1.3.1",
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
@@ -80,6 +80,10 @@ public void OnClientPutInServer(int client)
 public Action Timer_WelcomeMessage(Handle Timer, int client)
 {
 	char name[128];
+
+	if (!IsValidClient(client))
+		return Plugin_Handled;
+
 	GetClientName(client, name, sizeof(name));
 	CPrintToChat(client, "%t", "Message", name);
 
@@ -253,4 +257,9 @@ stock int GetScavengeRoundNumber()
 stock bool InSecondHalfOfRound()
 {
 	return view_as<bool>(GameRules_GetProp("m_bInSecondHalfOfRound"));
+}
+
+stock bool IsValidClient(int client)
+{ 
+    return (client <= 0 || client > MaxClients || !IsClientConnected(client) || !IsClientInGame(client)) ? false : true; 
 }
