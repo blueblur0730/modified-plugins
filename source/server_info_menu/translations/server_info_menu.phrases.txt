@@ -1,0 +1,62 @@
+"Phrases"
+{
+	"title_main"
+	{
+		"en"		"Commands and Settings Menu\n————————"
+		"chi"		"指令与设置菜单\n——————"
+	}
+
+	"Player"
+	{
+		"en"		"Query Players Info"
+		"chi"		"查询玩家信息"
+	}
+
+	"Server"
+	{
+		"en"		"Query Server Info"
+		"chi"		"查询服务器信息"
+	}
+
+	"Command"
+	{
+		"en"		"Player Commands"
+		"chi"		"玩家指令"
+	}
+
+	"title_command"
+	{
+		"en"		"Commands Menu"
+		"chi"		"指令菜单"
+	}
+
+	"Description1"
+	{
+		"en"		"/vote - Open vote menu"
+		"chi"		"/vote - 打开投票菜单"
+	}
+
+	"Description2"
+	{
+		"en"		"/votekick - Open vote kick menu"
+		"chi"		"/votekick - 打开投票踢人菜单"
+	}
+
+	"Description3"
+	{
+		"en"		"/votespec - Open vote spec menu"
+		"chi"		"/votespec - 打开投票旁观菜单"
+	}
+
+	"Description4"
+	{
+		"en"		"/config - Query current confogl config info"
+		"chi"		"/config - 查询当前confogl配置信息"
+	}
+
+	"Description5"
+	{
+		"en"		"/tickcvar - Query current server network cvar"
+		"chi"		"/tickcvar - 查询当前服务器网络cvar参数"
+	}
+}
