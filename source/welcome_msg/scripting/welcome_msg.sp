@@ -26,7 +26,7 @@ public Plugin myinfo =
 	name = "Server Welcome Message",
 	author = "blueblur",
 	description = "Welcome the user, query the info",
-	version	= "1.3.1",
+	version	= "1.3.2",
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
@@ -73,17 +73,13 @@ public void OnRoundIsLive()
 
 public void OnClientPutInServer(int client)
 {
-	if (g_hcvarSwitch.BoolValue)
+	if (g_hcvarSwitch.BoolValue && IsValidClient(client))
 		CreateTimer(g_hcvarWaitTime.FloatValue, Timer_WelcomeMessage, client);
 }
 
 public Action Timer_WelcomeMessage(Handle Timer, int client)
 {
 	char name[128];
-
-	if (!IsValidClient(client))
-		return Plugin_Handled;
-
 	GetClientName(client, name, sizeof(name));
 	CPrintToChat(client, "%t", "Message", name);
 
@@ -261,5 +257,5 @@ stock bool InSecondHalfOfRound()
 
 stock bool IsValidClient(int client)
 { 
-    return (client <= 0 || client > MaxClients || !IsClientConnected(client) || !IsClientInGame(client)) ? false : true; 
+    return (client > 0 && client <= MaxClients && IsClientInGame(client) && !IsFakeClient(client)) ? true : false; 
 }
