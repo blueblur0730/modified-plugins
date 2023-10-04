@@ -30,34 +30,20 @@
 
 	"RoundEndEarly_Type1"
 	{
-		"#format"	"{1:s}"
-		"en"		"[{olive}Quick End{default}] Round Ended Early: A team reached the their opponents' score with less time used."
-		"chi"		"[{olive}提前结束{default}] 该回合提前结束: {teamcolor}{1}{default}达到对方分数所用时间更少."
+		"en"		"[{olive}Quick End{default}] Round Ended Early: {green}Survivors{default} reached their {olive}opponents'{default} score with less time used."
+		"chi"		"[{olive}提前结束{default}] 该回合提前结束: {green}生还者{default}达到{olive}对方的{default}团队分数所用时间更少."
 	}
 
 	"RoundEndEarly_Type2"
 	{
-		"#format"	"{1:s}"
-		"en"		"[{olive}Quick End{default}] Round Ended Early: A team finished the round with less time used."
-		"chi"		"[{olive}提前结束{default}] 该回合提前结束: {teamcolor}{1}{default}完成该轮所用时间更少."
+
+		"en"		"[{olive}Quick End{default}] Round Ended Early: {green}Survivors{default} failed to reach their {olive}opponents'{default} score in the same time."
+		"chi"		"[{olive}提前结束{default}] 该回合提前结束: {green}生还者{default}在相同的时间内未能达到{olive}对方{default}的团队分数."
 	}
 
 	"RoundEndEarly_Type3"
 	{
-		"#format"	"{1:s}"
-		"en"		"[{olive}Quick End{default}] Round Ended Early: A team survived longer."
-		"chi"		"[{olive}提前结束{default}] 该回合提前结束: {teamcolor}{1}{default}生存了更长的时间."
-	}
-
-	"Survivor"
-	{
-		"en"		"Survivor"
-		"chi"		"生还者"
-	}
-
-	"Infected"
-	{
-		"en"		"Infected"
-		"chi"		"感染者"
+		"en"		"[{olive}Quick End{default}] Round Ended Early: {green}Survivors{default} survived longer, or {olive}Infected{default} didn't score last round."
+		"chi"		"[{olive}提前结束{default}] 该回合提前结束: {green}生还者{default}生存了更长的时间, 或{olive}感染者{default}团队在上一局没有得分."
 	}
 }

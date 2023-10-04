@@ -2,7 +2,7 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#include <sdktools>
+#include <sdktools_gamerules>
 #include <colors>
 
 // We must wait longer because of cases where the game doesn't
@@ -39,7 +39,7 @@ public Plugin myinfo =
 	name = "[L4D2] Scavenge Quick End",
 	author = "ProdigySim, blueblur",
 	description = "Checks various tiebreaker win conditions mid-round and ends the round as necessary.",
-	version	= "3.1.1",
+	version	= "3.1.2",
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
@@ -139,6 +139,7 @@ public void OnGameFrame()
 {
 	if (g_flDefaultLossTime != 0.0 && GetGameTime() > g_flDefaultLossTime)
 	{
+		g_eEndType = QE_AchievedTargetSetDeadLine;
 		EndRoundEarlyOnTime(1);
 		g_flDefaultLossTime = 0.0;
 	}
@@ -175,23 +176,19 @@ public Action EndRoundEarlyOnTime(int client)
 	ServerExecute();
 	SetCommandFlags("scenario_end", oldFlags);
 
-	char survivor[64], infected[64];
-	Format(survivor, sizeof(survivor), "%t", "Survivor");
-	Format(infected, sizeof(infected), "%t", "Infected");
-
 	switch (g_eEndType)
 	{
 		case QE_SameTargetCompareUsedTime:
 		{
-			CPrintToChatAll("%t", "RoundEndEarly_Type1", GetWinningTeam(GetScavengeRoundNumber()) == 1 ? survivor : infected);
+			CPrintToChatAll("%t", "RoundEndEarly_Type1");
 		}
 		case QE_AchievedTargetSetDeadLine:
 		{
-			CPrintToChatAll("%t", "RoundEndEarly_Type2", GetWinningTeam(GetScavengeRoundNumber()) == 1 ? survivor : infected);
+			CPrintToChatAll("%t", "RoundEndEarly_Type2");
 		}
 		case QE_WhoSurvivedLonger:
 		{
-			CPrintToChatAll("%t", "RoundEndEarly_Type3", GetWinningTeam(GetScavengeRoundNumber()) == 1 ? survivor : infected);
+			CPrintToChatAll("%t", "RoundEndEarly_Type3");
 		}
 	}
 

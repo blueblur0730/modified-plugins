@@ -32,7 +32,7 @@ public void OnPluginStart()
 {
 	char sBuffer[128];
 	// Cmd
-	RegConsoleCmd("sm_info", ChangeLog_CMD);
+	RegConsoleCmd("sm_config", ChangeLog_CMD);
 
 	// ConVars
 	cvarEnableStatus = CreateConVar("sm_enable_changelog", "1", "Enable the plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0);
