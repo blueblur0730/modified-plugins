@@ -1,0 +1,51 @@
+"Phrases"
+{
+	"BRACKET_START"
+	{
+		"en"			"┌ "
+	}
+
+	"BRACKET_MIDDLE"
+	{
+		"en"			"├ "
+	}
+
+	"BRACKET_END"
+	{
+		"en"			"└ "
+	}
+
+	"HEADER"
+	{
+		"en"			"<{green}Player Info{default}>"
+		"chi"			"<{green}玩家信息{default}>"
+	}
+
+	"INFO_ONE"
+	{
+		"#format"		"{1:N},{2:s},{3:.1f},{4:.1f},{5:s}"
+		"en"			"{olive}{1} {default}Lerp: {2}{3}{default} | Hours: {green}{4}{default} | [{green}{5}{default}]"
+		"chi"			"{olive}{1} {default}Lerp: {2}{3}{default} | 时长: {green}{4}{default} | [{green}{5}{default}]"
+	}
+
+	"INFO_TWO"
+	{
+		"#format"		"{1:N},{2:.1f},{3:.1f},{4:s}"
+		"en"			"{olive}{1} {default}Lerp: {2}{default} | Hours: {green}{3}{default} | [{green}{4}{default}]"
+		"chi"			"{olive}{1} {default}Lerp: {2}{default} | 时长: {green}{3}{default} | [{green}{4}{default}]"
+	}
+
+	"Connecting"
+	{
+		"#format"		"{1:s}"
+		"en"			"[{green}!{default}] Player {olive}{1}{default} is connecting..."
+		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} 正在连接..."
+	}
+
+	"Connected"
+	{
+		"#format"		"{1:s},{2:.1f},{3:.1f}"
+		"en"			"[{green}!{default}] Player {olive}{1}{default} connected. (Lerp: {olive}{2}{default} | Hours: {green}{3}{default})"
+		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} 已连接. (Lerp: {olive}{2}{default} | 时长: {green}{3}{default})"
+	}
+}
