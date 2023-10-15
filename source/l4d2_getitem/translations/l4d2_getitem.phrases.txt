@@ -1,0 +1,238 @@
+"Phrases"
+{
+	"Advertisement"
+	{
+		"#format"	"{1:d}"
+		"en"		"{blue}❀ {default}Before go{green} out of door{default} or {green}ReadyUp get lived{default}, you have ( {olive}{1}{default} ) chances to reqeust weapons."
+		"chi"		"{blue}❀ {default}你在{green}门内{default}或{green}ReadyUp完毕前{default}有 ( {olive}{1}{default} ) 次获取武器的机会."
+	}
+
+	"MainTitle"
+	{
+		"en"		"Get Item Main Menu\n————————————"
+		"chi"		"获取物品菜单\n————————"
+	}
+
+	"SecondaryOn"
+	{
+		"en"		"Sencondary            ★On"
+		"chi"		"副武器          ★启用"
+	}
+
+	"SecondaryOff"
+	{
+		"en"		"Sencondary            ✰Off"
+		"chi"		"副武器          ✰禁用"
+	}
+	"Tier1On"
+	{
+		"en"		"Tier 1           	★On"
+		"chi"		"小枪            ★启用"
+	}
+
+	"Tier1Off"
+	{
+		"en"		"Tier 1           	✰Off"
+		"chi"		"小枪            ✰禁用"
+	}
+
+	"Tier2On"
+	{
+		"en"		"Tier 2           	★On"
+		"chi"		"大枪            ★启用"
+	}
+
+	"Tier2Off"
+	{
+		"en"		"Tier 2           	✰Off"
+		"chi"		"大枪            ✰禁用"
+	}
+
+	"ItemOn"
+	{
+		"en"		"Item           	★On"
+		"chi"		"物品            ★启用"
+	}
+
+	"ItemOff"
+	{
+		"en"		"Item           	✰Off"
+		"chi"		"物品            ✰禁用"
+	}
+
+	"AdminMenu"
+	{
+		"en"		"Admin Menu"
+		"chi"		"管理员菜单"
+	}
+
+	"RoundStarted"
+	{
+		"en"		"{blue}❀ {green}Round{default} has started, can not request weapons now!"
+		"chi"		"{blue}❀ {green}对局{default} 已正式开始, 无法获取武器!"
+	}
+
+	"Secondary"
+	{
+		"en"		"Secondary\n——————————"
+		"chi"		"副武器\n—————"
+	}
+
+	"GetItemWithLimit"
+	{
+		"#format"	"{1:N},{2:s},{3:d},{4:d}"
+		"en"		"{blue}❀ {green}{1} {default}acquired {blue}{2}{default}, Limit: [{blue}{3}{default} / {green}{4}{default}]"
+		"chi"		"{blue}❀ {green}{1} {default}获取了 {blue}{2}{default}, 次数: [{blue}{3}{default} / {green}{4}{default}]"
+	}
+
+	"ReachedLimit"
+	{
+		"#format"	"{1:d}"
+		"en"		"{blue}❀ {default}You have reached the{green} requests limits{default} ({green}{1}{default} times)."
+		"chi"		"{blue}❀ {default}已达{green}获取次数{default}上限 ({green}{1}{default} 次)."
+	}
+
+	"GetItem"
+	{
+		"#format"	"{1:N},{2:s}"
+		"en"		"{blue}❀ {green}{1} {default}acquired {blue}{2}"
+		"chi"		"{blue}❀ {green}{1} {default}获取了 {blue}{2}"
+	}
+
+	"UseItInSafeRoom"
+	{
+		"en"		"{blue}❀ {default}Please use this function inside{green} the safe area {default}."
+		"chi"		"{blue}❀ {default}请在{green} 安全区域 {default}内使用此功能."
+	}
+
+	"Tier1"
+	{
+		"en"		"Tier 1\n————————"
+		"chi"		"小枪\n——————"
+	}
+
+	"Tier2"
+	{
+		"en"		"Tier 2\n————————"
+		"chi"		"大枪\n——————"
+	}
+
+	"Item"
+	{
+		"en"		"Item\n——————"
+		"chi"		"物品\n——————"
+	}
+
+	"SecondaryMenuOn"
+	{
+		"en"		"Turn on secondary menu"
+		"chi"		"开启副武器菜单"
+	}
+
+	"SecondaryMenuOff"
+	{
+		"en"		"Turn off secondary menu"
+		"chi"		"关闭副武器菜单"
+	}
+
+	"Tier1MenuOn"
+	{
+		"en"		"Turn on Tier 1 menu"
+		"chi"		"开启小枪菜单"
+	}
+
+	"Tier1MenuOff"
+	{
+		"en"		"Turn off Tier 1 menu"
+		"chi"		"关闭小枪菜单"
+	}
+
+	"Tier2MenuOn"
+	{
+		"en"		"Turn on Tier 2 menu"
+		"chi"		"开启大枪菜单"
+	}
+
+	"Tier2MenuOff"
+	{
+		"en"		"Turn off Tier 2 menu"
+		"chi"		"关闭大枪菜单"
+	}
+
+	"ItemMenuOn"
+	{
+		"en"		"Turn on item menu"
+		"chi"		"开启物品菜单"
+	}
+
+	"ItemMenuOff"
+	{
+		"en"		"Turn off item menu"
+		"chi"		"关闭物品菜单"
+	}
+
+	"AllowOutOn"
+	{
+		"en"		"Enable requests out of the safe area"
+		"chi"		"允许安全区域外使用"
+	}
+
+	"AllowOutOff"
+	{
+		"en"		"Disable requests out of the safe area"
+		"chi"		"禁止安全区域外使用"
+	}
+
+	"On"
+	{
+		"en"		"on"
+		"chi"		"开启"
+	}
+
+	"Off"
+	{
+		"en"		"off"
+		"chi"		"关闭"
+	}
+
+	"admin"
+	{
+		"en"		"Admin"
+		"chi"		"管理员"
+	}
+
+	"Menu_e"
+	{
+		"#format"	"{1:s},{2:N},{3:s}"
+		"en"		"{blue}<{1}> {green}{2} {default}turned {3} the{blue} Secondary{default} menu."
+		"chi"		"{blue}<{1}> {green}{2} {default}{3}了{blue}副武器{default}菜单."
+	}
+
+	"Menu_f"
+	{
+		"#format"	"{1:s},{2:N},{3:s}"
+		"en"		"{blue}<{1}> {green}{2} {default}turned {3} the{blue} Tier 1{default} menu."
+		"chi"		"{blue}<{1}> {green}{2} {default}{3}了{blue}小枪{default}菜单."
+	}
+
+	"Menu_g"
+	{
+		"#format"	"{1:s},{2:N},{3:s}"
+		"en"		"{blue}<{1}> {green}{2} {default}turned {3} the{blue} Tier 2{default} menu."
+		"chi"		"{blue}<{1}> {green}{2} {default}{3}了{blue}大枪{default}菜单."
+	}
+
+	"Menu_h"
+	{
+		"#format"	"{1:s},{2:N},{3:s}"
+		"en"		"{blue}<{1}> {green}{2} {default}turned {3} the{blue} Item{default} menu."
+		"chi"		"{blue}<{1}> {green}{2} {default}{3}了{blue}物品{default}菜单."
+	}
+
+	"Menu_i"
+	{
+		"#format"	"{1:s},{2:N},{3:s}"
+		"en"		"{blue}<{1}> {green}{2} {default}has turned {3} the{blue} E+R{default} function when out of safe area."
+		"chi"		"{blue}<{1}> {green}{2} {default}已{3}安全区域外使用{blue}E+R{default}功能"
+	}
+}
