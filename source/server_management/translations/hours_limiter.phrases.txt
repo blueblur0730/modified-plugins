@@ -1,0 +1,29 @@
+"Phrases"
+{
+	"TryCheckPlayerHours"
+	{
+		"#format"		"{1:d}"
+		"en"			"Attempt {1} times to determine the time played was unsuccessful"
+		"chi"			"尝试{1}次获取游戏时长未成功"
+	}
+
+	"KickHiddenHours"
+	{
+		"en"			"Your game hours are hidden"
+		"chi"			"您的游戏时长是隐藏的"
+	}
+
+	"KickUnDesiredHoursMin"
+	{
+		"#format"		"{1:.1f}"
+		"en"			"Must have more than {1} hours to play"
+		"chi"			"您必须多于{1}h时长才能进行游玩"
+	}
+
+	"KickUnDesiredHoursMax"
+	{
+		"#format"		"{1:.1f}"
+		"en"			"Must have less than {1} hours to play"
+		"chi"			"您必须少于{1}h时长才能游玩"
+	}
+}

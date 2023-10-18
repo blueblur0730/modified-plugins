@@ -21,7 +21,7 @@
 *		"link"		"many text\n many many text\n really really many descriptions"	//you can use \n to change the line to write many words
 */
 
-	"ZoneMod v2.8.3"
+	"ZoneMod v2.8.7"
 	{
 		"link"		"https://github.com/SirPlease/L4D2-Competitive-Rework/commits"
 	}
@@ -31,8 +31,8 @@
 		"link"		"https://github.com/spoon-l4d2/Nextmod/blob/master/README.md"
 	}
 
-	"ScavOgl Rework v2.2"
+	"Scavogl v2.8.7"
 	{
-		"link"		"https://github.com/lechuga16/scavogl_rework/blob/master/README.md"
+		"link"		""
 	}
 }
