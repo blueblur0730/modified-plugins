@@ -35,6 +35,13 @@
 		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} 正在连接..."
 	}
 
+	"Connected_Geoip"
+	{
+		"#format"		"{1:s},{2:s},{3:.1f},{4:.1f}"
+		"en"			"[{green}!{default}] Player {olive}{1}{default} [{olive}{2}{default}] connected. (Lerp: {olive}{3}{default} | Hours: {green}{4}{default})"
+		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} [{olive}{2}{default}] 已连接. (Lerp: {olive}{3}{default} | 时长: {green}{4}{default})"
+	}
+
 	"Connected"
 	{
 		"#format"		"{1:s},{2:.1f},{3:.1f}"

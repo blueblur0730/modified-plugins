@@ -25,7 +25,7 @@ void WM_OnPluginStart()
 	LoadTranslations(TRANSLATIONS_WELCOME_MSG);
 }
 
-void WM_OnPluginStarted(int client)
+void WM_OnClientPutInServer(int client)
 {
 	if (wm_cvSwitch.BoolValue && IsValidClient(client))
 		CreateTimer(wm_cvWaitTime.FloatValue, Timer_WelcomeMessage, client);
@@ -47,7 +47,7 @@ public Action Timer_WelcomeMessage(Handle Timer, int client)
 		}
 	}
 
-	if (wm_cvPrintRound.BoolValue)
+	if (wm_cvPrintRound.BoolValue && IsValidClient(client))
 		CreateTimer(wm_cvPrintRoundWaitTime.FloatValue, Timer_RoundStatus, client);
 
 	return Plugin_Handled;
@@ -68,6 +68,7 @@ public Action Timer_RoundStatus(Handle Timer, int client)
 
 	if (L4D_IsVersusMode() || L4D2_IsScavengeMode())
 	{
+		SetGlobalTransTarget(client);
 		char firsthalf[64], secondhalf[64], round[16];
 		Format(firsthalf, sizeof(firsthalf), "%t", "FirstHalf");
 		Format(secondhalf, sizeof(secondhalf), "%t", "SecondHalf");
@@ -111,6 +112,7 @@ public Action Cmd_svInfo(int client, int arg)
 
 	if (L4D_GetGameModeType() == GAMEMODE_VERSUS || L4D_GetGameModeType() == GAMEMODE_SCAVENGE)
 	{
+		SetGlobalTransTarget(client);
 		char firsthalf[64], secondhalf[64], round[16];
 		Format(firsthalf, sizeof(firsthalf), "%t", "FirstHalf");
 		Format(secondhalf, sizeof(secondhalf), "%t", "SecondHalf");

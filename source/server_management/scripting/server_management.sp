@@ -1,7 +1,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION "2.0.1"
+#define PLUGIN_VERSION "2.1.1"
 
 // define the macros to compile the part you need
 #define MODULE_PLAYERINFO 1
@@ -64,6 +64,14 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 		return APLRes_SilentFailure;
 	}
 
+#if MODULE_HOURSLIMITER
+	HL_APL();
+#endif
+
+#if MODULE_PLAYERINFO
+	PL_APL();
+#endif
+
 	RegPluginLibrary("server_management");
 	return APLRes_Success;
 }
@@ -112,7 +120,7 @@ public void OnClientConnected(int iClient)
 public void OnClientPutInServer(int client)
 {
 #if MODULE_WELCOMEMSG
-	WM_OnPluginStarted(client);
+	WM_OnClientPutInServer(client);
 #endif
 
 #if MODULE_PLAYERINFO
@@ -123,7 +131,7 @@ public void OnClientPutInServer(int client)
 public void SteamWorks_OnValidateClient(int iOwnerAuthId, int iAuthId)
 {
 #if MODULE_PLAYERINFO
-	PI_SteamWorks_OnValidateClient(iOwnerAuthId, iAuthId);
+	PI_SteamWorks_OnValidateClient(iAuthId);
 #endif
 }
 
