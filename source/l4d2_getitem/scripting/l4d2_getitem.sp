@@ -4,14 +4,52 @@
 #include <sourcemod>
 #include <left4dhooks>
 #include <sdktools>
-#include <colors>			
+#include <colors>
+
+/*
+#undef REQUIRE_PLUGIN
+#include <clientprefs>	
+*/
 
 #define NAME 			"L4D2 Item acquisition Plugin | L4D2物品获取插件"			//定义插件名字
 #define AUTHOR 			"绪花✧(≖ ◡ ≖✿) | Ross | 鱼鱼 | blueblur"				//定义作者
 #define DESCRIPTION 	"L4D2 Item acquisition Plugin | L4D2物品获取插件"			//定义插件描述
-#define VERSION 		"1.2.2"														//定义插件版本
+#define VERSION 		"1.3.1"														//定义插件版本
 #define URL 			"https://steamcommunity.com/profiles/76561198100717207/"	//定义作者联系地址
-
+/**
+ * Original authors: 绪花✧(≖ ◡ ≖✿) | Ross | 鱼鱼
+ * Replenishment author: blueblur
+ * 
+ * changelog:
+ * 
+ * 1.0.0:
+ * 	- initial version by oringinal authors.
+ * 
+ * 1.1.0:
+ *  - added optional readyup function. cvar support.
+ * 
+ * 1.1.1:
+ * 	- added gamemode support. support coop/realism, versus, scavenge
+ * 
+ * 1.2.0:
+ *  - added reqeust limit functions. cvar support.
+ * 
+ * 1.2.1:
+ *  - optimized codes. issue fixing.
+ * 
+ * 1.2.2:
+ * 	- added chat ad reminder, cvar support.
+ * 
+ * 1.3.0:
+ *  - fully translation support. due to code format items on the menu only support sChi/En language (since we use string arrays).
+ * 
+ * 1.3.1:
+ *  - ad logic optimized. more translations to remind player.
+ * 
+ * to do:
+ *  - add cookie function, save players' preferences and choose whether automatically give their preferred weapons on the start or not. (also could be done by SQL, but really necessary?)
+ * 
+*/
 #define IsValidPlayer(%1)	(%1 && IsClientInGame(%1) && GetClientTeam(%1) == 2 && IsPlayerAlive(%1))//&& !IsFakeClient(%1) 
 
 
@@ -83,24 +121,24 @@ static const char
 static const char
 	g_sWeaponName[4][18][] =
 	{
-		{//slot 0()
+		{	//slot 0()
 			"katana","fireaxe","machete","knife","pistol","pistol_magnum",
 			"chainsaw","frying_pan","baseball_bat","crowbar","cricket_bat",
 			"tonfa","electric_guitar","golfclub","shovel","pitchfork","riotshield",""
 		},
 
-		{//slot 1()
+		{	//slot 1()
 			"pumpshotgun","shotgun_chrome","smg","smg_silenced","smg_mp5","ammo",
 			"","","","","","","","","","","","",
 		},
 
-		{//slot 2()
+		{	//slot 2()
 			"autoshotgun","shotgun_spas","hunting_rifle","sniper_military","rifle",
 			"rifle_desert","rifle_ak47","rifle_sg552","sniper_scout","sniper_awp",
 			"rifle_m60","grenade_launcher","","","","","","",
 		},
 
-		{//slot 3()
+		{	//slot 3()
 			"first_aid_kit","defibrillator","pain_pills","adrenaline","molotov","pipe_bomb",
 			"vomitjar","upgradepack_incendiary","upgradepack_explosive","gascan","propanetank",
 			"oxygentank","fireworkcrate","cola_bottles","gnome","incendiary_ammo","explosive_ammo",
@@ -111,24 +149,61 @@ static const char
 static const char
 	g_sItemNameChi[4][18][] =
 	{
-		{"武士刀","消防斧",	"砍刀",	"小刀","手枪","马格南","电锯","平底锅","棒球棒","撬棍","板球棒","警棍","吉他","高尔夫","铲子","草叉","防爆盾","",},/*slot 0()*/
-		{"木喷","铁喷","UZI微冲","消音微冲","MP5","备弹","","","","","","","","","","","","",},/*slot 1()*/
-		{"一代连喷","二代连喷","木狙","军狙","M-16","SCAR","AK-47","SG552","鸟狙","AWP","M60","榴弹发射器","","","","","","",},/*slot 2()*/
-		{"医疗包","除颤仪","止痛药","肾上腺素","燃烧瓶","土制炸弹","胆汁瓶","燃烧弹药包","高爆弹药包","汽油桶","煤气罐","氧气瓶","烟花箱","可乐瓶","小侏儒","燃烧弹药","高爆弹药","激光瞄准器",},/*slot 3()*/
+		{	/*slot 0()*/
+			"武士刀","消防斧","砍刀","小刀","手枪","马格南","电锯",
+			"平底锅","棒球棒","撬棍","板球棒","警棍","吉他","高尔夫",
+			"铲子","草叉","防爆盾","",
+		},
+
+		{	/*slot 1()*/
+			"木喷","铁喷","UZI微冲","消音微冲","MP5","备弹",
+			"","","","","","","","","","","","",
+		},
+
+		{	/*slot 2()*/
+			"一代连喷","二代连喷","木狙","军狙","M-16","SCAR","AK-47","SG552",
+			"鸟狙","AWP","M60","榴弹发射器","","","","","","",
+		},
+
+		{	/*slot 3()*/
+			"医疗包","除颤仪","止痛药","肾上腺素","燃烧瓶","土制炸弹","胆汁瓶",
+			"燃烧弹药包","高爆弹药包","汽油桶","煤气罐","氧气瓶","烟花箱","可乐瓶",
+			"小侏儒","燃烧弹药","高爆弹药","激光瞄准器",
+		},
 	};
 
 static const char
 	g_sItemNameEn[4][18][] =
 	{
-		{"Katana","Axe","Machete","Knife","Pistol","Deagle","Chainsaw","Frying Pan","Baseball Bat","Crowbar","Cricket Bat","Tonfa","Guitar","Golf Club","Shovel","Pitchfork","Riot Shield","",},/*slot 0()*/
-		{"Pump Shotgun","Chrome Shotgun","Uzi","Mac-10","MP5","Ammo","","","","","","","","","","","","",},/*slot 1()*/
-		{"Autoshotgun","SPAS Shotgun","Hunting Rifle","Military Sniper","M-16","Desert Rifle","AK-47","SG552","Scout","AWP","M60","Grenade Launcher","","","","","","",},/*slot 2()*/
-		{"First Aid Kit","Defibrillator","Pills","Adrenaline","Molotov","Pipe Bomb","Bile Bomb","Incendiary Ammo Pack","Explosive Ammo Pack","Gascan","Propane Tank","Oxygen Tank","Fireworks","Cola Bottles","Gnome","Incendiary Ammo","Explosive Ammo","Laser Sight",},/*slot 3()*/
+		{	/*slot 0()*/
+			"Katana","Axe","Machete","Knife","Pistol","Deagle","Chainsaw","Frying Pan",
+			"Baseball Bat","Crowbar","Cricket Bat","Tonfa","Guitar","Golf Club","Shovel",
+			"Pitchfork","Riot Shield","",
+		},
+
+		{	/*slot 1()*/
+			"Pump Shotgun","Chrome Shotgun","Uzi","Mac-10","MP5","Ammo",
+			"","","","","","","","","","","","",
+		},
+
+		{	/*slot 2()*/
+			"Autoshotgun","SPAS Shotgun","Hunting Rifle","Military Sniper","M-16",
+			"Desert Rifle","AK-47","SG552","Scout","AWP","M60","Grenade Launcher",
+			"","","","","","",
+		},
+
+		{	/*slot 3()*/
+			"First Aid Kit","Defibrillator","Pills","Adrenaline","Molotov","Pipe Bomb",
+			"Bile Bomb","Incendiary Ammo Pack","Explosive Ammo Pack","Gascan","Propane Tank",
+			"Oxygen Tank","Fireworks","Cola Bottles","Gnome","Incendiary Ammo","Explosive Ammo",
+			"Laser Sight",
+		},
 	};
 	
 public void OnPluginStart()
 {
 	RegAdminCmd("sm_getitem", Command_Item, ADMFLAG_GENERIC, "物品获取");
+	//RegClientCookie("ERPrefs", "Weapon prefs on start", CookieAccess_Protected);
 	
 	g_hcmeleedefault		= CreateConVar("l4d2_er_meleedefault",		"1",	"默认是否开启副武器菜单",							FCVAR_NONE, true, 0.0, true, 1.0);
 	g_hcinitialgundefault	= CreateConVar("l4d2_er_initialgundefault",	"1",	"默认是否开启小枪菜单",								FCVAR_NONE, true, 0.0, true, 1.0);
@@ -204,8 +279,10 @@ public void OnMapEnd()
 public Action Timer_Ad(Handle Timer)
 {
 	if (g_bReadyUpAvailable)
-		CPrintToChatAll("%t", "Advertisement", g_iRequestCount);
-
+		g_bEnableLimit ? CPrintToChatAll("%t", "Advertisement_Readyup_Limit", g_iRequestCount) : CPrintToChatAll("%t", "Advertisement_Readyup");
+	else
+		g_bEnableLimit ? CPrintToChatAll("%t", "Advertisement_Limit", g_iRequestCount) : CPrintToChatAll("%t", "Advertisement");
+		
 	return Plugin_Continue;
 }
 
@@ -244,6 +321,18 @@ public void Event_ScavRoundFinished(Event hEvent, char[] sName, bool dontBroadca
 		for (int i; i < MaxClients; i++) 
 			g_iArrayCount[i] = 0;
 	}
+}
+
+public void OnLibraryRemoved(const char[] name)
+{
+	if (g_bUseReadyup)
+		if (StrEqual(name, "readyup")) g_bReadyUpAvailable = false;
+}
+
+public void OnLibraryAdded(const char[] name)
+{
+	if (g_bUseReadyup)
+		if (StrEqual(name, "readyup")) g_bReadyUpAvailable = true;
 }
 
 public void OnRoundIsLive()
@@ -342,7 +431,7 @@ int Menu_HandlerFunction(Menu menu, MenuAction action, int client, int itemNum)
 				}
 			}
 			else
-				CPrintToChat(client, "%t", "RoundStarted");		//{blue}❀ {green}对局{default} 已正式开始, 无法获取武器!
+				CPrintToChat(client, "%t", "RoundStarted");
 		}
 	}
 	return 0;
@@ -353,7 +442,7 @@ void MenuGetMelee(int client)
 	char secondary[64];
 	Format(secondary, sizeof(secondary), "%t", "Secondary");
 	Menu menu = new Menu(iMelees_MenuHandler);
-	menu.SetTitle(secondary);		//副武器\n—————
+	menu.SetTitle(secondary);
 	for (int i = 0; i < 17; i++)
 	{
 		menu.AddItem(g_sWeaponName[0][i], (SpecifyLanguage(client)) ? g_sItemNameChi[0][i] : g_sItemNameEn[0][i]);
@@ -386,16 +475,14 @@ int iMelees_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 							{
 								vCheatCommand(client, line);
 								g_iArrayCount[client]++;
-								//{blue}❀ {green}%N {default}获取了 {blue}%s{default}, 次数: [{blue}%d{default} / {green}%d{default}]
 								CPrintToChatAll("%t", "GetItemWithLimit", client, (SpecifyLanguage(client)) ? g_sItemNameChi[0][param2] : g_sItemNameEn[0][param2], g_iArrayCount[client], g_iRequestCount);
 							}
-							else	//{blue}❀ {default}已达{green}获取次数{default}上限 ({green}%d{default}次).
+							else
 								CPrintToChat(client, "%t", "ReachedLimit", g_iRequestCount);
 						}
 						else
 						{	
 							vCheatCommand(client, line);
-							// {blue}❀ {green}%N {default}获取了 {blue}%s
 							CPrintToChatAll("%t", "GetItem", client, (SpecifyLanguage(client)) ? g_sItemNameChi[0][param2] : g_sItemNameEn[0][param2]);
 						}
 					}
@@ -403,7 +490,7 @@ int iMelees_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 						return 0;
 				}
 			}
-			else	// {blue}❀ {default}请在{green} 安全区域 {default}内使用此功能.
+			else
 				CPrintToChat(client, "%t", "UseItInSafeRoom");
 		}
 		case MenuAction_Cancel: 
@@ -422,7 +509,7 @@ void MenuGetInitialGun(int client)
 	char Tier1[64];
 	Format(Tier1, sizeof(Tier1), "%t", "Tier1");
 	Menu menu = new Menu(iInitialGun_MenuHandler);
-	menu.SetTitle(Tier1);		//小枪\n——————
+	menu.SetTitle(Tier1);
 	for (int i = 0; i < 6; i++)
 	{
 		menu.AddItem(g_sWeaponName[1][i], (SpecifyLanguage(client)) ? g_sItemNameChi[1][i] : g_sItemNameEn[1][i]);
@@ -513,7 +600,7 @@ void MenuGetAdvancedGun(int client)
 	char Tier2[64];
 	Format(Tier2, sizeof(Tier2), "%t", "Tier2");
 	Menu menu = new Menu(iAdvancedGun_MenuHandler);
-	menu.SetTitle(Tier2);		//大枪\n——————
+	menu.SetTitle(Tier2);
 	for (int i = 0; i < 12; i++)
 	{
 		menu.AddItem(g_sWeaponName[2][i], (SpecifyLanguage(client)) ? g_sItemNameChi[2][i] : g_sItemNameEn[2][i]);
@@ -679,11 +766,11 @@ void Menuadmin(int client)
 	Format(ItemMenuOn, sizeof(ItemMenuOn), "%t", "ItemMenuOn"); Format(ItemMenuOff, sizeof(ItemMenuOff), "%t", "ItemMenuOff");
 	Format(AllowOutOn, sizeof(AllowOutOn), "%t", "AllowOutOn"); Format(AllowOutOff, sizeof(AllowOutOff), "%t", "AllowOutOff");
 
-	menu.AddItem("e", g_bmeleedefault ? SecondaryMenuOff : SecondaryMenuOn);		//关闭副武器菜单
-	menu.AddItem("f", g_binitialgundefault ? Tier1MenuOff : Tier1MenuOn);	//关闭小枪菜单
-	menu.AddItem("g", g_bMenuAdvancedGunOpen ? Tier2MenuOff : Tier2MenuOn);	//关闭大枪菜单
-	menu.AddItem("h", g_bMenuThrowableOpen ? ItemMenuOff : ItemMenuOn);		//关闭物品菜单
-	menu.AddItem("i", g_bsafearea ? AllowOutOff : AllowOutOn);		//允许安全区域外使用
+	menu.AddItem("e", g_bmeleedefault ? SecondaryMenuOff : SecondaryMenuOn);
+	menu.AddItem("f", g_binitialgundefault ? Tier1MenuOff : Tier1MenuOn);
+	menu.AddItem("g", g_bMenuAdvancedGunOpen ? Tier2MenuOff : Tier2MenuOn);
+	menu.AddItem("h", g_bMenuThrowableOpen ? ItemMenuOff : ItemMenuOn);
+	menu.AddItem("i", g_bsafearea ? AllowOutOff : AllowOutOn);
 	
 	menu.ExitBackButton = true;
 	menu.Display(client, MENU_TIME_FOREVER);
@@ -722,7 +809,6 @@ int iadmin_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
 					case 'e':
 					{
 						g_bmeleedefault = !g_bmeleedefault;
-						//{blue}<管理员> {green}%N {default}开启了{blue}副武器{default}菜单
 						CPrintToChatAll(menue);
 					}
 					case 'f':
@@ -743,7 +829,6 @@ int iadmin_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
 					case 'i':
 					{
 						g_bsafearea = !g_bsafearea;
-						//{blue}<管理员> {green}%N {default}已禁止安全区域外使用{blue}E+R{default}功能
 						CPrintToChatAll(menui);
 					}
 				}

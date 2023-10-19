@@ -1,10 +1,29 @@
 "Phrases"
 {
-	"Advertisement"
+	"Advertisement_Readyup_Limit"
 	{
 		"#format"	"{1:d}"
-		"en"		"{blue}❀ {default}Before go{green} out of door{default} or {green}ReadyUp get lived{default}, you have ( {olive}{1}{default} ) chances to reqeust weapons."
-		"chi"		"{blue}❀ {default}你在{green}门内{default}或{green}ReadyUp完毕前{default}有 ( {olive}{1}{default} ) 次获取武器的机会."
+		"en"		"{blue}❀ You have ( {olive}{1}{default} ) chances to reqeust weapons by pressing {olive}E+R{defualt} before {green}ReadyUp{default} get lived."
+		"chi"		"{blue}❀ {default}你在{green}ReadyUp{default}结束前按{olive}E+R{defualt}有 ( {olive}{1}{default} ) 次获取武器的机会."
+	}
+
+	"Advertisement_Readyup"
+	{
+		"en"		"{blue}❀ You can request weapons freely by pressing {olive}E+R{defualt} before {green}ReadyUp{default} get lived."
+		"chi"		"{blue}❀ {default}你在{green}ReadyUp{default}结束前可以按{olive}E+R{defualt}自由获取武器."
+	}
+
+	"Advertisement_Limit"
+	{
+		"#format"	"{1:d}"
+		"en"		"{blue}❀ You have ( {olive}{1}{default} ) chances to reqeust weapons by pressing {olive}E+R{defualt} inside the {green}safe area{defualt}."
+		"chi"		"{blue}❀ {default}你在{green}安全区内{default}按{olive}E+R{defualt}有( {olive}{1}{default} ) 次获取武器的机会."
+	}
+
+	"Advertisement"
+	{
+		"en"		"{blue}❀ You can reqeust weapons freely by pressing {olive}E+R{defualt} inside the {green}safe area{defualt}."
+		"chi"		"{blue}❀ {default}你在{green}安全区内{default}可以按{olive}E+R{defualt}自由获取武器."
 	}
 
 	"MainTitle"
