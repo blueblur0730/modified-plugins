@@ -27,28 +27,28 @@ bool
 
 bool g_bIsInReady = true;
 
-#include <server_management/includes/util.inc>
+#include "server_management/includes/util.inc"
 
 #if MODULE_WELCOMEMSG
-	#include <server_management/welcome_msg.inc>
+	#include "server_management/welcome_msg.inc"
 #endif
 
 #if MODULE_PLAYERINFO
-	#include <server_management/player_info.inc>
+	#include "server_management/player_info.inc"
 #endif
 
 #if MODULE_HOURSLIMITER
-	#include <server_management/hours_limiter.inc>
+	#include "server_management/hours_limiter.inc"
 #endif
 
 #if MODULE_CHANGELOG
-	#include <server_management/changelog.inc>
+	#include "server_management/changelog.inc"
 #endif
 
 public Plugin myinfo =
 {
 	name = "Server Management",
-	author = "blueblur, credits to TouchMe",
+	author = "blueblur, credits to TouchMe, stars",
 	description = "Intergrated server management method.",
 	version	= PLUGIN_VERSION,
 	url	= "https://github.com/blueblur0730/modified-plugins"

@@ -42,6 +42,13 @@
 		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} [{olive}{2}{default}] 已连接. (Lerp: {olive}{3}{default} | 时长: {green}{4}{default})"
 	}
 
+	"Connected_Geocity"
+	{
+		"#format"		"{1:s},{2:s},{3:s},{4:.1f},{5:.1f}"
+		"en"			"[{green}!{default}] Player {olive}{1}{default} [{olive}{2} {3}{default}] connected. (Lerp: {olive}{4}{default} | Hours: {green}{5}{default})"
+		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} [{olive}{2} {3}{default}] 已连接. (Lerp: {olive}{4}{default} | 时长: {green}{5}{default})"
+	}
+
 	"Connected"
 	{
 		"#format"		"{1:s},{2:.1f},{3:.1f}"
