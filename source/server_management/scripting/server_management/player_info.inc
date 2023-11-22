@@ -113,6 +113,7 @@ void PI_OnClientPutInServer(int iClient)
 	if (IsValidClient_Pre(iClient) && !IsFakeClient(iClient))
 	{
 		char  ccode[3];
+		char  city[32];
 		char  sName[128];
 		float fLerpTime;
 		int	  iPlayedTime;
@@ -125,7 +126,12 @@ void PI_OnClientPutInServer(int iClient)
 		Call_Finish();
 
 		if (pi_cvEnableGeoip.BoolValue && GeoipCode2(ip[iClient], ccode))
-			CPrintToChatAll("%t", "Connected_Geoip", sName, ccode, fLerpTime, SecToHours(iPlayedTime));
+		{
+			if(GeoipCity(ip[iClient], city, sizeof(city)))
+				CPrintToChatAll("%t", "Connected_Geocity", sName, ccode, city, fLerpTime, SecToHours(iPlayedTime));
+			else
+				CPrintToChatAll("%t", "Connected_Geoip", sName, ccode, fLerpTime, SecToHours(iPlayedTime));
+		}
 		else
 			CPrintToChatAll("%t", "Connected", sName, fLerpTime, SecToHours(iPlayedTime));
 	}
