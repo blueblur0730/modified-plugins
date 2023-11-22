@@ -35,20 +35,23 @@ public Action Timer_WelcomeMessage(Handle Timer, int client)
 {
 	char name[128];
 	GetClientName(client, name, sizeof(name));
-	CPrintToChat(client, "%t", "Message", name);
-
-	if (wm_cvMoreLine.IntValue != 0)
+	if(!IsFakeClient(client))
 	{
-		char buffer[128];
-		for (int i = 1; i < wm_cvMoreLine.IntValue; i++)
-		{
-			CycleCount(buffer, sizeof(buffer), i);
-			CPrintToChat(client, "%t", buffer);
-		}
-	}
+		CPrintToChat(client, "%t", "Message", name);
 
-	if (wm_cvPrintRound.BoolValue && IsValidClient(client))
-		CreateTimer(wm_cvPrintRoundWaitTime.FloatValue, Timer_RoundStatus, client);
+		if (wm_cvMoreLine.IntValue != 0)
+		{
+			char buffer[128];
+			for (int i = 1; i < wm_cvMoreLine.IntValue; i++)
+			{
+				CycleCount(buffer, sizeof(buffer), i);
+				CPrintToChat(client, "%t", buffer);
+			}
+		}
+		
+		if (wm_cvPrintRound.BoolValue && IsValidClient(client))
+			CreateTimer(wm_cvPrintRoundWaitTime.FloatValue, Timer_RoundStatus, client);
+	}
 
 	return Plugin_Handled;
 }
