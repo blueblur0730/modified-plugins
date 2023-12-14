@@ -1,0 +1,36 @@
+"Phrases"
+{
+	"Spawned"
+	{
+		"#format"	"{1:s}"
+		"en"		"{teamcolor}[{default}!{teamcolor}] {olive}Tank {default}({teamcolor}Control: {1}{default}) has spawned!"
+	}
+
+	"Spawned_Hint"
+	{
+		"#format"	"{1:s}"
+		"en"		"[!] Tank (Control: {1}) has spawned!"
+	}
+
+	"Spawned2"
+	{
+		"#format"	"{1:N}"
+		"en"		"{teamcolor}[{default}!{teamcolor}] {olive}Tank {default}({teamcolor}Control: {1}{default}) has spawned!"
+	}
+
+	"Spawned2_Hint"
+	{
+		"#format"	"{1:N}"
+		"en"		"[!] Tank (Control: {1}) has spawned!"
+	}
+
+	"Spawned3"
+	{
+		"en"		"{teamcolor}[{default}!{teamcolor}] {olive}Tank {default}({teamcolor}Control: AI{default}) has spawned!"
+	}
+
+	"Spawned3_Hint"
+	{
+		"en"		"[!] Tank (Control: AI) has spawned!"
+	}
+}
