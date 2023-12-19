@@ -38,7 +38,7 @@ public void OnPluginStart()
 
 	g_hPrintStyle = CreateConVar("l4d2_tank_announce_print_style",\
 								"2",\
-								"Print style for announcement when tank spawned. Add numbers together if multiplely print. 0=disable, 1=chat, 2=hint.",\
+								"Print style for announcement when tank spawned. Add numbers together if multiply print. 0=disable, 1=chat, 2=hint.",\
 								FCVAR_NOTIFY);
 
 	g_iPrintStyle = g_hPrintStyle.IntValue;

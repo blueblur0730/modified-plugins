@@ -1,0 +1,14 @@
+"Execute"
+{
+	"c2m1_highway"
+	{
+		"change"
+		{
+			"name"		"cfg/map_configs/c2m1.cfg"
+		}
+		"restore"
+		{
+			"name"		"cfg/map_configs/c2m1_restore.cfg"
+		}
+	}
+}
