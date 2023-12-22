@@ -1,10 +1,18 @@
 /* Change log:
- *
+ * 
+ * - 2.8: 12/23/23
+ *  - optimized the logic of detect count and Kv.
+ *  - optimized varibles' name and code format.
+ *  - added cvar change hook.
+ *  - removed plugin enable cvar
+ *  - removed event hook "scavenge_round_end"
+ *  - added cvar "plugin version"
+ * 
  * - 2.7.1: 9/26/23
  *  - Fixed a bug on comparing two float coordinates.
  *  - Sperated cvars.
  *  - Enable status adjusted.
- * 
+ *
  * - 2.7: 9/18/23
  *	- Reconstructed codes.
  *   - Remove player auto suicide.
@@ -75,31 +83,44 @@
 #include <sdktools>
 #include <colors>
 
-#define PLUGIN_VERSION "2.7.1"
-#define CONFIG_PATH	   "configs/l4d2_scav_gascan_selfburn.txt"
+#define PLUGIN_VERSION "2.8"
+#define CONFIG_PATH	"configs/l4d2_scav_gascan_selfburn.txt"
 
-#define DEBUG		   0
-
-KeyValues
-	kv = null;
+#define DEBUG 0
+#define MAX_EDICTS 2048
 
 ConVar
-	g_hcvarEnablePlugin,
+	g_hcvarEnablexMin,
+	g_hcvarEnablexMax,
+	g_hcvarEnableyMin,
+	g_hcvarEnableyMax,
+	g_hcvarEnablezMin,
+	g_hcvarEnablezMax,
+	g_hcvarEnableLimit,
+	g_hcvarBurnInterval,
+	g_hcvarBurnLimit;
 
-	g_hcvarEnableSquareDetectxMin,
-	g_hcvarEnableSquareDetectxMax,
-	g_hcvarEnableSquareDetectyMin,
-	g_hcvarEnableSquareDetectyMax,
-	g_hcvarEnableHeightDetectzMin,
-	g_hcvarEnableHeightDetectzMax,
+bool
+	g_bEnablexMin,
+	g_bEnablexMax,
+	g_bEnableyMin,
+	g_bEnableyMax,
+	g_bEnablezMin,
+	g_bEnablezMax,
+	g_bEnableLimit;
 
-	g_hcvarEnableCountLimit,
-	g_hcvarIntervalBurnGascan,
-	g_hcvarBurnedGascanMaxLimit;
+float
+	g_fBurnInterval;
 
 int
-	g_iBurnedGascanCount = 0,
-	g_iDetectCount		 = 0;
+	g_iBurnLimit;
+
+int
+	g_iBurnedCount = 0,
+	g_iEntDetectCount[MAX_EDICTS] = { -1, ... };
+
+char
+	g_sPath[128];
 
 enum struct CoordinateInfo
 {
@@ -126,63 +147,66 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	char sBuffer[128];
+	CreateConVar("l4d2_scav_gascan_selfburn_version", PLUGIN_VERSION, "Plgin version", FCVAR_NOTIFY | FCVAR_DONTRECORD);
 
-	// ConVars
-	g_hcvarEnablePlugin				= CreateConVar("l4d2_scav_gascan_selfburn_enable", "1", "Enable Plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnablexMin = CreateConVar("l4d2_scav_gascan_selfburn_detect_x_min", "1", "Enable square coordinate detection(detect x min)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnablexMax = CreateConVar("l4d2_scav_gascan_selfburn_detect_x_max", "1", "Enable square coordinate detection(detect x max)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnableyMin = CreateConVar("l4d2_scav_gascan_selfburn_detect_y_min", "1", "Enable square coordinate detection(detect y min)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnableyMax = CreateConVar("l4d2_scav_gascan_selfburn_detect_y_max", "1", "Enable square coordinate detection(detect y max)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnablezMin = CreateConVar("l4d2_scav_gascan_selfburn_detect_z_min", "1", "Enable height coordinate detection(detect z min)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnablezMax = CreateConVar("l4d2_scav_gascan_selfburn_detect_z_max", "1", "Enable height coordinate detection(detect z max)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnableLimit = CreateConVar("l4d2_scav_gascan_burned_limit_enable", "1", "Enable Limited Gascan burn", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarBurnInterval = CreateConVar("l4d2_scav_gascan_selfburn_interval", "10.0", "Interval every gascan detection dose", FCVAR_NOTIFY, true, 0.0);
+	g_hcvarBurnLimit = CreateConVar("l4d2_scav_gascan_burned_limit", "4", "Limits the max gascan can get burned if they are out of bounds.", FCVAR_NOTIFY, true, 0.0);
 
-	g_hcvarEnableSquareDetectxMin	= CreateConVar("l4d2_scav_gascan_selfburn_detect_x_min", "1", "Enable square coordinate detection(detect x min)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_hcvarEnableSquareDetectxMax	= CreateConVar("l4d2_scav_gascan_selfburn_detect_x_max", "1", "Enable square coordinate detection(detect x max)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_hcvarEnableSquareDetectyMin	= CreateConVar("l4d2_scav_gascan_selfburn_detect_y_min", "1", "Enable square coordinate detection(detect y min)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_hcvarEnableSquareDetectyMax	= CreateConVar("l4d2_scav_gascan_selfburn_detect_y_max", "1", "Enable square coordinate detection(detect y max)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_hcvarEnableHeightDetectzMin	= CreateConVar("l4d2_scav_gascan_selfburn_detect_z_min", "1", "Enable height coordinate detection(detect z min)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_hcvarEnableHeightDetectzMax	= CreateConVar("l4d2_scav_gascan_selfburn_detect_z_max", "1", "Enable height coordinate detection(detect z max)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_hcvarEnablexMin.AddChangeHook(OnCvarChanged);
+	g_hcvarEnablexMax.AddChangeHook(OnCvarChanged);
+	g_hcvarEnableyMin.AddChangeHook(OnCvarChanged);
+	g_hcvarEnableyMax.AddChangeHook(OnCvarChanged);
+	g_hcvarEnablezMin.AddChangeHook(OnCvarChanged);
+	g_hcvarEnablezMax.AddChangeHook(OnCvarChanged);
+	g_hcvarEnableLimit.AddChangeHook(OnCvarChanged);
+	g_hcvarBurnInterval.AddChangeHook(OnCvarChanged);
+	g_hcvarBurnLimit.AddChangeHook(OnCvarChanged);
 
-	g_hcvarEnableCountLimit			= CreateConVar("l4d2_scav_gascan_burned_limit_enable", "1", "Enable Limited Gascan burn", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_hcvarIntervalBurnGascan		= CreateConVar("l4d2_scav_gascan_selfburn_interval", "10.0", "Interval every gascan detection dose", FCVAR_NOTIFY, true, 0.0);
-	g_hcvarBurnedGascanMaxLimit 	= CreateConVar("l4d2_scav_gascan_burned_limit", "4", "Limits the max gascan can get burned if they are out of bounds.", FCVAR_NOTIFY, true, 0.0);
-
-	// KeyValue
-	kv = new KeyValues("Positions");
-	BuildPath(Path_SM, sBuffer, 128, CONFIG_PATH);
-	if (!kv.ImportFromFile(sBuffer))
-		SetFailState("File %s may be missed!", CONFIG_PATH);
-
-	// Hooks
+	BuildPath(Path_SM, g_sPath, sizeof(g_sPath), CONFIG_PATH);
 	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
-	HookEvent("scavenge_round_finished", Event_ScavRoundFinished, EventHookMode_PostNoCopy);
-
-	// Translations
 	LoadTranslations("l4d2_scav_gascan_selfburn.phrases");
+}
+
+public void OnCvarChanged(ConVar hConVar, const char[] sOldValue, const char[] sNewValue)
+{
+	g_bEnablexMin = g_hcvarEnablexMin.BoolValue;
+	g_bEnablexMax = g_hcvarEnablexMax.BoolValue;
+	g_bEnableyMin = g_hcvarEnableyMin.BoolValue;
+	g_bEnableyMax = g_hcvarEnableyMax.BoolValue;
+	g_bEnablezMin = g_hcvarEnablezMin.BoolValue;
+	g_bEnablezMax = g_hcvarEnablezMax.BoolValue;
+	g_bEnableLimit = g_hcvarEnableLimit.BoolValue;
+	g_fBurnInterval = g_hcvarBurnInterval.FloatValue;
+	g_iBurnLimit = g_hcvarBurnLimit.IntValue;
 }
 
 public void OnMapStart()
 {
-	if (g_hcvarEnablePlugin.BoolValue && IsScavengeMode())
-	{
-		char sMapName[128];
-		kv.Rewind();
-		GetCurrentMap(sMapName, sizeof(sMapName));
-		ParseMapCoordinateInfo(g_esInfo, sMapName);
-		CreateTimer(g_hcvarIntervalBurnGascan.FloatValue, Timer_DetectGascan, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-	}
+	if (!IsScavengeMode())
+		return;
+
+	char sMapName[128];
+	GetCurrentMap(sMapName, sizeof(sMapName));
+	ParseMapCoordinateInfo(sMapName);
+	CreateTimer(g_fBurnInterval, Timer_DetectGascan, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
 
-public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
+public void Event_RoundStart(Event hEvent, const char[] sName, bool dontBroadcast)
 {
-	g_iBurnedGascanCount = 0;
-	g_iDetectCount		 = 0;
+	g_iBurnedCount = 0;
 }
 
-public void Event_ScavRoundFinished(Event event, const char[] name, bool dontBroadcast)
-{
-	g_iBurnedGascanCount = 0;
-}
-
-Action Timer_DetectGascan(Handle Timer)
+Action Timer_DetectGascan(Handle hTimer)
 {
 #if DEBUG
-	PrintToConsoleAll("Timer started.");
+	PrintToServer("Timer started.");
 #endif
 	FindMisplacedCans();
 	return Plugin_Handled;
@@ -197,7 +221,7 @@ void FindMisplacedCans()
 		if (!IsValidEntity(ent))
 			continue;
 #if DEBUG
-		PrintToConsoleAll("Found entity weapon_gascan: %d", ent);
+		PrintToServer("Found entity weapon_gascan: %d", ent);
 #endif
 		if (IsReachedLimit())
 			break;	  // burned gascan has reached its max limit we set, stop the loop (stop igniting the gascan).
@@ -205,81 +229,91 @@ void FindMisplacedCans()
 		float fPosition[3];
 		GetEntPropVector(ent, Prop_Send, "m_vecOrigin", fPosition);
 
-		g_iDetectCount = 0;
-
-		if (g_hcvarEnableHeightDetectzMin.BoolValue)
+		if (g_bEnablezMin)
 		{
-			if (FloatCompare(g_esInfo.z_min, 0.0) == 0) return;
-			else if (fPosition[2] <= g_esInfo.z_min)
+			if (FloatCompare(g_esInfo.z_min, 0.0) == 0)
+				continue;
+
+			if (fPosition[2] <= g_esInfo.z_min)
 			{
 				if (fPosition[2])	 // if you dont have this gascan will ignite if you grab it.
 				{
-					g_iDetectCount++;
+					g_iEntDetectCount[ent]++;
 					CheckDetectCountThenIgnite(ent);
 				}
 			}
 		}
 
-		if (g_hcvarEnableHeightDetectzMax.BoolValue)
+		if (g_bEnablezMax)
 		{
-			if (FloatCompare(g_esInfo.z_max, 0.0) == 0) return;
-			else if (g_esInfo.z_max <= fPosition[2])
+			if (FloatCompare(g_esInfo.z_max, 0.0) == 0)
+				continue;
+
+			if (g_esInfo.z_max <= fPosition[2])
 			{
 				if (fPosition[2])
 				{
-					g_iDetectCount++;
+					g_iEntDetectCount[ent]++;
 					CheckDetectCountThenIgnite(ent);
 				}
 			}
 		}
 
-		if (g_hcvarEnableSquareDetectxMin.BoolValue)
+		if (g_bEnablexMin)
 		{
-			if (FloatCompare(g_esInfo.x_min, 0.0) == 0) return;
-			else if (g_esInfo.x_max <= fPosition[0])
+			if (FloatCompare(g_esInfo.x_min, 0.0) == 0)
+				continue;
+
+			if (g_esInfo.x_max <= fPosition[0])
 			{
 				if (fPosition[0])
 				{
-					g_iDetectCount++;
+					g_iEntDetectCount[ent]++;
 					CheckDetectCountThenIgnite(ent);
 				}
 			}
 		}
 
-		if (g_hcvarEnableSquareDetectxMax.BoolValue)
+		if (g_bEnablexMax)
 		{
-			if (FloatCompare(g_esInfo.x_max, 0.0) == 0) return;
-			else if (fPosition[0] <= g_esInfo.x_max)
+			if (FloatCompare(g_esInfo.x_max, 0.0) == 0)
+				continue;
+
+			if (fPosition[0] <= g_esInfo.x_max)
 			{
 				if (fPosition[0])
 				{
-					g_iDetectCount++;
+					g_iEntDetectCount[ent]++;
 					CheckDetectCountThenIgnite(ent);
 				}
 			}
 		}
 
-		if (g_hcvarEnableSquareDetectyMin.BoolValue)
+		if (g_bEnableyMin)
 		{
-			if (FloatCompare(g_esInfo.y_min, 0.0) == 0) return;
-			else if (g_esInfo.y_min <= fPosition[1])
+			if (FloatCompare(g_esInfo.y_min, 0.0) == 0)
+				continue;
+
+			if (g_esInfo.y_min <= fPosition[1])
 			{
 				if (fPosition[1])
 				{
-					g_iDetectCount++;
+					g_iEntDetectCount[ent]++;
 					CheckDetectCountThenIgnite(ent);
 				}
 			}
 		}
 
-		if (g_hcvarEnableSquareDetectyMax.BoolValue)
+		if (g_bEnableyMax)
 		{
-			if (FloatCompare(g_esInfo.y_max, 0.0) == 0) return;
-			else if (fPosition[1] <= g_esInfo.y_max)
+			if (FloatCompare(g_esInfo.y_max, 0.0) == 0)
+				continue;
+
+			if (fPosition[1] <= g_esInfo.y_max)
 			{
 				if (fPosition[1])
 				{
-					g_iDetectCount++;
+					g_iEntDetectCount[ent]++;
 					CheckDetectCountThenIgnite(ent);
 				}
 			}
@@ -290,56 +324,54 @@ void FindMisplacedCans()
 void CheckDetectCountThenIgnite(int entity)
 {
 #if DEBUG
-	PrintToConsoleAll("Out bound gascan found: %d", entity);
+	PrintToServer("Out bound gascan found: %d", entity);
 #endif
-	if (g_hcvarEnableCountLimit.BoolValue)
-	{
-		if (!IsDetectCountOverflow())
-		{
-			g_iBurnedGascanCount++;
-			Ignite(entity);
-		}
-	}
-	else
-	{
-		if (!IsDetectCountOverflow())
-		{
-			Ignite(entity);
-		}
-	}
+
+	if (!IsDetectCountOverflow(entity))
+		Ignite(entity);
 }
 
 Action Ignite(int entity)
 {
-	AcceptEntityInput(entity, "ignite");
-	if (g_hcvarEnableCountLimit.BoolValue)
+	if (g_bEnableLimit)
 	{
-		CPrintToChatAll("%t", "IgniteInLimit", g_iBurnedGascanCount, g_hcvarBurnedGascanMaxLimit.IntValue);
-		if (g_iBurnedGascanCount == g_hcvarBurnedGascanMaxLimit.IntValue)
+		if (g_iBurnedCount == g_iBurnLimit)
 		{
 			CPrintToChatAll("%t", "ReachedLimit");
+			return Plugin_Handled;
 		}
+
+		CPrintToChatAll("%t", "IgniteInLimit", g_iBurnedCount, g_iBurnLimit);
 	}
 	else
-	{
 		CPrintToChatAll("%t", "Ignite");
-	}
+
+	AcceptEntityInput(entity, "ignite");
+
+	if (g_bEnableLimit)
+		g_iBurnedCount++;
 
 	return Plugin_Handled;
 }
 
-void ParseMapCoordinateInfo(CoordinateInfo esInfo, char[] sMapName)
+void ParseMapCoordinateInfo(char[] sMapName)
 {
-	if (kv.JumpToKey(sMapName))
+	KeyValues Kv = new KeyValues("Positions");
+	Kv.SetEscapeSequences(true);
+
+	if (!Kv.ImportFromFile(g_sPath))
+		SetFailState("File %s may be missed!", CONFIG_PATH);
+
+	if (Kv.JumpToKey(sMapName) && Kv.GotoFirstSubKey(false))
 	{
-		esInfo.z_min = kv.GetFloat("height_zlimit_min", 0.0);
-		esInfo.z_max = kv.GetFloat("height_zlimit_max", 0.0);
+		g_esInfo.z_min = Kv.GetFloat("height_zlimit_min", 0.0);
+		g_esInfo.z_max = Kv.GetFloat("height_zlimit_max", 0.0);
 
-		esInfo.x_max = kv.GetFloat("width_xlimit_max", 0.0);
-		esInfo.x_min = kv.GetFloat("width_xlimit_min", 0.0);
+		g_esInfo.x_max = Kv.GetFloat("width_xlimit_max", 0.0);
+		g_esInfo.x_min = Kv.GetFloat("width_xlimit_min", 0.0);
 
-		esInfo.y_max = kv.GetFloat("width_ylimit_max", 0.0);
-		esInfo.y_min = kv.GetFloat("width_ylimit_min", 0.0);
+		g_esInfo.y_max = Kv.GetFloat("width_ylimit_max", 0.0);
+		g_esInfo.y_min = Kv.GetFloat("width_ylimit_min", 0.0);
 	}
 	else
 		LogError("Invalid map name! Current map name dose not match the map name stored in the config!");
@@ -347,29 +379,31 @@ void ParseMapCoordinateInfo(CoordinateInfo esInfo, char[] sMapName)
 #if DEBUG
 	PrintToServer("Successfully parsed info.");
 	PrintToServer("--------------- Parsed mapname %s and coordinates. ---------------", sMapName);
-	PrintToServer("z_max = %f\nz_min = %f", esInfo.z_max, esInfo.z_min);
-	PrintToServer("x_max = %f\nx_min = %f", esInfo.x_max, esInfo.x_min);
-	PrintToServer("y_max = %f\ny_min = %f", esInfo.y_max, esInfo.y_min);
+	PrintToServer("z_max = %f\nz_min = %f", g_esInfo.z_max, g_esInfo.z_min);
+	PrintToServer("x_max = %f\nx_min = %f", g_esInfo.x_max, g_esInfo.x_min);
+	PrintToServer("y_max = %f\ny_min = %f", g_esInfo.y_max, g_esInfo.y_min);
 	PrintToServer("------------------------------------------------------------------");
 #endif
+
+	delete Kv;
 }
 
 stock bool IsReachedLimit()
 {
-	if (g_hcvarEnableCountLimit.BoolValue)
-		return (g_iBurnedGascanCount >= g_hcvarBurnedGascanMaxLimit.IntValue) ? true : false;
+	if (g_bEnableLimit)
+		return (g_iBurnedCount >= g_iBurnLimit) ? true : false;
 
-	return true;
+	return false;
 }
 
-stock bool IsDetectCountOverflow()
+stock bool IsDetectCountOverflow(int entity)
 {
-	return (g_iDetectCount >= 2) ? true : false;
+	return (g_iEntDetectCount[entity] >= 2) ? true : false;
 }
 
 stock bool IsScavengeMode()
 {
-	char   sGameMode[32];
+	char sGameMode[32];
 	ConVar hcvarGameMode = FindConVar("mp_gamemode");
 	hcvarGameMode.GetString(sGameMode, sizeof(sGameMode));
 
