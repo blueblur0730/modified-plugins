@@ -27,16 +27,16 @@ void WM_OnPluginStart()
 
 void WM_OnClientPutInServer(int client)
 {
-	if (wm_cvSwitch.BoolValue && IsValidClient(client))
+	if (wm_cvSwitch.BoolValue && IsValidClient(client) && client > 0 && IsClientInGame(client) && !IsFakeClient(client))
 		CreateTimer(wm_cvWaitTime.FloatValue, Timer_WelcomeMessage, client);
 }
 
 public Action Timer_WelcomeMessage(Handle Timer, int client)
 {
 	char name[128];
-	GetClientName(client, name, sizeof(name));
-	if(!IsFakeClient(client))
+	if(client > 0 && IsValidClient(client) && !IsFakeClient(client)&& client > 0 && IsClientInGame(client))
 	{
+		GetClientName(client, name, sizeof(name));
 		CPrintToChat(client, "%t", "Message", name);
 
 		if (wm_cvMoreLine.IntValue != 0)
@@ -49,7 +49,7 @@ public Action Timer_WelcomeMessage(Handle Timer, int client)
 			}
 		}
 		
-		if (wm_cvPrintRound.BoolValue && IsValidClient(client))
+		if (wm_cvPrintRound.BoolValue && IsValidClient(client) && client > 0 && IsClientInGame(client) && !IsFakeClient(client))
 			CreateTimer(wm_cvPrintRoundWaitTime.FloatValue, Timer_RoundStatus, client);
 	}
 
