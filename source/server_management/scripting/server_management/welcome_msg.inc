@@ -61,43 +61,43 @@ public Action Timer_RoundStatus(Handle Timer, int client)
 	if(IsValidClient(client) && IsClientInGame(client) && !IsFakeClient(client))
 	{
         char Buffer[128], Mapname[128];
-	    wm_cvHostname.GetString(Buffer, sizeof(Buffer));
-	    GetCurrentMap(Mapname, sizeof(Mapname));
+        wm_cvHostname.GetString(Buffer, sizeof(Buffer));
+        GetCurrentMap(Mapname, sizeof(Mapname));
 
-	    if (wm_cvMaxSlots == null)	// in case you dont have match_vote.smx
-		    wm_cvMaxSlots = FindConVar("sv_maxplayers");
+        if (wm_cvMaxSlots == null)	// in case you dont have match_vote.smx
+	        wm_cvMaxSlots = FindConVar("sv_maxplayers");
 
-	    CPrintToChatEx(client, client, "%t", "Header", Buffer);
-	    CPrintToChatEx(client, client, "%t", "PlayerNum", (GetTotalPlayers() == wm_cvMaxSlots.IntValue) ? "{green}" : "{olive}", GetTotalPlayers(), wm_cvMaxSlots.IntValue);
-	    CPrintToChatEx(client, client, "%t", "MapName", Mapname);
+        CPrintToChatEx(client, client, "%t", "Header", Buffer);
+        CPrintToChatEx(client, client, "%t", "PlayerNum", (GetTotalPlayers() == wm_cvMaxSlots.IntValue) ? "{green}" : "{olive}", GetTotalPlayers(), wm_cvMaxSlots.IntValue);
+        CPrintToChatEx(client, client, "%t", "MapName", Mapname);
 
-	    if (L4D_IsVersusMode() || L4D2_IsScavengeMode())
-	    {
-	    	SetGlobalTransTarget(client);
-	    	char firsthalf[64], secondhalf[64], round[16];
-	    	Format(firsthalf, sizeof(firsthalf), "%t", "FirstHalf");
-	    	Format(secondhalf, sizeof(secondhalf), "%t", "SecondHalf");
-	    	Format(round, sizeof(round), "#R%d / ", GetScavengeRoundNumber());
+        if (L4D_IsVersusMode() || L4D2_IsScavengeMode())
+        {
+        	SetGlobalTransTarget(client);
+        	char firsthalf[64], secondhalf[64], round[16];
+        	Format(firsthalf, sizeof(firsthalf), "%t", "FirstHalf");
+        	Format(secondhalf, sizeof(secondhalf), "%t", "SecondHalf");
+        	Format(round, sizeof(round), "#R%d / ", GetScavengeRoundNumber());
 
-	    	CPrintToChatEx(client, client,  "%t", "GameMode_RoundStatus", GetGameModeString(client), 
-	    	(L4D2_IsScavengeMode()) ? round : "", 
-	    	(!InSecondHalfOfRound()) ? firsthalf : secondhalf);
-	    }
-	    else if (L4D2_IsGenericCooperativeMode())
-	    {
-	    	char difficulty[64];
-	    	ConVar hdifficulty = FindConVar("z_difficulty");
-	    	hdifficulty.GetString(difficulty, sizeof(difficulty));
-	    	CPrintToChatEx(client, client, "%t", "GameMode_Coop", GetGameModeString(client), difficulty);
-	    }
-	    //else if (L4D_IsSurvivalMode())		// not this time.
-	    	//CPrintToChatEx(client, client, "%t", "GameMode_Survival", GetGameModeString(client));
+        	CPrintToChatEx(client, client,  "%t", "GameMode_RoundStatus", GetGameModeString(client), 
+        	(L4D2_IsScavengeMode()) ? round : "", 
+        	(!InSecondHalfOfRound()) ? firsthalf : secondhalf);
+        }
+        else if (L4D2_IsGenericCooperativeMode())
+        {
+        	char difficulty[64];
+        	ConVar hdifficulty = FindConVar("z_difficulty");
+        	hdifficulty.GetString(difficulty, sizeof(difficulty));
+        	CPrintToChatEx(client, client, "%t", "GameMode_Coop", GetGameModeString(client), difficulty);
+        }
+        //else if (L4D_IsSurvivalMode())		// not this time.
+        	//CPrintToChatEx(client, client, "%t", "GameMode_Survival", GetGameModeString(client));
 
-	    if (g_bReadyUpAvailable)
-	    {
-	    	CPrintToChatEx(client, client, "%t", "ReadyUpStatus", ReadyUpStatus(client));
-	    	CPrintToChatEx(client, client, "%t", "ReadyUpCfgNameStatus", ReadyUpCfgNameStatus(client));
-	    }
+        if (g_bReadyUpAvailable)
+        {
+        	CPrintToChatEx(client, client, "%t", "ReadyUpStatus", ReadyUpStatus(client));
+        	CPrintToChatEx(client, client, "%t", "ReadyUpCfgNameStatus", ReadyUpCfgNameStatus(client));
+        }
     }
 	return Plugin_Handled;
 }
