@@ -110,7 +110,7 @@ public Action PI_Event_PlayerDisconnect(Handle hEvent, const char[] sName, bool 
 
 void PI_OnClientPutInServer(int iClient)
 {
-	if (IsValidClient_Pre(iClient) && iClient > 0 && IsClientInGame(iClient) && !IsFakeClient(iClient))
+	if (IsValidClient_Pre(iClient) && IsClientInGame(iClient) && !IsFakeClient(iClient))
 	{
 		char  ccode[3];
 		char  city[32];
