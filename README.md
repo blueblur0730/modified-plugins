@@ -1,6 +1,6 @@
 # modified-plugins
 Compile with 
-- sm1.11-6936
+- sm1.11-6964
 
 Include
-- Left4Dhooks 1.138
+- Left4Dhooks 1.150
