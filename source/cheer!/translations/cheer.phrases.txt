@@ -1,98 +1,82 @@
 ﻿"Phrases"
 {
-	"over cheer limit"
+	"over_cheer_limit"
 	{
 		"#format"	"{1:i}"		// 1: times you can cheer
 		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}cheers{default} for this round. ({lightgreen}{1}{default} times)."
 		"chi"		"[{orange}!{default}] 你已经达到本轮最大 {orange}cheer{default} 次数限制. ({lightgreen}{1}{default} 次)."
 	}
 
-	"over in round cheer limit"
+	"over_in_round_cheer_limit"
 	{
 		"#format"	"{1:i}"		// 1: times you can cheer
 		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}cheers{default} in round. ({lightgreen}{1}{default} times)."
 		"chi"		"[{orange}!{default}] 你已经达到轮中最大 {orange}cheer{default} 次数限制. ({lightgreen}{1}{default} 次)."
 	}
 
-	"over jeer limit"
+	"over_jeer_limit"
 	{
 		"#format"	"{1:i}"		// 1: times you can jeer
 		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}jeers{default} for this round. ({lightgreen}{1}{default} times)"
 		"chi"		"[{orange}!{default}] 你已经达到了本轮最大 {orange}jeer{default} 次数限制. ({lightgreen}{1}{default} 次)"
 	}
 
-	"over in round Jeer limit"
+	"over_in_round_jeer_limit"
 	{
 		"#format"	"{1:i}"		// 1: times you can jeer
 		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}jeers{default} in round. ({lightgreen}{1}{default} times)"
 		"chi"		"[{orange}!{default}] 你已经达到了轮中最大 {orange}jeer{default} 次数限制. ({lightgreen}{1}{default} 次)"
 	}
 
-	"cheer interval limited"
+	"cheer_interval_limited"
 	{
 		"#format"	"{1:i}"		// 1: time left to cheer
 		"en"		"[{orange}!{default}] You have to wait at least ({lightgreen}{1}{default}s) to command next {orange}cheer{default}."
 		"chi"		"[{orange}!{default}] 你必须等待至少 ({lightgreen}{1}{default}秒) 来进行下一次 {orange}cheer{default}."
 	}
 
-	"jeer interval limited"
+	"jeer_interval_limited"
 	{
 		"#format"	"{1:i}"		// 1: time left to jeer
 		"en"		"[{orange}!{default}] You have to wait at least ({lightgreen}{1}{default}s) to command next {orange}jeer{default}."
 		"chi"		"[{orange}!{default}] 你必须等待至少 ({lightgreen}{1}{default}秒) 来进行下一次 {orange}jeer{default}."
 	}
 
-	"round is live"
+	"round_is_live"
 	{
 		"en"		"[{orange}!{default}] Can not use Cheers or Jeers while round is live."
 		"chi"		"[{orange}!{default}] 回合开始时不允许使用Cheers或Jeers."
 	}
 
-	// 求生只能用default, olive, orange(等于green), green, lightgreen(且lightgreen不能和teamcolor, red, blue冲突), 尽管colors.inc或multicolor.inc提供了许多颜色, 所以求生做不到csgo的五彩斑斓.
-
-	"C Cheered!!!"
-	{
-		"#format"	"{1:s},{2:s}"		// 1: team, 2: name
-		"en"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {teamcolor}Cheered!!!"
-		"chi"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {teamcolor}Cheered!!!"
-	}
-
 	"Cheered!!!"
 	{
 		"#format"	"{1:s},{2:s}"		// 1: team, 2: name
-		"en"		"*{1}* {2}: Cheered!!!"
-		"chi"		"*{1}* {2}: Cheered!!!"
-	}
-
-	"C Jeered!!!"
-	{
-		"#format"	"{1:s},{2:s}"		// 1: team, 2: name
-		"en"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {teamcolor}Jeered!!!"
-		"chi"		"*{teamcolor}{1}{default}* {teamcolor}{2}{default}: {teamcolor}Jeered!!!"
+		"en"		"({teamcolor}{1}{default}) {teamcolor}{2}{default}: {green}Cheered!!!"
+		"chi"		"({teamcolor}{1}{default}) {teamcolor}{2}{default}: {green}Cheered!!!"
 	}
 
 	"Jeered!!!"
 	{
 		"#format"	"{1:s},{2:s}"		// 1: team, 2: name
-		"en"		"*{1}* {2}: Jeered!!!"
-		"chi"		"*{1}* {2}: Jeered!!!"
+		"en"		"({teamcolor}{1}{default}) {teamcolor}{2}{default}: {green}Jeered!!!"
+		"chi"		"({teamcolor}{1}{default}) {teamcolor}{2}{default}: {green}Jeered!!!"
 	}
 
 	"Spectator"
 	{
-		"en"		"Spec"
+		"en"		"Spectator"
 		"chi"		"旁观"
 	}
 
 	"Survivor"
 	{
-		"en"		"Sur"
+		"en"		"Survivor"
 		"chi"		"生还"
 	}
 
 	"Infected"
 	{
-		"en"		"Inf"
+		"en"		"Infected"
 		"chi"		"特感"
 	}
 }

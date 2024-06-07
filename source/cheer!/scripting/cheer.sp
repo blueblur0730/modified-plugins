@@ -1,0 +1,418 @@
+/*
+cheer.sp
+
+Description:
+	The Cheer! plugin allows players to cheer random cheers per round.
+
+Versions:
+	1.0
+		* Initial Release
+
+	1.1
+		* Added cvar to control colors
+		* Added cvar to control chat
+		* Added team color to name
+
+	1.2
+		* Added jeers
+		* Added admin only support for jeers
+		* Made config file autoload
+
+	1.3
+		* Added *DEAD* in front of dead people's jeers
+		* Added volume control cvar sm_cheer_jeer_volume
+		* Added jeer limit cvat sm_cheer_jeer_limit
+		* Added count infomation to limit displays
+2007
+------------------------------------------------------------
+2023
+	r1.0: 8/1/23
+		* updated to sm1.11 new syntax.
+		* reformatted to support L4D2.
+
+	r1.1: 8/2/23
+		* check the gamemode in L4D2. we dont ues this plugin if the round has already started in versus or scavenge.
+		* split cheer and jeer into two commands saperately rather than checking wether a player is dead or not.
+
+	r1.1.1: 8/2/23
+		* if round is lived, tell them we cannot use commands.
+
+	r1.2: 8/2/23
+		* fix an issue message didn't print to chat.
+		* add team descriptions.
+
+	r1.2.1: 8/2/23
+		* now cheer or jeer counts restore to 0 if round ends.
+
+	r1.3: 8/6/23
+		* Optimized code format.
+		* Added in round check. We allow players to ues cheer or jeer in scavenge or versus mode while round is live, switch and limits is controlled by new added cvar.
+
+	r1.3.1: 8/6/23
+		* Added a cvar to control wether a client should download sound files. (there's more other effecient ways to download files, we don't recommend to do this on this plugin.)
+
+	r1.3.2: 8/7/23
+		* Added a cvar to control the interval we can cheer or jeer next time, preventing chat spamming.
+		* more mutation gamemode detections.
+
+	r1.3.3: 9/13/23
+		* Added a cvar to control the sound file number we can load. Now we can load each cheer or jeer files up to 128 at a time. (still confusing if there is anyway to turn this 128 into a valid varible.)
+
+	to do:
+		* unlock the limit of sound files we can load.
+------------------------------------------------------------
+2024
+	r2.0.0: 7/6/24
+		* Finshed to do. Credits to MapChanger by Alex Dragokas.
+		* 
+*/
+#pragma semicolon 1
+#pragma newdecls required
+
+#include <sourcemod>
+#include <sdktools>
+#include <colors>
+#include <left4dhooks>
+
+#define PLUGIN_VERSION	   	"r2.0.0"
+
+#define L4D_TEAM_SPECTATOR 	1
+#define L4D_TEAM_SURVIVOR  	2
+#define L4D_TEAM_INFECTED  	3
+
+// Plugin definitions
+public Plugin myinfo =
+{
+	name = "[L4D2] Cheer!",
+	author = "dalto, L4D2 modified version by blueblur",
+	description = "The Cheer! plugin allows players to cheer random cheers per round",
+	version	= PLUGIN_VERSION,
+	url	= "https://github.com/blueblur0730/modified-plugins"
+};
+
+int
+	g_iCheerCount[MAXPLAYERS + 1],
+	g_iJeerCount[MAXPLAYERS + 1],
+	g_iCheerInRoundCount[MAXPLAYERS + 1],
+	g_iJeerInRoundCount[MAXPLAYERS + 1];
+
+float
+	g_fLastTimeCheer[MAXPLAYERS + 1],
+	g_fLastTimeJeer[MAXPLAYERS + 1];
+
+ConVar
+	g_hCvarCheerSoundDir, g_hCvarCheer, g_hCvarMaxCheers, g_hCvarChat, g_hCvarJeerSoundDir, g_hCvarJeer, g_hCvarMaxJeers, g_hCvarJeerVolume,
+	g_hCvarCheerVolume, g_hCvarInRoundEnable, g_hCvarInRoundMaxCheers, g_hCvarInRoundMaxJeers, g_hCvarDownloadEnable,
+	g_hCvarCmdIntervalueEnable, g_hCvarCmdInterval;
+
+StringMap
+	g_hMapCheerFile, g_hMapJeerFile;
+
+bool
+	g_bIsRoundAlive = false;
+
+public void OnPluginStart()
+{
+	// ConVars
+	CreateConVar("cheer_version", PLUGIN_VERSION, "Cheer Version", FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY);
+
+	g_hCvarCheer = CreateConVar("cheer_enable", "1", "Enables the cheer");
+	g_hCvarCheerSoundDir = CreateConVar("cheer_sound_dir", "sound/nepu/cheer", "Sound file directory");
+	g_hCvarMaxCheers = CreateConVar("cheer_limit", "10", "The maximum number of cheers per round");
+	g_hCvarCheerVolume = CreateConVar("cheer_volume", "1.0", "Cheer volume: should be a number between 0.0. and 1.0");
+
+	g_hCvarJeer	= CreateConVar("jeer_enable", "1", "Enables the jeer");
+	g_hCvarJeerSoundDir = CreateConVar("jeer_sound_dir", "sound/nepu/jeer", "Sound file directory");
+	g_hCvarMaxJeers	= CreateConVar("jeer_limit", "10", "The maximum number of jeers per round");
+	g_hCvarJeerVolume = CreateConVar("jeer_volume", "1.0", "Jeer volume: should be a number between 0.0. and 1.0");
+
+	g_hCvarChat	= CreateConVar("cheer_chat", "1", "1 to turn enable chat messages, 0 for off");
+	g_hCvarCmdIntervalueEnable = CreateConVar("cheer_cmd_interval_enable", "1", "Enable commander interval? (Prevent chat spamming)");
+	g_hCvarCmdInterval = CreateConVar("cheer_cmd_interval", "3.0", "Interval we can cheer or jeer next time");
+
+	g_hCvarInRoundEnable = CreateConVar("cheer_in_round_enable", "1", "Enables the Cheer! plugin in round");
+	g_hCvarInRoundMaxCheers	= CreateConVar("cheer_in_round_limit", "5", "The maximum number of cheers in round");
+	g_hCvarInRoundMaxJeers = CreateConVar("jeer_in_round_limit", "5", "The maximum number of jeers in round");
+
+	g_hCvarDownloadEnable = CreateConVar("cheer_download_enable", "0", "Enable download generated by Cheer! plugin ?");
+
+	// Cmd
+	RegConsoleCmd("sm_cheer", CommandCheer);
+	RegConsoleCmd("sm_jeer", CommandJeer);
+
+	// Execute the config file
+	AutoExecConfig(true, "cheer");
+
+	// Translations
+	LoadTranslations("cheer.phrases");
+
+	// Load Sounds
+	g_hMapCheerFile = new StringMap();
+	g_hMapJeerFile = new StringMap();
+	LoadSounds();
+
+	// Hooks
+	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
+	HookEvent("round_end", Event_RoundEnd, EventHookMode_PostNoCopy);
+	HookEvent("player_left_start_area", Event_PlayerLeftStartArea, EventHookMode_PostNoCopy);
+}
+
+public void OnMapStart()
+{
+	if (g_hMapCheerFile.Size != 0)
+		OnMapStart_Do(true);
+
+	if (g_hMapJeerFile.Size != 0)
+		OnMapStart_Do(false);
+}
+
+void OnMapStart_Do(bool bCheerOrJeer)
+{
+	char sPath[PLATFORM_MAX_PATH];
+	for (int i = 0; i < (bCheerOrJeer ? g_hMapCheerFile.Size : g_hMapJeerFile.Size); i++)
+	{
+		char sNumber[128];
+		IntToString(i, sNumber, sizeof(sNumber));
+		if (bCheerOrJeer)
+		{
+			if (g_hMapCheerFile.GetString(sNumber, sPath, sizeof(sPath)))
+				PrecacheSound(sPath, true);
+		}
+		else
+		{
+			if (g_hMapJeerFile.GetString(sNumber, sPath, sizeof(sPath)))
+				PrecacheSound(sPath, true);
+		}
+
+		if (g_hCvarDownloadEnable.BoolValue)
+			AddFileToDownloadsTable(sPath);
+	}
+}
+
+public void Event_PlayerLeftStartArea(Event event, char[] name, bool dontBroadcast)
+{
+	g_bIsRoundAlive = true;
+}
+
+// Initializations to be done at the beginning of the round
+public void Event_RoundStart(Event event, char[] name, bool dontBroadcast)
+{
+	RestoreIndexes();
+}
+
+public void Event_RoundEnd(Event event, char[] name, bool dontBroadcast)
+{
+	RestoreIndexes();
+}
+
+// When a new client is put in the server we reset their cheer count
+public void OnClientPutInServer(int client)
+{
+	if (client && !IsFakeClient(client))
+	{
+		g_iCheerCount[client]		 = 0;
+		g_iJeerCount[client]		 = 0;
+		g_iCheerInRoundCount[client] = 0;
+		g_iJeerInRoundCount[client]	 = 0;
+	}
+}
+
+void RestoreIndexes()
+{
+	for (int i = 0; i <= MaxClients; i++)
+	{
+		g_iCheerCount[i]		= 0;
+		g_iJeerCount[i]			= 0;
+		g_iCheerInRoundCount[i] = 0;
+		g_iJeerInRoundCount[i]	= 0;
+		g_fLastTimeCheer[i] 	= 0.0;
+		g_fLastTimeJeer[i]		= 0.0;
+	}
+
+	g_bIsRoundAlive = false;
+}
+
+Action CommandCheer(int client, int args)
+{
+	Command_CheerOrJeer(client, true);
+	return Plugin_Handled;
+}
+
+Action CommandJeer(int client, int args)
+{
+	Command_CheerOrJeer(client, false);
+	return Plugin_Handled;
+}
+
+void Command_CheerOrJeer(int client, bool bCheerOrJeer)
+{
+	if (!(bCheerOrJeer ? g_hCvarCheer.BoolValue : g_hCvarJeer.BoolValue))
+	{
+		ReplyToCommand(client, "%t", bCheerOrJeer ? "cheer_disabled" :"jeer_disabled");
+		return;
+	}
+
+	if (!client || !IsClientInGame(client) || IsFakeClient(client))
+		return;
+
+	if ((bCheerOrJeer ? (g_iCheerCount[client] >= g_hCvarMaxCheers.IntValue) : (g_iJeerCount[client] >= g_hCvarMaxJeers.IntValue)))
+	{
+		CPrintToChat(client, "%t", bCheerOrJeer ? "over_cheer_limit" :"over_jeer_limit", bCheerOrJeer ? g_hCvarMaxCheers.IntValue : g_hCvarMaxJeers.IntValue);
+		return;
+	}
+
+	if (g_hCvarCmdIntervalueEnable.BoolValue)
+	{
+		float fDelayTime = g_hCvarCmdInterval.FloatValue;
+
+		if (bCheerOrJeer)
+		{
+			if (g_iCheerCount[client] == 0)
+			{
+				g_fLastTimeCheer[client] = GetEngineTime();
+			}
+		}
+		else
+		{
+			if (g_iJeerCount[client] == 0)
+			{
+				g_fLastTimeJeer[client] = GetEngineTime();
+			}
+		}
+
+		if (GetEngineTime() - (bCheerOrJeer ? g_fLastTimeCheer[client] : g_fLastTimeJeer[client]) < fDelayTime)
+		{
+			int iTimeLeft = RoundToNearest(fDelayTime - (GetEngineTime() - (bCheerOrJeer ? g_fLastTimeCheer[client] : g_fLastTimeJeer[client])));
+			CPrintToChat(client, "%t", bCheerOrJeer ? "cheer_interval_limited" : "jeer_interval_limited", iTimeLeft);
+			return;
+		}
+	}
+
+	if (L4D_IsVersusMode() || L4D2_IsScavengeMode())
+	{
+		if (g_bIsRoundAlive)
+		{
+			if (g_hCvarInRoundEnable.BoolValue)
+			{
+				if ((bCheerOrJeer ? g_iCheerInRoundCount[client] : g_iJeerInRoundCount[client]) >=
+					(bCheerOrJeer ? g_hCvarInRoundMaxCheers.IntValue : g_hCvarInRoundMaxJeers.IntValue))
+				{
+					CPrintToChat(client, "%t", bCheerOrJeer ? "over_in_round_cheer_limit" : "over_in_round_jeer_limit",
+					bCheerOrJeer ? g_hCvarInRoundMaxCheers.IntValue : g_hCvarInRoundMaxJeers.IntValue);
+					return;
+				}
+				else
+				{
+					ExcuteCheerOrJeer(bCheerOrJeer, client);
+					if (bCheerOrJeer) g_fLastTimeJeer[client] = GetEngineTime();
+					else g_fLastTimeCheer[client] = GetEngineTime();
+				}
+			}
+			else
+			{
+				CPrintToChat(client, "%t", "round_is_live");
+				return;
+			}
+		}
+		else
+		{
+			ExcuteCheerOrJeer(bCheerOrJeer, client);
+			if (bCheerOrJeer) g_fLastTimeJeer[client] = GetEngineTime();
+			else g_fLastTimeCheer[client] = GetEngineTime();
+		}
+	}
+	else
+	{
+		ExcuteCheerOrJeer(bCheerOrJeer, client);
+		if (bCheerOrJeer) g_fLastTimeJeer[client] = GetEngineTime();
+		else g_fLastTimeCheer[client] = GetEngineTime();
+	}
+}
+
+void ExcuteCheerOrJeer(bool bCheerOrJeer, int client)
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			char sBuffer[PLATFORM_MAX_PATH]; char sNumber[128];
+			IntToString(GetRandomInt(0, (bCheerOrJeer ? g_hMapCheerFile.Size : g_hMapJeerFile.Size)), sNumber, sizeof(sNumber));
+
+			if (bCheerOrJeer) g_hMapCheerFile.GetString(sNumber, sBuffer, PLATFORM_MAX_PATH);
+			else g_hMapJeerFile.GetString(sNumber, sBuffer, PLATFORM_MAX_PATH);
+
+			EmitSoundToClient(i, sBuffer, _, _, _, _, bCheerOrJeer ? g_hCvarCheerVolume.FloatValue : g_hCvarJeerVolume.FloatValue);
+		}
+	}
+
+	if (g_hCvarChat.BoolValue)
+	{
+		char team[64];
+		char name[64];
+
+		switch (GetClientTeam(client))
+		{
+			case L4D_TEAM_SPECTATOR:
+				Format(team, sizeof(team), "%t", "Spectator");
+
+			case L4D_TEAM_SURVIVOR:
+				Format(team, sizeof(team), "%t", "Survivor");
+
+			case L4D_TEAM_INFECTED:
+				Format(team, sizeof(team), "%t", "Infected");
+		}
+
+		GetClientName(client, name, sizeof(name));
+		CPrintToChatAllEx(client, "%t", bCheerOrJeer ? "Cheered!!!" : "Jeered!!!", team, name);
+	}
+
+	bCheerOrJeer ? g_iCheerCount[client]++ : g_iJeerCount[client]++;
+	if (g_bIsRoundAlive) bCheerOrJeer ? g_iCheerInRoundCount[client]++ : g_iJeerInRoundCount[client]++;
+}
+
+// from MapChanger by Alex Dragokas
+void LoadSounds()
+{
+	DirectoryListing hDir;
+
+	if (g_hCvarCheer.BoolValue)
+		LoadSounds_Do(hDir, true);
+
+	if (g_hCvarJeer.BoolValue)
+		LoadSounds_Do(hDir, false);
+
+	delete hDir;
+}
+
+void LoadSounds_Do(DirectoryListing hDir, bool bCheerOrJeer)
+{
+	int iLen; char SoundFile[PLATFORM_MAX_PATH];
+	FileType fileType; char Paths[PLATFORM_MAX_PATH];
+
+	if (bCheerOrJeer) g_hCvarCheerSoundDir.GetString(Paths, sizeof(Paths));
+	else g_hCvarJeerSoundDir.GetString(Paths, sizeof(Paths));
+
+	hDir = OpenDirectory(Paths, false);
+	if (hDir)
+	{
+		while (hDir.GetNext(SoundFile, PLATFORM_MAX_PATH, fileType))
+		{
+			static int i = 0;
+			if (fileType == FileType_File)
+			{
+				iLen = strlen(SoundFile);
+					
+				if ( iLen >= 4 && (strcmp(SoundFile[iLen - 4], ".mp3") == 0 || strcmp(SoundFile[iLen - 4], ".wav") == 0))
+				{
+					char sNumber[128];
+					IntToString(i, sNumber, sizeof(sNumber));
+					Format(SoundFile, sizeof(SoundFile), "%s/%s", Paths, SoundFile);
+
+					if (bCheerOrJeer) g_hMapCheerFile.SetString(sNumber, SoundFile, false);
+					else g_hMapJeerFile.SetString(sNumber, SoundFile, false);
+				}
+			}
+			i++;
+		}
+	}
+}
