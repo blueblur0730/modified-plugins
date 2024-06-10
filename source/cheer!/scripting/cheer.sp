@@ -62,7 +62,7 @@ Versions:
 		* unlock the limit of sound files we can load.
 ------------------------------------------------------------
 2024
-	r2.0.0: 7/6/24
+	r2.0.0: 6/7/24
 		* Finshed to do. Credits to MapChanger by Alex Dragokas.
 			- Removed config file. Now plugin will precache file automatically by the preset path in the sound/.. directory.
 				- Added new convar "cheer_sound_dir" and "jeer_sound_dir" to specify the sound path to precache.
