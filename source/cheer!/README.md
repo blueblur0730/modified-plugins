@@ -75,9 +75,11 @@ cheer_download_enable 0
 <hr>
 
 ### Client Cmd
+```
 sm_cheer
-sm_jeer
 
+sm_jeer
+```
 <hr>
 
 ### Notice
