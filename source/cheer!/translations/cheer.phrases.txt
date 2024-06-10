@@ -1,31 +1,21 @@
 ﻿"Phrases"
 {
-	"over_cheer_limit"
+	"cheer_disabled"
 	{
-		"#format"	"{1:i}"		// 1: times you can cheer
-		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}cheers{default} for this round. ({lightgreen}{1}{default} times)."
-		"chi"		"[{orange}!{default}] 你已经达到本轮最大 {orange}cheer{default} 次数限制. ({lightgreen}{1}{default} 次)."
+		"en"		"[{orange}!{default}] Server doesn't allow players to use {orange}cheer{default} command."
+		"chi"		"[{orange}!{default}] 服务器不允许玩家使用{orange}cheer{default}指令"
 	}
 
-	"over_in_round_cheer_limit"
+	"jeer_disabled"
 	{
-		"#format"	"{1:i}"		// 1: times you can cheer
-		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}cheers{default} in round. ({lightgreen}{1}{default} times)."
-		"chi"		"[{orange}!{default}] 你已经达到轮中最大 {orange}cheer{default} 次数限制. ({lightgreen}{1}{default} 次)."
+		"en"		"[{orange}!{default}] Server doesn't allow players to use {orange}jeer command."
+		"chi"		"[{orange}!{default}] 服务器不允许玩家使用{orange}jeer{default}指令"
 	}
 
-	"over_jeer_limit"
+	"Recharging"
 	{
-		"#format"	"{1:i}"		// 1: times you can jeer
-		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}jeers{default} for this round. ({lightgreen}{1}{default} times)"
-		"chi"		"[{orange}!{default}] 你已经达到了本轮最大 {orange}jeer{default} 次数限制. ({lightgreen}{1}{default} 次)"
-	}
-
-	"over_in_round_jeer_limit"
-	{
-		"#format"	"{1:i}"		// 1: times you can jeer
-		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}jeers{default} in round. ({lightgreen}{1}{default} times)"
-		"chi"		"[{orange}!{default}] 你已经达到了轮中最大 {orange}jeer{default} 次数限制. ({lightgreen}{1}{default} 次)"
+		"en"		"[{orange}!{default}] You have to wait for a while to use this command again!"
+		"chi"		"[{orange}!{default}] 你必须等一会才能使用这个指令!"
 	}
 
 	"cheer_interval_limited"
@@ -48,35 +38,31 @@
 		"chi"		"[{orange}!{default}] 回合开始时不允许使用Cheers或Jeers."
 	}
 
+	"over_jeer_limit"
+	{
+		"#format"	"{1:i}"		// 1: times you can jeer
+		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}jeers{default} for this round. ({lightgreen}{1}{default} times)"
+		"chi"		"[{orange}!{default}] 你已经达到了本轮最大 {orange}jeer{default} 次数限制. ({lightgreen}{1}{default} 次)"
+	}
+
+	"over_cheer_limit"
+	{
+		"#format"	"{1:i}"		// 1: times you can cheer
+		"en"		"[{orange}!{default}] You have already reached your maximum number of {orange}cheers{default} for this round. ({lightgreen}{1}{default} times)."
+		"chi"		"[{orange}!{default}] 你已经达到本轮最大 {orange}cheer{default} 次数限制. ({lightgreen}{1}{default} 次)."
+	}
+
 	"Cheered!!!"
 	{
-		"#format"	"{1:s},{2:s}"		// 1: team, 2: name
-		"en"		"({teamcolor}{1}{default}) {teamcolor}{2}{default}: {green}Cheered!!!"
-		"chi"		"({teamcolor}{1}{default}) {teamcolor}{2}{default}: {green}Cheered!!!"
+		"#format"	"{1:s}"		// 1: team, 2: name
+		"en"		"{teamcolor}{1}{default}: {green}Cheered!!!"
+		"chi"		"{teamcolor}{1}{default}: {green}Cheered!!!"
 	}
 
 	"Jeered!!!"
 	{
-		"#format"	"{1:s},{2:s}"		// 1: team, 2: name
-		"en"		"({teamcolor}{1}{default}) {teamcolor}{2}{default}: {green}Jeered!!!"
-		"chi"		"({teamcolor}{1}{default}) {teamcolor}{2}{default}: {green}Jeered!!!"
-	}
-
-	"Spectator"
-	{
-		"en"		"Spectator"
-		"chi"		"旁观"
-	}
-
-	"Survivor"
-	{
-		"en"		"Survivor"
-		"chi"		"生还"
-	}
-
-	"Infected"
-	{
-		"en"		"Infected"
-		"chi"		"特感"
+		"#format"	"{1:s}"		// 1: team, 2: name
+		"en"		"{teamcolor}{1}{default}: {green}Jeered!!!"
+		"chi"		"{teamcolor}{1}{default}: {green}Jeered!!!"
 	}
 }
