@@ -261,6 +261,16 @@ void Command_CheerOrJeer(int client, bool bCheerOrJeer)
 		return;
 	}
 
+	if (g_bCvarCmdIntervalueEnable)
+	{
+		if ((GetEngineTime() - (bCheerOrJeer ? g_fLastTimeCheer[client] : g_fLastTimeJeer[client])) < g_fCvarCmdInterval)
+		{
+			int iTimeLeft = RoundToNearest(g_fCvarCmdInterval - (GetEngineTime() - (bCheerOrJeer ? g_fLastTimeCheer[client] : g_fLastTimeJeer[client])));
+			CPrintToChat(client, "%t", bCheerOrJeer ? "cheer_interval_limited" : "jeer_interval_limited", iTimeLeft);
+			return;
+		}
+	}
+
 	if (!client || !IsClientInGame(client) || IsFakeClient(client))
 		return;
 
@@ -274,24 +284,6 @@ void Command_CheerOrJeer(int client, bool bCheerOrJeer)
 		else
 		{
 			ExcuteCheerOrJeer(bCheerOrJeer, client);
-			return;
-		}
-	}
-
-	if (g_bCvarCmdIntervalueEnable && g_iCvarWayToPlay == 1)
-	{
-		float fDelayTime = g_fCvarCmdInterval;
-
-		if (bCheerOrJeer ? (g_iCheerCount[client] == 0) : (g_iJeerCount[client] == 0))
-			g_fLastTimeCheer[client] = GetEngineTime();
-		else
-			g_fLastTimeJeer[client] = GetEngineTime();
-
-
-		if (GetEngineTime() - (bCheerOrJeer ? g_fLastTimeCheer[client] : g_fLastTimeJeer[client]) < fDelayTime)
-		{
-			int iTimeLeft = RoundToNearest(fDelayTime - (GetEngineTime() - (bCheerOrJeer ? g_fLastTimeCheer[client] : g_fLastTimeJeer[client])));
-			CPrintToChat(client, "%t", bCheerOrJeer ? "cheer_interval_limited" : "jeer_interval_limited", iTimeLeft);
 			return;
 		}
 	}

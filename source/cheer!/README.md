@@ -202,4 +202,7 @@ Versions:
 
 	r2.1.3: 6/12/24
 		* Fixed an issue caused by improperly using DataPack.
+
+	r2.1.4: 6/13/24
+		* Allow players to have command interval limit when "cheer_way_to_play" is set to 2.
 ```
