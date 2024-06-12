@@ -379,6 +379,11 @@ void LoadSounds_Do(DirectoryListing hDir, char[] sPath, bool bCheerOrJeer)
 	int iLen; char SoundFile[PLATFORM_MAX_PATH];
 	FileType fileType;
 
+	/**
+	 * Note: When use OpenDirectory(), you need to specify concisely the folder in the base game dir.
+	 * When use PrecacheSound() and EmitSound*(), the path string dose not need the prefix 'sound/',
+	 * the function will automatically serch the file under the dir 'sound/' based on the path you put in.
+	 */
 	Format(sBuffer, PLATFORM_MAX_PATH, sPath);
 	Format(sPath, PLATFORM_MAX_PATH, "sound/%s", sPath);
 	hDir = OpenDirectory(sPath, false);
