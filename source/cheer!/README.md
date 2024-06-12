@@ -36,8 +36,8 @@ cheer_max_chance 3
 // Enables the cheer  
 cheer_enable 1
 
-// Sound file directory  
-cheer_sound_dir sound/nepu/cheer
+// Sound file directory under the directory 'sound/...'
+cheer_sound_dir nepu/cheer
 
 // The maximum number of cheers per round. This cvar is ignored if 'cheer_way_to_play' is set to 2 or 'cheer_competitive_mode_enable' is on  
 cheer_limit 10
@@ -48,8 +48,8 @@ cheer_volume 1.0
 // Enables the jeer  
 jeer_enable 1
 
-// Sound file directory  
-jeer_sound_dir sound/nepu/jeer
+// Sound file directory under the directory 'sound/...' 
+jeer_sound_dir nepu/jeer
 
 // The maximum number of jeers per round. This cvar is ignored if 'cheer_way_to_play' is set to 2 or 'cheer_competitive_mode_enable' is on  
 jeer_limit 10
@@ -87,4 +87,113 @@ sm_jeer
  - Custom sound file is not a necessity. You can use the original game sound files.
  - FastDL is recommended.
  - If your server is played by only several friends just let them put the custom sound file on their client folder it would make things much easier.
- - .mp3 and .wav format is recommended. [See more information here](https://forums.alliedmods.net/archive/index.php/t-331070.html#:~:text=This%20is%20usually%20an%20error%20in%20the%20audio,to%20change%20the%20audio%20name%20and%20update%20FastDL.).
+ - .mp3 and .wav format is restricted. [See more information here about file quality](https://forums.alliedmods.net/archive/index.php/t-331070.html#:~:text=This%20is%20usually%20an%20error%20in%20the%20audio,to%20change%20the%20audio%20name%20and%20update%20FastDL.).
+ - If client says `Failed to load sound ".../... .mp3", file probably missing from disk/repository` and the file is indeed on the position it should be there and you have ensured everything is done right, try change the file directory cvar and both server-side and client-side file's directory. See more informations below.
+[*1](https://forums.alliedmods.net/showthread.php?t=237472)  
+[*2](https://forums.alliedmods.net/showthread.php?t=272147)
+
+### ChangeLog
+```
+cheer.sp
+
+Description:
+	The Cheer! plugin allows players to cheer random cheers per round.
+
+Versions:
+	1.0
+		* Initial Release
+
+	1.1
+		* Added cvar to control colors
+		* Added cvar to control chat
+		* Added team color to name
+
+	1.2
+		* Added jeers
+		* Added admin only support for jeers
+		* Made config file autoload
+
+	1.3
+		* Added *DEAD* in front of dead people's jeers
+		* Added volume control cvar sm_cheer_jeer_volume
+		* Added jeer limit cvat sm_cheer_jeer_limit
+		* Added count infomation to limit displays
+2007
+------------------------------------------------------------
+2023
+	r1.0: 8/1/23
+		* updated to sm1.11 new syntax.
+		* reformatted to support L4D2.
+
+	r1.1: 8/2/23
+		* check the gamemode in L4D2. we dont ues this plugin if the round has already started in versus or scavenge.
+		* split cheer and jeer into two commands saperately rather than checking wether a player is dead or not.
+
+	r1.1.1: 8/2/23
+		* if round is lived, tell them we cannot use commands.
+
+	r1.2: 8/2/23
+		* fix an issue message didn't print to chat.
+		* add team preflexes.
+
+	r1.2.1: 8/2/23
+		* now cheer or jeer counts restore to 0 if round ends.
+
+	r1.3: 8/6/23
+		* Optimized code format.
+		* Added in round check. We allow players to ues cheer or jeer in scavenge or versus mode while round is live, switch and limits is controlled by new added cvar.
+
+	r1.3.1: 8/6/23
+		* Added a cvar to control wether a client should download sound files. (there's more other effecient ways to download files, we don't recommend to do this on this plugin.)
+
+	r1.3.2: 8/7/23
+		* Added a cvar to control the interval we can cheer or jeer next time, preventing chat spamming.
+		* more mutation gamemode detections.
+
+	r1.3.3: 9/13/23
+		* Added a cvar to control the sound file number we can load. Now we can load each cheer or jeer files up to 128 at a time. (still confusing if there is anyway to turn this 128 into a valid varible.)
+
+	to do:
+		* unlock the limit of sound files we can load.
+------------------------------------------------------------
+2024
+	r2.0.0: 6/7/24
+		* Finshed to do. Credits to MapChanger by Alex Dragokas.
+			- Removed config file. Now plugin will precache file automatically by the preset path in the sound/.. directory.
+				- Added new convar "cheer_sound_dir" and "jeer_sound_dir" to specify the sound path to precache.
+				- Removed convar "sm_cheer_sound_number" and "sm_cheer_colors" 谁不在colors啊我也在colors啊colors就得应该是colors而不是不colors
+		* Renamed convars.
+		* Reformatted codes.
+		* Code optimizations and simplifizations.
+		* Translations reformatted. Removed two non-color phrases.
+		* Added Left4DHooks to identify gamemode. (More directly isn't ?)
+		* Removed sourcemod cfg cvar file. I dont like it.
+	  + to do:
+		* New choice. Added more convar to control the way we use.
+		* Add a way to use. Player only have 3 chances to use commands, but the chance will regain with the time passing. Like what ExG ze dose.
+		* Let user himself choose wether to unlimit the chance or other things in competitive gamemodes.
+	
+	r2.1.0: 6/9/24
+		* Added cvar change hook.
+		* Removed cvar "cheer_in_round_limit", "jeer_in_round_limit".
+		* Added cvar "cheer_way_to_play", "cheer_regain_time", "cheer_max_chance" (to do *3/1).
+		* Renamed cvar "cheer_in_round_enable" to "cheer_competitive_mode_enable".
+		* No longer limit while round began when in competitive mod.
+
+	r2.1.1: 6/10/24
+		* Removed team name prefix tag translations and unused translations.
+		* Finished to do *2
+		* Added new translation phrase "Rechargeing"
+		* If "cheer_competitive_mode_enable" is on, ignore cvar "cheer_cmd_interval_enable" "cheer_limit" "jeer_limit"
+		* Logic optimized.
+
+	r2.1.2: 6/12/24
+		* Fixed an issue that cvars didn't initialize on plugin start up.
+		* Use ArrayList instead of StringMap.
+		* Fixed that regain time didn't work.
+		* Translation phrase "Rechargeing" should be "Recharging".
+		* Fixed when client first entered the server the index wasn't initialized correcctly.
+		* Fixed the sound path prefix tag to write in.
+		* Fixed an issue that chance caculations dosen't work correctly.
+		* Fixed that the directory didn't format correctly to pass to the functions.
+```
