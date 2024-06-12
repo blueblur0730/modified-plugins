@@ -22,6 +22,9 @@
 
 ### ConVars
 ```
+// Plugin Version
+cheer_version
+
 // The way to play sounds.  
 // 1 = global chances is limited by cvars below,  
 // 2 = global chance will regain with the time passing, which means global chance is only affected by these 3 cvars below.  
