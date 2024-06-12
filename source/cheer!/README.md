@@ -195,8 +195,11 @@ Versions:
 		* Use ArrayList instead of StringMap.
 		* Fixed that regain time didn't work.
 		* Translation phrase "Rechargeing" should be "Recharging".
-		* Fixed when client first entered the server the index wasn't initialized correcctly.
+		* Fixed when client first entered the server the index wasn't initialized correctly.
 		* Fixed the sound path prefix tag to write in.
-		* Fixed an issue that chance caculations dosen't work correctly.
+		* Fixed an issue that chance calculations dosen't work correctly.
 		* Fixed that the directory didn't format correctly to pass to the functions.
+
+	r2.1.3: 6/12/24
+		* Fixed an issue caused by improperly using DataPack.
 ```

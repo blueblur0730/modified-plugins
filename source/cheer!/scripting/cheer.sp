@@ -6,7 +6,7 @@
 #include <left4dhooks>
 #include <sdktools>
 
-#define PLUGIN_VERSION	   	"r2.1.2"
+#define PLUGIN_VERSION	   	"r2.1.3"
 
 // Plugin definitions
 public Plugin myinfo =
@@ -358,6 +358,7 @@ void ExcuteCheerOrJeer(bool bCheerOrJeer, int client)
 
 Action DPTimer_RegainChance(Handle Timer, DataPack dp)
 {
+	dp.Reset();
 	int client = dp.ReadCell();
 	bool bCheerOrJeer = dp.ReadCell();
 	bCheerOrJeer ? g_iCurrentCheerChance[client]++ : g_iCurrentJeerChance[client]++;
