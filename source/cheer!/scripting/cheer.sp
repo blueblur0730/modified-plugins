@@ -6,7 +6,7 @@
 #include <left4dhooks>
 #include <sdktools>
 
-#define PLUGIN_VERSION	   	"r2.1.5"
+#define PLUGIN_VERSION	   	"r2.1.6"
 
 // Plugin definitions
 public Plugin myinfo =
@@ -339,19 +339,17 @@ void ExcuteCheerOrJeer(bool bCheerOrJeer, int client)
 
 	if (g_bCvarChat)
 	{
-		char name[64];
-		GetClientName(client, name, sizeof(name));
 		if (g_bCvarPlayToTeam)
 		{
 			L4DTeam team = L4D_GetClientTeam(client);
 			for (int i = 0; i < MaxClients; i++)
 			{
 				if (IsClientInGame(i) && !IsFakeClient(i) && team == L4D_GetClientTeam(i) )
-					CPrintToChatEx(client, client, bCheerOrJeer ? "Cheered!!!" : "Jeered!!!", name);
+					CPrintToChatEx(client, client, bCheerOrJeer ? "Cheered!!!" : "Jeered!!!", client);
 			}
 		}
 		else
-			CPrintToChatAllEx(client, "%t", bCheerOrJeer ? "Cheered!!!" : "Jeered!!!", name);
+			CPrintToChatAllEx(client, "%t", bCheerOrJeer ? "Cheered!!!" : "Jeered!!!", client);
 	}
 
 	if (bCheerOrJeer) g_fLastTimeCheer[client] = GetEngineTime();

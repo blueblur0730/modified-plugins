@@ -213,4 +213,8 @@ Versions:
 		* Added new convar "cheer_play_to_team" to choose whether play sounds and send chat message to your teammates or to all players. default off.
 		* On last version we forgot to replace version tag lmao
 		* Credits to Microsoft to let me know I'm writing Shit English and shamefully to correct every wrong words I've written in the documents.
+
+	r2.1.6: 6/13/24
+		* Minor change with message variable.
+			* Translation phrases "Cheered!!!" and "Jeered!!!" now use client index to specify client's name.
 ```
