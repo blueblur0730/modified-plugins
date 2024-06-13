@@ -54,14 +54,14 @@
 
 	"Cheered!!!"
 	{
-		"#format"	"{1:s}"		// 1: team, 2: name
+		"#format"	"{1:s}"		// 1: name
 		"en"		"{teamcolor}{1}{default}: {green}Cheered!!!"
 		"chi"		"{teamcolor}{1}{default}: {green}Cheered!!!"
 	}
 
 	"Jeered!!!"
 	{
-		"#format"	"{1:s}"		// 1: team, 2: name
+		"#format"	"{1:s}"		// 1: name
 		"en"		"{teamcolor}{1}{default}: {green}Jeered!!!"
 		"chi"		"{teamcolor}{1}{default}: {green}Jeered!!!"
 	}
