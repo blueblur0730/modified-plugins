@@ -1,15 +1,21 @@
 ﻿"Phrases"
 {
+	"disabled"
+	{
+		"en"		"[{orange}!{default}] Server doesn't allow players to use {orange}cheer{default} or {orange}jeer{default} command."
+		"chi"		"[{orange}!{default}] 服务器不允许玩家使用 {orange}cheer{default} 或 {orange}jeer{default} 指令"
+	}
+
 	"cheer_disabled"
 	{
 		"en"		"[{orange}!{default}] Server doesn't allow players to use {orange}cheer{default} command."
-		"chi"		"[{orange}!{default}] 服务器不允许玩家使用{orange}cheer{default}指令"
+		"chi"		"[{orange}!{default}] 服务器不允许玩家使用 {orange}cheer{default} 指令"
 	}
 
 	"jeer_disabled"
 	{
 		"en"		"[{orange}!{default}] Server doesn't allow players to use {orange}jeer command."
-		"chi"		"[{orange}!{default}] 服务器不允许玩家使用{orange}jeer{default}指令"
+		"chi"		"[{orange}!{default}] 服务器不允许玩家使用 {orange}jeer{default} 指令"
 	}
 
 	"Recharging"

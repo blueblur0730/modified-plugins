@@ -6,7 +6,7 @@
 #include <left4dhooks>
 #include <sdktools>
 
-#define PLUGIN_VERSION	   	"r2.1.6"
+#define PLUGIN_VERSION	   	"r2.2.0"
 
 // Plugin definitions
 public Plugin myinfo =
@@ -28,58 +28,74 @@ float
 	g_fLastTimeCheer[MAXPLAYERS + 1],
 	g_fLastTimeJeer[MAXPLAYERS + 1];
 
+ArrayList
+	g_hArrayCheerFile, g_hArrayJeerFile;
+
+bool
+	g_bIsFileLoadingFailed_Cheer = false,
+	g_bIsFileLoadingFailed_Jeer = false,
+	g_bIsRoundAlive = false;
+
+/* cvar variables below all*/
 ConVar
-	g_hCvarWayToPlay, g_hCvarRegainTime, g_hCvarMaxChance, g_hCvarCheerSoundDir, g_hCvarCheer, g_hCvarMaxCheers, 
-	g_hCvarChat, g_hCvarJeerSoundDir, g_hCvarJeer, g_hCvarMaxJeers, g_hCvarJeerVolume,
-	g_hCvarCheerVolume, g_hCvarCompetitiveEnable, g_hCvarPlayToTeam, g_hCvarDownloadEnable, g_hCvarCmdIntervalueEnable, g_hCvarCmdInterval;
+	g_hCvarWayToPlay, g_hCvarRegainTime, g_hCvarMaxChance, g_hCvarCheerSoundDir, g_hCvarEnable, g_hCvarMaxCheers, 
+	g_hCvarChat, g_hCvarJeerSoundDir, g_hCvarMaxJeers, g_hCvarJeerVolume,
+	g_hCvarCheerVolume, g_hCvarCompetitiveEnable, g_hCvarPlayToWho, g_hCvarCmdIntervalueEnable, g_hCvarCmdInterval;
 
 int
-	g_iCvarWayToPlay, g_iCvarMaxChance, g_iCvarMaxCheers, g_iCvarMaxJeers;
+	g_iCvarWayToPlay, g_iCvarEnable, g_iCvarMaxChance, g_iCvarMaxCheers, g_iCvarMaxJeers, g_iCvarChat, g_iCvarPlayToWho;
 	
 float
 	g_fCvarRegainTime, g_fCvarJeerVolume, g_fCvarCheerVolume, g_fCvarCmdInterval;
 
 bool
-	g_bCvarCheer, g_bCvarChat, g_bCvarJeer, g_bCvarCompetitiveEnable, g_bCvarPlayToTeam, g_bCvarDownloadEnable, g_bCvarCmdIntervalueEnable;
+	g_bCvarCompetitiveEnable, g_bCvarCmdIntervalueEnable;
 
 char
 	g_sCvarCheerSoundDir[PLATFORM_MAX_PATH], g_sCvarJeerSoundDir[PLATFORM_MAX_PATH];
 
-ArrayList
-	g_hArrayCheerFile, g_hArrayJeerFile;
-
-bool
-	g_bIsRoundAlive = false;
-
 public void OnPluginStart()
 {
 	// ConVars
-	CreateConVar("cheer_version", PLUGIN_VERSION, "Cheer Version", FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY);
+	CreateConVar("l4d2_cheer_version", PLUGIN_VERSION, "Cheer Version", FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 	g_hCvarWayToPlay = CreateConVar("cheer_way_to_play", "2",
 									 "The way to play sounds. \
 									 1 = global chances is limited by cvars below, \
-									 2 = global chance will regain with the time passing, which means global chance is only affected by these 3 cvars below.");
+									 2 = global chance will regain with the time passing, which means global chance is only affected by these 2 cvars below.");
+									 
 	g_hCvarRegainTime = CreateConVar("cheer_regain_time", "20.0", "The time to regain a chance to use command");
 	g_hCvarMaxChance = CreateConVar("cheer_max_chance", "3", "Max chance to use command. The chance will regain");
 
-	g_hCvarCheer = CreateConVar("cheer_enable", "1", "Enables the cheer");
+	g_hCvarEnable = CreateConVar("cheer_enable", "3",
+								"Enables the cheer. \
+								0 = disable all, \
+								1 = enable cheer, \
+								2 = enable jeer, \
+								3 = enable both cheer and jeer.");
+
 	g_hCvarCheerSoundDir = CreateConVar("cheer_sound_dir", "nepu/cheer", "Sound file directory under the directory 'sound/...'");
 	g_hCvarMaxCheers = CreateConVar("cheer_limit", "10", "The maximum number of cheers per round. This cvar is ignored if 'cheer_way_to_play' is set to 2 or 'cheer_competitive_mode_enable' is on");
 	g_hCvarCheerVolume = CreateConVar("cheer_volume", "1.0", "Cheer volume: should be a number between 0.0. and 1.0");
-
-	g_hCvarJeer	= CreateConVar("jeer_enable", "1", "Enables the jeer");
 	g_hCvarJeerSoundDir = CreateConVar("jeer_sound_dir", "nepu/jeer", "Sound file directory under the directory 'sound/...'");
 	g_hCvarMaxJeers	= CreateConVar("jeer_limit", "10", "The maximum number of jeers per round. This cvar is ignored if 'cheer_way_to_play' is set to 2 or 'cheer_competitive_mode_enable' is on");
 	g_hCvarJeerVolume = CreateConVar("jeer_volume", "1.0", "Jeer volume: should be a number between 0.0. and 1.0");
 
-	g_hCvarChat	= CreateConVar("cheer_chat", "1", "1 to turn enable chat messages, 0 for off");
+	g_hCvarChat	= CreateConVar("cheer_chat", "2",
+								"The way we print chat messages. \
+								0 = Dont print message at all, \
+								1 = Print to teammates, \
+								2 = To all players");
+
+	g_hCvarPlayToWho = CreateConVar("cheer_play_to_who", "2", 
+									"Play sounds only to who?\
+									1 = to the player that used the command, \
+									2 = to the team that the player that used the command is on, \
+									3 = to all players.");
+
 	g_hCvarCmdIntervalueEnable = CreateConVar("cheer_cmd_interval_enable", "0", "Enable command interval? This cvar is ignored if 'cheer_competitive_mode_enable' is enabled");
 	g_hCvarCmdInterval = CreateConVar("cheer_cmd_interval", "3.0", "Interval to cheer or jeer next time");
 	g_hCvarCompetitiveEnable = CreateConVar("cheer_competitive_mode_enable", "0", "Enables the command in competitive mode when the round begins? This cvar is ignored if 'cheer_way_to_play' is set to 2");
-	g_hCvarPlayToTeam = CreateConVar("cheer_play_to_team", "0", "Play sounds and chat message only to the teammates ?");
-
-	g_hCvarDownloadEnable = CreateConVar("cheer_download_enable", "0", "Enable download generated by Cheer! plugin ?");
 
 	AddCvarChangeHook();
 	SetCvar();
@@ -90,7 +106,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_jeer", CommandJeer);
 
 	// Translations
-	LoadTranslations("cheer.phrases");
+	LoadTranslations("l4d2_cheer.phrases");
 
 	// Load Sounds
 	g_hArrayCheerFile = new ArrayList(PLATFORM_MAX_PATH);
@@ -100,7 +116,6 @@ public void OnPluginStart()
 	// Hooks
 	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
 	HookEvent("round_end", Event_RoundEnd, EventHookMode_PostNoCopy);
-	HookEvent("player_left_start_area", Event_PlayerLeftStartArea, EventHookMode_PostNoCopy);
 }
 
 void AddCvarChangeHook()
@@ -109,17 +124,15 @@ void AddCvarChangeHook()
 	g_hCvarRegainTime.AddChangeHook(OnCvarChanged);
 	g_hCvarMaxChance.AddChangeHook(OnCvarChanged);
 	g_hCvarCheerSoundDir.AddChangeHook(OnCvarChanged);
-	g_hCvarCheer.AddChangeHook(OnCvarChanged);
+	g_hCvarEnable.AddChangeHook(OnCvarChanged);
 	g_hCvarMaxCheers.AddChangeHook(OnCvarChanged);
 	g_hCvarChat.AddChangeHook(OnCvarChanged);
 	g_hCvarJeerSoundDir.AddChangeHook(OnCvarChanged);
-	g_hCvarJeer.AddChangeHook(OnCvarChanged);
 	g_hCvarMaxJeers.AddChangeHook(OnCvarChanged);
 	g_hCvarJeerVolume.AddChangeHook(OnCvarChanged);
 	g_hCvarCheerVolume.AddChangeHook(OnCvarChanged);
 	g_hCvarCompetitiveEnable.AddChangeHook(OnCvarChanged);
-	g_hCvarPlayToTeam.AddChangeHook(OnCvarChanged);
-	g_hCvarDownloadEnable.AddChangeHook(OnCvarChanged);
+	g_hCvarPlayToWho.AddChangeHook(OnCvarChanged);
 	g_hCvarCmdIntervalueEnable.AddChangeHook(OnCvarChanged);
 	g_hCvarCmdInterval.AddChangeHook(OnCvarChanged);
 }
@@ -133,20 +146,18 @@ void SetCvar()
 {
 	g_iCvarWayToPlay = g_hCvarWayToPlay.IntValue;
 	g_iCvarMaxChance = g_hCvarMaxChance.IntValue;
+	g_iCvarEnable = g_hCvarEnable.IntValue;
 	g_iCvarMaxCheers = g_hCvarMaxCheers.IntValue;
 	g_iCvarMaxJeers = g_hCvarMaxJeers.IntValue;
+	g_iCvarChat = g_hCvarChat.IntValue;
+	g_iCvarPlayToWho = g_hCvarPlayToWho.IntValue;
 
 	g_fCvarRegainTime = g_hCvarRegainTime.FloatValue;
 	g_fCvarCheerVolume = g_hCvarCheerVolume.FloatValue;
 	g_fCvarJeerVolume = g_hCvarJeerVolume.FloatValue;
 	g_fCvarCmdInterval = g_hCvarCmdInterval.FloatValue;
-
-	g_bCvarCheer = g_hCvarCheer.BoolValue;
-	g_bCvarChat = g_hCvarChat.BoolValue;
-	g_bCvarJeer = g_hCvarJeer.BoolValue;
+	
 	g_bCvarCompetitiveEnable = g_hCvarCompetitiveEnable.BoolValue;
-	g_bCvarPlayToTeam = g_hCvarPlayToTeam.BoolValue;
-	g_bCvarDownloadEnable = g_hCvarDownloadEnable.BoolValue;
 	g_bCvarCmdIntervalueEnable = g_hCvarCmdIntervalueEnable.BoolValue;
 
 	g_hCvarCheerSoundDir.GetString(g_sCvarCheerSoundDir, sizeof(g_sCvarCheerSoundDir));
@@ -155,15 +166,29 @@ void SetCvar()
 
 public void OnMapStart()
 {
-	if (g_hArrayCheerFile.Length != 0)
-		OnMapStart_Do(true);
-
-	if (g_hArrayJeerFile.Length != 0)
-		OnMapStart_Do(false);
+	OnMapStart_Do(true);
+	OnMapStart_Do(false);
 }
 
 void OnMapStart_Do(bool bCheerOrJeer)
 {
+	if (bCheerOrJeer)
+	{
+		if (g_hArrayCheerFile.Length == 0)
+		{
+			g_bIsFileLoadingFailed_Cheer = true;
+			return;
+		}
+	}
+	else
+	{
+		if (g_hArrayJeerFile.Length == 0)
+		{
+			g_bIsFileLoadingFailed_Jeer = true;
+			return;
+		}
+	}
+
 	char sPath[PLATFORM_MAX_PATH];
 	for (int i = 0; i < (bCheerOrJeer ? g_hArrayCheerFile.Length : g_hArrayJeerFile.Length); i++)
 	{
@@ -183,13 +208,10 @@ void OnMapStart_Do(bool bCheerOrJeer)
 					PrintToServer("[Cheer!] File %s precached successfully!", sPath);
 			}
 		}
-
-		if (g_bCvarDownloadEnable)
-			AddFileToDownloadsTable(sPath);
 	}
 }
 
-public void Event_PlayerLeftStartArea(Event event, char[] name, bool dontBroadcast)
+public void L4D_OnFirstSurvivorLeftSafeArea_Post(int client)
 {
 	g_bIsRoundAlive = true;
 }
@@ -243,7 +265,6 @@ void SetIndex()
 	}
 }
 
-// to pass the bool value we defined two functions here, this will make the code shorter.
 Action CommandCheer(int client, int args)
 {
 	Command_CheerOrJeer(client, true);
@@ -258,10 +279,31 @@ Action CommandJeer(int client, int args)
 
 void Command_CheerOrJeer(int client, bool bCheerOrJeer)
 {
-	if (!(bCheerOrJeer ? g_bCvarCheer : g_bCvarJeer))
+	switch (g_iCvarEnable)
 	{
-		CReplyToCommand(client, "%t", bCheerOrJeer ? "cheer_disabled" :"jeer_disabled");
-		return;
+		case 0:
+		{
+			CReplyToCommand(client, "%t", "disabled");
+			return;
+		}
+
+		case 1:
+		{
+			if (!bCheerOrJeer)
+			{
+				CReplyToCommand(client, "%t", "jeer_disabled");
+				return;
+			}
+		}
+
+		case 2:
+		{
+			if (bCheerOrJeer)
+			{
+				CReplyToCommand(client, "%t", "cheer_disabled");
+				return;
+			}
+		}
 	}
 
 	if (g_bCvarCmdIntervalueEnable)
@@ -321,35 +363,49 @@ void Command_CheerOrJeer(int client, bool bCheerOrJeer)
 
 void ExcuteCheerOrJeer(bool bCheerOrJeer, int client)
 {
-	char sBuffer[PLATFORM_MAX_PATH];
-	if (bCheerOrJeer) g_hArrayCheerFile.GetString(GetRandomInt(0, g_hArrayCheerFile.Length - 1), sBuffer, PLATFORM_MAX_PATH);
-	else g_hArrayJeerFile.GetString(GetRandomInt(0, g_hArrayCheerFile.Length - 1), sBuffer, PLATFORM_MAX_PATH);
-
-	if (g_bCvarPlayToTeam)
+	if (!(bCheerOrJeer ? g_bIsFileLoadingFailed_Cheer : g_bIsFileLoadingFailed_Jeer))
 	{
-		L4DTeam team = L4D_GetClientTeam(client);
-		for (int i = 0; i < MaxClients; i++)
+		char sBuffer[PLATFORM_MAX_PATH];
+		if (bCheerOrJeer) g_hArrayCheerFile.GetString(GetRandomInt(0, g_hArrayCheerFile.Length - 1), sBuffer, PLATFORM_MAX_PATH);
+		else g_hArrayJeerFile.GetString(GetRandomInt(0, g_hArrayCheerFile.Length - 1), sBuffer, PLATFORM_MAX_PATH);
+
+		/* EmitSound*() plays a sound on an entity (of course, client is an entity as well),
+		 * which means the sound will be emitted and spread out from the entity's position.
+		 * g_iCvarPlayToWho decides how many sound will be emitted, which avoids this to be noisy..
+		 */
+		switch (g_iCvarPlayToWho)
 		{
-			if (IsClientInGame(i) && !IsFakeClient(i) && team == L4D_GetClientTeam(i) )
-				EmitSoundToClient(i, sBuffer, _, _, _, _, bCheerOrJeer ? g_fCvarCheerVolume : g_fCvarJeerVolume);
+			case 1: EmitSoundToClient(client, sBuffer, _, _, _, _, bCheerOrJeer ? g_fCvarCheerVolume : g_fCvarJeerVolume);
+			case 2:
+			{
+				L4DTeam team = L4D_GetClientTeam(client);
+				for (int i = 0; i < MaxClients; i++)
+				{
+					if (IsClientInGame(i) && !IsFakeClient(i) && team == L4D_GetClientTeam(i))
+					{
+						EmitSoundToClient(i, sBuffer, _, _, _, _, bCheerOrJeer ? g_fCvarCheerVolume : g_fCvarJeerVolume);
+					}
+				}
+			}
+			case 3: EmitSoundToAll(sBuffer, _, _, _, _, bCheerOrJeer ? g_fCvarCheerVolume : g_fCvarJeerVolume);
 		}
 	}
-	else
-		EmitSoundToAll(sBuffer, _, _, _, _, bCheerOrJeer ? g_fCvarCheerVolume : g_fCvarJeerVolume);
 
-	if (g_bCvarChat)
+	switch (g_iCvarChat)
 	{
-		if (g_bCvarPlayToTeam)
+		case 2:
 		{
-			L4DTeam team = L4D_GetClientTeam(client);
-			for (int i = 0; i < MaxClients; i++)
+			if (g_iCvarPlayToWho)
 			{
-				if (IsClientInGame(i) && !IsFakeClient(i) && team == L4D_GetClientTeam(i) )
-					CPrintToChatEx(client, client, bCheerOrJeer ? "Cheered!!!" : "Jeered!!!", client);
+				L4DTeam team = L4D_GetClientTeam(client);
+				for (int i = 0; i < MaxClients; i++)
+				{
+					if (IsClientInGame(i) && !IsFakeClient(i) && team == L4D_GetClientTeam(i) )
+						CPrintToChatEx(client, client, bCheerOrJeer ? "Cheered!!!" : "Jeered!!!", client);
+				}
 			}
 		}
-		else
-			CPrintToChatAllEx(client, "%t", bCheerOrJeer ? "Cheered!!!" : "Jeered!!!", client);
+		case 3: CPrintToChatAllEx(client, "%t", bCheerOrJeer ? "Cheered!!!" : "Jeered!!!", client);
 	}
 
 	if (bCheerOrJeer) g_fLastTimeCheer[client] = GetEngineTime();
@@ -403,6 +459,7 @@ void LoadSounds_Do(DirectoryListing hDir, char[] sPath, bool bCheerOrJeer)
 	hDir = OpenDirectory(sPath, false);
 	if (hDir)
 	{
+		int i = 0;
 		while (hDir.GetNext(SoundFile, PLATFORM_MAX_PATH, fileType))
 		{
 			if (fileType == FileType_File)
@@ -415,10 +472,13 @@ void LoadSounds_Do(DirectoryListing hDir, char[] sPath, bool bCheerOrJeer)
 					Format(SoundFile, sizeof(SoundFile), "%s/%s", sBuffer, SoundFile);
 					if (bCheerOrJeer) g_hArrayCheerFile.PushString(SoundFile);
 					else g_hArrayJeerFile.PushString(SoundFile);
+					i++;
 				}
 			}
 		}
+		if (i == 0)
+			LogError("[Cheer!] No sound files found in '%s'.", sPath);
 	}
 	else
-		PrintToServer("[Cheer!] handle 'hDir' is null! Please check if you have 'sound/..' directory on your server game folder.");
+		LogError("[Cheer!] handle 'hDir' is null! '%s' is not a valid directory.", sPath);
 }

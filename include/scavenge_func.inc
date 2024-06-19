@@ -13,19 +13,6 @@
 #include <sdktools>
 
 /*
- * Returns if the current gamemode is scavenge.
- *
- * @return 			true if the current gamemode is scavenge, false otherwise
- */
-stock bool IsScavengeMode()
-{
-	char   sCurGameMode[64];
-	ConVar CurGameMode = FindConVar("mp_gamemode");
-	CurGameMode.GetString(sCurGameMode, sizeof(sCurGameMode));
-	return (strcmp(sCurGameMode, "scavenge") == 0) ? true : false;
-}
-
-/*
  * Returns the current round number of current scavenge match.
  *
  * @return       	Round numbers
@@ -147,22 +134,6 @@ stock void SetWinningTeamNumber(int round, int team)
 	GameRules_SetProp("m_iWinningTeamNumber", team, _, round - 1);
 }
 
-/* FormatScavengeRoundTime() */
-/* Credit to Forgetest from plugin 'Hyper-V HUD Manager(spechud)' */
-
-/*
- * Returns the boolean value of the current round.
- *
- * @return			true if the current round is in second half, false otherwise.
- */
-
-/* Already existed in l4d2util_rounds.inc
-stock bool InSecondHalfOfRound()
-{
-	return view_as<bool>(GameRules_GetProp("m_bInSecondHalfOfRound", 1));
-}
-*/
-
 /*
  * Returns number of characters of scavenge format time.
  *
@@ -182,10 +153,6 @@ stock int FormatScavengeRoundTime(char[] buffer, int maxlen, int team, bool node
 
 	return nodecimalpoint ? Format(buffer, maxlen, "%d:%02.0f", minutes, seconds) : Format(buffer, maxlen, "%d:%05.2f", minutes, seconds);
 }
-
-/* GetRoundDuration(), GetScavengeTeamScore(), L4D2_TeamNumberToTeamIndex() */
-/* Credit to ProdigySim from plugin 'Scavenge Quick End' */
-/* GetScavengeMatchScore(), SetScavengeMatchScore() and SetScavengeTeamScore() was derived from these functions. */
 
 /*
  * Returns the float value of the this round duration.
@@ -225,8 +192,6 @@ stock int GetScavengeTeamScore(int team, int round)
 	team = L4D2_TeamNumberToTeamIndex(team);
 
 	return GameRules_GetProp("m_iScavengeTeamScore", _, (2 * (round - 1)) + team);
-	// this is because:
-
 	/*
 	  Sub-Class Table (3 Deep): m_iScavengeTeamScore
 		-Member: 000 (offset 0) (type integer) (bits 6)
