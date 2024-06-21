@@ -100,7 +100,7 @@ sm_jeer
  - Custom sound file is not a necessity. You can use the original game sound files.
  - FastDL is recommended.
  - If your server is played by only several friends just let them put the custom sound file on their client folder it would make things much easier.
- - .mp3 and .wav format is restricted. [See more information here about file quality](https://forums.alliedmods.net/archive/index.php/t-331070.html#:~:text=This%20is%20usually%20an%20error%20in%20the%20audio,to%20change%20the%20audio%20name%20and%20update%20FastDL.).
+ - .mp3 and .wav format is restricted. [See more information here about file quality](https://developer.valvesoftware.com/wiki/L4D2_Custom_Sound_and_Music_Tutorial#:~:text=cache%20entry.-,Sound%20cache%20compatibility,-%5Bedit%5D). [Forume Discussion](https://forums.alliedmods.net/archive/index.php/t-331070.html#:~:text=This%20is%20usually%20an%20error%20in%20the%20audio,to%20change%20the%20audio%20name%20and%20update%20FastDL.).
  - If client says `Failed to load sound ".../... .mp3", file probably missing from disk/repository` and the file is indeed on the position it should be there and you have ensured everything is done right, try change the file directory cvar and both server-side and client-side file's directory. See more informations below.  
 [*1](https://forums.alliedmods.net/showthread.php?t=237472)  
 [*2](https://forums.alliedmods.net/showthread.php?t=272147)
