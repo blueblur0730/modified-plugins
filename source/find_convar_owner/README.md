@@ -2,6 +2,7 @@
 
 ### Introduction
  - A lite version of "dump_all_cmds_cvars" by Bacardi, this plugin dumps all sourcemod generated convars into a keyvalue file.  
+ - The dumpped file is located at sourcemod/data/dumpped_convars.txt .
 
 ### Source
  - https://forums.alliedmods.net/showthread.php?p=2688799  
