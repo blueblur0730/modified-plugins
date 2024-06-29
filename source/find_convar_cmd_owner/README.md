@@ -33,3 +33,31 @@ sm_dumpcvar
 sm_dumpcmd
 ```
 <hr>
+
+### Changelog
+```
+/** changelog:
+ * 1.0: 
+ * 	- initial release.
+ * 
+ * 1.1: 
+ * 	- fixed a problem when plugin name has the '/' slash character.
+ * 	- fixed that there's only one cvar printed per plugin.
+ * 
+ * 1.2: 
+ * 	- support cmd dumpping.
+ *  - variables renamed.
+ *  - logics improved.
+ *  - path key now use ' | ' to replace '_'
+ *  - added a new convar 'find_convar_cmd_owner_dumpmore'.
+ * 
+ * 1.2.1:
+ *  - unneeded code removed.
+ * 
+ * 1.2.2:
+ *  - fixed convars don't have a defualt flag.
+ *  - fixed flags are overlapping in the convars dumpping.
+ *  - formatted cvar flag output.
+ *  - BUG: flags are overlapping when outputting cmds.
+ */ 
+```

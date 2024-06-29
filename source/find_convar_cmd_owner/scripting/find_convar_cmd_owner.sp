@@ -1,31 +1,13 @@
-/** changelog:
- * 1.0: 
- * 	- initial release.
- * 
- * 1.1: 
- * 	- fixed a problem when plugin name has the '/' slash character.
- * 	- fixed that there's only one cvar printed per plugin.
- * 
- * 1.2: 
- * 	- support cmd dumpping.
- *  - variables renamed.
- *  - logics improved.
- *  - path key now use ' | ' to replace '_'
- *  - added a new convar 'find_convar_cmd_owner_dumpmore'.
- * 
- * 1.2.1:
- *  - unneeded code removed.
- */ 
-
 #pragma semicolon 1
 #pragma newdecls required
 
 #include <sourcemod>
 
-#define PL_VERSION	"1.2.1"
+#define PL_VERSION	"1.2.2"
 #define DUMP_PATH_CONVAR	"data/dumpped_convars.txt"
 #define DUMP_PATH_COMMAND	"data/dumpped_commands.txt"
 #define DEBUG 0
+#define DEBUG_MSG 0
 
 enum struct ConVarInfo
 {
@@ -47,14 +29,13 @@ enum struct CmdInfo
 }
 
 static const char g_sFlags[][] = {
-	//"FCVAR_NONE",
 	"FCVAR_UNREGISTERED", "FCVAR_DEVELOPMENTONLY", "FCVAR_GAMEDLL", "FCVAR_CLIENTDLL", //"FCVAR_MATERIAL_SYSTEM",
 	"FCVAR_HIDDEN", "FCVAR_PROTECTED", "FCVAR_SPONLY", "FCVAR_ARCHIVE", "FCVAR_NOTIFY",
 	"FCVAR_USERINFO", "FCVAR_PRINTABLEONLY", "FCVAR_UNLOGGED", "FCVAR_NEVER_AS_STRING",
 	"FCVAR_REPLICATED", "FCVAR_CHEAT", "FCVAR_SS", "FCVAR_DEMO", "FCVAR_DONTRECORD",
 	"FCVAR_SS_ADDED", "FCVAR_RELEASE", "FCVAR_RELOAD_MATERIALS", "FCVAR_RELOAD_TEXTURES",
 	"FCVAR_NOT_CONNECTED", "FCVAR_MATERIAL_SYSTEM_THREAD", //"FCVAR_ARCHIVE_XBOX",
-	"FCVAR_ARCHIVE_GAMECONSOLE", "FCVAR_ACCESSIBLE_FROM_THREADS", "", "", "FCVAR_SERVER_CAN_EXECUTE",
+	"FCVAR_ARCHIVE_GAMECONSOLE", "FCVAR_ACCESSIBLE_FROM_THREADS", "_", "_", "FCVAR_SERVER_CAN_EXECUTE",
 	"FCVAR_SERVER_CANNOT_QUERY", "FCVAR_CLIENTCMD_CAN_EXECUTE"
 };
 
@@ -166,7 +147,7 @@ void CollectConVars()
 	do
 	{
 		if (sBuffer[0] != '\0' && !bIsCommand)
-			StoreBuffers(sBuffer);
+			StoreBuffers(sBuffer, flags);
 	}
 	while ((bNext = FindNextConCommand(hConCmdIter, sBuffer, sizeof(sBuffer), bIsCommand, flags, sDescription, sizeof(sDescription))));
 
@@ -176,7 +157,7 @@ void CollectConVars()
 	SetKvString_ConVars();
 }
 
-void StoreBuffers(const char[] sBuffer)
+void StoreBuffers(const char[] sBuffer, int flags)
 {
 	if (g_hcvarHide.BoolValue)
 	{
@@ -216,14 +197,24 @@ void StoreBuffers(const char[] sBuffer)
 		if (g_hcvarDumpMore.BoolValue)
 		{
 			hCvar.GetDescription(esConVarInfo.description, sizeof(esConVarInfo.description));
-			for (int i = 0; i < sizeof(g_sFlags); i++)
+			if (flags == 0)
+				Format(esConVarInfo.flags, sizeof(esConVarInfo.flags), "FCVAR_NONE");
+			else
 			{
-				if (hCvar.Flags & 1 << i)
+				for (int i = 0; i < sizeof(g_sFlags); i++)
 				{
-					Format(esConVarInfo.flags, sizeof(esConVarInfo.flags), "%s | %s", esConVarInfo.flags, g_sFlags[i]);
-					if (StrContains(esConVarInfo.flags, "FCVAR_NONE | ") > -1)
-						ReplaceString(esConVarInfo.flags, sizeof(esConVarInfo.flags), "FCVAR_NONE | ", "");
+					if (flags & (1 << i))
+					{
+						#if DEBUG_MSG
+							PrintToServer("i: %d, flags: %s", i, g_sFlags[i]);
+						#endif
+						Format(esConVarInfo.flags, sizeof(esConVarInfo.flags), "%s | %s", esConVarInfo.flags, g_sFlags[i]);
+					}	
 				}
+				// wtf
+				ReplaceStringEx(esConVarInfo.flags, sizeof(esConVarInfo.flags), " | ", "", 1);
+				ReplaceStringEx(esConVarInfo.flags, sizeof(esConVarInfo.flags), "|", "");
+				ReplaceStringEx(esConVarInfo.flags, sizeof(esConVarInfo.flags), " ", "");
 			}
 
 			float fMin, fMax;
@@ -281,17 +272,22 @@ void CollectCmds()
 			if (CmdIter.Flags == 0)
 				Format(esCmdInfo.flags, sizeof(esCmdInfo.flags), "FCVAR_NONE");
 			else
-			{
-				for (int i = 0; i < sizeof(g_sFlags); i++)
+			{	
+				int flags = CmdIter.Flags; int i = 0;
+				while (i < sizeof(g_sFlags))
 				{
-					if (CmdIter.Flags & 1 << i)
+					if (flags & (1 << i))
 					{
+						#if DEBUG_MSG
+							PrintToServer("i: %d, flags: %s", i, g_sFlags[i]);
+						#endif
 						Format(esCmdInfo.flags, sizeof(esCmdInfo.flags), "%s | %s", esCmdInfo.flags, g_sFlags[i]);
-						if (StrContains(esCmdInfo.flags, "FCVAR_NONE | ") > -1)
-							ReplaceString(esCmdInfo.flags, sizeof(esCmdInfo.flags), "FCVAR_NONE | ", "");
 					}
-
+					i++;
 				}
+
+				if (StrContains(esCmdInfo.flags, "FCVAR_NONE | ") > -1)
+					ReplaceString(esCmdInfo.flags, sizeof(esCmdInfo.flags), "FCVAR_NONE | ", "");
 			}
 		}
 		g_harrCmdInfo.PushArray(esCmdInfo);
