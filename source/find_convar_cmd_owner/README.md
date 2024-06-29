@@ -1,7 +1,7 @@
 # [ANY] Find ConVar/Cmd Owner
 
 ### Introduction
- - An Alternative and extendedversion of "dump_all_cmds_cvars" by Bacardi, this plugin dumps all sourcemod generated convars and cmds into a keyvalue file.  
+ - An Alternative and extended version of "dump_all_cmds_cvars" by Bacardi, this plugin dumps all sourcemod generated convars and cmds into a keyvalue file.  
  - The dumpped file is located at `sourcemod/data/find_convar_cmd_owner/..`.
 
 ### Source
