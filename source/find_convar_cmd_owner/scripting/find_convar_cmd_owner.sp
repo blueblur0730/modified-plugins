@@ -61,7 +61,7 @@ public void OnPluginStart()
 	CreateConVar("find_convar_cmd_owner_version", PL_VERSION, "Version of the plugin.", FCVAR_NOTIFY | FCVAR_DONTRECORD | FCVAR_SPONLY);
 
 	g_hcvarHide			 = CreateConVar("find_convar_cmd_owner_hide", "1", "hide the cvar of this plugin.", _, true, 0.0, true, 1.0);
-	g_hcvarStoreNameType = CreateConVar("find_convar_cmd_owner_storenametype", "2", "1 = File and path name, 2 = Descriptive name", _, true, 1.0, true, 2.0);
+	g_hcvarStoreNameType = CreateConVar("find_convar_cmd_owner_storenametype", "1", "1 = File and path name, 2 = Descriptive name", _, true, 1.0, true, 2.0);
 
 	// by defualt, cvars have values and cmds have flags in the keyvalue file.
 	g_hcvarDumpMore		 = CreateConVar("find_convar_cmd_owner_dumpmore", "1", "dump description and flags of the cvar and cmd, and the bounds of cvar?", _, true, 0.0, true, 1.0);

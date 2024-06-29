@@ -2,7 +2,8 @@
 
 ### Introduction
  - An Alternative and extended version of "dump_all_cmds_cvars" by Bacardi, this plugin dumps all sourcemod generated convars and cmds into a keyvalue file.  
- - The dumpped file is located at `sourcemod/data/find_convar_cmd_owner/..`.
+ - This plugin can find the plugin by given a cvar/cmd, or find the cvar/cmd by given the plugin name.
+ - The dumpped file is located at `sourcemod/data/find_convar_cmd_owner/..`. Create the folder if you dont have it.
 
 ### Source
  - https://forums.alliedmods.net/showthread.php?p=2688799  
@@ -20,10 +21,11 @@ find_convar_cmd_owner_version
 // hide the cvar of this plugin
 find_convar_cmd_owner_hide 1
 
-// 1 = File and path name, 2 = Descriptive name (It's not recommended to use 1 :p since the format looks pretty bad)
-find_convar_cmd_owner_storenametype 2
+// 1 = File and path name, 2 = Descriptive name
+find_convar_cmd_owner_storenametype 1
 
-// dump description and flags of the cvar and cmd, and the bounds of cvar. (by defualt, cvars have values and cmds have flags in the keyvalue file.)
+// dump description and flags of the cvar and cmd, and the bounds of cvar.
+// by defualt, cvars have values and cmds have flags in the keyvalue file.
 find_convar_cmd_owner_dumpmore 1
 ```
 
@@ -70,11 +72,13 @@ sm_find_its_concvar
  *  - fixed convars don't have a defualt flag.
  *  - fixed flags are overlapping in the convars dumpping.
  *  - formatted cvar flag output.
+ *
  *  - BUG: flags are overlapping when outputting cmds.
  * 
  * 2.0:
  *  - added cmd 'sm_find_its_owner' to find a cvar/cmd's owner.
  *  - added cmd 'sm_find_its_concvar' to find a plugin's cvar/cmd.
+ *
  *  - BUG 'sm_find_its_concvar' casues server crash when specifiying some certain plugin, most probably caused when a plugin have 
  *    multiple source files. such as NekoSpecials.
  *    
