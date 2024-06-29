@@ -3,9 +3,9 @@
 
 #include <sourcemod>
 
-#define PL_VERSION	"1.2.2"
-#define DUMP_PATH_CONVAR	"data/dumpped_convars.txt"
-#define DUMP_PATH_COMMAND	"data/dumpped_commands.txt"
+#define PL_VERSION	"2.0"
+#define DUMP_PATH_CONVAR	"data/find_convar_cmd_owner/dumpped_convars.txt"
+#define DUMP_PATH_COMMAND	"data/find_convar_cmd_owner/dumpped_commands.txt"
 #define DEBUG 0
 #define DEBUG_MSG 0
 
@@ -39,13 +39,13 @@ static const char g_sFlags[][] = {
 	"FCVAR_SERVER_CANNOT_QUERY", "FCVAR_CLIENTCMD_CAN_EXECUTE"
 };
 
-bool	  g_bIsPluginLoaded = false, g_bIsConfigExecuted = false;
+bool	  g_bIsAllPluginLoaded = false, g_bIsAllConfigExecuted = false;
 
 ConVar g_hcvarHide, g_hcvarStoreNameType, g_hcvarDumpMore;
 
 KeyValues kv;
 
-ArrayList g_harrConVarInfo, g_harrCmdInfo;
+ArrayList g_harrConVarInfo = null, g_harrCmdInfo = null, g_harrFindOwnerConVar = null, g_harrFindOwnerCmd = null;
 
 public Plugin myinfo =
 {
@@ -64,34 +64,33 @@ public void OnPluginStart()
 	g_hcvarStoreNameType = CreateConVar("find_convar_cmd_owner_storenametype", "2", "1 = File and path name, 2 = Descriptive name", _, true, 1.0, true, 2.0);
 
 	// by defualt, cvars have values and cmds have flags in the keyvalue file.
-	g_hcvarDumpMore		 = CreateConVar("find_convar_cmd_owner_dumpmore", "1", "dump description and flags of the cvar and cmd, and the bounds of cvar.", _, true, 0.0, true, 1.0);
-	
+	g_hcvarDumpMore		 = CreateConVar("find_convar_cmd_owner_dumpmore", "1", "dump description and flags of the cvar and cmd, and the bounds of cvar?", _, true, 0.0, true, 1.0);
+
 	RegServerCmd("sm_dumpcvar", Command_DumpCvar, "Dump");
 	RegServerCmd("sm_dumpcmd", Command_DumpCmd, "Dump");
-
-	kv = new KeyValues("ConVars");
-	g_harrConVarInfo = new ArrayList(sizeof(ConVarInfo));
+	RegServerCmd("sm_find_its_owner", Command_FindItsOwner, "Usage: sm_find_its_owner <cvar/cmd>, the result will appear on the server console.");
+	RegServerCmd("sm_find_its_concvar", Command_FindItsConConvar, "Usage: sm_find_its_concvar <plugin_file_name.smx>, the result will appear on the data/find_convar_cmd_owner/<plugin_name>.txt.");
 }
 
 public void OnAllPluginsLoaded()
 {
-	g_bIsPluginLoaded = true;
+	g_bIsAllPluginLoaded = true;
 }
 
 public void OnConfigsExecuted()
 {
-	g_bIsConfigExecuted = true;
+	g_bIsAllConfigExecuted = true;
 }
 
 public void OnMapEnd()
 {
-	g_bIsPluginLoaded	= false;
-	g_bIsConfigExecuted = false;
+	g_bIsAllPluginLoaded	= false;
+	g_bIsAllConfigExecuted = false;
 }
 
 Action Command_DumpCvar(int args)
 {
-	if (!g_bIsPluginLoaded || !g_bIsConfigExecuted)
+	if (!g_bIsAllPluginLoaded || !g_bIsAllConfigExecuted)
 	{
 		PrintToServer("All plugin is not loaded or all config is not executed yet.");
 		return Plugin_Handled;
@@ -106,7 +105,7 @@ Action Command_DumpCvar(int args)
 
 Action Command_DumpCmd(int args)
 {
-	if (!g_bIsPluginLoaded || !g_bIsConfigExecuted)
+	if (!g_bIsAllPluginLoaded || !g_bIsAllConfigExecuted)
 	{
 		PrintToServer("All plugin is not loaded or all config is not executed yet.");
 		return Plugin_Handled;
@@ -119,40 +118,77 @@ Action Command_DumpCmd(int args)
 	return Plugin_Handled;
 }
 
+Action Command_FindItsOwner(int args)
+{
+	if (!g_bIsAllPluginLoaded || !g_bIsAllConfigExecuted)
+	{
+		PrintToServer("All plugin is not loaded or all config is not executed yet.");
+		return Plugin_Handled;
+	}
+
+	if (GetCmdArgs() != 1)
+	{
+		PrintToServer("Usage: sm_find_its_owner <cvar/cmd>");
+		return Plugin_Handled;
+	}
+
+	char sBuffer[256];
+	GetCmdArg(1, sBuffer, sizeof(sBuffer));
+
+	ConVar hCvar = FindConVar(sBuffer);
+	if (hCvar != null)
+	{
+		char sPluginName[256];
+		GetPluginFilename(hCvar.Plugin, sPluginName, sizeof(sPluginName));
+		PrintToServer("ConVar: %s, Plugin: %s", sBuffer, sPluginName);
+	}
+	else
+	{
+		CommandIterator CmdIter = new CommandIterator();
+		while (CmdIter.Next())
+		{
+			if (CmdIter.Plugin != null)
+			{
+				char sPluginName[256];
+				GetPluginFilename(hCvar.Plugin, sPluginName, sizeof(sPluginName));
+				if (StrContains(sPluginName, sBuffer) > -1)
+				{
+					PrintToServer("Cmd: %s, Plugin: %s", sBuffer, sPluginName);
+					break;
+				}
+			}
+		}
+		delete CmdIter;
+	}
+
+	return Plugin_Handled;
+}
+
 // from dump_all_cmds_cvars by Bacardi https://forums.alliedmods.net/showthread.php?p=2688799
 void CollectConVars()
 {
 	char sBuffer[256];
 	bool bIsCommand = false;
 	int	flags = 0;
-	char sDescription[256];
 	Handle hConCmdIter;			// im expecting a convar iterator
 
-	sBuffer[0]		= '\0';
-	sDescription[0] = '\0';
+	sBuffer[0] = '\0';
+
+	hConCmdIter = FindFirstConCommand(sBuffer, sizeof(sBuffer), bIsCommand, flags);
 
 	if (hConCmdIter == null)
 	{
-		hConCmdIter = FindFirstConCommand(sBuffer, sizeof(sBuffer), bIsCommand, flags, sDescription, sizeof(sDescription));
-
-		if (hConCmdIter == null)
-		{
-			PrintToServer("No convars or cmds found.");
-			return;
-		}
+		PrintToServer("No convars or cmds found.");
+		return;
 	}
-
-	bool bNext;
 
 	do
 	{
 		if (sBuffer[0] != '\0' && !bIsCommand)
 			StoreBuffers(sBuffer, flags);
 	}
-	while ((bNext = FindNextConCommand(hConCmdIter, sBuffer, sizeof(sBuffer), bIsCommand, flags, sDescription, sizeof(sDescription))));
-
-	if (!bNext)
-		delete hConCmdIter;
+	while (FindNextConCommand(hConCmdIter, sBuffer, sizeof(sBuffer), bIsCommand, flags));
+	delete hConCmdIter;
 
 	SetKvString_ConVars();
 }
@@ -167,9 +203,6 @@ void StoreBuffers(const char[] sBuffer, int flags)
 			|| strcmp(sBuffer, "find_convar_cmd_owner_dumpmore") == 0)
 			return;
 	}
-
-	if (kv == null)
-		kv = new KeyValues("ConVars");
 
 	if (g_harrConVarInfo == null)
 		g_harrConVarInfo = new ArrayList(sizeof(ConVarInfo));
@@ -300,6 +333,10 @@ void SetKvString_ConVars()
 {
 	ConVarInfo esConVarInfo;
 	char key[128], value[128], flags[128], description[128], min[128], max[128];
+
+	if (kv == null)
+		kv = new KeyValues("ConVars");
+
 	for (int i = 0; i < g_harrConVarInfo.Length; i++)
 	{
 		g_harrConVarInfo.GetArray(i, esConVarInfo);
@@ -379,6 +416,238 @@ void FinaleOutput(bool bIsCommand)
 {
 	char sDumpPath[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sDumpPath, sizeof(sDumpPath), bIsCommand ? DUMP_PATH_COMMAND: DUMP_PATH_CONVAR);
+	kv.Rewind();
+	kv.ExportToFile(sDumpPath);
+	PrintToServer("Dumpping completed.");
+	delete kv;
+}
+
+Action Command_FindItsConConvar(int args)
+{
+	if (!g_bIsAllPluginLoaded || !g_bIsAllConfigExecuted)
+	{
+		PrintToServer("All plugin is not loaded or all config is not executed yet.");
+		return Plugin_Handled;
+	}
+
+	if (GetCmdArgs() != 1)
+	{
+		PrintToServer("Usage: sm_find_its_concvar <plugin_file_name>");
+		return Plugin_Handled;
+	}
+
+	char sBuffer[256];
+	GetCmdArg(1, sBuffer, sizeof(sBuffer));
+	PrintToServer("Dumpping the convars and cmds of this plugin: %s", sBuffer);
+
+	PluginIterator hIter = new PluginIterator();
+	char sPluginName[256]; Handle hPlugin;
+	while (hIter.Next())
+	{
+		if (hIter.Plugin != null)
+		{
+			GetPluginFilename(hIter.Plugin, sPluginName, sizeof(sPluginName));
+
+			if (StrContains(sPluginName, sBuffer) > -1)
+			{
+				if (StrContains(sPluginName, "/") > -1)
+					ReplaceString(sPluginName, sizeof(sPluginName), "/", " | ");
+
+				hPlugin = hIter.Plugin;
+				break;
+			}
+		}
+	}
+	delete hIter;
+
+	char sConCommand[256]; bool bIsCommand; int flags = 0;
+	Handle hConCmdIter = FindFirstConCommand(sConCommand, sizeof(sConCommand), bIsCommand, flags);
+	if (hConCmdIter != null)
+	{
+		do
+		{
+			if (sConCommand[0] != '\0')
+			{
+				FindConCommand(sConCommand, bIsCommand, hPlugin, flags);
+			}
+		}
+		while (FindNextConCommand(hConCmdIter, sConCommand, sizeof(sConCommand), bIsCommand, flags));
+		delete hConCmdIter;
+	}
+	SetKvString_FindOwner(sPluginName);
+
+	return Plugin_Handled;
+}
+
+void FindConCommand(const char[] sConCommand, bool bIsCommand, Handle hPlugin, int flags)
+{
+	if (!bIsCommand)
+	{
+		ConVar hCvar = FindConVar(sConCommand);
+		if (hCvar == null)
+			return;
+
+		if (hCvar.Plugin != hPlugin)
+			return;
+
+		ConVarInfo esConVarInfo;
+		if (g_harrFindOwnerConVar == null)
+			g_harrFindOwnerConVar = new ArrayList(sizeof(ConVarInfo));
+		
+		strcopy(esConVarInfo.cvar, sizeof(esConVarInfo.cvar), sConCommand);
+		hCvar.GetDefault(esConVarInfo.value, sizeof(esConVarInfo.value));
+		if (g_hcvarDumpMore.BoolValue)
+		{
+			if (flags == 0)
+				Format(esConVarInfo.flags, sizeof(esConVarInfo.flags), "FCVAR_NONE");
+			else
+			{
+				for (int i = 0; i < sizeof(g_sFlags); i++)
+				{
+					if (flags & (1 << i))
+					{
+						#if DEBUG_MSG
+							PrintToServer("i: %d, flags: %s", i, g_sFlags[i]);
+						#endif
+						Format(esConVarInfo.flags, sizeof(esConVarInfo.flags), "%s | %s", esConVarInfo.flags, g_sFlags[i]);
+					}	
+				}
+				// wtf
+				ReplaceStringEx(esConVarInfo.flags, sizeof(esConVarInfo.flags), " | ", "", 1);
+				ReplaceStringEx(esConVarInfo.flags, sizeof(esConVarInfo.flags), "|", "");
+				ReplaceStringEx(esConVarInfo.flags, sizeof(esConVarInfo.flags), " ", "");
+			}
+			hCvar.GetDescription(esConVarInfo.description, sizeof(esConVarInfo.description));
+			float fMin, fMax;
+			if (hCvar.GetBounds(ConVarBound_Lower, fMin))
+				Format(esConVarInfo.min, sizeof(esConVarInfo.min), "%.02f", fMin);
+			else
+				esConVarInfo.min = "no limit";
+			if (hCvar.GetBounds(ConVarBound_Upper, fMax))
+				Format(esConVarInfo.max, sizeof(esConVarInfo.max), "%.02f", fMax);
+			else
+				esConVarInfo.max = "no limit";
+		}
+		g_harrFindOwnerConVar.PushArray(esConVarInfo);
+	}
+	else
+	{
+		CmdInfo esCmdInfo;
+		if (g_harrFindOwnerCmd == null)
+			g_harrFindOwnerCmd = new ArrayList(sizeof(CmdInfo));
+
+		CommandIterator CmdIter = new CommandIterator();
+		while (CmdIter.Next())
+		{
+			if (CmdIter.Plugin != null)
+			{
+				if (CmdIter.Plugin != hPlugin)
+					continue;
+
+				if (g_hcvarDumpMore.BoolValue)
+				{
+					CmdIter.GetDescription(esCmdInfo.description, sizeof(esCmdInfo.description));
+					if (esCmdInfo.description[0] == '\0')
+						esCmdInfo.description = "_";
+				}
+
+				CmdIter.GetName(esCmdInfo.cmd, sizeof(esCmdInfo.cmd));
+				if (flags == 0)
+					Format(esCmdInfo.flags, sizeof(esCmdInfo.flags), "FCVAR_NONE");
+				else
+				{	
+					int i = 0;
+					while (i < sizeof(g_sFlags))
+					{
+						if (flags & (1 << i))
+						{
+							#if DEBUG_MSG
+								PrintToServer("i: %d, flags: %s", i, g_sFlags[i]);
+							#endif
+							Format(esCmdInfo.flags, sizeof(esCmdInfo.flags), "%s | %s", esCmdInfo.flags, g_sFlags[i]);
+						}
+						i++;
+					}
+
+					if (StrContains(esCmdInfo.flags, "FCVAR_NONE | ") > -1)
+						ReplaceString(esCmdInfo.flags, sizeof(esCmdInfo.flags), "FCVAR_NONE | ", "");
+				}
+			}
+			g_harrFindOwnerCmd.PushArray(esCmdInfo);
+		}
+		delete CmdIter;
+	}
+}
+
+void SetKvString_FindOwner(const char[] sPluginName)
+{
+	if (kv == null)
+		kv = new KeyValues(sPluginName);
+
+	CmdInfo esCmdInfo; ConVarInfo esConVarInfo;
+	if (g_harrFindOwnerCmd.Length != 0)
+	{
+		char key[128], flags[128], description[128];
+		for (int i = 0; i < g_harrFindOwnerCmd.Length; i++)
+		{
+			g_harrFindOwnerCmd.GetArray(i, esCmdInfo);
+			if (kv.JumpToKey("Commands", true))
+			{
+				if (g_hcvarDumpMore.BoolValue)
+				{
+					kv.Rewind();
+					Format(flags, sizeof(flags), "Commands/%s/flags", esCmdInfo.cmd);
+					kv.SetString(flags, esCmdInfo.flags);
+					Format(description, sizeof(description), "Commands/%s/description", esCmdInfo.cmd);
+					kv.SetString(description, esCmdInfo.description);
+				}
+				else
+				{
+					kv.Rewind();
+					Format(key, sizeof(key), "Commands/%s", esCmdInfo.cmd);
+					kv.SetString(key, esCmdInfo.flags);
+				}
+			}
+		}
+		delete g_harrFindOwnerCmd;
+	}
+
+	if (g_harrFindOwnerConVar.Length != 0)
+	{
+
+		char key[128], value[128], flags[128], description[128], min[128], max[128];
+		for (int i = 0; i < g_harrFindOwnerConVar.Length; i++)
+		{
+			g_harrFindOwnerConVar.GetArray(i, esConVarInfo);
+			if (kv.JumpToKey("ConVars", true))
+			{
+				if (g_hcvarDumpMore.BoolValue)
+				{
+					kv.Rewind();
+					Format(value, sizeof(value), "ConVars/%s/defvalue", esConVarInfo.cvar);
+					kv.SetString(value, esConVarInfo.value);
+					Format(flags, sizeof(flags), "ConVars/%s/flags", esConVarInfo.cvar);
+					kv.SetString(flags, esConVarInfo.flags);
+					Format(description, sizeof(description), "ConVars/%s/description", esConVarInfo.cvar);
+					kv.SetString(description, esConVarInfo.description);
+					Format(min, sizeof(min), "ConVars/%s/min", esConVarInfo.cvar);
+					kv.SetString(min, esConVarInfo.min);
+					Format(max, sizeof(max), "ConVars/%s/max", esConVarInfo.cvar);
+					kv.SetString(max, esConVarInfo.max);
+				}
+				else
+				{
+					kv.Rewind();
+					Format(key, sizeof(key), "ConVars/%s", esConVarInfo.cvar);
+					kv.SetString(key, esConVarInfo.value);
+				}
+			}
+		}
+		delete g_harrFindOwnerConVar;
+	}
+
+	char sDumpPath[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, sDumpPath, sizeof(sDumpPath), "data/find_convar_cmd_owner/%s.txt", sPluginName);
 	kv.Rewind();
 	kv.ExportToFile(sDumpPath);
 	PrintToServer("Dumpping completed.");
