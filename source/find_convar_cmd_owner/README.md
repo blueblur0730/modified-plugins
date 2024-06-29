@@ -79,7 +79,7 @@ sm_find_its_concvar
  *  - added cmd 'sm_find_its_owner' to find a cvar/cmd's owner.
  *  - added cmd 'sm_find_its_concvar' to find a plugin's cvar/cmd.
  *
- *  - BUG 'sm_find_its_concvar' casues server crash when specifiying some certain plugin, most probably caused when a plugin have 
+ *  - BUG 'sm_find_its_concvar' causes server crash when specifiying some certain plugin, most probably caused when a plugin have 
  *    multiple source files. such as NekoSpecials.
  *    
  */ 
