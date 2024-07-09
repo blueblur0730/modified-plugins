@@ -1,0 +1,14 @@
+"Games"
+{
+	"left4dead2"
+	{
+		"Offsets"	// should be a sig.
+		{
+			"CBaseCombatWeapon::StopWeaponSound"
+			{
+				"linux"		"303"
+				"windowns"	"302"
+			}
+		}
+	}
+}
