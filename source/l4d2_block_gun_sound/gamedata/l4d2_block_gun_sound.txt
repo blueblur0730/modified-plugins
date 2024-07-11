@@ -2,12 +2,28 @@
 {
 	"left4dead2"
 	{
-		"Offsets"	// should be a sig.
+		"Offsets"
 		{
 			"CBaseCombatWeapon::StopWeaponSound"
 			{
 				"linux"		"303"
 				"windowns"	"302"
+			}
+		}
+		"Signatures"
+		{
+			/*
+			* How to find on windows:
+			* 1. search string "break_breakable" to find CBreakable::Die.
+			* 2. the first function call should be CBaseEntity::GetParametersForSound, double click it.
+			* 3. code xref CBaseEntity::GetParametersForSound, the first xref should be CBaseCombatWeapon::StopWeaponSound by simple comparsion.
+			*/
+			"CBaseCombatWeapon::StopWeaponSound"
+			{
+				"library"	"server"
+				"linux"		"@_ZN17CBaseCombatWeapon15StopWeaponSoundE13WeaponSound_t"
+				"windows"	"\x55\x8B\xEC\x81\xEC\xAC\x00\x00\x00\xA1\x2A\x2A\x2A\x2A\x33\xC5\x89\x45\xFC\x8B\x45\x08"
+						/*55 8B EC 81 EC AC 00 00 00 A1 ? ? ? ? 33 C5 89 45 FC 8B 45 08*/
 			}
 		}
 	}

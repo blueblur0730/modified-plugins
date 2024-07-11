@@ -3,13 +3,15 @@
 
 #include <sourcemod>
 #include <sdktools>
+#include <sdkhooks>
 
-#define PL_VERSION "1.0"
+#define PL_VERSION "1.1"
 
 ConVar g_hCvarBlockGunSound;
-int    g_iBlockGunSound;
+int    g_iBlockGunSound, g_iWeaponIndex[MAXPLAYERS + 1];
 float  g_fSoundVolume[MAXPLAYERS + 1] = { 1.0, ... };
 Handle g_hSDKCall_StopWeaponSound;
+bool   g_bLateLoad = false;
 
 #define MAX_WEAPON_SOUNDS 33
 #define GAMEDATA_FILE "l4d2_block_gun_sound"
@@ -86,8 +88,15 @@ public Plugin myinfo =
 	url	= "https://github.com/blueblur0730/modified-plugins"
 }
 
+public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
+{
+	g_bLateLoad = late;
+	return APLRes_Success;
+}
+
 public void OnPluginStart()
 {
+	InitGameData();
 	CreateConVar("l4d2_block_gun_sound_version", PL_VERSION, "L4D2 Block Gun Sound version", FCVAR_NOTIFY | FCVAR_DONTRECORD | FCVAR_SPONLY);
 
 	g_hCvarBlockGunSound = CreateConVar("l4d2_block_gun_sound", "1",
@@ -98,15 +107,19 @@ public void OnPluginStart()
 
 	g_hCvarBlockGunSound.AddChangeHook(OnConVarChanged);
 	SetCvar();
-	InitGameData();
 
-	HookEvent("weapon_fire", Event_WeaponFire, EventHookMode_Pre);
+	if (g_bLateLoad)
+		LateHook();
+
 	AddNormalSoundHook(NormalSoundHook);
 
 	for (int i = 0; i < MAX_WEAPON_SOUNDS; i++)
-	{
 		PrecacheSound(g_sWeaponSoundPath[i]);
-	}
+}
+
+public void OnClientPutInServer(int client)
+{
+	SDKHook(client, SDKHook_WeaponEquipPost, OnWeaponEquipPost);
 }
 
 void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
@@ -117,6 +130,18 @@ void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue
 void SetCvar()
 {
 	g_iBlockGunSound = g_hCvarBlockGunSound.IntValue;
+}
+
+void LateHook()
+{
+	for (int i = 0; i < MaxClients; i++)
+	{
+		if (i > 0 && i < MaxClients)
+		{
+			if (IsClientInGame(i))
+				SDKHook(i, SDKHook_WeaponEquipPost, OnWeaponEquipPost);
+		}
+	}
 }
 
 Action Command_SoundVolume(int client, int args)
@@ -141,20 +166,18 @@ Action Command_SoundVolume(int client, int args)
 	return Plugin_Handled;
 }
 
-void Event_WeaponFire(Event hEvent, const char[] name, bool dontBroadcast)
+void OnWeaponEquipPost(int client, int weapon)
 {
-	if (g_iBlockGunSound != 1)
+	if (!IsValidEntity(weapon))
 		return;
 
-	int client = GetClientOfUserId(hEvent.GetInt("userid"));
-	if (!IsClientInGame(client))
-		return;
+	g_iWeaponIndex[client] = weapon;
+}
 
-	int iWeapon = L4D_GetPlayerCurrentWeapon(client);
-	if (iWeapon == -1)
-		return;
-
-	SDKCall(g_hSDKCall_StopWeaponSound, iWeapon, SINGLE);
+public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float vel[3], const float angles[3], int weapon, int subtype, int cmdnum, int tickcount, int seed, const int mouse[2])
+{
+	if (buttons & IN_ATTACK)
+		SDKCall(g_hSDKCall_StopWeaponSound, g_iWeaponIndex[client], SINGLE);
 }
 
 /**
@@ -204,8 +227,10 @@ void InitGameData()
 		SetFailState("Failed to load gamedata file '%s'", GAMEDATA_FILE);
 
 	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(hGd, SDKConf_Virtual, "CBaseCombatWeapon::StopWeaponSound");
+
 	// https://github.com/alliedmodders/hl2sdk/blob/4c27c1305c5e042ae1f62f6dc6ba7e96fd06e05d/game/shared/basecombatweapon_shared.cpp#L1947
+	if (!PrepSDKCall_SetFromConf(hGd, SDKConf_Signature, "CBaseCombatWeapon::StopWeaponSound"))
+		SetFailState("Failed to load signature for 'CBaseCombatWeapon::StopWeaponSound'");
 	
 	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);	// WeaponSound_t
 	g_hSDKCall_StopWeaponSound = EndPrepSDKCall();
