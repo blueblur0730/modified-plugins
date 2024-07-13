@@ -12,7 +12,7 @@
  - https://forums.alliedmods.net/showthread.php?p=1648508
 
 ### Requirements
-  - (colors.inc)[https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/include/colors.inc] to compile
+  - [colors.inc](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/include/colors.inc) to compile
   - Configs are set manully otherwise plugin wont do anything.
 
 ### ConVars
