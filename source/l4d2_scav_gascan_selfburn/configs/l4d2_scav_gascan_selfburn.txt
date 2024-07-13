@@ -1,13 +1,14 @@
 "Positions"
 {
+	// if z > z_max or z < z_min (other dimension dose the same) the gascan will be ignited. consider the value as a wall.
 	"c8m5_rooftop"
 	{
 		"height_zlimit_min"		"500.0"
-		"height_zlimit_max"		"0.0"
-		"width_xlimit_max"		"0.0"
-		"width_ylimit_max"		"0.0"
-		"width_xlimit_min"		"0.0"
-		"width_ylimit_min"		"0.0"
+		"height_zlimit_max"		""			// any blank value wont be considered as a part of the check.
+		"width_xlimit_max"		""
+		"width_ylimit_max"		""
+		"width_xlimit_min"		""
+		"width_ylimit_min"		""
 	}
 
 	"c8m1_apartment"
@@ -22,11 +23,11 @@
 
 	"c4m2_sugarmill_a"
 	{
-		"height_zlimit_min"		"0.0"
+		"height_zlimit_min"		""
 		"height_zlimit_max"		"864.2"			// rooftop of sugarmill
-		"width_xlimit_max"		"0.0"
-		"width_ylimit_max"		"0.0"
-		"width_xlimit_min"		"0.0"
+		"width_xlimit_max"		"2573.8"		// the entrance of the sugar factory (not the mill)
+		"width_ylimit_max"		"-5310.8"
+		"width_xlimit_min"		""
 		"width_ylimit_min"		"-9510.0"		// sugar field
 	}
 
@@ -51,56 +52,6 @@
 		"width_ylimit_min"		"-200.0"
 	}
 
-	"beach"
-	{
-		"height_zlimit_min"		"657.13"		// sea surface
-		"height_zlimit_max"		"2000.0"
-		"width_xlimit_max"		"1405.0"
-		"width_ylimit_max"		"1340.0"
-		"width_xlimit_min"		"-3096.0"
-		"width_ylimit_min"		"-2504.0"
-	}
-
-	"nothinggonelast10"
-	{
-		"height_zlimit_min"		"256.01"		// sea surface
-		"height_zlimit_max"		"1405.0"
-		"width_xlimit_max"		"1200.0"
-		"width_ylimit_max"		"900.0"
-		"width_xlimit_min"		"-1091.0"
-		"width_ylimit_min"		"-1210.0"
-	}
-
-	"cedafever_m2"
-	{
-		"height_zlimit_min"		"-817.9"
-		"height_zlimit_max"		"112.3"
-		"width_xlimit_max"		"5251.0"
-		"width_ylimit_max"		"3366.0"
-		"width_xlimit_min"		"384.0"
-		"width_ylimit_min"		"220.2"
-	}
-
-	"cedafever_m3"
-	{
-		"height_zlimit_min"		"900.0"		// the street
-		"height_zlimit_max"		"2100.0"
-		"width_xlimit_max"		"-3800.0"
-		"width_ylimit_max"		"4750.0"
-		"width_xlimit_min"		"-7100.0"
-		"width_ylimit_min"		"1900.0"
-	}
-
-	"l4d2_fort_roof"
-	{
-		"height_zlimit_min"		"1776.0"
-		"height_zlimit_max"		"4700.0"
-		"width_xlimit_max"		"3610.0"
-		"width_ylimit_max"		"2700.0"
-		"width_xlimit_min"		"940.0"
-		"width_ylimit_min"		"-600.0"
-	}
-
 	"l4d2_deadsite_v1_1"
 	{
 		"height_zlimit_min"		"3800.0"	// the underground park
@@ -109,55 +60,5 @@
 		"width_ylimit_max"		"7872.0"
 		"width_xlimit_min"		"6000.0"
 		"width_ylimit_min"		"5378.0"
-	}
-
-	"roofdownthedrain"
-	{
-		"height_zlimit_min"		"900.0"
-		"height_zlimit_max"		"3100.0"
-		"width_xlimit_max"		"-203.0"
-		"width_ylimit_max"		"15555.0"
-		"width_xlimit_min"		"-2822.0"
-		"width_ylimit_min"		"12830.0"
-	}
-
-	"c11m1_greenhouse_scavenge"
-	{
-		"height_zlimit_min"		"200.0"		// the street
-		"height_zlimit_max"		"1200.0"
-		"width_xlimit_max"		"7000.0"
-		"width_ylimit_max"		"1965.0"
-		"width_xlimit_min"		"1600.0"
-		"width_ylimit_min"		"-1180.0"
-	}
-
-	"nmrm5_rooftop"			// same as c8m5
-	{
-		"height_zlimit_min"		"500.0"
-		"height_zlimit_max"		"7000.0"
-		"width_xlimit_max"		"8100.0"
-		"width_ylimit_max"		"9800.0"
-		"width_xlimit_min"		"4700.0"
-		"width_ylimit_min"		"7200.0"
-	}
-
-	"cotd04_rooftop_redux_demo"	// same as c8m5
-	{
-		"height_zlimit_min"		"500.0"
-		"height_zlimit_max"		"7000.0"
-		"width_xlimit_max"		"8100.0"
-		"width_ylimit_max"		"9800.0"
-		"width_xlimit_min"		"4700.0"
-		"width_ylimit_min"		"7200.0"
-	}
-
-	"wth_3"
-	{
-		"height_zlimit_min"		"-800.0"		// under the river
-		"height_zlimit_max"		"-48.0"
-		"width_xlimit_max"		"-1730.0"
-		"width_ylimit_max"		"-4447.3"
-		"width_xlimit_min"		"-8434.0"
-		"width_ylimit_min"		"-10700.0"
 	}
 }
