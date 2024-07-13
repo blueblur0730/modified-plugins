@@ -66,7 +66,8 @@ void GetSectionCfg(bool bIsMapEnd)
 
     if (Kv.JumpToKey(sBuffer) && Kv.GotoFirstSubKey(false))
     {
-        g_hArrayCfg = new ArrayList(ByteCountToCells(MAX_MESSAGE_LENGTH));
+        if (g_hArrayCfg == null)
+            g_hArrayCfg = new ArrayList(ByteCountToCells(MAX_MESSAGE_LENGTH));
 
         do
         {
