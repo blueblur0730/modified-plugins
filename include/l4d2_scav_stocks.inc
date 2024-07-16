@@ -171,7 +171,8 @@ methodmap ScavStocksWrapper
 		if (round <= 0 || round > 5)
 			round = GameRules_GetProp("m_nRoundNumber");
 
-		L4D2_TeamNumberToTeamIndex(team);
+		if (L4D2_TeamNumberToTeamIndex(team) == -1)
+			return -1;
 
 		return GameRules_GetProp("m_iScavengeTeamScore", _, (2 * (round - 1)) + team);
 		/*
