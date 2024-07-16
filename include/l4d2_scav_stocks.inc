@@ -1,7 +1,7 @@
-#if defined _l4d2_scav_dhooks_stock_included
+#if defined _l4d2_scav_stocks_included
 	#endinput
 #endif
-#define _l4d2_scav_dhooks_stock_included
+#define _l4d2_scav_stocks_included
 
 #include <sourcemod>
 #include <sdktools>
