@@ -57,7 +57,10 @@ public void OnPluginStart()
 void OnGameModeChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
     if (strcmp(newValue, "scavenge") == 0)
+    {
         ChangeHook();
+        return;
+    }
     else if (g_bRumbleHooked)
         UnhookUserMessage(GetUserMessageId("Rumble"), UsgHook_Rumble_Intercept, true);
     else if (g_bBlurHooked)
