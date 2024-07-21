@@ -9,13 +9,13 @@
 // We must wait longer because of cases where the game doesn't
 // do the compare at the same time as us.
 #define SAFETY_BUFFER_TIME 1.0
-#define L4D2Team_Survivor 2
-#define L4D2Team_Infected 3
+#define L4D2Team_Survivor  2
+#define L4D2Team_Infected  3
 #define PL_VERSION "4.0"
 
 float g_flDefaultLossTime;
 bool g_bLateLoad, g_bInScavengeRound, g_bIsRoundActivated;
-int g_iLateLoadRound;
+int	g_iLateLoadRound;
 ArrayList g_hArrSurDur, g_hArrInfDur;
 ConVar g_hcvarQuickEndSwitch;
 ScavStocksWrapper g_Wrapper;
@@ -26,8 +26,7 @@ enum EndType
 	QE_AchievedTargetSetDeadLine,
 	QE_WhoSurvivedLonger,
 	QE_None
-}
-EndType g_eEndType;
+} EndType g_eEndType;
 
 public Plugin myinfo =
 {
@@ -98,8 +97,8 @@ public void OnMapEnd()
 
 	if (g_hArrInfDur)
 		delete g_hArrInfDur;
-	
-	g_bLateLoad = false; // refresh the late load status on map change.
+
+	g_bLateLoad		 = false;	 // refresh the late load status on map change.
 	g_iLateLoadRound = 0;
 }
 
@@ -134,7 +133,7 @@ Action Cmd_QuaryTime(int client, any args)
 			}
 		}
 
-		if (g_bLateLoad) // we cant retrieve the previous round duration if the plugin is loaded lately.
+		if (g_bLateLoad)	// we cant retrieve the previous round duration if the plugin is loaded lately.
 		{
 			if (round <= g_iLateLoadRound)
 			{
@@ -143,7 +142,7 @@ Action Cmd_QuaryTime(int client, any args)
 			}
 		}
 
-		PrintRoundTime(round, client, true, true);	// previous round must have played two halves.
+		PrintRoundTime(round, client, true, true);	  // previous round must have played two halves.
 		return Plugin_Handled;
 	}
 
@@ -159,7 +158,7 @@ Action Cmd_QuaryTime(int client, any args)
 
 void PrintRoundTime(int round, int client, bool bInSecondHalf, bool bIsPreviousRound = false)
 {
-	if (bInSecondHalf)	// in second half of round, infected are survivors who played on last round.
+	if (bInSecondHalf)	  // in second half of round, infected are survivors who played on last round.
 	{
 		char SurTime[128], InfTime[128];
 		if (bIsPreviousRound)
@@ -177,19 +176,19 @@ void PrintRoundTime(int round, int client, bool bInSecondHalf, bool bIsPreviousR
 		}
 
 		CPrintToChat(client, "%t", "PrintRoundTime", round,
-													 g_Wrapper.GetTeamScore(L4D2Team_Infected, round, bIsPreviousRound),
-													 InfTime);
+					 g_Wrapper.GetTeamScore(L4D2Team_Infected, round, bIsPreviousRound),
+					 InfTime);
 		CPrintToChat(client, "%t", "PrintRoundTimeInHalf", round,
-														   g_Wrapper.GetTeamScore(L4D2Team_Survivor, round, bIsPreviousRound),
-														   SurTime);
+					 g_Wrapper.GetTeamScore(L4D2Team_Survivor, round, bIsPreviousRound),
+					 SurTime);
 	}
 	else
 	{
 		char SurTime[128];
 		FormatDurationTime(SurTime, sizeof(SurTime), L4D2Team_Survivor);	// only survivors are playing on this round.
 		CPrintToChat(client, "%t", "PrintRoundTime", round,
-													 g_Wrapper.GetTeamScore(L4D2Team_Survivor),
-													 SurTime);
+					 g_Wrapper.GetTeamScore(L4D2Team_Survivor),
+					 SurTime);
 	}
 }
 
@@ -202,7 +201,7 @@ void Event_ScavMatchFinished(Event hEvent, const char[] name, bool dontBroadcast
 	if (g_hArrInfDur.Length > 0)
 		g_hArrInfDur.Clear();
 
-	g_bLateLoad = false; // refresh the late load status on match end.
+	g_bLateLoad	= false;	 // refresh the late load status on match end.
 	g_iLateLoadRound = 0;
 }
 
@@ -219,11 +218,11 @@ void Event_RoundEnd(Event hEvent, const char[] name, bool dontBroadcast)
 		g_hArrInfDur.Push(g_Wrapper.GetRoundDuration(L4D2Team_Infected));
 	}
 
-	if (g_bInScavengeRound) 
+	if (g_bInScavengeRound)
 		PrintRoundEndTimeData(g_Wrapper.m_bInSecondHalfOfRound);
 
 	g_flDefaultLossTime = 0.0;
-	g_bInScavengeRound = false;
+	g_bInScavengeRound	= false;
 	g_bIsRoundActivated = false;
 }
 
@@ -233,7 +232,7 @@ void Event_RoundStart(Event hEvent, const char[] name, bool dontBroadcast)
 	g_flDefaultLossTime = 0.0;
 	g_eEndType = QE_None;
 
-	if (g_bInScavengeRound && g_Wrapper.m_bInSecondHalfOfRound)	// we are in second half of round now.
+	if (g_bInScavengeRound && g_Wrapper.m_bInSecondHalfOfRound)	   // we are in second half of round now.
 	{
 		// record the loss condition deadline.
 		if (g_Wrapper.GetTeamScore(L4D2Team_Infected) == g_Wrapper.m_nScavengeItemsGoal ||
@@ -244,7 +243,7 @@ void Event_RoundStart(Event hEvent, const char[] name, bool dontBroadcast)
 
 void Event_GascanPourCompleted(Event hEvent, const char[] name, bool dontBroadcast)
 {
-	if (g_bInScavengeRound && g_Wrapper.m_bInSecondHalfOfRound)	// we are in second half of round now.
+	if (g_bInScavengeRound && g_Wrapper.m_bInSecondHalfOfRound)	   // we are in second half of round now.
 	{
 		if (g_Wrapper.m_nScavengeItemsRemaining > 0)	// to check if there is anymore gascans, which reduce the condition that survivor team complete the target.
 		{
@@ -280,22 +279,22 @@ void PrintRoundEndTimeData(bool bSecondHalf)
 	{
 		char SurTime[128], InfTime[128];
 		FormatDurationTime(InfTime, sizeof(InfTime), L4D2Team_Infected);
-		CPrintToChatAll("%t", "PrintRoundEndTime", g_Wrapper.m_nRoundNumber, 
-												 	g_Wrapper.GetTeamScore(L4D2Team_Infected),
-													InfTime);
+		CPrintToChatAll("%t", "PrintRoundEndTime", g_Wrapper.m_nRoundNumber,
+						g_Wrapper.GetTeamScore(L4D2Team_Infected),
+						InfTime);
 
 		FormatDurationTime(SurTime, sizeof(SurTime), L4D2Team_Survivor);
 		CPrintToChatAll("%t", "PrintRoundEndTimeInHalf", g_Wrapper.m_nRoundNumber,
-														 g_Wrapper.GetTeamScore(L4D2Team_Survivor),
-														 SurTime);
+						g_Wrapper.GetTeamScore(L4D2Team_Survivor),
+						SurTime);
 	}
 	else
 	{
 		char SurTime[128];
 		FormatDurationTime(SurTime, sizeof(SurTime), L4D2Team_Survivor);
 		CPrintToChatAll("%t", "PrintRoundEndTime", g_Wrapper.m_nRoundNumber,
-													 g_Wrapper.GetTeamScore(L4D2Team_Survivor),
-													 SurTime);
+						g_Wrapper.GetTeamScore(L4D2Team_Survivor),
+						SurTime);
 	}
 }
 
