@@ -6,6 +6,7 @@
 #include <sourcemod>
 #include <sdktools>
 
+// Note: when changing a GameRules property, to make game function normally best to use L4D_NotifyNetworkStateChanged() from left4dhooks.
 methodmap ScavStocksWrapper
 {
 	/**
