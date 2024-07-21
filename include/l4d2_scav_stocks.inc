@@ -63,8 +63,7 @@ methodmap ScavStocksWrapper
 			return GameRules_GetProp("m_nRoundNumber");
 		}
 		public set(int round) {
-			if (round <= 0 || round > 5)
-				return;
+			if (round <= 0 || round > 5) return;
 
 			GameRules_SetProp("m_nRoundNumber", round);
 		}
@@ -81,8 +80,7 @@ methodmap ScavStocksWrapper
 			return GameRules_GetProp("m_nRoundLimit");
 		}
 		public set(int limit) {
-			if (limit != 1 || limit != 3 || limit != 5)
-				return;
+			if (limit != 1 || limit != 3 || limit != 5) return;
 
 			GameRules_SetProp("m_nRoundLimit", limit);
 		}
@@ -117,8 +115,7 @@ methodmap ScavStocksWrapper
 			return GameRules_GetPropFloat("m_flAccumulatedTime");
 		}
 		public set(float time) {
-			if (time < 0.0)
-				return;
+			if (time < 0.0) return;
 
 			GameRules_SetPropFloat("m_flAccumulatedTime", time);
 		}
@@ -128,13 +125,12 @@ methodmap ScavStocksWrapper
  	 * Returns the winning team index of a specific round.
  	 *
  	 * @param round		round to find. valide number is 1 to 5.
+	 * @note			defualt round number is current round number.
 	 * 
  	 * @return 			the winning team index of a specific round, 0 or 1.
-	 * 					-1 on invalid round number.
  	*/
-	public int GetWinningTeamIndex(int round) {
-		if (round <= 0 || round > 5)
-			return -1;
+	public int GetWinningTeamIndex(int round = -1) {
+		if (round <= 0 || round > 5) return -1;
 
 		return GameRules_GetProp("m_iWinningTeamNumber", _, round - 1);
 	}
@@ -143,9 +139,11 @@ methodmap ScavStocksWrapper
 	 * Returns the duration of current round
 	 * 
 	 * @param team		team number to get the duration time. valid value are 2 or 3.
+	 * @note			return -1.0 on invalid team number.
+	 * @note			"m_flRoundStartTime", "m_flRoundEndTime" only records current half of a round's data. "m_flRoundDuration" records both halves.
+	 * 					these data will be cleared upon a new scavenge round begin.
 	 * 
 	 * @return 			the duration of current round.
-	 * @note			invalid team number will auto return the duration time of current infected team.
 	*/
 	public float GetRoundDuration(int team) {
 		float m_flRoundStartTime = GameRules_GetPropFloat("m_flRoundStartTime");
@@ -153,8 +151,8 @@ methodmap ScavStocksWrapper
 		if (team == 2 && m_flRoundStartTime != 0.0 && GameRules_GetPropFloat("m_flRoundEndTime") == 0.0)
 			return (GetGameTime() - m_flRoundStartTime); // Survivor team still playing round.
 
-		if (L4D2_TeamNumberToTeamIndex(team) == -1)
-			return GameRules_GetPropFloat("m_flRoundDuration", L4D2_TeamNumberToTeamIndex(3));
+		team = L4D2_TeamNumberToTeamIndex(team);
+		if (team == -1) return -1.0;
 
 		return GameRules_GetPropFloat("m_flRoundDuration", team);
 	}
@@ -162,17 +160,19 @@ methodmap ScavStocksWrapper
 	/** 
  	 * Returns the team score of this round.
  	 *
- 	 * @param team 		team number to find. valid value  are 2 or 3.
- 	 * @param round		round number to find.
+ 	 * @param team 				team number to find. valid value are 2 or 3.
+ 	 * @param round				round number to find.
+	 * @param bIsPreviousRound	true if we are trying to get the score of previous round, false otherwise.
+	 * @note					defualt or invalid round number is set to current round number.
  	 *
- 	 * @return 			the team score of this round. invalide team number will return -1.
+ 	 * @return 					the team score of this round. invalide team number will return -1.
  	*/
-	public int GetTeamScore(int team, int round) {
+	public int GetTeamScore(int team, int round = -1, bool bIsPreviousRound = false) {
 		if (round <= 0 || round > 5)
 			round = GameRules_GetProp("m_nRoundNumber");
 
-		if (L4D2_TeamNumberToTeamIndex(team) == -1)
-			return -1;
+		team = L4D2_TeamNumberToTeamIndex(team, bIsPreviousRound);
+		if (team == -1) return -1;
 
 		return GameRules_GetProp("m_iScavengeTeamScore", _, (2 * (round - 1)) + team);
 		/*
@@ -197,48 +197,51 @@ methodmap ScavStocksWrapper
 	/**
  	 * Sets the round score on specific round.
  	 *
- 	 * @param team 		team number, valid index is 2 or 3
- 	 * @param round		round number to set the score, valid number is 1 to 5
- 	 * @param score		round score to set
-	 * @note			score shouldn't be greater than goal amount of current round.
-	 * @note			invalid round number will be set as current round number.
+ 	 * @param team 				team number, valid index is 2 or 3.
+ 	 * @param round				round number to set the score, valid number is 1 to 5.
+ 	 * @param score				round score to set.
+	 * @param bIsPreviousRound	true if we are trying to set the score of previous round, false otherwise.
+	 * @note					score shouldn't be greater than goal amount of current map.
  	 *
- 	 * @return			invalid team number will be ignored and set nothing.
+ 	 * @return					invalid team number will be ignored and set nothing.
+	 * @return					invalid round number will be ignored and set nothing.
  	 */
-	public void SetTeamScore(int team, int round, int score) {
-		if (round <= 0 || round > 5)
-			round = GameRules_GetProp("m_nRoundNumber");
+	public void SetTeamScore(int team, int round, int score, bool bIsPreviousRound = false) {
+		if (round <= 0 || round > 5) return;
 
-		if (L4D2_TeamNumberToTeamIndex(team) == -1)
-			return;
+		team = L4D2_TeamNumberToTeamIndex(team, bIsPreviousRound);
+		if (team == -1) return;
 
-		GameRules_SetProp("m_iScavengeTeamScore", score, 4, (2 * (round - 1)) + team);
+		GameRules_SetProp("m_iScavengeTeamScore", score, _, (2 * (round - 1)) + team);
 	}
 
 	/**
  	 * Returns the team's match score of this match.
  	 *
- 	 * @param team 		team number. valid value is 2 and 3
+ 	 * @param team 				team number. valid value is 2 and 3
+	 * @param bIsPreviousRound	true if we are trying to get the score of previous round, false otherwise.
  	 *
- 	 * @return 			the team match score of this match.
- 	 *					return -1 on invalid team number.
+ 	 * @return 					the team match score of this match.
+ 	 *							return -1 on invalid team number.
  	 */
-	public int GetMatchScore(int team) {
-		if (L4D2_TeamNumberToTeamIndex(team) == -1)
-			return -1;
+	public int GetMatchScore(int team, bool bIsPreviousRound = false) {
+		team = L4D2_TeamNumberToTeamIndex(team, bIsPreviousRound);
+		if (team == -1) return -1;
 
 		return GameRules_GetProp("m_iScavengeMatchScore", _, team);
 	}
 	/**
  	 * Sets the team's match score of this match.
  	 *
- 	 * @param team 		team number. valid value is 2 and 3
+ 	 * @param team 				team number. valid value is 2 and 3
+	 * @param score				team match score to set.
+	 * @param bIsPreviousRound	true if we are trying to set the score of previous round, false otherwise.
  	 *
- 	 * @return 			invalid team number will be ignored and set nothing.
+ 	 * @return 					invalid team number will be ignored and set nothing.
  	 */
-	public void SetMatchScore(int team, int score) {
-		if (L4D2_TeamNumberToTeamIndex(team) == -1)
-			return;
+	public void SetMatchScore(int team, int score, bool bIsPreviousRound = false) {
+		team = L4D2_TeamNumberToTeamIndex(team, bIsPreviousRound);
+		if (team == -1) return;
 
 		GameRules_SetProp("m_iScavengeMatchScore", score, _, team);
 	}
@@ -252,34 +255,33 @@ methodmap ScavStocksWrapper
  * @param buffer				buffer to store the round and time
  * @param maxlen				maxlenth of buffer.
  * @param team					team number, valide value see enum TeamNumber.
- * @param nodecimalpoint		true to print seconds without decimal point, false otherwise, also prints 5 digits in front of decimal point.
  *
  * @return 						number of characters written to the buffer, not including the null terminator.
 */
-stock int FormatDurationTime(char[] buffer, int maxlen, int team, bool nodecimalpoint = false) 
+stock int FormatDurationTime(char[] buffer, int maxlen, int team) 
 {
 	ScavStocksWrapper scav;
-	float flRoundStartTime = scav.GetRoundDuration(team);
-	int	  minutes = RoundToFloor(flRoundStartTime) / 60;
-	float seconds = 60 * minutes - flRoundStartTime;
+	float seconds = scav.GetRoundDuration(team);
+	int	  minutes = RoundToFloor(seconds) / 60;
+	seconds -= 60 * minutes;
 
-	return nodecimalpoint ? Format(buffer, maxlen, "%d:%02.0f", minutes, seconds) :
-							Format(buffer, maxlen, "%d:%05.2f", minutes, seconds);
+	return Format(buffer, maxlen, "%d:%02.2f", minutes, seconds);
 }
 
-/*
+/** 
  * Convert "2" or "3" to "0" or "1" for global static indices.
  * Defaultly recongnise 2 as team survivors and 3 as team infected.
  * 
- * @note			from plugin Scavenge Quick End by ProdigySim.
+ * @note					from plugin Scavenge Quick End by ProdigySim.
  *
- * @param team 		team number. valid value is 2 or 3.
+ * @param team 				team number. valid value is 2 or 3.
+ * @param bIsPreviousRound	true if we are trying to get the team index of previous round, false otherwise.
  *
- * @return 			1 if the team survivors flipped or team is infected,
- *  				0 if the team is survivors or team infected flipped,
- *  				-1 if the team number is invalid.
+ * @return 					1 if the team survivors flipped or team is infected,
+ *  						0 if the team is survivors or team infected flipped,
+ *  						-1 if the team number is invalid.
  */
-stock int L4D2_TeamNumberToTeamIndex(int team)
+stock int L4D2_TeamNumberToTeamIndex(int team, bool bIsPreviousRound = false)
 {
 	// must be team 2 or 3 for this stupid function
 	if (team != 2 && team != 3) return -1;
@@ -292,17 +294,23 @@ stock int L4D2_TeamNumberToTeamIndex(int team)
 	// 3	   1		 0
 	// index = (team & 1) ^ flipped
 	// index = team-2 XOR flipped, or team%2 XOR flipped, or this...
-	bool flipped = view_as<bool>(GameRules_GetProp("m_bAreTeamsFlipped"));
-	if (flipped) ++team;
+	if (!bIsPreviousRound)
+	{
+		bool flipped = view_as<bool>(GameRules_GetProp("m_bAreTeamsFlipped"));
+		if (flipped) ++team;
+	}
+	else 
+		++team;
+
 	return team % 2;
 }
 
-/*
+/**
  * Returns current gascan count.
  *
  * @note			from plugin Scavenge Hardcore by Eyal828.
  * 
- * @return			gascan count
+ * @return			current all gascan count
  */
 stock int GetGasCanCount()
 {
@@ -321,27 +329,27 @@ stock int GetGasCanCount()
 
 	return count;
 }
+
 /**
  * Returns the number of cans for current round to win.
  * 
- * @return 			the number of cans to win this round for survivors, -1 if the gamemode is not scavenge.
+ * @return 			the number of cans to win this round for survivors, -1 on failure.
 */
 stock int GetNumCansToWin()
 {
 	ScavStocksWrapper scav;
-	if (scav.IsScavengeMode())
+	if (scav.m_bInSecondHalfOfRound)
 	{
-		if (scav.m_bInSecondHalfOfRound)
-		{
-			int surScore = scav.GetTeamScore(2, scav.m_nRoundNumber);
-			int infScore = scav.GetTeamScore(3, scav.m_nRoundNumber);
+		int surScore = scav.GetTeamScore(2, scav.m_nRoundNumber);
+		int infScore = scav.GetTeamScore(3, scav.m_nRoundNumber);
+		if (surScore != -1 || infScore != -1)
 			return (infScore - surScore + 1);
-		}
-		else
-		{
-			int surScore = scav.GetTeamScore(2, scav.m_nRoundNumber);
+	}
+	else
+	{
+		int surScore = scav.GetTeamScore(2, scav.m_nRoundNumber);
+		if (surScore != -1)
 			return (scav.m_nScavengeItemsGoal - surScore);
-		}
 	}
 
 	return -1;
@@ -360,3 +368,23 @@ stock int GetNumCansToWin()
 	*/
 }
 
+/**
+ * Returns the winning team number of a specific round.
+ * 
+ * @param round				round to find. valid number is 1 to 5.
+ * @param bIsPreviousRound	true if we are trying to get the score of previous round, false otherwise.
+ * 
+ * @return 					the winning team number of a specific round, 2 for survivors, 3 for infected, -1 on invalid round number.
+*/
+stock int GetWinningTeam(int round, bool bIsPreviousRound = false)
+{
+	if (round <= 0 || round > 5)
+		return -1;
+
+	int survivor, infected;
+	ScavStocksWrapper scav;
+	survivor = scav.GetTeamScore(2, round, bIsPreviousRound);
+	infected = scav.GetTeamScore(3, round, bIsPreviousRound);
+
+	return (survivor > infected) ? 2 : 3;
+}

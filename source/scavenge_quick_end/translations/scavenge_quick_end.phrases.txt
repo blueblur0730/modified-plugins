@@ -1,31 +1,56 @@
 "Phrases"
 {
+	"Usage"
+	{
+		"en"		"[{orange}!{default}] Usage: sm_time <round>."
+		"chi"		"[{orange}!{default}] 用法: sm_time <回合>."
+	}
+
+	"InvalidRound"
+	{
+		"en"		"[{orange}!{default}] You can only check the results from round {olive}1{default} to {olive}current{default} round."
+		"chi"		"[{orange}!{default}] 你只能查看从回合{olive}1{default}到{olive}当前回合{default}的结果."
+	}
+
+	"NotStartedYet"
+	{
+		"en"		"[{orange}!{default}] Current round has not started yet."
+		"chi"		"[{orange}!{default}] 当前回合还未开始."
+	}
+
+	"LateLoaded"
+	{
+		"#format"	"{1:d}"
+		"en"		"[{orange}!{default}] Plugin was not loaded in previous round, unable to retrieve the round duration starting from round {olive}{1}."
+		"chi"		"[{orange}!{default}] 插件在之前回合中并未加载, 无法获取从第{olive}{1}{default}回合开始之前的回合用时."
+	}
+
 	"PrintRoundTime"
 	{
-		"#format"	"{1:d},{2:d},{3:d},{4:.2f}"
-		"en"		"[{olive}!{default}] Round {orange}{1}{default}, 1st half: {orange}{2} cans {default}in {orange}{3}:{4}"
-		"chi"		"[{olive}!{default}] 第{orange}{1}{default}局, 上半轮: {orange}{2}桶 {default}用时: {orange}{3}:{4}"
+		"#format"	"{1:d},{2:d},{3:s}"
+		"en"		"[{olive}!{default}] Round {orange}{1}{default}, 1st half: {orange}{2} cans {default}in {orange}{3}"
+		"chi"		"[{olive}!{default}] 第{orange}{1}{default}局, 上半轮: {orange}{2}桶 {default}用时: {orange}{3}"
 	}
 
 	"PrintRoundTimeInHalf"
 	{
-		"#format"	"{1:d},{2:d},{3:d},{4:.2f}"
-		"en"		"[{olive}!{default}] Round {orange}{1}{default}, 2nd half: {orange}{2} cans {default}in {orange}{3}:{4}"
-		"chi"		"[{olive}!{default}] 第{orange}{1}{default}局, 下半轮: {orange}{2}桶 {default}已用时: {orange}{3}:{4}"
+		"#format"	"{1:d},{2:d},{3:s}"
+		"en"		"[{olive}!{default}] Round {orange}{1}{default}, 2nd half: {orange}{2} cans {default}in {orange}{3}"
+		"chi"		"[{olive}!{default}] 第{orange}{1}{default}局, 下半轮: {orange}{2}桶 {default}已用时: {orange}{3}"
 	}
 
 	"PrintRoundEndTime"
 	{
-		"#format"	"{1:d},{2:d},{3:d},{4:.2f}"
-		"en"		"<{olive}Round End{default}> Round {orange}{1}{default}, 1st half: {orange}{2} cans {default}in {orange}{3}:{4}"
-		"chi"		"<{olive}轮回结算{default}> 第{orange}{1}{default}局, 上半轮: {orange}{2}桶 {default}用时: {orange}{3}:{4}"
+		"#format"	"{1:d},{2:d},{3:s}"
+		"en"		"<{olive}Round End{default}> Round {orange}{1}{default}, 1st half: {orange}{2} cans {default}in {orange}{3}"
+		"chi"		"<{olive}轮回结算{default}> 第{orange}{1}{default}局, 上半轮: {orange}{2}桶 {default}用时: {orange}{3}"
 	}
 
 	"PrintRoundEndTimeInHalf"
 	{
-		"#format"	"{1:d},{2:d},{3:d},{4:.2f}"
-		"en"		"<{olive}Round End{default}> Round {orange}{1}{default}, 2nd half: {orange}{2} cans {default}in {orange}{3}:{4}"
-		"chi"		"<{olive}轮回结算{default}> 第{orange}{1}{default}局, 下半轮: {orange}{2}桶 {default}用时: {orange}{3}:{4}"
+		"#format"	"{1:d},{2:d},{3:s}"
+		"en"		"<{olive}Round End{default}> Round {orange}{1}{default}, 2nd half: {orange}{2} cans {default}in {orange}{3}"
+		"chi"		"<{olive}轮回结算{default}> 第{orange}{1}{default}局, 下半轮: {orange}{2}桶 {default}用时: {orange}{3}"
 	}
 
 	"RoundEndEarly_Type1"
