@@ -6,7 +6,12 @@
 #include <sourcemod>
 #include <sdktools>
 
-// Note: when changing a GameRules property, to make game function normally best to use L4D_NotifyNetworkStateChanged() from left4dhooks.
+// [L4D2] Scavenge Stocks Wrapper
+// Version: 1.0
+// Author: blueblur
+// Date: 2024-7-22
+// URL: https://github.com/blueblur0730/modified-plugins
+
 methodmap ScavStocksWrapper
 {
 	/**
@@ -21,35 +26,67 @@ methodmap ScavStocksWrapper
 	}
 
 	/**
-	 * Is round in second half ?
-	 * 
-	 * @return 	true if round in second half, false otherwise.
+	 * Note: When changing a GameRules property,
+	 * to make game function normally best to use L4D_NotifyNetworkStateChanged() from left4dhooks before changing the property.
+	 * Even though you can, it's not recommended and unnecessary to do this.
+	 * But here the stock still provides these "set" wrappers for anyone who knows what they are doing to use them.
+	 * For most use, GameRules_GetProp() is what we exactly need.
+	*/
+
+	/**
+	 * Get or set the current round status.
 	*/
 	property bool m_bInSecondHalfOfRound {
 		public get() {
 			return view_as<bool>(GameRules_GetProp("m_bInSecondHalfOfRound"));
 		}
+
+		public set(bool value) {
+			GameRules_SetProp("m_bInSecondHalfOfRound", value);
+		}
 	}
 
 	/**
-	 * Is teams flipped?
-	 * 
-	 * @return 	true if teams flipped, false otherwise.
+	 * Get or set the current team flipping status.
 	*/
 	property bool m_bAreTeamsFlipped {
 		public get() {
 			return view_as<bool>(GameRules_GetProp("m_bAreTeamsFlipped"));
 		}
+
+		public set(bool value) {
+			GameRules_SetProp("m_bAreTeamsFlipped", value);
+		}
 	}
 
 	/**
-	 * Is currently in intro?
-	 * 
-	 * @return 	true if in intro, false otherwise.
+	 * Get the currrent intro status.
 	*/
 	property bool m_bInIntro {
 		public get() {
 			return view_as<bool>(GameRules_GetProp("m_bInIntro"));
+		}
+	}
+
+	/**
+	 * Get the current round start time.
+	 * 
+	 * @note		only records the data of current half of round, which means changing every half of a round.
+	*/
+	property float m_flRoundStartTime {
+		public get() {
+			return GameRules_GetPropFloat("m_flRoundStartTime");
+		}
+	}
+
+	/**
+	 * Get the current round end time.
+	 * 
+	 * @note		only records the data of current half of round, which means changing every half of a round.
+	*/
+	property float m_flRoundEndTime {
+		public get() {
+			return GameRules_GetPropFloat("m_flRoundEndTime");
 		}
 	}
 
@@ -88,20 +125,28 @@ methodmap ScavStocksWrapper
 	}
 
 	/** 
- 	 * Get the remaining number of scavenge items.
+ 	 * Get or set the remaining number of scavenge items.
  	*/
 	property int m_nScavengeItemsRemaining {
 		public get() {
 			return GameRules_GetProp("m_nScavengeItemsRemaining");
 		}
+
+		public set(int value) {
+			GameRules_SetProp("m_nScavengeItemsRemaining", value);
+		}
 	}
 
 	/**
-	 * Get the goal amount of current round.
+	 * Get or set the goal amount of current round.
 	*/
 	property int m_nScavengeItemsGoal {
 		public get() {
 			return GameRules_GetProp("m_nScavengeItemsGoal");
+		}
+
+		public set(int value) {
+			GameRules_SetProp("m_nScavengeItemsGoal", value);
 		}
 	}
 
@@ -126,7 +171,8 @@ methodmap ScavStocksWrapper
  	 * Returns the winning team index of a specific round.
  	 *
  	 * @param round		round to find. valide number is 1 to 5.
-	 * @note			defualt round number is current round number.
+	 * @note			return -1 on invalid round number (default round number).
+	 * @note			noted that the passed rounds are team flipped.
 	 * 
  	 * @return 			the winning team index of a specific round, 0 or 1.
  	*/
@@ -141,15 +187,13 @@ methodmap ScavStocksWrapper
 	 * 
 	 * @param team		team number to get the duration time. valid value are 2 or 3.
 	 * @note			return -1.0 on invalid team number.
-	 * @note			"m_flRoundStartTime", "m_flRoundEndTime" only records current half of a round's data. "m_flRoundDuration" records both halves.
-	 * 					these data will be cleared upon a new scavenge round begin.
+	 * @note			"m_flRoundDuration" records duration time ofboth halves of a round.
+	 * 					data will be cleared upon a new scavenge round begin.
 	 * 
 	 * @return 			the duration of current round.
 	*/
 	public float GetRoundDuration(int team) {
-		float m_flRoundStartTime = GameRules_GetPropFloat("m_flRoundStartTime");
-
-		if (team == 2 && m_flRoundStartTime != 0.0 && GameRules_GetPropFloat("m_flRoundEndTime") == 0.0)
+		if (team == 2 && this.m_flRoundStartTime != 0.0 && this.m_flRoundEndTime == 0.0)
 			return (GetGameTime() - m_flRoundStartTime); // Survivor team still playing round.
 
 		team = L4D2_TeamNumberToTeamIndex(team);
@@ -170,7 +214,7 @@ methodmap ScavStocksWrapper
  	*/
 	public int GetTeamScore(int team, int round = -1, bool bIsPreviousRound = false) {
 		if (round <= 0 || round > 5)
-			round = GameRules_GetProp("m_nRoundNumber");
+			round = this.m_nRoundNumber;
 
 		team = L4D2_TeamNumberToTeamIndex(team, bIsPreviousRound);
 		if (team == -1) return -1;
@@ -178,7 +222,7 @@ methodmap ScavStocksWrapper
 		return GameRules_GetProp("m_iScavengeTeamScore", _, (2 * (round - 1)) + team);
 		/*
 		team index has been converted to 0 and 1 from 2 and 3.
-		m_iScavengeTeamScore has 10 elements for team and each round.
+		m_iScavengeTeamScore has 10 elements for teams on each round.
 	 	Tooth table:
 		team | round | result
 		  2	  	 1 	  	 0
@@ -370,7 +414,7 @@ stock int GetNumCansToWin()
 }
 
 /**
- * Returns the winning team number of a specific round.
+ * Returns the winning team number of a specific round by comparing the team scores.
  * 
  * @param round				round to find. valid number is 1 to 5.
  * @param bIsPreviousRound	true if we are trying to get the score of previous round, false otherwise.
