@@ -1,0 +1,76 @@
+"Games"
+{
+	"left4dead2"
+	{
+		"Functions"
+		{
+			"CBaseCombatWeapon::WeaponSound"
+			{
+				"signature"	"CBaseCombatWeapon::WeaponSound"
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"entity"
+				"arguments"
+				{
+					"sound_type"
+					{
+						"type"	"int"
+					}
+				}
+			}
+			
+			"CBaseEntity::EmitSound"
+			{
+				"signature"	"CBaseEntity::EmitSound"
+				"callconv"	"cdecl"
+				"return"	"void"
+				"arguments"
+				{
+					"filter"
+					{
+						"type"	"int"
+					}
+					"EntIndex"
+					{
+						"type"	"cbaseentity"
+					}
+					"sound_name"
+					{
+						"type"	"string"
+					}
+				}
+			}
+		}
+		"Signatures"
+		{
+			"CBaseCombatWeapon::StopWeaponSound"
+			{
+				"library"	"server"
+				"linux"		"@_ZN17CBaseCombatWeapon15StopWeaponSoundE13WeaponSound_t"
+				"windows"	"\x55\x8B\xEC\x81\xEC\xAC\x00\x00\x00\xA1\x2A\x2A\x2A\x2A\x33\xC5\x89\x45\xFC\x8B\x45\x08"
+						/* 55 8B EC 81 EC AC 00 00 00 A1 ? ? ? ? 33 C5 89 45 FC 8B 45 08 */
+						// 1. search string "break_breakable" to find CBreakable::Die.
+						// 2. the first function call should be CBaseEntity::GetParametersForSound, double click it.
+						// 3. code xref CBaseEntity::GetParametersForSound, the first xref should be CBaseCombatWeapon::StopWeaponSound by simple comparsion.
+			}
+			
+			"CBaseCombatWeapon::WeaponSound"
+			{
+				"library"	"server"
+				"linux"		"@_ZN17CBaseCombatWeapon11WeaponSoundE13WeaponSound_tf"
+				"windows"	"\x55\x8B\xEC\x81\xEC\xCC\x00\x00\x00\xA1\x2A\x2A\x2A\x2A\x33\xC5\x89\x45\xFC\x53\x8B\x5D\x08"
+						/* 55 8B EC 81 EC CC 00 00 00 A1 ? ? ? ? 33 C5 89 45 FC 53 8B 5D 08 */
+						// find CBaseCombatWeapon::StopWeaponSound and go to vtable xref,
+						// CBaseCombatWeapon::WeaponSound is always above CBaseCombatWeapon::StopWeaponSound.
+			}
+
+			"CBaseEntity::EmitSound"
+			{
+				"library"	"server"
+				"linux"		"@_ZN11CBaseEntity9EmitSoundER16IRecipientFilteriPKcPK6VectorfPf"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x5C\xA1\x2A\x2A\x2A\x2A\x53"
+						/* 55 8B EC 83 EC 5C A1 ? ? ? ? 53 */
+			}
+		}
+	}
+}
