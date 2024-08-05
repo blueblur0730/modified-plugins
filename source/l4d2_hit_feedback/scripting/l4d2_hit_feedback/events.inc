@@ -3,123 +3,87 @@
 #endif
 #define _l4d2_hit_feedback_events_included
 
-static const char s_sWeaponName[10][] = {
-	"sniper_awp",
-	"sniper_scout",
-	"pistol_magnum",
-	"shotgun_spas",
-	"hunting_rifle",
-	"sniper_military",
-	"autoshotgun",
-	"pumpshotgun",
-	"shotgun_chrome",
-	"pistol",
-};
+static bool bIsVictimDeadPlayer[MAXPLAYERS + 1] = { false, ... };
 
 void Event_Spawn(Event event, const char[] name, bool dontBroadcast)
 {
-	int Client				   = GetClientOfUserId(event.GetInt("userid"));
-	IsVictimDeadPlayer[Client] = false;
+	int Client = GetClientOfUserId(event.GetInt("userid"));
+	bIsVictimDeadPlayer[Client] = false;
 }
 
 void Event_PlayerIncap(Event event, const char[] name, bool dontBroadcast)
 {
 	int victim = GetClientOfUserId(event.GetInt("userid"));
 	if (IsValidClient(victim) && GetClientTeam(victim) == 3 && GetEntProp(victim, Prop_Send, "m_zombieClass") == 8)
-		IsVictimDeadPlayer[victim] = true;
+		bIsVictimDeadPlayer[victim] = true;
 }
 
 void Event_TankSpawn(Event event, const char[] name, bool dontBroadcast)
 {
-	int tank				 = GetClientOfUserId(GetEventInt(event, "userid"));
-	IsVictimDeadPlayer[tank] = false;
+	int tank = GetClientOfUserId(event.GetInt("userid"));
+	bIsVictimDeadPlayer[tank] = false;
 }
 
+// this is left for both SI and survivors.
 void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
 	int	 victim		= GetClientOfUserId(event.GetInt("userid"));
 	int	 attacker	= GetClientOfUserId(event.GetInt("attacker"));
-	bool bHeadShout = event.GetBool("headshot");
+	bool bHeadShot = event.GetBool("headshot");
 	int	 damagetype = event.GetInt("type");
 	char sWeaponName[64];
 	event.GetString("weapon", sWeaponName, sizeof(sWeaponName));
 
-	if (!g_hCvEnableFire.BoolValue && damagetype & DMG_BURN)
+	if (!CheckDamageType(damagetype))
 		return;
 
-	if (!g_hCvEnableBlast.BoolValue && damagetype & DMG_BLAST)
+	if (!IsSurvivor(attacker) || !IsInfected(victim) || IsFakeClient(attacker))
 		return;
 
-	if (IsFakeClient(attacker))
+	if (!g_bCvEnableMelee && (strcmp(sWeaponName, "melee", false) == 0 || strcmp(sWeaponName, "chainsaw", false) == 0))
 		return;
 
-	if (!IsValidClient(victim) && IsValidClient(attacker))
-		return;
+	if (g_bCvEnableSIKillOverlay && GetEntProp(victim, Prop_Send, "m_zombieClass") != 0)
+		ShowKillMessage(attacker, bHeadShot ? kill_1 : kill);
 
-	if (GetClientTeam(victim) != 3 && GetClientTeam(attacker) != 2)
-		return;
-
-	if (!g_hCvEnableMelee.BoolValue && (strcmp(sWeaponName, "melee", false) == 0 || strcmp(sWeaponName, "chainsaw", false) == 0))
-		return;
-
-	if (g_hCvEnableInfectedPic.BoolValue)
-		ShowKillMessage(attacker, bHeadShout ? kill_1 : kill);
-
-	if (g_hCvEnableSound.BoolValue)
+	if (g_bCvEnableSound && g_bCvEnableSIKillSnd)
 	{
 		switch (g_iStyle[attacker])
 		{
-			case 1: EmitSoundToClient(attacker, bHeadShout ? g_sSoundHeadShot : g_sSoundKill, SOUND_FROM_PLAYER, SNDCHAN_STATIC);
-			case 2: EmitSoundToClient(attacker, bHeadShout ? g_sSoundHeadShotDefualt : g_sSoundKillDefualt, SOUND_FROM_PLAYER, SNDCHAN_STATIC);
+			case 1: EmitSoundToClient(attacker, bHeadShot ? g_sSoundHeadShot : g_sSoundKill, SOUND_FROM_PLAYER, SNDCHAN_STATIC);
+			case 2: EmitSoundToClient(attacker, bHeadShot ? g_sSoundHeadShotDefualt : g_sSoundKillDefualt, SOUND_FROM_PLAYER, SNDCHAN_STATIC);
 		}
 	}
 
-	ManageTimer(g_hCvTimeForKillMarker, attacker);
+	ManageTimer(g_flTimeForKillMarker, attacker);
 }
 
+// this is left for survivors in the future.
+/*
 void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
 	int	 victim		= GetClientOfUserId(event.GetInt("userid"));
 	int	 attacker	= GetClientOfUserId(event.GetInt("attacker"));
 	int	 damagetype = event.GetInt("type");
 	char sWeaponName[64];
-	GetEventString(event, "weapon", sWeaponName, sizeof(sWeaponName));
+	event.GetString("weapon", sWeaponName, sizeof(sWeaponName));
 
-	if (!g_hCvEnableFire.BoolValue && damagetype & DMG_BURN)
+	if (!CheckDamageType(damagetype))
 		return;
 
-	if (!g_hCvEnableBlast.BoolValue && damagetype & DMG_BLAST)
+	if (!IsSurvivor(attacker) || !IsInfected(victim) || IsFakeClient(attacker))
 		return;
 
-	if (!IsValidClient(victim) && !IsValidClient(attacker))
+	if (!bIsVictimDeadPlayer[victim])
 		return;
 
-	if (IsFakeClient(attacker))
+	if (!g_bCvEnableMelee && strcmp(sWeaponName, "melee", false) == 0 || strcmp(sWeaponName, "chainsaw", false) == 0)
 		return;
 
-	if (GetClientTeam(victim) != 3)
-		return;
+	if (g_bCvEnableInfectedPic)
+		ShowKillMessage(attacker, hit_armor);
 
-	if (!IsVictimDeadPlayer[victim])
-		return;
-
-	if (!g_hCvEnableMelee.BoolValue && strcmp(sWeaponName, "melee", false) == 0 || strcmp(sWeaponName, "chainsaw", false) == 0)
-		return;
-
-	bool bIsWeaponMatched = false;
-	for (int i = 0; i < sizeof(sWeaponName); i++)
-	{
-		if (strcmp(sWeaponName, s_sWeaponName[i]))
-		{
-			bIsWeaponMatched = true;
-			break;
-		}
-	}
-
-	if (g_hCvEnableInfectedPic.BoolValue)
-		ShowKillMessage(attacker, bIsWeaponMatched ? hit_armor : hit_armor_1);
-
-	if (g_hCvEnableSound.BoolValue)
+	if (g_bCvEnableSound)
 	{
 		switch (g_iStyle[attacker])
 		{
@@ -128,74 +92,78 @@ void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 		}
 	}
 
-	ManageTimer(g_hCvTimeForHitMarker, attacker);
+	ManageTimer(g_flTimeForHitMarker, attacker);
 }
+*/
 
+// this part is for CIs and witch.
 void Event_InfectedDeath(Event event, const char[] name, bool dontBroadcast)
 {
 	int	 attacker	= GetClientOfUserId(event.GetInt("attacker"));
-	bool bHeadShout = event.GetBool("headshot");
+	bool bHeadShot = event.GetBool("headshot");
 	bool damagetype = event.GetBool("blast");
 	int	 WeaponID	= event.GetInt("weapon_id");
 
-	if (!g_hCvEnableFire.BoolValue && WeaponID == 0)
+	if (!g_bCvEnableFire && WeaponID == 0)
 		return;
 
-	if (!g_hCvEnableBlast.BoolValue && damagetype)
+	if (!g_bCvEnableBlast && damagetype)
 		return;
 
-	if (!IsValidClient(attacker) || IsFakeClient(attacker))
+	if (!IsSurvivor(attacker) || IsFakeClient(attacker))
 		return;
 
-	if (GetClientTeam(attacker) != 2)
+	if (!g_bCvEnableMelee && IsWepIdMeleeWeapon(attacker))
 		return;
 
-	if (!g_hCvEnableMelee.BoolValue && IsWepIdMeleeWeapon(attacker))
-		return;
+	if (g_bCvEnableCIKillOverlay)
+		ShowKillMessage(attacker, bHeadShot ? kill_1 : kill);
 
-	if (g_hCvEnableInfKillPic.BoolValue)
-		ShowKillMessage(attacker, bHeadShout ? kill_1 : kill);
-
-	if (g_hCvEnableSound.BoolValue && g_hCvEnableOnInfectedKill.BoolValue)
+	if (g_bCvEnableSound && g_bCvEnableCIKillSnd)
 	{
 		switch (g_iStyle[attacker])
 		{
-			case 1: EmitSoundToClient(attacker, bHeadShout ? g_sSoundHeadShot : g_sSoundKill, SOUND_FROM_PLAYER, SNDCHAN_STATIC);
-			case 2: EmitSoundToClient(attacker, bHeadShout ? g_sSoundHeadShotDefualt : g_sSoundKillDefualt, SOUND_FROM_PLAYER, SNDCHAN_STATIC);
+			case 1: EmitSoundToClient(attacker, bHeadShot ? g_sSoundHeadShot : g_sSoundKill, SOUND_FROM_PLAYER, SNDCHAN_STATIC);
+			case 2: EmitSoundToClient(attacker, bHeadShot ? g_sSoundHeadShotDefualt : g_sSoundKillDefualt, SOUND_FROM_PLAYER, SNDCHAN_STATIC);
 		}
 	}
 
-	ManageTimer(g_hCvTimeForKillMarker, attacker);
+	ManageTimer(g_flTimeForKillMarker, attacker);
 }
 
+// this part if for both CIs and witch and SIs.
 void Event_InfectedHurt(Event event, const char[] event_name, bool dontBroadcast)
 {
 	int victim		= event.GetInt("entityid");
 	int attacker	= GetClientOfUserId(event.GetInt("attacker"));
 	int dmg			= event.GetInt("amount");
 	int damagetype	= event.GetInt("type");
-	int eventhealth = GetEntProp(victim, Prop_Data, "m_iHealth");
 	int entity		= event.GetInt("entityid");
+	int eventhealth = GetEntProp(victim, Prop_Data, "m_iHealth");
 
-	if (!g_hCvEnableFire.BoolValue && damagetype & DMG_BURN)
-		return;
-
-	if (!g_hCvEnableBlast.BoolValue && damagetype & DMG_BLAST)
+	if (!CheckDamageType(damagetype))
 		return;
 
 	if (!IsValidClient(attacker) || IsFakeClient(attacker))
 		return;
 
+	// on last hit, play the kill sound instead of hit sound. Infected Death will be triggered.
 	if (eventhealth <= dmg)
 		return;
 
-	if (!g_hCvEnableMelee.BoolValue && IsWepIdMeleeWeapon(attacker))
+	if (!g_bCvEnableMelee && IsWepIdMeleeWeapon(attacker))
 		return;
 
-	if (g_hCvEnableOnInfectedHit.BoolValue)
-		ShowKillMessage(attacker, IsWitch(entity) ? hit_armor : hit_armor_1);
+	char sClassname[32];
+	GetEntityClassname(entity, sClassname, sizeof(sClassname));
+	if ((strcmp(sClassname, "infected") == 0 && g_bCvEnableCIHitOverlay) ||
+		(GetEntProp(entity, Prop_Send, "m_zombieClass") != 0 && g_bCvEnableSIHitOverlay))
+	{
+		ShowKillMessage(attacker, hit_armor);
+	}
 
-	if (g_hCvEnableSound.BoolValue && g_hCvEnableOnInfectedHit.BoolValue)
+	if (g_bCvEnableSound && ((g_bCvEnableCIHitSnd && strcmp(sClassname, "infected") == 0) ||
+	 	(GetEntProp(entity, Prop_Send, "m_zombieClass") != 0 && g_bCvEnableSIHitSnd)))
 	{
 		switch (g_iStyle[attacker])
 		{
@@ -204,5 +172,5 @@ void Event_InfectedHurt(Event event, const char[] event_name, bool dontBroadcast
 		}
 	}
 
-	ManageTimer(g_hCvTimeForHitMarker, attacker);
+	ManageTimer(g_flTimeForHitMarker, attacker);
 }
