@@ -7,7 +7,7 @@
 #include <left4dhooks>
 
 #define DEBUG 1
-#define PL_VERSION "1.0"
+#define PL_VERSION "1.1"
 #define GAMEDATA_FILE "l4d2_scav_dhooks_natives"
 
 Handle g_hSDKCall_IncrementScavengeMatchScore, g_hSDKCall_UpdateOvertimeState, g_hSDKCall_ResetRoundNumber,
@@ -17,6 +17,8 @@ g_hSDKCall_CTerrorGameRules_IncrementScavengeTeamScore;
 
 DynamicDetour g_hDetour_OnStartIntro, g_hDetour_AreBossesProhibited, g_hDetour_OnBeginRoundSetupTime, g_hDetour_OnEndOvertime;
 GlobalForward g_hOnStartIntro, g_hAreBossesProhibited, g_hOnBeginRoundSetupTime, g_hOnEndOvertime;
+
+bool g_bStartedIntro = false;
 
 methodmap SDKCall_Wrapper
 {
@@ -50,6 +52,18 @@ public Plugin myinfo =
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
+	EngineVersion engine = GetEngineVersion();
+	if(engine != Engine_Left4Dead2)
+	{
+		strcopy(error, err_max, "Plugin only supports Left 4 Dead 2.");
+		return APLRes_SilentFailure;
+	}
+
+	return APLRes_Success;
+}
+
 public void OnPluginStart()
 {
     CreateConVar("l4d2_scav_dhooks_version", PL_VERSION, "L4D2 Scavenge Direct Hooks version", FCVAR_NOTIFY | FCVAR_DONTRECORD | FCVAR_SPONLY);
@@ -58,6 +72,14 @@ public void OnPluginStart()
     SetupDetours();
     SetupForwards();
     SetupNatives();
+
+    RegPluginLibrary("l4d2_scav_dhooks_natives");
+}
+
+public void OnMapStart()
+{
+    // reset on every map start.
+    g_bStartedIntro = false;
 }
 
 void PrepareSDKCalls()
@@ -69,17 +91,16 @@ void PrepareSDKCalls()
     g_hSDKCall_IncrementScavengeMatchScore                  = CreateSDKCall(SDKCall_GameRules, gd, SDKConf_Signature, "CTerrorGameRules::IncrementScavengeMatchScore"     , true, SDKType_PlainOldData, SDKPass_Plain, false, _, _);
     g_hSDKCall_UpdateOvertimeState                          = CreateSDKCall(SDKCall_Raw,       gd, SDKConf_Signature, "CDirectorScavengeMode::UpdateOvertimeState"        , false, _, _ , false, _, _);
     g_hSDKCall_ResetRoundNumber                             = CreateSDKCall(SDKCall_GameRules, gd, SDKConf_Signature, "CTerrorGameRules::ResetRoundNumber"                , false, _, _ , false, _, _);
-    g_hSDKCall_AccumulateTime                               = CreateSDKCall(SDKCall_GameRules, gd, SDKConf_Signature, "CTerrorGameRules::AccumulateTime"                  , false, _, _ , false, _, _);
+    g_hSDKCall_AccumulateTime                               = CreateSDKCall(SDKCall_GameRules, gd, SDKConf_Signature, "CTerrorGameRules::AccumulateTime"                  , true, SDKType_Float, SDKPass_Plain, false, _, _);
     g_hSDKCall_RestartScavengeRound                         = CreateSDKCall(SDKCall_Raw,       gd, SDKConf_Signature, "CDirectorScavengeMode::RestartScavengeRound"       , true, SDKType_PlainOldData, SDKPass_Plain, false, _, _);
     g_hSDKCall_UpdateScavengeMobSpawns                      = CreateSDKCall(SDKCall_Static,    gd, SDKConf_Signature, "CDirectorScavengeMode::UpdateScavengeMobSpawns"    , false, _, _ , true, SDKType_Bool, SDKPass_Plain);
     g_hSDKCall_EndScavengeRound                             = CreateSDKCall(SDKCall_Raw,       gd, SDKConf_Signature, "CDirectorScavengeMode::EndScavengeRound"           , false, _, _ , false, _, _);
+    g_hSDKCall_CTerrorGameRules_IncrementScavengeTeamScore  = CreateSDKCall(SDKCall_GameRules, gd, SDKConf_Signature, "CTerrorGameRules::IncrementScavengeTeamScore"      , true, SDKType_PlainOldData, SDKPass_Plain, false, _, _);
 
     SDKType[] paramType = new SDKType[2]; SDKPassMethod[] paramPass = new SDKPassMethod[2];
     paramType[0] = SDKType_PlainOldData; paramType[1] = SDKType_CBaseEntity;
     paramPass[0] = SDKPass_Plain;        paramPass[1] = SDKPass_Pointer;
     g_hSDKCall_CDirector_IncrementScavengeTeamScore         = CreateSDKCallEx(SDKCall_Raw,     gd, SDKConf_Signature, "CDirector::IncrementScavengeTeamScore"             , true, 2, paramType, paramPass, false, _, _);
-
-    g_hSDKCall_CTerrorGameRules_IncrementScavengeTeamScore  = CreateSDKCall(SDKCall_GameRules, gd, SDKConf_Signature, "CTerrorGameRules::IncrementScavengeTeamScore"      , true, SDKType_PlainOldData, SDKPass_Plain, false, _, _);
 
     delete gd;
 }
@@ -109,7 +130,7 @@ Handle CreateSDKCallEx(SDKCallType type, GameData gd, SDKFuncConfSource source, 
     {
         for (int i = 0; i < ParamNum; i++)
         {
-            SetUp.AddParam(paramType[i - 1], paramPass[i - 1]);
+            SetUp.AddParam(paramType[i], paramPass[i]);
         }
     }
     if (bHasReturn)
@@ -161,13 +182,19 @@ void SetupNatives()
     CreateNative("L4D2_CTerrorGameRules_IncrementScavengeTeamScore", Native_CTerrorGameRules_IncrementScavengeTeamScore);
 }
 
-MRESReturn DTR_CDirectorScavengeMode_OnStartIntro()
+MRESReturn DTR_CDirectorScavengeMode_OnStartIntro(DHookReturn hReturn)
 {
 #if DEBUG
-    PrintToServer("### DTR_CDirectorScavengeMode_OnStartIntro");
+    PrintToServer("### DTR_CDirectorScavengeMode_OnStartIntro, IsScav: %d", hReturn.Value);
 #endif
-    Call_StartForward(g_hOnStartIntro);
-    Call_Finish();
+
+    // if the gamemode is scavenge mode.
+    if (hReturn.Value)
+    {
+        Call_StartForward(g_hOnStartIntro);
+        Call_Finish();
+        g_bStartedIntro = true;
+    }
 
     return MRES_Ignored;
 }
@@ -202,8 +229,13 @@ MRESReturn DTR_CDirectorScavengeMode_OnBeginRoundSetupTime()
     PrintToServer("### DTR_CDirectorScavengeMode_OnBeginRoundSetupTime");
 #endif
 
-    Call_StartForward(g_hOnBeginRoundSetupTime);
-    Call_Finish();
+    // this function called at the same time with OnStartIntro (even a little bit faster) when the first round start.
+    // so we let it calls later as the real call.
+    if (g_bStartedIntro)
+    {
+        Call_StartForward(g_hOnBeginRoundSetupTime);
+        Call_Finish();
+    }
 
     return MRES_Ignored;
 }
@@ -231,7 +263,7 @@ void ValidateNatives(Handle test, const char[] name)
 int Native_IncrementScavengeMatchScore(Handle plugin, int numParams)
 {
     int team = GetNativeCell(1);
-    if (team != 1 || team != 2)
+    if (team != 1 && team != 2)
         ThrowNativeError(SP_ERROR_PARAM, "Invalid team number: %d", team);
 
     ValidateNatives(g_hSDKCall_IncrementScavengeMatchScore, "L4D2_IncrementScavengeMatchScore");
@@ -288,7 +320,7 @@ int Native_EndScavengeRound(Handle plugin, int numParams)
 int Native_CDirector_IncrementScavengeTeamScore(Handle plugin, int numParams)
 {
     int team = GetNativeCell(1);
-    if (team != 2 || team != 3)
+    if (team != 2 && team != 3)
         ThrowNativeError(SP_ERROR_PARAM, "Invalid team number: %d", team);
     
     int client = GetNativeCell(2);
@@ -305,7 +337,7 @@ int Native_CDirector_IncrementScavengeTeamScore(Handle plugin, int numParams)
 int Native_CTerrorGameRules_IncrementScavengeTeamScore(Handle plugin, int numParams)
 {
     int team = GetNativeCell(1);
-    if (team != 2 || team != 3)
+    if (team != 2 && team != 3)
         ThrowNativeError(SP_ERROR_PARAM, "Invalid team number: %d", team);
 
     ValidateNatives(g_hSDKCall_CTerrorGameRules_IncrementScavengeTeamScore, "L4D2_CTerrorGameRules_IncrementScavengeTeamScore");

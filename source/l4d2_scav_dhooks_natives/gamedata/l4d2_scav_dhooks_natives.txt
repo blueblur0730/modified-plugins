@@ -8,7 +8,7 @@
 			{
 				"signature"		"CDirectorScavengeMode::OnStartIntro"
 				"callconv"		"thiscall"
-				"return"		"int"
+				"return"		"bool"
 				"this"			"ignore"
 			}
 
