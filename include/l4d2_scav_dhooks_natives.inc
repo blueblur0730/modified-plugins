@@ -4,27 +4,43 @@
 #define _l4d2_scav_dhooks_native_included
 
 /**
- * Called when the intro cutscene starting to play on the beginning of a scavenge match.
+ * Called when the intro cutscene is starting to play on the beginning of a scavenge match.
  * 
  * @noreturn
 */
 forward void L4D2_OnStartScavengeIntro()
 
 /**
- * Called when The Director trying to check if bosses are prohibited.
+ * Called when the scavenge round setup countdown timer begins.
  * 
- * @param prohibited   The bool value after the check. True on prohibition, false on allowed.
+ * @param time   The time duration of the round setup countdown timer.
  * 
- * @return             Plugin_Continue or Plugin_Handled to prohibit bosses. Plugin_Changed to allow bosses.
+ * @note time will be 0.0 if the countdown timer is null.
+ * @return Plugin_Handled to hide VGUI Panel 'ready_countdown' (but it wont stop the round setup countdown timer). 
+ * 		   Plugin_Changed to use the value from plugin on the timer.
+ * 		   Plugin_Continue to do nothing.
 */
-forward Action L4D2_AreBossesProhibited(bool prohibited)
+forward Action L4D2_OnBeginScavengeRoundSetupTime(float &time)
 
 /**
  * Called when the scavenge round setup countdown timer begins.
  * 
+ * @param time   The time duration of the round setup countdown timer.
+ * 
+ * @note This forward will not trigger if the relative pre-hook forward has been blocked with Plugin_Handled
  * @noreturn
 */
-forward void L4D2_OnBeginScavengeRoundSetupTime()
+forward void L4D2_OnBeginScavengeRoundSetupTime_Post(float time)
+
+/**
+ * Called when the scavenge round setup countdown timer begins.
+ * 
+ * @param time   The time duration of the round setup countdown timer.
+ * 
+ * @note This forward will ONLY trigger if the relative pre-hook forward has been blocked with Plugin_Handled
+ * @noreturn
+*/
+forward void L4D2_OnBeginScavengeRoundSetupTime_PostHandled(float time)
 
 /**
  * Called when a scavenge round ended the overtime status.
@@ -94,19 +110,16 @@ native bool L4D2_UpdateScavengeMobSpawns()
 native void L4D2_EndScavengeRound()
 
 /**
- * Increments the scavenge team score through The Director.
- * 
- * @param team		Team number to increment. 2 for survivors or 3 for infected.
- * @param client	Client index who act as if he poured the gascan.
+ * Increments both survivors' scavenge team score and round timer.
  * 
  * @note This function increnments both score and round timer, like a normal gascan poured.
  * @note This function calls CTerrorGameRules::IncrementScavengeTeamScore and CGameRulesProxy::NotifyNetworkStateChanged internally.
  * @noreturn
 */
-native void L4D2_CDirector_IncrementScavengeTeamScore(int team, int client)
+native void L4D2_CDirector_IncrementScavengeTeamScore()
 
 /**
- * Increments the scavenge team score through GameRule object.
+ * Increments survivors' scavenge team score.
  * 
  * @param team		Team number to increment. 2 for survivors or 3 for infected.
  * 
@@ -114,7 +127,7 @@ native void L4D2_CDirector_IncrementScavengeTeamScore(int team, int client)
  * @note This function calls CGameRulesProxy::NotifyNetworkStateChanged internally.
  * @noreturn
 */
-native void L4D2_CTerrorGameRules_IncrementScavengeTeamScore()
+native void L4D2_CTerrorGameRules_IncrementScavengeTeamScore(int team)
 
 public SharedPlugin __pl_l4d2_scav_dhooks_natives = 
 {

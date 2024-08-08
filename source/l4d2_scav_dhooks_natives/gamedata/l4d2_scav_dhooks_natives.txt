@@ -12,32 +12,34 @@
 				"this"			"ignore"
 			}
 
-			"CDirector::AreBossesProhibited"
-			{
-				"signature"		"CDirector::AreBossesProhibited"
-				"windows"
-				{
-					"callconv"		"stdcall"
-				}
-				"linux"
-				{
-					"callconv"		"cdecl"
-				}
-				"return"		"bool"
-				"this"			"ignore"
-				"arguments"
-				{
-					"prohibitbosses"
-					{
-						"type"		"bool"
-					}
-				}
-			}
+			//"CDirector::AreBossesProhibited"
+			//{
+			//	"signature"		"CDirector::AreBossesProhibited"
+			//	"callconv"		"thiscall"
+			//	"return"		"bool"
+			//	"this"			"ignore"
+			//}
 
 			"CDirectorScavengeMode::OnBeginRoundSetupTime"
 			{
 				"signature"		"CDirectorScavengeMode::OnBeginRoundSetupTime"
-				"callconv"		"thiscall" // https://reverseengineering.stackexchange.com/questions/13703/what-is-byte-usercall-eax-and-edi
+				"callconv"		"thiscall"
+				"return"		"int"
+				"this"			"ignore"
+			}
+
+			"CDirectorScavengeMode::UpdateOvertimeState"
+			{
+				"signature"		"CDirectorScavengeMode::UpdateOvertimeState"
+				"callconv"		"thiscall"
+				"return"		"int"
+				"this"			"ignore"
+			}
+
+			"CDirectorScavengeMode::ScavengeUpdateScenarioState"
+			{
+				"signature"		"CDirectorScavengeMode::ScavengeUpdateScenarioState"
+				"callconv"		"thiscall"
 				"return"		"int"
 				"this"			"ignore"
 			}
@@ -45,6 +47,22 @@
 			"CDirectorScavengeMode::OnEndOvertime"
 			{
 				"signature"		"CDirectorScavengeMode::OnEndOvertime"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"ignore"
+			}
+
+			"CDirectorScavengeMode::OnStartOvertime"
+			{
+				"signature"		"CDirectorScavengeMode::OnStartOvertime"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"ignore"
+			}
+
+			"CDirectorScavengeMode::OnRoundTimeExpired"
+			{
+				"signature"		"CDirectorScavengeMode::OnRoundTimeExpired"
 				"callconv"		"thiscall"
 				"return"		"void"
 				"this"			"ignore"
@@ -65,29 +83,16 @@
 							
 			}
 
-			// no unique symbols or offsets are found, abandoned.
-
-			// char __usercall CDirectorScavengeMode::OnFinishIntro@<al>(long double@<st0>, CDirectorScavengeMode *this)
-			//"CDirectorScavengeMode::OnFinishIntro"
-			//{
-			//	"library"	"server"
-			//	"linux"		"@_ZN21CDirectorScavengeMode13OnFinishIntroEv"
-			//	"windows"	""
-			//}
-
-			// could use  instead.
-
 			// int CDirectorScavengeMode::OnEndRoundSetupTime()
-			//"CDirectorScavengeMode::OnEndRoundSetupTime"
-			//{
-			//	"library"	"server"
-			//	"linux"		"@_ZN21CDirectorScavengeMode19OnEndRoundSetupTimeEv"
-			//	"windows"	"\x55\x8B\xEC\x83\xEC\x10\x33\xC0\x88\x45\xF8\x89\x45\xFC\x8D\x45\xF0\x50\xC7\x45\xF0\xFF\xFF\xFF\xFF\xC7\x45\xF4\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x83\xC4\x04"
-			//				/* 55 8B EC 83 EC 10 33 C0 88 45 F8 89 45 FC 8D 45 F0 50 C7 45 F0 FF FF FF FF C7 45 F4 ? ? ? ? E8 ? ? ? ? 83 C4 04 */
-			//				// search for string "ready_countdown", find all occurance, the 3rd call should be it.
-			//}
+			"CDirectorScavengeMode::OnEndRoundSetupTime"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CDirectorScavengeMode19OnEndRoundSetupTimeEv"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x10\x33\xC0\x88\x45\xF8\x89\x45\xFC\x8D\x45\xF0\x50\xC7\x45\xF0\xFF\xFF\xFF\xFF\xC7\x45\xF4\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x83\xC4\x04"
+							/* 55 8B EC 83 EC 10 33 C0 88 45 F8 89 45 FC 8D 45 F0 50 C7 45 F0 FF FF FF FF C7 45 F4 ? ? ? ? E8 ? ? ? ? 83 C4 04 */
+							// search for string "ready_countdown", find all occurance, the 3rd call should be it.
+			}
 
-			// https://hex-rays.com/blog/igors-tip-of-the-week-51-custom-calling-conventions/
 			// int __usercall CDirectorScavengeMode::OnBeginRoundSetupTime@<eax>(long double a1@<st0>, CDirectorScavengeMode *this)
 			"CDirectorScavengeMode::OnBeginRoundSetupTime"
 			{
@@ -108,15 +113,56 @@
 							// search for string "info_director" and find all occurance.
 			}
 			
-			// bool __cdecl CDirector::AreBossesProhibited(CDirectorVersusMode **this)
-			"CDirector::AreBossesProhibited"
+			// void *__cdecl CDirectorScavengeMode::OnStartOvertime(CDirectorScavengeMode *this)
+			"CDirectorScavengeMode::OnStartOvertime"
 			{
 				"library"	"server"
-				"linux"		"@_ZNK9CDirector19AreBossesProhibitedEv"
-				"windows"	"\x55\x8B\xEC\x51\x56\x8B\xF1\x8B\x8E\x48\x06\x00\x00\x8D\x45\xFF\x50\xE8\x2A\x2A\x2A\x2A\x84\xC0\x74\x2A\x8A\x45\xFF\x5E\x8B\xE5\x5D\xC3\x8B\x8E\x44\x06\x00\x00"		
-							/* 55 8B EC 51 56 8B F1 8B 8E 48 06 00 00 8D 45 FF 50 E8 ? ? ? ? 84 C0 74 ? 8A 45 FF 5E 8B E5 5D C3 8B 8E 44 06 00 00 */
-							// search for string "ProhibitBosses".
+				"linux"		"@_ZN21CDirectorScavengeMode15OnStartOvertimeEv"
+				"windows"	"\x55\x8B\xEC\x51\x66\xC7\x41\x0B\x01\x01"
+							/* 55 8B EC 51 66 C7 41 0B 01 01 */
+							// search string is "begin_scavenge_overtime".
 			}
+			
+			// int __usercall CDirectorScavengeMode::UpdateOvertimeState@<eax>(long double a1@<st0>, CDirectorScavengeMode *this)
+			"CDirectorScavengeMode::UpdateOvertimeState"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CDirectorScavengeMode19UpdateOvertimeStateEv"
+				"windows"	"\x55\x8B\xEC\x51\x53\x56\x8D\x45\xFF"
+							/* 55 8B EC 51 53 56 8D 45 FF */
+							// find CDirectorScavengeMode::OnEndOvertime (description above), the only one xref should be it.
+			}
+
+			// char __usercall CDirectorScavengeMode::ScavengeUpdateScenarioState@<al>(long double@<st0>, CDirectorScavengeMode *this)
+			"CDirectorScavengeMode::ScavengeUpdateScenarioState"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CDirectorScavengeMode27ScavengeUpdateScenarioStateEv"
+				"windows"	"\x55\x8B\xEC\x51\x56\x8B\xF1\xE8\x2A\x2A\x2A\x2A\x84\xC0\x0F\x84\x2A\x2A\x2A\x2A\x80\x7E\x08\x00"
+							/* 55 8B EC 51 56 8B F1 E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 80 7E 08 00*/
+							// find CDirectorScavengeMode::OnStartOvertime (description above), the only xref is CDirectorScavengeMode::UpdateOvertimeState
+							// again it has only one xref, which is CDirectorScavengeMode::ScavengeUpdateScenarioState.
+			}
+
+			// int __cdecl CDirectorScavengeMode::OnRoundTimeExpired(CDirectorScavengeMode *this)
+			"CDirectorScavengeMode::OnRoundTimeExpired"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CDirectorScavengeMode18OnRoundTimeExpiredEv"
+				"windows"	"\x55\x8B\xEC\x51\x56\x8D\x45\xFF\x50\x8B\xF1\xE8\x2A\x2A\x2A\x2A\x83\xC4\x04"
+							/* 55 8B EC 51 56 8D 45 FF 50 8B F1 E8 ? ? ? ? 83 C4 04 */
+							// find CTerrorGameRules::GetRemainingAccumulatedTime (description below), under the 'if' statement this function should be it.
+			}
+			
+			// bool __cdecl CDirector::AreBossesProhibited(CDirectorVersusMode **this)
+			//"CDirector::AreBossesProhibited"
+			//{
+			//	"library"	"server"
+			//	"linux"		"@_ZNK9CDirector19AreBossesProhibitedEv"
+			//	"windows"	"\x55\x8B\xEC\x51\x56\x8B\xF1\x8B\x8E\x48\x06\x00\x00\x8D\x45\xFF\x50\xE8\x2A\x2A\x2A\x2A\x84\xC0\x74\x2A\x8A\x45\xFF\x5E\x8B\xE5\x5D\xC3\x8B\x8E\x44\x06\x00\x00"		
+			//			/* 55 8B EC 51 56 8B F1 8B 8E 48 06 00 00 8D 45 FF 50 E8 ? ? ? ? 84 C0 74 ? 8A 45 FF 5E 8B E5 5D C3 8B 8E 44 06 00 00 */
+			//			// search for string "ProhibitBosses".
+			//}
 
 			////////////////
 			// Calls
@@ -141,16 +187,6 @@
 							/* 55 8B EC 53 8B 5D 08 57 8B F9 85 DB 7E ? 56 8B B4 9F D4 03 00 00  */
 							// find CDirectorScavengeMode::EndScavengeRound (description below), at the mid of the function,
 							// notice "if ( !v4 )", statement inside calls CTerrorGameRules::IncrementScavengeMatchScore.
-			}
-
-			// int __usercall CDirectorScavengeMode::UpdateOvertimeState@<eax>(long double a1@<st0>, CDirectorScavengeMode *this)
-			"CDirectorScavengeMode::UpdateOvertimeState"
-			{
-				"library"	"server"
-				"linux"		"@_ZN21CDirectorScavengeMode19UpdateOvertimeStateEv"
-				"windows"	"\x55\x8B\xEC\x51\x53\x56\x8D\x45\xFF"
-							/* 55 8B EC 51 53 56 8D 45 FF */
-							// find CDirectorScavengeMode::OnEndOvertime (description above), the only one xref should be it.
 			}
 
 			// int __cdecl CTerrorGameRules::ResetRoundNumber(CTerrorGameRules *this) this is called by CDirector::Rematch
@@ -229,13 +265,18 @@
 							// inside it the second call should be it.
 			}
 
-			// int __cdecl CTerrorGameRules::GetScavengeScoreInternal(CTerrorGameRules *this, int a2, int a3)
-			"CTerrorGameRules::GetScavengeScoreInternal"
+			// long double __cdecl CTerrorGameRules::GetRemainingAccumulatedTime(CTerrorGameRules *this)
+			"CTerrorGameRules::GetRemainingAccumulatedTime"
 			{
 				"library"	"server"
-				"linux"		"@_ZN16CTerrorGameRules24GetScavengeScoreInternalEii"
-				"windows"	""
+				"linux"		"@_ZNK16CTerrorGameRules27GetRemainingAccumulatedTimeEv"
+				"windows"	"\x55\x8B\xEC\x51\xF3\x0F\x10\x91\x48\x04\x00\x00\x0F\x57\xC0"
+							/* 55 8B EC 51 F3 0F 10 91 48 04 00 00 0F 57 C0 */
+							// find CDirectorScavengeMode::ScavengeUpdateScenarioState, inside of it there is an 'if' statement that check wether a DWORD function is <= 0.0, this should be it.
 			}
 		}
 	}
 }
+
+// https://hex-rays.com/blog/igors-tip-of-the-week-51-custom-calling-conventions/
+// https://reverseengineering.stackexchange.com/questions/13703/what-is-byte-usercall-eax-and-edi

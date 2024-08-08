@@ -10,13 +10,36 @@
 #define PL_VERSION "1.1"
 #define GAMEDATA_FILE "l4d2_scav_dhooks_natives"
 
-Handle g_hSDKCall_IncrementScavengeMatchScore, g_hSDKCall_UpdateOvertimeState, g_hSDKCall_ResetRoundNumber,
-g_hSDKCall_AccumulateTime, g_hSDKCall_RestartScavengeRound,
-g_hSDKCall_UpdateScavengeMobSpawns, g_hSDKCall_EndScavengeRound, g_hSDKCall_CDirector_IncrementScavengeTeamScore,
-g_hSDKCall_CTerrorGameRules_IncrementScavengeTeamScore;
+Handle 
+    g_hSDKCall_IncrementScavengeMatchScore, 
+    g_hSDKCall_UpdateOvertimeState, 
+    g_hSDKCall_ResetRoundNumber,
+    g_hSDKCall_AccumulateTime, 
+    g_hSDKCall_RestartScavengeRound,
+    g_hSDKCall_UpdateScavengeMobSpawns, 
+    g_hSDKCall_EndScavengeRound, 
+    g_hSDKCall_CDirector_IncrementScavengeTeamScore,
+    g_hSDKCall_CTerrorGameRules_IncrementScavengeTeamScore;
 
-DynamicDetour g_hDetour_OnStartIntro, g_hDetour_AreBossesProhibited, g_hDetour_OnBeginRoundSetupTime, g_hDetour_OnEndOvertime;
-GlobalForward g_hOnStartIntro, g_hAreBossesProhibited, g_hOnBeginRoundSetupTime, g_hOnEndOvertime;
+DynamicDetour 
+    g_hDetour_OnStartIntro, 
+    g_hDetour_OnBeginRoundSetupTime,
+    g_hDetour_OnStartOvertime,
+    g_hDetour_OnEndOvertime, 
+    g_hDetour_OnUpdateOvertimeState, 
+    g_hDetour_OnScavengeUpdateScenarioState,
+    g_hDetour_OnRoundTimeExpired;
+
+GlobalForward 
+    g_hForward_OnStartIntro, 
+    g_hForward_OnBeginRoundSetupTime,
+    g_hForward_OnBeginRoundSetupTime_Post,
+    g_hForward_OnBeginRoundSetupTime_PostHandled,
+    g_hForward_OnEndOvertime, 
+    g_hForward_OnUpdateOvertimeState, 
+    g_hForward_OnScavengeUpdateScenarioState,
+    g_hForward_OnStartOvertime,
+    g_hForward_OnRoundTimeExpired;
 
 bool g_bStartedIntro = false;
 
@@ -66,12 +89,11 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-    CreateConVar("l4d2_scav_dhooks_version", PL_VERSION, "L4D2 Scavenge Direct Hooks version", FCVAR_NOTIFY | FCVAR_DONTRECORD | FCVAR_SPONLY);
+    CreateConVar("l4d2_scav_dhooks_natives_version", PL_VERSION, "L4D2 Scavenge Direct Hooks Natives version", FCVAR_NOTIFY | FCVAR_DONTRECORD | FCVAR_SPONLY);
 
     PrepareSDKCalls();
     SetupDetours();
-    SetupForwards();
-    SetupNatives();
+    SetupForwardsNatives();
 
     RegPluginLibrary("l4d2_scav_dhooks_natives");
 }
@@ -144,33 +166,53 @@ void SetupDetours()
     if (!gd)
         LogError("Failed to load gamedata file \""...GAMEDATA_FILE..."\"");
 
-    CreateDetour(g_hDetour_OnStartIntro, gd, "CDirectorScavengeMode::OnStartIntro", Hook_Post, DTR_CDirectorScavengeMode_OnStartIntro);
-    CreateDetour(g_hDetour_AreBossesProhibited, gd, "CDirector::AreBossesProhibited", Hook_Post, DTR_CDirector_AreBossesProhibited);
-    CreateDetour(g_hDetour_OnBeginRoundSetupTime, gd, "CDirectorScavengeMode::OnBeginRoundSetupTime", Hook_Post, DTR_CDirectorScavengeMode_OnBeginRoundSetupTime);
-    CreateDetour(g_hDetour_OnEndOvertime, gd, "CDirectorScavengeMode::OnEndOvertime", Hook_Post, DTR_CDirectorScavengeMode_OnEndOvertime);
+    CreateDetour(g_hDetour_OnStartIntro,                    gd, "CDirectorScavengeMode::OnStartIntro",                  Hook_Pre, DTR_CDirectorScavengeMode_OnStartIntro);
+    CreateDetour(g_hDetour_OnBeginRoundSetupTime,           gd, "CDirectorScavengeMode::OnBeginRoundSetupTime",         Hook_Pre, DTR_CDirectorScavengeMode_OnBeginRoundSetupTime);
+    CreateDetour(g_hDetour_OnBeginRoundSetupTime,           gd, "CDirectorScavengeMode::OnBeginRoundSetupTime",         Hook_Post, _, DTR_CDirectorScavengeMode_OnBeginRoundSetupTime_Post, true);
+    CreateDetour(g_hDetour_OnEndOvertime,                   gd, "CDirectorScavengeMode::OnEndOvertime",                 Hook_Post, DTR_CDirectorScavengeMode_OnEndOvertime);
+    CreateDetour(g_hDetour_OnStartOvertime,                 gd, "CDirectorScavengeMode::OnStartOvertime",               Hook_Post, DTR_CDirectorScavengeMode_OnStartOvertime);
+    CreateDetour(g_hDetour_OnUpdateOvertimeState,           gd, "CDirectorScavengeMode::OnUpdateOvertimeState",         Hook_Post, DTR_CDirectorScavengeMode_OnUpdateOvertimeState);
+    CreateDetour(g_hDetour_OnScavengeUpdateScenarioState,   gd, "CDirectorScavengeMode::ScavengeUpdateScenarioState",   Hook_Post, DTR_CDirectorScavengeMode_OnScavengeUpdateScenarioState);
+    CreateDetour(g_hDetour_OnRoundTimeExpired,              gd, "CTerrorGameRules::RoundTimeExpired",                   Hook_Post, DTR_CTerrorGameRules_RoundTimeExpired);
 
     delete gd;
 }
 
-void CreateDetour(DynamicDetour hDetour, GameData gd, const char[] name, HookMode mode, DHookCallback callback = INVALID_FUNCTION)
+void CreateDetour(DynamicDetour hDetour, GameData gd, const char[] name, HookMode mode, DHookCallback cb = INVALID_FUNCTION, DHookCallback postcb = INVALID_FUNCTION, bool bUseLast = false)
 {
-    hDetour = DynamicDetour.FromConf(gd, name);
-    if (!hDetour)
-        LogError("Failed to set up detour for '%s'", name);
-    if (!hDetour.Enable(mode, callback))
-        LogError("Failed to enable detour for '%s'", name);
-}
+    if (!bUseLast)
+    {
+        hDetour = DynamicDetour.FromConf(gd, name);
+        if (!hDetour)
+        {
+            LogError("Failed to set up detour for '%s'", name);
+            return;
+        }
+    }
 
-void SetupForwards()
-{
-    g_hOnStartIntro = new GlobalForward("L4D2_OnStartScavengeIntro", ET_Ignore);
-    g_hAreBossesProhibited = new GlobalForward("L4D2_AreBossesProhibited", ET_Hook, Param_Cell);
-    g_hOnBeginRoundSetupTime = new GlobalForward("L4D2_OnBeginScavengeRoundSetupTime", ET_Ignore);
-    g_hOnEndOvertime = new GlobalForward("L4D2_OnEndScavengeOvertime", ET_Ignore);
-}
+    if (cb != INVALID_FUNCTION)
+    {
+        if (!hDetour.Enable(mode, cb))
+            LogError("Failed to enable pre detour for '%s'", name);
+    }
 
-void SetupNatives()
+    if (postcb != INVALID_FUNCTION)
+    {
+        if (!hDetour.Enable(mode, postcb))
+        LogError("Failed to enable post detour for '%s'", name);
+    }
+}  
+
+void SetupForwardsNatives()
 {
+    g_hForward_OnStartIntro = new GlobalForward("L4D2_OnStartScavengeIntro", ET_Event);
+    g_hForward_OnBeginRoundSetupTime = new GlobalForward("L4D2_OnBeginScavengeRoundSetupTime", ET_Event, Param_FloatByRef);
+    g_hForward_OnBeginRoundSetupTime_Post = new GlobalForward("L4D2_OnEndScavengeRoundSetupTime_Post", ET_Event, Param_Float);
+    g_hForward_OnBeginRoundSetupTime_PostHandled = new GlobalForward("L4D2_OnEndScavengeRoundSetupTime_PostHandled", ET_Event, Param_Float);
+    g_hForward_OnEndOvertime = new GlobalForward("L4D2_OnEndScavengeOvertime", ET_Event);
+    g_hForward_OnUpdateOvertimeState = new GlobalForward("L4D2_OnUpdateScavengeOvertimeState", ET_Event);
+    g_hForward_OnScavengeUpdateScenarioState = new GlobalForward("L4D2_OnScavengeUpdateScenarioState", ET_Event, Param_Cell);
+
     CreateNative("L4D2_IncrementScavengeMatchScore", Native_IncrementScavengeMatchScore);
     CreateNative("L4D2_UpdateScavengeOvertimeState", Native_UpdateScavengeOvertimeState);
     CreateNative("L4D2_ResetScavengeRoundNumber", Native_ResetScavengeRoundNumber);
@@ -185,13 +227,13 @@ void SetupNatives()
 MRESReturn DTR_CDirectorScavengeMode_OnStartIntro(DHookReturn hReturn)
 {
 #if DEBUG
-    PrintToServer("### DTR_CDirectorScavengeMode_OnStartIntro, IsScav: %d", hReturn.Value);
+    PrintToServer("### DTR_CDirectorScavengeMode_OnStartIntro");
 #endif
 
     // if the gamemode is scavenge mode.
     if (hReturn.Value)
     {
-        Call_StartForward(g_hOnStartIntro);
+        Call_StartForward(g_hForward_OnStartIntro);
         Call_Finish();
         g_bStartedIntro = true;
     }
@@ -199,45 +241,55 @@ MRESReturn DTR_CDirectorScavengeMode_OnStartIntro(DHookReturn hReturn)
     return MRES_Ignored;
 }
 
-MRESReturn DTR_CDirector_AreBossesProhibited(DHookReturn hReturn, DHookParam hParams)
-{
-
-#if DEBUG
-    // PrintToServer("### DTR_CDirector_AreBossesProhibited");
-#endif
-
-    bool prohibitbosses = hParams.Get(1);
-
-    Action aResult = Plugin_Continue;
-    Call_StartForward(g_hAreBossesProhibited);
-    Call_PushCell(prohibitbosses);
-    Call_Finish(aResult);
-
-    if (aResult == Plugin_Changed)
-    {
-        hReturn.Value = true;
-        hParams.Set(1, false);
-        return MRES_ChangedOverride;    
-    }
-
-    return MRES_Ignored;
-}
-
-MRESReturn DTR_CDirectorScavengeMode_OnBeginRoundSetupTime()
+bool g_bBlock_OnBeginRoundSetupTime = false;
+MRESReturn DTR_CDirectorScavengeMode_OnBeginRoundSetupTime(DHookReturn hReturn)
 {
 #if DEBUG
     PrintToServer("### DTR_CDirectorScavengeMode_OnBeginRoundSetupTime");
 #endif
 
-    // this function called at the same time with OnStartIntro (even a little bit faster) when the first round start.
+    // this function called at the same time with CDirectorScavengeMode::OnStartIntro (even a little bit faster) when the first round start.
     // so we let it calls later as the real call.
+    // might be CDirector::OnTeamsReady calling it.
     if (g_bStartedIntro)
     {
-        Call_StartForward(g_hOnBeginRoundSetupTime);
-        Call_Finish();
+        Action aResult = Plugin_Continue;
+        CountdownTimer timer = L4D2Direct_GetScavengeRoundSetupTimer();
+        float duration = (timer == CTimer_Null ? 0.0 : CTimer_GetCountdownDuration(timer));
+        Call_StartForward(g_hForward_OnBeginRoundSetupTime);
+        Call_PushFloatRef(duration);
+        Call_Finish(aResult);
+
+        if (aResult == Plugin_Handled)
+        {
+            hReturn.Value = false;
+            g_bBlock_OnBeginRoundSetupTime = true;
+            return MRES_Override;
+        }
+
+        if (aResult == Plugin_Changed)
+        {
+            if (CTimer_HasStarted(timer))
+            {
+                CTimer_Invalidate(timer);
+                CTimer_Start(timer, duration);
+                return MRES_Handled;
+            }
+        }
     }
 
     return MRES_Ignored;
+}
+
+MRESReturn DTR_CDirectorScavengeMode_OnBeginRoundSetupTime_Post()
+{
+    if (g_bStartedIntro)
+    {
+        CountdownTimer timer = L4D2Direct_GetScavengeRoundSetupTimer();
+        Call_StartForward(g_bBlock_OnBeginRoundSetupTime ? g_hForward_OnBeginRoundSetupTime_PostHandled : g_hForward_OnBeginRoundSetupTime_Post);
+        Call_PushFloat(timer == CTimer_Null ? 0.0 : CTimer_GetCountdownDuration(timer));
+        Call_Finish();  
+    }
 }
 
 MRESReturn DTR_CDirectorScavengeMode_OnEndOvertime()
@@ -246,18 +298,36 @@ MRESReturn DTR_CDirectorScavengeMode_OnEndOvertime()
     PrintToServer("### DTR_CDirectorScavengeMode_OnEndOvertime");
 #endif
 
-    Call_StartForward(g_hOnEndOvertime);
+    Call_StartForward(g_hForward_OnEndOvertime);
     Call_Finish();
 
     return MRES_Ignored;
 }
 
+MRESReturn DTR_CDirectorScavengeMode_OnStartOvertime()
+{
+
+}
+
+MRESReturn DTR_CDirectorScavengeMode_OnUpdateOvertimeState()
+{
+
+}
+
+MRESReturn DTR_CDirectorScavengeMode_OnScavengeUpdateScenarioState()
+{
+
+}
+
+MRESReturn DTR_CTerrorGameRules_RoundTimeExpired()
+{
+
+}
+
 void ValidateNatives(Handle test, const char[] name)
 {
-	if( test == null )
-	{
+	if(!test)
 		ThrowNativeError(SP_ERROR_INVALID_ADDRESS, "%s not available.", name);
-	}
 }
 
 int Native_IncrementScavengeMatchScore(Handle plugin, int numParams)
@@ -319,19 +389,16 @@ int Native_EndScavengeRound(Handle plugin, int numParams)
 
 int Native_CDirector_IncrementScavengeTeamScore(Handle plugin, int numParams)
 {
-    int team = GetNativeCell(1);
-    if (team != 2 && team != 3)
-        ThrowNativeError(SP_ERROR_PARAM, "Invalid team number: %d", team);
-    
-    int client = GetNativeCell(2);
-    if (!IsClientInGame(client))
-        ThrowNativeError(SP_ERROR_PARAM, "Invalid client Index: %d", client);
-
     Address pDirector = L4D_GetPointer(POINTER_SCAVENGEMODE);
 
     ValidateNatives(g_hSDKCall_CDirector_IncrementScavengeTeamScore, "L4D2_CDirector_IncrementScavengeTeamScore");
-    SDKCall(g_hSDKCall_CDirector_IncrementScavengeTeamScore, pDirector, team, client);
+    SDKCall(g_hSDKCall_CDirector_IncrementScavengeTeamScore, pDirector, 2, 0);   // it needs an entity index to be passed, the game chooses 0 (world) as the trigger.
     return 0;
+
+    //CDirectorScavengeMode *__cdecl scavenge_increment_score()
+    //{
+    //    return CDirector::IncrementScavengeTeamScore((CDirectorScavengeMode **)TheDirector, 2, 0);
+    //}
 }
 
 int Native_CTerrorGameRules_IncrementScavengeTeamScore(Handle plugin, int numParams)
