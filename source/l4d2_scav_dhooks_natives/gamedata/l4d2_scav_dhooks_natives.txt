@@ -32,7 +32,7 @@
 			{
 				"signature"		"CDirectorScavengeMode::UpdateOvertimeState"
 				"callconv"		"thiscall"
-				"return"		"int"
+				"return"		"bool"
 				"this"			"ignore"
 			}
 
@@ -40,7 +40,7 @@
 			{
 				"signature"		"CDirectorScavengeMode::ScavengeUpdateScenarioState"
 				"callconv"		"thiscall"
-				"return"		"int"
+				"return"		"void"
 				"this"			"ignore"
 			}
 
@@ -48,7 +48,7 @@
 			{
 				"signature"		"CDirectorScavengeMode::OnEndOvertime"
 				"callconv"		"thiscall"
-				"return"		"void"
+				"return"		"bool"
 				"this"			"ignore"
 			}
 
@@ -64,10 +64,11 @@
 			{
 				"signature"		"CDirectorScavengeMode::OnRoundTimeExpired"
 				"callconv"		"thiscall"
-				"return"		"void"
+				"return"		"bool"
 				"this"			"ignore"
 			}
 		}
+
 		"Signatures"
 		{
 			//////////////
@@ -104,7 +105,7 @@
 			}
 
 			// void *__cdecl CDirectorScavengeMode::OnEndOvertime(CDirectorScavengeMode *this, bool a2)
-			"CDirectorScavengeMode::OnEndOvertime"	// for OnStartOverTime, use event "begin_scavenge_overtime"
+			"CDirectorScavengeMode::OnEndOvertime"
 			{
 				"library"	"server"	// why you putting down two same functions?
 				"linux"		"@_ZN21CDirectorScavengeMode13OnEndOvertimeEb"
@@ -260,7 +261,7 @@
 				"linux"		"@_ZN16CTerrorGameRules26IncrementScavengeTeamScoreEi"
 				"windows"	"\x55\x8B\xEC\x8B\x45\x08\x57\x8B\xF9\x83\xF8\x02\x7C\x2A"
 							/* 55 8B EC 8B 45 08 57 8B F9 83 F8 02 7C ?  */
-							// find CGasCan::OnActionComplete by search string "gascan_pour_completed",
+							// find CGasCan::OnActionComplete by searching string "gascan_pour_completed",
 							// the 3rd call that pass the this pointer and constant value 2 and var a2 should be CDirecor::IncrementScavengeTeamScore,
 							// inside it the second call should be it.
 			}
@@ -273,6 +274,22 @@
 				"windows"	"\x55\x8B\xEC\x51\xF3\x0F\x10\x91\x48\x04\x00\x00\x0F\x57\xC0"
 							/* 55 8B EC 51 F3 0F 10 91 48 04 00 00 0F 57 C0 */
 							// find CDirectorScavengeMode::ScavengeUpdateScenarioState, inside of it there is an 'if' statement that check wether a DWORD function is <= 0.0, this should be it.
+			}
+
+			// CCSGameRules *__cdecl CDirector::ClearScavengeScores(CDirector *this, bool)
+			"CDirector::ClearScavengeScores"
+			{
+				"library"	"server"
+				"linux"		"@_ZN9CDirector19ClearScavengeScoresEb"
+				"windows"	""
+			}
+
+			// CNavArea *__cdecl CDirectorItemManager::GetNavAreaForScavengeItem(CDirectorItemManager *this, CBaseEntity *)
+			"CDirectorItemManager::GetNavAreaForScavengeItem"
+			{
+				"library"	"server"
+				"linux"		"@_ZN20CDirectorItemManager25GetNavAreaForScavengeItemEP11CBaseEntity"
+				"windows"	""
 			}
 		}
 	}
