@@ -276,12 +276,15 @@
 							// find CDirectorScavengeMode::ScavengeUpdateScenarioState, inside of it there is an 'if' statement that check wether a DWORD function is <= 0.0, this should be it.
 			}
 
-			// CCSGameRules *__cdecl CDirector::ClearScavengeScores(CDirector *this, bool)
-			"CDirector::ClearScavengeScores"
+			// claers m_iScavengeTeamScore and m_iWinningTeamNumber and m_flTeamRoundTime (bool for m_iScavengeMatchScore)
+			// CTerrorGameRules *__cdecl CTerrorGameRules::ClearScavengeScores(CTerrorGameRules *this, bool a2)
+			"CTerrorGameRules::ClearScavengeScores"
 			{
 				"library"	"server"
 				"linux"		"@_ZN9CDirector19ClearScavengeScoresEb"
 				"windows"	""
+							/*  */
+							
 			}
 
 			// CNavArea *__cdecl CDirectorItemManager::GetNavAreaForScavengeItem(CDirectorItemManager *this, CBaseEntity *)
@@ -289,7 +292,11 @@
 			{
 				"library"	"server"
 				"linux"		"@_ZN20CDirectorItemManager25GetNavAreaForScavengeItemEP11CBaseEntity"
-				"windows"	""
+				"windows"	"\x55\x8B\xEC\x83\xEC\x18\x53\x56\x57\x8B\x7D\x08\x8B\xD9\x89\x5D\xF4"
+							/* 55 8B EC 83 EC 18 53 56 57 8B 7D 08 8B D9 89 5D F4 */
+							// search for string "Scavenge something" to find SurvivorBot::L4D1_ScavengeNearbyItems
+							// find the call that passes a float value '1500.0', it returns a CBaseEntity pointer,
+							// the next call that use it should be it.
 			}
 		}
 	}

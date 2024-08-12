@@ -50,7 +50,7 @@ forward void L4D2_OnBeginScavengeRoundSetupTime_PostHandled(float time)
  * @note 			same as event "scavenge_overtime_start". This function fires output "OnScavengeOvertimeStart" of entity "info_director".
  * @noreturn
 */
-forward void L4D2_OnStartScavengeOvertime(int[] client)
+forward void L4D2_OnStartScavengeOvertime(int client[32])
 
 /**
  * Called when a scavenge overtime status ends.
@@ -66,6 +66,7 @@ forward void L4D2_OnEndScavengeOvertime(bool bEndStatus)
 /**
  * Called when the scavenge overtime state updated.
  * 
+ * @note 			L4D2_OnUpdateScavengeOvertimeState is always called during the overtime status around per seconds from cvar "scavenge_overtime_grace_time".
  * @return			Plugin_Handled to prevent the overtime state from ending.
 */
 forward Action L4D2_OnUpdateScavengeOvertimeState()
@@ -89,6 +90,8 @@ forward void L4D2_OnUpdateScavengeOvertimeState_PostHandled()
 /**
  * Called when the game is trying to end the scavenge round by comparing the team scores or by the status of the overtime.
  * 
+ * @note 			L4D2_OnScavengeUpdateScenarioState() is always called during the game around per seconds, and is always calls before
+ * 		 			L4D2_OnUpdateScavengeOvertimeState() and L4D2_OnScavengeRoundTimeExpired(). make sure you know the sequence when returing Plugin_Handled.
  * @return			Plugin_Handled to prevent the round from ending.
 */
 forward Action L4D2_OnScavengeUpdateScenarioState()
@@ -110,10 +113,27 @@ forward void L4D2_OnScavengeUpdateScenarioState_Post()
 forward void L4D2_OnScavengeUpdateScenarioState_PostHandled()
 
 /**
+ * Called every time when the round timer has elapsed to 0.
  * 
- * 
+ * @return			Plugin_Handled to prevent the round from entering the overtime state, then end the round.
 */
-forward void L4D2_OnScavengeRoundTimeExpired()
+forward Action L4D2_OnScavengeRoundTimeExpired()
+
+/**
+ * Called every time when the round timer has elapsed to 0.
+ * 
+ * @note 			This forward will not trigger if the relative pre-hook forward has been blocked with Plugin_Handled
+ * @noreturn
+*/
+forward void L4D2_OnScavengeRoundTimeExpired_Post()
+
+/**
+ * Called every time when the round timer has elapsed to 0.
+ * 
+ * @note 			This forward will ONLY trigger if the relative pre-hook forward has been blocked with Plugin_Handled
+ * @noreturn
+*/
+forward void L4D2_OnScavengeRoundTimeExpired_PostHandled()
 
 /**
  * Increments the scavenge match score for one team.
