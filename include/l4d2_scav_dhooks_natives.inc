@@ -11,36 +11,11 @@
 forward void L4D2_OnStartScavengeIntro()
 
 /**
- * Called when the scavenge round setup countdown timer begins.
+ * Called when the scavenge round setup countdown timer is about to begin.
  * 
- * @param time   	The time duration of the round setup countdown timer. (ConVar value "scavenge_round_setup_time")
- * 
- * @note 			time will be 0.0 if the countdown timer is null.
- * @return 			Plugin_Handled to hide VGUI Panel 'ready_countdown' (but it wont stop the round setup countdown timer). 
- * 		   			Plugin_Changed to use the value from plugin on the timer.
- * 		   			Plugin_Continue to do nothing.
+ * @noreturn	   			
 */
-forward Action L4D2_OnBeginScavengeRoundSetupTime(float &time)
-
-/**
- * Called when the scavenge round setup countdown timer begins.
- * 
- * @param time   	The time duration of the round setup countdown timer.
- * 
- * @note 			This forward will not trigger if the relative pre-hook forward has been blocked with Plugin_Handled
- * @noreturn
-*/
-forward void L4D2_OnBeginScavengeRoundSetupTime_Post(float time)
-
-/**
- * Called when the scavenge round setup countdown timer begins.
- * 
- * @param time   	The time duration of the round setup countdown timer.
- * 
- * @note 			This forward will ONLY trigger if the relative pre-hook forward has been blocked with Plugin_Handled
- * @noreturn
-*/
-forward void L4D2_OnBeginScavengeRoundSetupTime_PostHandled(float time)
+forward void L4D2_OnBeginScavengeRoundSetupTime()
 
 /**
  * Called when a scavenge overtime status starts.
@@ -136,20 +111,9 @@ forward void L4D2_OnScavengeRoundTimeExpired_Post()
 forward void L4D2_OnScavengeRoundTimeExpired_PostHandled()
 
 /**
- * Increments the scavenge match score for one team.
- * 
- * @param team   The team number to increment the score for.
- * 				 1 for survivors, 2 for infected.
- * 
- * @note This function calls CGameRulesProxy::NotifyNetworkStateChanged internally.
- * @noreturn
-*/
-native void L4D2_IncrementScavengeMatchScore(int team)
-
-/**
  * Resets the scavenge round number to 0.
  * 
- * @note This function calls CGameRulesProxy::NotifyNetworkStateChanged internally.
+ * @note Do not call this native alone.
  * @noreturn
 */
 native void L4D2_ResetScavengeRoundNumber()
@@ -159,25 +123,18 @@ native void L4D2_ResetScavengeRoundNumber()
  * 
  * @param time   The time to add to the timer.
  * 
- * @note This function calls CGameRulesProxy::NotifyNetworkStateChanged internally except the condition when argument time = 0.0.
  * @note You can pass a negative value to subtract time.
  * @noreturn
 */
 native void L4D2_AccumulateScavengeRoundTime(float time)
 
 /**
- * Restarts the scavenge round.
+ * Restarts the round.
  * 
+ * @note You can't use this native before the game starts on versus and scavenge.
  * @noreturn
 */
-native void L4D2_RestartScavengeRound()
-
-/**
- * Update a scavenge mode mob spawn.
- * 
- * @return true on success, false on failure.
-*/
-native bool L4D2_UpdateScavengeMobSpawns()
+native void L4D2_RestartRound()
 
 /**
  * End the scavenge round.
@@ -186,26 +143,6 @@ native bool L4D2_UpdateScavengeMobSpawns()
  * @noreturn
 */
 native void L4D2_EndScavengeRound()
-
-/**
- * Increments both survivors' scavenge team score and round timer.
- * 
- * @note This function increnments both score and round timer, like a normal gascan poured.
- * @note This function calls CTerrorGameRules::IncrementScavengeTeamScore and CGameRulesProxy::NotifyNetworkStateChanged internally.
- * @noreturn
-*/
-native void L4D2_IncrementScavengeTeamScoreAndDuration()
-
-/**
- * Increments one team's scavenge team score.
- * 
- * @param team		Team number to increment. 2 for survivors or 3 for infected.
- * 
- * @note This function increnments only score.
- * @note This function calls CGameRulesProxy::NotifyNetworkStateChanged internally.
- * @noreturn
-*/
-native void L4D2_IncrementScavengeTeamScore(int team)
 
 public SharedPlugin __pl_l4d2_scav_dhooks_natives = 
 {

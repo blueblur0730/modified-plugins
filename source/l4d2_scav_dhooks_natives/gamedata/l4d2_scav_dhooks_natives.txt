@@ -12,14 +12,6 @@
 				"this"			"ignore"
 			}
 
-			//"CDirector::AreBossesProhibited"
-			//{
-			//	"signature"		"CDirector::AreBossesProhibited"
-			//	"callconv"		"thiscall"
-			//	"return"		"bool"
-			//	"this"			"ignore"
-			//}
-
 			"CDirectorScavengeMode::OnBeginRoundSetupTime"
 			{
 				"signature"		"CDirectorScavengeMode::OnBeginRoundSetupTime"
@@ -48,8 +40,15 @@
 			{
 				"signature"		"CDirectorScavengeMode::OnEndOvertime"
 				"callconv"		"thiscall"
-				"return"		"bool"
+				"return"		"void"
 				"this"			"ignore"
+				"arguments"
+				{
+					"a1"
+					{
+						"type"	"bool"
+					}
+				}
 			}
 
 			"CDirectorScavengeMode::OnStartOvertime"
@@ -154,16 +153,6 @@
 							/* 55 8B EC 51 56 8D 45 FF 50 8B F1 E8 ? ? ? ? 83 C4 04 */
 							// find CTerrorGameRules::GetRemainingAccumulatedTime (description below), under the 'if' statement this function should be it.
 			}
-			
-			// bool __cdecl CDirector::AreBossesProhibited(CDirectorVersusMode **this)
-			//"CDirector::AreBossesProhibited"
-			//{
-			//	"library"	"server"
-			//	"linux"		"@_ZNK9CDirector19AreBossesProhibitedEv"
-			//	"windows"	"\x55\x8B\xEC\x51\x56\x8B\xF1\x8B\x8E\x48\x06\x00\x00\x8D\x45\xFF\x50\xE8\x2A\x2A\x2A\x2A\x84\xC0\x74\x2A\x8A\x45\xFF\x5E\x8B\xE5\x5D\xC3\x8B\x8E\x44\x06\x00\x00"		
-			//			/* 55 8B EC 51 56 8B F1 8B 8E 48 06 00 00 8D 45 FF 50 E8 ? ? ? ? 84 C0 74 ? 8A 45 FF 5E 8B E5 5D C3 8B 8E 44 06 00 00 */
-			//			// search for string "ProhibitBosses".
-			//}
 
 			////////////////
 			// Calls
@@ -212,27 +201,14 @@
 							// inside the function the return call should be it.
 			}
 
-			// int __usercall CDirectorScavengeMode::RestartScavengeRound@<eax>(long double a1@<st0>, CDirectorScavengeMode *this)
-			"CDirectorScavengeMode::RestartScavengeRound"
+			// CBaseEntity *__cdecl CTerrorGameRules::RestartRound(CTerrorGameRules *this)
+			"CTerrorGameRules::RestartRound"
 			{
 				"library"	"server"
-				"linux"		"@_ZN21CDirectorScavengeMode20RestartScavengeRoundEv"
-				"windows"	"\x56\x8B\xF1\x80\x3E\x00\x8B\x0D\x2A\x2A\x2A\x2A"
-							/* 56 8B F1 80 3E 00 8B 0D ? ? ? ? */
-							// search for string "Director::FinishScenarioExit\n", find CDirector::FinishScenarioExit
-							// xref it the 5th function with text "jmp" should be it.
-			}
-
-			// bool CDirectorScavengeMode::UpdateScavengeMobSpawns()
-			"CDirectorScavengeMode::UpdateScavengeMobSpawns"
-			{
-				"library"	"server"
-				"linux"		"@_ZN21CDirectorScavengeMode23UpdateScavengeMobSpawnsEv"
-				"windows"	"\xE8\x2A\x2A\x2A\x2A\x84\xC0\x75\x2A\xC3"
-							/* E8 ? ? ? ? 84 C0 75 ? C3  */
-							// search for either "Director::Update" (yes it's a string) "MobRechargeRate" "MobMaxSize" "WaterSlowsMovement" to find Director::Update
-							// the 4th call that passes this pointer (right under CVProfile::ExitScope(g_VProfCurrentProfile);) should be CDirector::UpdateMobSpawns
-							// inside of it, the 3rd call should be it. (by comparing the this pointer, the 2nd call is not the target we want, so left this one to be it.)
+				"linux"		"@_ZN16CTerrorGameRules12RestartRoundEv"
+				"windows"	"\x55\x8B\xEC\x0F\x57\xC0\x83\xEC\x08\x53\x33\xDB"
+							/* 55 8B EC 0F 57 C0 83 EC 08 53 33 DB */
+							// search string is "round_start_pre_entity"
 			}
 
 			// void __cdecl CDirectorScavengeMode::EndScavengeRound(CDirectorScavengeMode *this)
@@ -243,48 +219,6 @@
 				"windows"	"\x55\x8B\xEC\x83\xEC\x10\x56\x8B\xF1\x80\x7E\x08\x00"
 							/* 55 8B EC 83 EC 10 56 8B F1 80 7E 08 00  */
 							// search either "scavenge_round_finished" "scavenge_match_finished" "scavenge_round_haltime" "ScavengeRoundInitialTime".
-			}
-
-			// CDirectorScavengeMode *__cdecl CDirector::IncrementScavengeTeamScore(CDirectorScavengeMode **this, int, CBaseEntity *)
-			"CDirector::IncrementScavengeTeamScore"		// this increment score and add time to the scoreboard. (calls CDirectorScavengeMode::IncrementScavengeTeamScoreNonVirtual)
-			{
-				"library"	"server"
-				"linux"		"@_ZN9CDirector26IncrementScavengeTeamScoreEiP11CBaseEntity"
-				"windows"	"\x55\x8B\xEC\x56\x8B\xF1\xE8\x2A\x2A\x2A\x2A\x84\xC0\x74\x2A\x8B\x86\x44\x06\x00\x00"
-							/* 55 8B EC 56 8B F1 E8 ? ? ? ? 84 C0 74 ? 8B 86 44 06 00 00 */
-			}
-
-			// void __cdecl CTerrorGameRules::IncrementScavengeTeamScore(CTerrorGameRules *this, int)
-			"CTerrorGameRules::IncrementScavengeTeamScore"	// this only increment the score.
-			{
-				"library"	"server"
-				"linux"		"@_ZN16CTerrorGameRules26IncrementScavengeTeamScoreEi"
-				"windows"	"\x55\x8B\xEC\x8B\x45\x08\x57\x8B\xF9\x83\xF8\x02\x7C\x2A"
-							/* 55 8B EC 8B 45 08 57 8B F9 83 F8 02 7C ?  */
-							// find CGasCan::OnActionComplete by searching string "gascan_pour_completed",
-							// the 3rd call that pass the this pointer and constant value 2 and var a2 should be CDirecor::IncrementScavengeTeamScore,
-							// inside it the second call should be it.
-			}
-
-			// long double __cdecl CTerrorGameRules::GetRemainingAccumulatedTime(CTerrorGameRules *this)
-			"CTerrorGameRules::GetRemainingAccumulatedTime"
-			{
-				"library"	"server"
-				"linux"		"@_ZNK16CTerrorGameRules27GetRemainingAccumulatedTimeEv"
-				"windows"	"\x55\x8B\xEC\x51\xF3\x0F\x10\x91\x48\x04\x00\x00\x0F\x57\xC0"
-							/* 55 8B EC 51 F3 0F 10 91 48 04 00 00 0F 57 C0 */
-							// find CDirectorScavengeMode::ScavengeUpdateScenarioState, inside of it there is an 'if' statement that check wether a DWORD function is <= 0.0, this should be it.
-			}
-
-			// claers m_iScavengeTeamScore and m_iWinningTeamNumber and m_flTeamRoundTime (bool for m_iScavengeMatchScore)
-			// CTerrorGameRules *__cdecl CTerrorGameRules::ClearScavengeScores(CTerrorGameRules *this, bool a2)
-			"CTerrorGameRules::ClearScavengeScores"
-			{
-				"library"	"server"
-				"linux"		"@_ZN9CDirector19ClearScavengeScoresEb"
-				"windows"	""
-							/*  */
-							
 			}
 
 			// CNavArea *__cdecl CDirectorItemManager::GetNavAreaForScavengeItem(CDirectorItemManager *this, CBaseEntity *)
