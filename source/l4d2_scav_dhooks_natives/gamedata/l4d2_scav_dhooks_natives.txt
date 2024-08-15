@@ -1,0 +1,240 @@
+"Games"
+{
+	"left4dead2"
+	{
+		"Functions"
+		{
+			"CDirectorScavengeMode::OnStartIntro"
+			{
+				"signature"		"CDirectorScavengeMode::OnStartIntro"
+				"callconv"		"thiscall"
+				"return"		"bool"
+				"this"			"ignore"
+			}
+
+			"CDirectorScavengeMode::OnBeginRoundSetupTime"
+			{
+				"signature"		"CDirectorScavengeMode::OnBeginRoundSetupTime"
+				"callconv"		"thiscall"
+				"return"		"int"
+				"this"			"ignore"
+			}
+
+			"CDirectorScavengeMode::UpdateOvertimeState"
+			{
+				"signature"		"CDirectorScavengeMode::UpdateOvertimeState"
+				"callconv"		"thiscall"
+				"return"		"bool"
+				"this"			"ignore"
+			}
+
+			"CDirectorScavengeMode::ScavengeUpdateScenarioState"
+			{
+				"signature"		"CDirectorScavengeMode::ScavengeUpdateScenarioState"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"ignore"
+			}
+
+			"CDirectorScavengeMode::OnEndOvertime"
+			{
+				"signature"		"CDirectorScavengeMode::OnEndOvertime"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"ignore"
+				"arguments"
+				{
+					"a1"
+					{
+						"type"	"bool"
+					}
+				}
+			}
+
+			"CDirectorScavengeMode::OnStartOvertime"
+			{
+				"signature"		"CDirectorScavengeMode::OnStartOvertime"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"ignore"
+			}
+
+			"CDirectorScavengeMode::OnRoundTimeExpired"
+			{
+				"signature"		"CDirectorScavengeMode::OnRoundTimeExpired"
+				"callconv"		"thiscall"
+				"return"		"bool"
+				"this"			"ignore"
+			}
+		}
+
+		"Signatures"
+		{
+			//////////////
+			// Detours
+			//////////////
+			"CDirectorScavengeMode::OnStartIntro"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CDirectorScavengeMode12OnStartIntroEv"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x10\x56\x8B\xF1\xE8\x2A\x2A\x2A\x2A\x84\xC0\x74\x2A\xF3\x0F\x10\x46\x18"
+							/* 55 8B EC 83 EC 10 56 8B F1 E8 ? ? ? ? 84 C0 74 ? F3 0F 10 46 18  */
+							// search for string "ready_countdown", find all occurance, the 4th should be it.
+							
+			}
+
+			// int CDirectorScavengeMode::OnEndRoundSetupTime()
+			"CDirectorScavengeMode::OnEndRoundSetupTime"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CDirectorScavengeMode19OnEndRoundSetupTimeEv"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x10\x33\xC0\x88\x45\xF8\x89\x45\xFC\x8D\x45\xF0\x50\xC7\x45\xF0\xFF\xFF\xFF\xFF\xC7\x45\xF4\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x83\xC4\x04"
+							/* 55 8B EC 83 EC 10 33 C0 88 45 F8 89 45 FC 8D 45 F0 50 C7 45 F0 FF FF FF FF C7 45 F4 ? ? ? ? E8 ? ? ? ? 83 C4 04 */
+							// search for string "ready_countdown", find all occurance, the 3rd call should be it.
+			}
+
+			// int __usercall CDirectorScavengeMode::OnBeginRoundSetupTime@<eax>(long double a1@<st0>, CDirectorScavengeMode *this)
+			"CDirectorScavengeMode::OnBeginRoundSetupTime"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CDirectorScavengeMode21OnBeginRoundSetupTimeEv"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x18\xA1\x2A\x2A\x2A\x2A\xD9\x40\x2C"
+							/* 55 8B EC 83 EC 18 A1 ? ? ? ? D9 40 2C */
+							// search for string "ready_countdown", find all occurance, the 2nd should be it.
+			}
+
+			// void *__cdecl CDirectorScavengeMode::OnEndOvertime(CDirectorScavengeMode *this, bool a2)
+			"CDirectorScavengeMode::OnEndOvertime"
+			{
+				"library"	"server"	// why you putting down two same functions?
+				"linux"		"@_ZN21CDirectorScavengeMode13OnEndOvertimeEb"
+				"windows"	"\x55\x8B\xEC\x56\x8D\x71\x24"
+							/* 55 8B EC 56 8D 71 24 */
+							// search for string "info_director" and find all occurance.
+			}
+			
+			// void *__cdecl CDirectorScavengeMode::OnStartOvertime(CDirectorScavengeMode *this)
+			"CDirectorScavengeMode::OnStartOvertime"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CDirectorScavengeMode15OnStartOvertimeEv"
+				"windows"	"\x55\x8B\xEC\x51\x66\xC7\x41\x0B\x01\x01"
+							/* 55 8B EC 51 66 C7 41 0B 01 01 */
+							// search string is "begin_scavenge_overtime".
+			}
+			
+			// int __usercall CDirectorScavengeMode::UpdateOvertimeState@<eax>(long double a1@<st0>, CDirectorScavengeMode *this)
+			"CDirectorScavengeMode::UpdateOvertimeState"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CDirectorScavengeMode19UpdateOvertimeStateEv"
+				"windows"	"\x55\x8B\xEC\x51\x53\x56\x8D\x45\xFF"
+							/* 55 8B EC 51 53 56 8D 45 FF */
+							// find CDirectorScavengeMode::OnEndOvertime (description above), the only one xref should be it.
+			}
+
+			// char __usercall CDirectorScavengeMode::ScavengeUpdateScenarioState@<al>(long double@<st0>, CDirectorScavengeMode *this)
+			"CDirectorScavengeMode::ScavengeUpdateScenarioState"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CDirectorScavengeMode27ScavengeUpdateScenarioStateEv"
+				"windows"	"\x55\x8B\xEC\x51\x56\x8B\xF1\xE8\x2A\x2A\x2A\x2A\x84\xC0\x0F\x84\x2A\x2A\x2A\x2A\x80\x7E\x08\x00"
+							/* 55 8B EC 51 56 8B F1 E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 80 7E 08 00*/
+							// find CDirectorScavengeMode::OnStartOvertime (description above), the only xref is CDirectorScavengeMode::UpdateOvertimeState
+							// again it has only one xref, which is CDirectorScavengeMode::ScavengeUpdateScenarioState.
+			}
+
+			// int __cdecl CDirectorScavengeMode::OnRoundTimeExpired(CDirectorScavengeMode *this)
+			"CDirectorScavengeMode::OnRoundTimeExpired"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CDirectorScavengeMode18OnRoundTimeExpiredEv"
+				"windows"	"\x55\x8B\xEC\x51\x56\x8D\x45\xFF\x50\x8B\xF1\xE8\x2A\x2A\x2A\x2A\x83\xC4\x04"
+							/* 55 8B EC 51 56 8D 45 FF 50 8B F1 E8 ? ? ? ? 83 C4 04 */
+							// find CTerrorGameRules::GetRemainingAccumulatedTime (description below), under the 'if' statement this function should be it.
+			}
+
+			////////////////
+			// Calls
+			////////////////
+
+			// int __cdecl CTerrorGameRules::TrackPlayerZombieDamage(CTerrorGameRules *this, CTerrorPlayer *, int, int)
+			"CTerrorGameRules::TrackPlayerZombieDamage"
+			{
+				"library"	"server"
+				"linux"		"@_ZN16CTerrorGameRules23TrackPlayerZombieDamageEP13CTerrorPlayerib"
+				"windows"	"\x55\x8B\xEC\x56\x8B\x75\x08\x57\x8B\xF9\x85\xF6\x74\x2A\x8B\x06\x8B\x90\x40\x05\x00\x00"
+							/* 55 8B EC 56 8B 75 08 57 8B F9 85 F6 74 ? 8B 06 8B 90 40 05 00 00 */
+							// find CTerrorGameRules::RecordInfectedDamageForVersus in left4dhooks, xref it and the first one shoulld be it
+			}
+
+			// int __cdecl CTerrorGameRules::IncrementScavengeMatchScore(CTerrorGameRules *this, int)
+			"CTerrorGameRules::IncrementScavengeMatchScore"
+			{
+				"library"	"server"
+				"linux"		"@_ZN16CTerrorGameRules27IncrementScavengeMatchScoreEi"
+				"windows"	"\x55\x8B\xEC\x53\x8B\x5D\x08\x57\x8B\xF9\x85\xDB\x7E\x2A\x56\x8B\xB4\x9F\xD4\x03\x00\x00"
+							/* 55 8B EC 53 8B 5D 08 57 8B F9 85 DB 7E ? 56 8B B4 9F D4 03 00 00  */
+							// find CDirectorScavengeMode::EndScavengeRound (description below), at the mid of the function,
+							// notice "if ( !v4 )", statement inside calls CTerrorGameRules::IncrementScavengeMatchScore.
+			}
+
+			// int __cdecl CTerrorGameRules::ResetRoundNumber(CTerrorGameRules *this) this is called by CDirector::Rematch
+			"CTerrorGameRules::ResetRoundNumber"
+			{
+				"library"	"server"
+				"linux"		"@_ZN16CTerrorGameRules16ResetRoundNumberEv"
+				"windows"	"\x56\x8B\xF1\x83\xBE\x54\x04\x00\x00\x00"
+							/* 56 8B F1 83 BE 54 04 00 00 00 */
+							// find CDirector::Rematch by left4dhooks first, the 2nd function that passes the this pointer should be it.
+			}
+
+			// int __cdecl CTerrorGameRules::AccumulateTime(CTerrorGameRules *this, float a2)
+			// int __userpurge sub_102DFBC0@<eax>(int a1@<ecx>, char a2@<efl>, float a3) windows
+			"CTerrorGameRules::AccumulateTime"	// this add time to the scoreboard.
+			{
+				"library"	"server"
+				"linux"		"@_ZN16CTerrorGameRules14AccumulateTimeEf"
+				"windows"	"\x55\x8B\xEC\x56\x8B\xF1\xF3\x0F\x10\x8E\x50\x04\x00\x00"
+							/* 55 8B EC 56 8B F1 F3 0F 10 8E 50 04 00 00 */
+							// search for string "ScavengeRoundInitialTime" to find all occurance, the 1st one should be CDirectorScavengeMode::ResetNonVirtual
+							// inside the function the return call should be it.
+			}
+
+			// CBaseEntity *__cdecl CTerrorGameRules::RestartRound(CTerrorGameRules *this)
+			"CTerrorGameRules::RestartRound"
+			{
+				"library"	"server"
+				"linux"		"@_ZN16CTerrorGameRules12RestartRoundEv"
+				"windows"	"\x55\x8B\xEC\x0F\x57\xC0\x83\xEC\x08\x53\x33\xDB"
+							/* 55 8B EC 0F 57 C0 83 EC 08 53 33 DB */
+							// search string is "round_start_pre_entity"
+			}
+
+			// void __cdecl CDirectorScavengeMode::EndScavengeRound(CDirectorScavengeMode *this)
+			"CDirectorScavengeMode::EndScavengeRound" // dose the same as the command "scenario_end", but more directly
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CDirectorScavengeMode16EndScavengeRoundEv"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x10\x56\x8B\xF1\x80\x7E\x08\x00"
+							/* 55 8B EC 83 EC 10 56 8B F1 80 7E 08 00  */
+							// search either "scavenge_round_finished" "scavenge_match_finished" "scavenge_round_haltime" "ScavengeRoundInitialTime".
+			}
+
+			// CNavArea *__cdecl CDirectorItemManager::GetNavAreaForScavengeItem(CDirectorItemManager *this, CBaseEntity *)
+			"CDirectorItemManager::GetNavAreaForScavengeItem"
+			{
+				"library"	"server"
+				"linux"		"@_ZN20CDirectorItemManager25GetNavAreaForScavengeItemEP11CBaseEntity"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x18\x53\x56\x57\x8B\x7D\x08\x8B\xD9\x89\x5D\xF4"
+							/* 55 8B EC 83 EC 18 53 56 57 8B 7D 08 8B D9 89 5D F4 */
+							// search for string "Scavenge something" to find SurvivorBot::L4D1_ScavengeNearbyItems
+							// find the call that passes a float value '1500.0', it returns a CBaseEntity pointer,
+							// the next call that use it should be it.
+			}
+		}
+	}
+}
+
+// https://hex-rays.com/blog/igors-tip-of-the-week-51-custom-calling-conventions/
+// https://reverseengineering.stackexchange.com/questions/13703/what-is-byte-usercall-eax-and-edi
