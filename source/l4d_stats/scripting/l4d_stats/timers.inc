@@ -1,5 +1,5 @@
 #if defined _l4d_stats_timers_included
- #endinput
+	#endinput
 #endif
 #define _l4d_stats_timers_included
 
@@ -8,9 +8,7 @@ Action Timer_ClientPostAdminCheck(Handle timer, int client)
 	if (!IsClientInGame(client))
 	{
 		if (g_iPostAdminCheckRetryCounter[client]++ < 10)
-		{
 			CreateTimer(3.0, Timer_ClientPostAdminCheck, client);
-		}
 
 		return Plugin_Handled;
 	}
@@ -22,27 +20,31 @@ Action Timer_ClientPostAdminCheck(Handle timer, int client)
 
 	CheckPlayerDB(client);
 
-	g_iTimerPoints[client] = 0;
-	g_iTimerKills[client] = 0;
+	g_iTimerPoints[client]	  = 0;
+	g_iTimerKills[client]	  = 0;
 	g_iTimerHeadshots[client] = 0;
 
-	CreateTimer(10.0, RankConnect, client);
-	CreateTimer(15.0, AnnounceConnect, client);
-	
+	CreateTimer(10.0, Timer_RankConnect, client);
+	CreateTimer(15.0, Timer_AnnounceConnect, client);
+
 	AnnouncePlayerConnect(client);
+
+	return Plugin_Handled;
 }
 
 // Show rank on connect.
-Action RankConnect(Handle timer, int value)
+Action Timer_RankConnect(Handle timer, int value)
 {
-	if (GetConVarBool(g_hCvar_RankOnJoin) && !InvalidGameMode())
+	if (g_hCvar_RankOnJoin.BoolValue && !InvalidGameMode())
 		cmd_ShowRank(value, 0);
+
+	return Plugin_Handled;
 }
 
 // Announce on player connect!
-Action AnnounceConnect(Handle timer, int client)
+Action Timer_AnnounceConnect(Handle timer, int client)
 {
-	if (!GetConVarBool(g_hCvar_AnnounceMode))
+	if (!g_hCvar_AnnounceMode.BoolValue)
 		return Plugin_Handled;
 
 	if (!IsClientConnected(client) || !IsClientInGame(client))
@@ -52,7 +54,7 @@ Action AnnounceConnect(Handle timer, int client)
 		else
 		{
 			g_iAnnounceCounter[client]++;
-			CreateTimer(5.0, AnnounceConnect, client);
+			CreateTimer(5.0, Timer_AnnounceConnect, client);
 		}
 
 		return Plugin_Handled;
@@ -62,12 +64,14 @@ Action AnnounceConnect(Handle timer, int client)
 
 	ShowMOTD(client);
 	StatsPrintToChat2(client, true, "Type \x05RANKMENU \x01to operate \x04the Plugin\x01!");
+
+	return Plugin_Handled;
 }
 
-Action timer_ProtectedFriendly(Handle timer, int data)
+Action Timer_ProtectedFriendly(Handle timer, int data)
 {
-	g_hTimerProtectedFriendly[data] = null;
-	int ProtectedFriendlies = g_iProtectedFriendlyCounter[data];
+	g_hTimerProtectedFriendly[data]	  = null;
+	int ProtectedFriendlies	= g_iProtectedFriendlyCounter[data];
 	g_iProtectedFriendlyCounter[data] = 0;
 
 	if (data == 0 || !IsClientConnected(data) || !IsClientInGame(data) || IsClientBot(data))
@@ -86,12 +90,12 @@ Action timer_ProtectedFriendly(Handle timer, int data)
 
 	switch (g_iCurrentGamemodeID)
 	{
-		case GAMEMODE_VERSUS:Format(UpdatePoints, sizeof(UpdatePoints), "points_survivors");
-		case GAMEMODE_REALISM:Format(UpdatePoints, sizeof(UpdatePoints), "points_realism");
-		case GAMEMODE_SURVIVAL:Format(UpdatePoints, sizeof(UpdatePoints), "points_survival");
-		case GAMEMODE_SCAVENGE:Format(UpdatePoints, sizeof(UpdatePoints), "points_scavenge_survivors");
-		case GAMEMODE_REALISMVERSUS:Format(UpdatePoints, sizeof(UpdatePoints), "points_realism_survivors");
-		case GAMEMODE_OTHERMUTATIONS:Format(UpdatePoints, sizeof(UpdatePoints), "points_mutations");
+		case GAMEMODE_VERSUS: Format(UpdatePoints, sizeof(UpdatePoints), "points_survivors");
+		case GAMEMODE_REALISM: Format(UpdatePoints, sizeof(UpdatePoints), "points_realism");
+		case GAMEMODE_SURVIVAL: Format(UpdatePoints, sizeof(UpdatePoints), "points_survival");
+		case GAMEMODE_SCAVENGE: Format(UpdatePoints, sizeof(UpdatePoints), "points_scavenge_survivors");
+		case GAMEMODE_REALISMVERSUS: Format(UpdatePoints, sizeof(UpdatePoints), "points_realism_survivors");
+		case GAMEMODE_OTHERMUTATIONS: Format(UpdatePoints, sizeof(UpdatePoints), "points_mutations");
 		default:
 		{
 			Format(UpdatePoints, sizeof(UpdatePoints), "points");
@@ -111,10 +115,12 @@ Action timer_ProtectedFriendly(Handle timer, int data)
 		else if (Mode == 3)
 			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for Protecting \x05%i friendlies\x01!", UserName, Score, ProtectedFriendlies);
 	}
-}
-// Team infected damage score
 
-Action timer_InfectedDamageCheck(Handle timer, int data)
+	return Plugin_Handled;
+}
+
+// Team infected damage score
+Action Timer_InfectedDamageCheck(Handle timer, int data)
 {
 	g_hTimerInfectedDamageCheck[data] = INVALID_HANDLE;
 
@@ -124,7 +130,7 @@ Action timer_InfectedDamageCheck(Handle timer, int data)
 	int InfectedDamage = g_hCvar_InfectedDamagePerPoint.IntValue;
 
 	int Score = 0;
-	int DamageCounter = 0;
+	int DamageCounter  = 0;
 
 	if (InfectedDamage > 1)
 	{
@@ -152,23 +158,23 @@ Action timer_InfectedDamageCheck(Handle timer, int data)
 	{
 		g_iInfectedDamageCounter[data] -= DamageCounter;
 
-		int Mode = g_hCvar_AnnounceMode.IntValue;
+		int	 Mode = g_hCvar_AnnounceMode.IntValue;
 
 		char query[1024];
 		char iID[MAX_LINE_WIDTH];
 
 		GetClientRankAuthString(data, iID, sizeof(iID));
 
-        switch (g_iCurrentGamemodeID)
-        {
-            case GAMEMODE_VERSUS: Format(query, sizeof(query), "UPDATE %splayers SET points_infected = points_infected + %i WHERE steamid = '%s'", g_sDbPrefix, Score, iID);
-            case GAMEMODE_REALISMVERSUS: Format(query, sizeof(query), "UPDATE %splayers SET points_realism_infected = points_realism_infected + %i WHERE steamid = '%s'", g_sDbPrefix, Score, iID);
-            case GAMEMODE_SCAVENGE: Format(query, sizeof(query), "UPDATE %splayers SET points_scavenge_infected = points_scavenge_infected + %i WHERE steamid = '%s'", g_sDbPrefix, Score, iID);
-            default:
-            {
-                Format(query, sizeof(query), "UPDATE %splayers SET points_mutations = points_mutations + %i WHERE steamid = '%s'", g_sDbPrefix, Score, iID);
-            }
-        }
+		switch (g_iCurrentGamemodeID)
+		{
+			case GAMEMODE_VERSUS: Format(query, sizeof(query), "UPDATE %splayers SET points_infected = points_infected + %i WHERE steamid = '%s'", g_sDbPrefix, Score, iID);
+			case GAMEMODE_REALISMVERSUS: Format(query, sizeof(query), "UPDATE %splayers SET points_realism_infected = points_realism_infected + %i WHERE steamid = '%s'", g_sDbPrefix, Score, iID);
+			case GAMEMODE_SCAVENGE: Format(query, sizeof(query), "UPDATE %splayers SET points_scavenge_infected = points_scavenge_infected + %i WHERE steamid = '%s'", g_sDbPrefix, Score, iID);
+			default:
+			{
+				Format(query, sizeof(query), "UPDATE %splayers SET points_mutations = points_mutations + %i WHERE steamid = '%s'", g_sDbPrefix, Score, iID);
+			}
+		}
 
 		SendSQLUpdate(query);
 		UpdateMapStat("points_infected", Score);
@@ -190,38 +196,28 @@ Action timer_InfectedDamageCheck(Handle timer, int data)
 				StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for doing damage to the Survivors!", Name, Score, DamageCounter);
 		}
 	}
+
+	return Plugin_Handled;
 }
 
+/*
 // Display player rank.
-Action:timer_ShowPlayerJoined(Handle timer, any client)
+Action timer_ShowPlayerJoined(Handle timer, int client)
 {
 	DoShowPlayerJoined(client);
 }
-
-void DoShowPlayerJoined(int client)
-{
-	if (StatsDisabled())
-	{
-		return;
-	}
-
-	char clientId[MAX_LINE_WIDTH];
-	GetClientRankAuthString(client, clientId, sizeof(clientId));
-
-	QueryClientPointsSteamID(client, clientId, GetClientPointsPlayerJoined);
-}
+*/
 
 // Display common Infected scores to each player.
-Action:Timer_ShowTimerScore(Handle timer, Handle hndl)
+Action Timer_ShowTimerScore(Handle timer, Handle hndl)
 {
 	if (StatsDisabled())
-		return;
+		return Plugin_Handled;
 
-	int Mode = GetConVarInt(g_hCvar_AnnounceMode);
+	int	 Mode = g_hCvar_AnnounceMode.IntValue;
 	char Name[MAX_LINE_WIDTH];
 
-	int maxplayers = MaxClients;
-	for (int i = 1; i <= maxplayers; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
 		{
@@ -246,193 +242,176 @@ Action:Timer_ShowTimerScore(Handle timer, Handle hndl)
 			InterstitialPlayerUpdate(i);
 		}
 
-		g_iTimerPoints[i] = 0;
-		g_iTimerKills[i] = 0;
+		g_iTimerPoints[i]	 = 0;
+		g_iTimerKills[i]	 = 0;
 		g_iTimerHeadshots[i] = 0;
 	}
 
+	return Plugin_Handled;
 }
 
-public Action:timer_ClearDatabase(Handle timer, any data)
+Action Timer_ClearDatabase(Handle timer)
 {
-	g_hClearDatabaseTimer = INVALID_HANDLE;
+	delete g_hClearDatabaseTimer;
 	g_iClearDatabaseCaller = -1;
+
+	return Plugin_Handled;
 }
 
 // Calculate Boomer vomit hits and check Boomer Perfect Blindness award
-
-public Action:timer_BoomerBlindnessCheck(Handle timer, any data)
+Action Timer_BoomerBlindnessCheck(Handle timer, int data)
 {
-	g_hTimerBoomerPerfectCheck[data] = INVALID_HANDLE;
+	delete g_hTimerBoomerPerfectCheck[data];
 
 	if (data > 0 && !IsClientBot(data) && IsClientInGame(data) && GetClientTeam(data) == TEAM_INFECTED && g_iBoomerHitCounter[data] > 0)
 	{
-		new HitCounter = g_iBoomerHitCounter[data];
+		int HitCounter			  = g_iBoomerHitCounter[data];
 		g_iBoomerHitCounter[data] = 0;
-		new OriginalHitCounter = HitCounter;
-		new BoomerPerfectHits = GetConVarInt(g_hCvar_BoomerPerfectHits);
-		new BoomerPerfectSuccess = GetConVarInt(g_hCvar_BoomerPerfectSuccessScore);
-		new Score = 0;
-		new AwardCounter = 0;
+		int OriginalHitCounter	  = HitCounter;
+		int BoomerPerfectHits	  = g_hCvar_BoomerPerfectHits.IntValue;
+		int BoomerPerfectSuccess  = g_hCvar_BoomerPerfectSuccessScore.IntValue;
+		int Score				  = 0;
+		int AwardCounter		  = 0;
 
-		//PrintToConsole(0, "timer_BoomerBlindnessCheck -> HitCounter = %i / BoomerPerfectHits = %i", HitCounter, BoomerPerfectHits);
+		// PrintToConsole(0, "timer_BoomerBlindnessCheck -> HitCounter = %i / BoomerPerfectHits = %i", HitCounter, BoomerPerfectHits);
 
 		while (HitCounter >= BoomerPerfectHits)
 		{
 			HitCounter -= BoomerPerfectHits;
 			Score += BoomerPerfectSuccess;
 			AwardCounter++;
-			//PrintToConsole(0, "timer_BoomerBlindnessCheck -> Score = %i", Score);
+			// PrintToConsole(0, "timer_BoomerBlindnessCheck -> Score = %i", Score);
 		}
 
 		Score += GetBoomerPoints(HitCounter);
-		//PrintToConsole(0, "timer_BoomerBlindnessCheck -> Total Score = %i", Score);
+		// PrintToConsole(0, "timer_BoomerBlindnessCheck -> Total Score = %i", Score);
 		Score = ModifyScoreDifficultyFloat(Score, 0.75, 0.5, TEAM_INFECTED);
 
 		char query[1024];
 		char iID[MAX_LINE_WIDTH];
 		GetClientRankAuthString(data, iID, sizeof(iID));
 
-		if (g_iCurrentGamemodeID == GAMEMODE_VERSUS)
-			Format(query, sizeof(query), "UPDATE %splayers SET points_infected = points_infected + %i, award_perfect_blindness = award_perfect_blindness + %i, infected_boomer_blinded = infected_boomer_blinded + %i, infected_boomer_vomits = infected_boomer_vomits + %i WHERE steamid = '%s'", g_sDbPrefix, Score, AwardCounter, OriginalHitCounter, (g_iBoomerVomitUpdated[data] ? 0 : 1), iID);
-		else if (g_iCurrentGamemodeID == GAMEMODE_REALISMVERSUS)
-			Format(query, sizeof(query), "UPDATE %splayers SET points_realism_infected = points_realism_infected + %i, award_perfect_blindness = award_perfect_blindness + %i, infected_boomer_blinded = infected_boomer_blinded + %i, infected_boomer_vomits = infected_boomer_vomits + %i WHERE steamid = '%s'", g_sDbPrefix, Score, AwardCounter, OriginalHitCounter, (g_iBoomerVomitUpdated[data] ? 0 : 1), iID);
-		else if (g_iCurrentGamemodeID == GAMEMODE_SCAVENGE)
-			Format(query, sizeof(query), "UPDATE %splayers SET points_scavenge_infected = points_scavenge_infected + %i, award_perfect_blindness = award_perfect_blindness + %i, infected_boomer_blinded = infected_boomer_blinded + %i, infected_boomer_vomits = infected_boomer_vomits + %i WHERE steamid = '%s'", g_sDbPrefix, Score, AwardCounter, OriginalHitCounter, (g_iBoomerVomitUpdated[data] ? 0 : 1), iID);
-		else
-			Format(query, sizeof(query), "UPDATE %splayers SET points_mutations = points_mutations + %i, award_perfect_blindness = award_perfect_blindness + %i, infected_boomer_blinded = infected_boomer_blinded + %i, infected_boomer_vomits = infected_boomer_vomits + %i WHERE steamid = '%s'", g_sDbPrefix, Score, AwardCounter, OriginalHitCounter, (g_iBoomerVomitUpdated[data] ? 0 : 1), iID);
-
+		if (g_iCurrentGamemodeID == GAMEMODE_VERSUS) Format(query, sizeof(query), "UPDATE %splayers SET points_infected = points_infected + %i, award_perfect_blindness = award_perfect_blindness + %i, infected_boomer_blinded = infected_boomer_blinded + %i, infected_boomer_vomits = infected_boomer_vomits + %i WHERE steamid = '%s'", g_sDbPrefix, Score, AwardCounter, OriginalHitCounter, (g_iBoomerVomitUpdated[data] ? 0 : 1), iID);
+		else if (g_iCurrentGamemodeID == GAMEMODE_REALISMVERSUS) Format(query, sizeof(query), "UPDATE %splayers SET points_realism_infected = points_realism_infected + %i, award_perfect_blindness = award_perfect_blindness + %i, infected_boomer_blinded = infected_boomer_blinded + %i, infected_boomer_vomits = infected_boomer_vomits + %i WHERE steamid = '%s'", g_sDbPrefix, Score, AwardCounter, OriginalHitCounter, (g_iBoomerVomitUpdated[data] ? 0 : 1), iID);
+		else if (g_iCurrentGamemodeID == GAMEMODE_SCAVENGE) Format(query, sizeof(query), "UPDATE %splayers SET points_scavenge_infected = points_scavenge_infected + %i, award_perfect_blindness = award_perfect_blindness + %i, infected_boomer_blinded = infected_boomer_blinded + %i, infected_boomer_vomits = infected_boomer_vomits + %i WHERE steamid = '%s'", g_sDbPrefix, Score, AwardCounter, OriginalHitCounter, (g_iBoomerVomitUpdated[data] ? 0 : 1), iID);
+		else Format(query, sizeof(query), "UPDATE %splayers SET points_mutations = points_mutations + %i, award_perfect_blindness = award_perfect_blindness + %i, infected_boomer_blinded = infected_boomer_blinded + %i, infected_boomer_vomits = infected_boomer_vomits + %i WHERE steamid = '%s'", g_sDbPrefix, Score, AwardCounter, OriginalHitCounter, (g_iBoomerVomitUpdated[data] ? 0 : 1), iID);
 		SendSQLUpdate(query);
 
-		if (!g_iBoomerVomitUpdated[data])
-			UpdateMapStat("infected_boomer_vomits", 1);
+		if (!g_iBoomerVomitUpdated[data]) UpdateMapStat("infected_boomer_vomits", 1);
 		UpdateMapStat("infected_boomer_blinded", HitCounter);
 
 		g_iBoomerVomitUpdated[data] = false;
-
 		if (Score > 0)
 		{
 			UpdateMapStat("points_infected", Score);
-
-			new Mode = GetConVarInt(g_hCvar_AnnounceMode);
+			int Mode = g_hCvar_AnnounceMode.IntValue;
 
 			if (Mode == 1 || Mode == 2)
 			{
-				if (AwardCounter > 0)
-					StatsPrintToChat(data, "You have earned \x04%i \x01points from \x05Perfect Blindness\x01!", Score);
-				else
-					StatsPrintToChat(data, "You have earned \x04%i \x01points for blinding \x05%i Survivors\x01!", Score, OriginalHitCounter);
+				if (AwardCounter > 0) StatsPrintToChat(data, "You have earned \x04%i \x01points from \x05Perfect Blindness\x01!", Score);
+				else StatsPrintToChat(data, "You have earned \x04%i \x01points for blinding \x05%i Survivors\x01!", Score, OriginalHitCounter);
 			}
 			else if (Mode == 3)
 			{
 				char Name[MAX_LINE_WIDTH];
 				GetClientName(data, Name, sizeof(Name));
-				if (AwardCounter > 0)
-					StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points from \x05Perfect Blindness\x01!", Name, Score);
-				else
-					StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for blinding \x05%i Survivors\x01!", Name, Score, OriginalHitCounter);
+				if (AwardCounter > 0) StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points from \x05Perfect Blindness\x01!", Name, Score);
+				else StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for blinding \x05%i Survivors\x01!", Name, Score, OriginalHitCounter);
 			}
 		}
 
-		if (AwardCounter > 0 && g_bEnableSounds_Boomer_Vomit && GetConVarBool(g_hCvar_SoundsEnabled))
+		if (AwardCounter > 0 && g_bEnableSounds_Boomer_Vomit && g_hCvar_SoundsEnabled.BoolValue)
 			EmitSoundToAll(g_sStatsSound_Boomer_Vomit);
 	}
+
+	return Plugin_Handled;
 }
 
-
 // Perform player init.
-
-public Action:InitPlayers(Handle timer)
+Action Timer_InitPlayers(Handle timer)
 {
-	if (db == INVALID_HANDLE)
-		return;
+	if (!db)
+		return Plugin_Handled;
 
 	char query[64];
 	Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers", g_sDbPrefix);
 	SQL_TQuery(db, GetRankTotal, query);
 
-	int maxplayers = MaxClients;
-
-	for (int i = 1; i <= maxplayers; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
 		{
 			CheckPlayerDB(i);
-
 			QueryClientPoints(i);
-
 			g_iTimerPoints[i] = 0;
-			g_iTimerKills[i] = 0;
+			g_iTimerKills[i]  = 0;
 		}
 	}
+
+	return Plugin_Handled;
 }
 
 // End blinded state.
-Action:timer_EndBoomerBlinded(Handle timer, any data)
+Action Timer_EndBoomerBlinded(Handle timer, int data)
 {
 	g_iPlayerBlinded[data][0] = 0;
 	g_iPlayerBlinded[data][1] = 0;
+
+	return Plugin_Handled;
 }
 
 // End blinded state.
-Action:timer_EndSmokerParalyzed(Handle timer, any data)
+Action Timer_EndSmokerParalyzed(Handle timer, int data)
 {
 	g_iPlayerParalyzed[data][0] = 0;
 	g_iPlayerParalyzed[data][1] = 0;
+
+	return Plugin_Handled;
 }
 
 // End lunging state.
-Action:timer_EndHunterLunged(Handle timer, any data)
+Action Timer_EndHunterLunged(Handle timer, int data)
 {
 	g_iPlayerLunged[data][0] = 0;
 	g_iPlayerLunged[data][1] = 0;
+
+	return Plugin_Handled;
 }
 
 // End plummel state.
-Action:timer_EndChargerPlummel(Handle timer, any data)
+Action Timer_EndChargerPlummel(Handle timer, int data)
 {
 	g_iChargerPlummelVictim[g_iPlayerPummeled[data][1]] = 0;
 	g_iPlayerPummeled[data][0] = 0;
 	g_iPlayerPummeled[data][1] = 0;
+
+	return Plugin_Handled;
 }
 
 // End charge impact counter state.
-Action:timer_EndCharge(Handle timer, any data)
+Action Timer_EndCharge(Handle timer, int data)
 {
 	g_hChargerImpactCounterTimer[data] = INVALID_HANDLE;
-	int Counter = g_iChargerImpactCounter[data];
+	int Counter	= g_iChargerImpactCounter[data];
 	g_iChargerImpactCounter[data] = 0;
 
-	int Score = 0;
+	int	 Score = 0;
 	char ScoreSet[256] = "";
 
-	if (Counter >= GetConVarInt(g_hCvar_ChargerRamHitsPerPoints))
+	if (Counter >= g_hCvar_ChargerRamHitsPerPoints.IntValue)
 	{
-		Score = ModifyScoreDifficultyFloat(GetConVarInt(g_hCvar_ChargerRamSuccessScore), 0.9, 0.8, TEAM_INFECTED);
-
-		if (g_iCurrentGamemodeID == GAMEMODE_VERSUS)
-		{
-			Format(ScoreSet, sizeof(ScoreSet), "points_infected = points_infected + %i", Score);
-		}
-		else if (g_iCurrentGamemodeID == GAMEMODE_REALISMVERSUS)
-		{
-			Format(ScoreSet, sizeof(ScoreSet), "points_realism_infected = points_realism_infected + %i", Score);
-		}
-		else if (g_iCurrentGamemodeID == GAMEMODE_SCAVENGE)
-		{
-			Format(ScoreSet, sizeof(ScoreSet), "points_scavenge_infected = points_scavenge_infected + %i", Score);
-		}
-		else
-		{
-			Format(ScoreSet, sizeof(ScoreSet), "points_mutations = points_mutations + %i", Score);
-		}
+		Score = ModifyScoreDifficultyFloat(g_hCvar_ChargerRamSuccessScore.IntValue, 0.9, 0.8, TEAM_INFECTED);
+		if (g_iCurrentGamemodeID == GAMEMODE_VERSUS) Format(ScoreSet, sizeof(ScoreSet), "points_infected = points_infected + %i", Score);
+		else if (g_iCurrentGamemodeID == GAMEMODE_REALISMVERSUS) Format(ScoreSet, sizeof(ScoreSet), "points_realism_infected = points_realism_infected + %i", Score);
+		else if (g_iCurrentGamemodeID == GAMEMODE_SCAVENGE) Format(ScoreSet, sizeof(ScoreSet), "points_scavenge_infected = points_scavenge_infected + %i", Score);
+		else Format(ScoreSet, sizeof(ScoreSet), "points_mutations = points_mutations + %i", Score);
 
 		StrCat(ScoreSet, sizeof(ScoreSet), ", award_scatteringram = award_scatteringram + 1, ");
 
-		if (g_bEnableSounds_Charger_Ram && GetConVarBool(g_hCvar_SoundsEnabled))
+		if (g_bEnableSounds_Charger_Ram && g_hCvar_SoundsEnabled.BoolValue)
 			EmitSoundToAll(SOUND_CHARGER_RAM);
 	}
-	//UPDATE players SET points_infected = points_infected + 40, award_scatteringram = acharger_impacts = charger_impacts + 4 WHERE steamid = 'STEAM_1:1:12345678'
+	// UPDATE players SET points_infected = points_infected + 40, award_scatteringram = acharger_impacts = charger_impacts + 4 WHERE steamid = 'STEAM_1:1:12345678'
 
 	char AttackerID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(data, AttackerID, sizeof(AttackerID));
@@ -449,7 +428,7 @@ Action:timer_EndCharge(Handle timer, any data)
 
 	int Mode = 0;
 	if (Score > 0)
-		Mode = GetConVarInt(g_hCvar_AnnounceMode);
+		Mode = g_hCvar_AnnounceMode.IntValue;
 
 	if ((Mode == 1 || Mode == 2) && IsClientConnected(data) && IsClientInGame(data))
 		StatsPrintToChat(data, "You have earned \x04%i \x01points for charging a \x05Scattering Ram \x01on \x03%i \x01victims!", Score, Counter);
@@ -459,93 +438,78 @@ Action:timer_EndCharge(Handle timer, any data)
 		GetClientName(data, AttackerName, sizeof(AttackerName));
 		StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for charging a \x05Scattering Ram \x01on \x03%i \x01victims!", AttackerName, Score, Counter);
 	}
+
+	return Plugin_Handled;
 }
 
 // End carried state.
-Action:timer_EndChargerCarry(Handle timer, any data)
+Action Timer_EndChargerCarry(Handle timer, int data)
 {
 	g_iChargerCarryVictim[g_iPlayerCarried[data][1]] = 0;
 	g_iPlayerCarried[data][0] = 0;
 	g_iPlayerCarried[data][1] = 0;
+
+	return Plugin_Handled;
 }
 
 // End jockey ride state.
-Action:timer_EndJockeyRide(Handle timer, any data)
+Action Timer_EndJockeyRide(Handle timer, int data)
 {
 	g_iJockeyVictim[g_iPlayerCarried[data][1]] = 0;
 	g_iPlayerJockied[data][0] = 0;
 	g_iPlayerJockied[data][1] = 0;
+
+	return Plugin_Handled;
 }
 
 // End friendly fire damage counter.
-Action:timer_FriendlyFireDamageEnd(Handle timer, any dp)
+Action Timer_FriendlyFireDamageEnd(Handle timer, DataPack dp)
 {
-	ResetPack(dp);
+	dp.Reset();
 
-	int HumanDamage = ReadPackCell(dp);
-	int BotDamage = ReadPackCell(dp);
-	int Attacker = ReadPackCell(dp);
+	int HumanDamage = dp.ReadCell();
+	int BotDamage = dp.ReadCell();
+	int Attacker = dp.ReadCell();
 
 	// This may fail! What happens when a player skips and another joins with the same Client ID (is this even possible in such short time?)
 	g_hFriendlyFireTimer[Attacker][0] = INVALID_HANDLE;
 
 	char AttackerID[MAX_LINE_WIDTH];
-	ReadPackString(dp, AttackerID, sizeof(AttackerID));
+	dp.ReadString(AttackerID, sizeof(AttackerID));
 	char AttackerName[MAX_LINE_WIDTH];
-	ReadPackString(dp, AttackerName, sizeof(AttackerName));
+	dp.ReadString(AttackerName, sizeof(AttackerName));
 
 	// The damage is read and turned into lost points...
-	ResetPack(dp);
-	WritePackCell(dp, 0); // Human damage
-	WritePackCell(dp, 0); // Bot damage
+	dp.Reset();
+	dp.WriteCell(0);	// Human damage
+	dp.WriteCell(0);	// Bot damage
 
 	if (HumanDamage <= 0 && BotDamage <= 0)
-		return;
+		return Plugin_Handled;
 
 	int Score = 0;
-	
-	if (GetConVarBool(g_hCvar_EnableNegativeScore))
+	if (g_hCvar_EnableNegativeScore.BoolValue)
 	{
 		if (HumanDamage > 0)
-			Score += ModifyScoreDifficultyNR(RoundToNearest(GetConVarFloat(g_hCvar_FriendlyFireMultiplier) * HumanDamage), 2, 4, TEAM_SURVIVORS);
+			Score += ModifyScoreDifficultyNR(RoundToNearest(g_hCvar_FriendlyFireMultiplier.FloatValue * HumanDamage), 2, 4, TEAM_SURVIVORS);
 
 		if (BotDamage > 0)
 		{
-			float BotScoreMultiplier = GetConVarFloat(g_hCvar_BotScoreMultiplier);
-
+			float BotScoreMultiplier = g_hCvar_BotScoreMultiplier.FloatValue;
 			if (BotScoreMultiplier > 0.0)
-				Score += ModifyScoreDifficultyNR(RoundToNearest(GetConVarFloat(g_hCvar_FriendlyFireMultiplier) * BotDamage), 2, 4, TEAM_SURVIVORS);
+				Score += ModifyScoreDifficultyNR(RoundToNearest(g_hCvar_FriendlyFireMultiplier.FloatValue * BotDamage), 2, 4, TEAM_SURVIVORS);
 		}
 	}
 
 	char UpdatePoints[32];
-
 	switch (g_iCurrentGamemodeID)
 	{
-		case GAMEMODE_VERSUS:
-		{
-			Format(UpdatePoints, sizeof(UpdatePoints), "points_survivors");
-		}
-		case GAMEMODE_REALISM:
-		{
-			Format(UpdatePoints, sizeof(UpdatePoints), "points_realism");
-		}
-		case GAMEMODE_SURVIVAL:
-		{
-			Format(UpdatePoints, sizeof(UpdatePoints), "points_survival");
-		}
-		case GAMEMODE_SCAVENGE:
-		{
-			Format(UpdatePoints, sizeof(UpdatePoints), "points_scavenge_survivors");
-		}
-		case GAMEMODE_REALISMVERSUS:
-		{
-			Format(UpdatePoints, sizeof(UpdatePoints), "points_realism_survivors");
-		}
-		case GAMEMODE_OTHERMUTATIONS:
-		{
-			Format(UpdatePoints, sizeof(UpdatePoints), "points_mutations");
-		}
+		case GAMEMODE_VERSUS: Format(UpdatePoints, sizeof(UpdatePoints), "points_survivors");
+		case GAMEMODE_REALISM: Format(UpdatePoints, sizeof(UpdatePoints), "points_realism");
+		case GAMEMODE_SURVIVAL: Format(UpdatePoints, sizeof(UpdatePoints), "points_survival");
+		case GAMEMODE_SCAVENGE: Format(UpdatePoints, sizeof(UpdatePoints), "points_scavenge_survivors");
+		case GAMEMODE_REALISMVERSUS: Format(UpdatePoints, sizeof(UpdatePoints), "points_realism_survivors");
+		case GAMEMODE_OTHERMUTATIONS: Format(UpdatePoints, sizeof(UpdatePoints), "points_mutations");
 		default:
 		{
 			Format(UpdatePoints, sizeof(UpdatePoints), "points");
@@ -558,28 +522,29 @@ Action:timer_FriendlyFireDamageEnd(Handle timer, any dp)
 
 	int Mode = 0;
 	if (Score > 0)
-		Mode = GetConVarInt(g_hCvar_AnnounceMode);
+		Mode = g_hCvar_AnnounceMode.IntValue;
 
 	if ((Mode == 1 || Mode == 2) && IsClientConnected(Attacker) && IsClientInGame(Attacker))
 		StatsPrintToChat(Attacker, "You have \x03LOST \x04%i \x01points for inflicting \x03Friendly Fire Damage \x05(%i HP)\x01!", Score, HumanDamage + BotDamage);
 	else if (Mode == 3)
 		StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for inflicting \x03Friendly Fire Damage \x05(%i HP)\x01!", AttackerName, Score, HumanDamage + BotDamage);
+
+	return Plugin_Handled;
 }
 
 // Start team shuffle.
-Action:timer_ShuffleTeams(Handle timer, any data)
+Action Timer_ShuffleTeams(Handle timer)
 {
 	if (CheckHumans())
-		return;
+		return Plugin_Handled;
 
 	char query[1024];
 	Format(query, sizeof(query), "SELECT steamid FROM %splayers WHERE ", g_sDbPrefix);
 
-	int maxplayers = MaxClients;
 	char SteamID[MAX_LINE_WIDTH], where[512];
-	int counter = 0, team;
+	int	 counter = 0, team;
 
-	for (int i = 1; i <= maxplayers; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientBot(i) || !IsClientConnected(i) || !IsClientInGame(i))
 			continue;
@@ -600,87 +565,90 @@ Action:timer_ShuffleTeams(Handle timer, any data)
 	if (counter <= 1)
 	{
 		StatsPrintToChatAllPreFormatted2(true, "Team shuffle by player PPM failed because there was \x03not enough players\x01!");
-		return;
+		return Plugin_Handled;
 	}
 
 	Format(where, sizeof(where), "ORDER BY (%s) / (%s) DESC", DB_PLAYERS_TOTALPOINTS, DB_PLAYERS_TOTALPLAYTIME);
 	StrCat(query, sizeof(query), where);
 
 	SQL_TQuery(db, ExecuteTeamShuffle, query);
+
+	return Plugin_Handled;
 }
 
 // End of RANKVOTE.
-Action:timer_RankVote(Handle timer, any data)
+Action Timer_RankVote(Handle timer)
 {
-	g_hRankVoteTimer = INVALID_HANDLE;
+	delete g_hRankVoteTimer;
 
 	if (!CheckHumans())
 	{
-		new humans = 0, votes = 0, yesvotes = 0, novotes = 0, WinningVoteCount = 0;
-
+		int humans = 0, votes = 0, yesvotes = 0, novotes = 0, WinningVoteCount = 0;
 		CheckRankVotes(humans, votes, yesvotes, novotes, WinningVoteCount);
-
 		StatsPrintToChatAll2(true, "Vote to shuffle teams by player PPM \x03%s \x01with \x04%i (yes) against %i (no)\x01.", (yesvotes > novotes ? "PASSED" : "DID NOT PASS"), yesvotes, novotes);
 
 		if (yesvotes > novotes)
-		{
-			CreateTimer(3.0, timer_ShuffleTeams);
-		}
+			CreateTimer(3.0, Timer_ShuffleTeams);
 	}
+
+	return Plugin_Handled;
 }
 
 // End friendly fire cooldown.
-Action:timer_g_bFriendlyFireCooldownEnd(Handle timer, any data)
+Action Timer_FriendlyFireCooldownEnd(Handle timer, int data)
 {
 	g_bFriendlyFireCooldown[g_iFriendlyFirePrm[data][0]][g_iFriendlyFirePrm[data][1]] = false;
-	g_hFriendlyFireTimer[g_iFriendlyFirePrm[data][0]][g_iFriendlyFirePrm[data][1]] = INVALID_HANDLE;
+	delete g_hFriendlyFireTimer[g_iFriendlyFirePrm[data][0]][g_iFriendlyFirePrm[data][1]];
+
+	return Plugin_Handled;
 }
 
 // End friendly fire cooldown.
-Action:timer_MeleeKill(Handle timer, any data)
+Action Timer_MeleeKill(Handle timer, any data)
 {
-	g_hMeleeKillTimer[data] = INVALID_HANDLE;
+	delete g_hMeleeKillTimer[data];
 	int Counter = g_iMeleeKillCounter[data];
 	g_iMeleeKillCounter[data] = 0;
 
 	if (Counter <= 0 || IsClientBot(data) || !IsClientConnected(data) || !IsClientInGame(data) || GetClientTeam(data) != TEAM_SURVIVORS)
-		return;
+		return Plugin_Handled;
 
 	char query[512], clientID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(data, clientID, sizeof(clientID));
 	Format(query, sizeof(query), "UPDATE %splayers SET melee_kills = melee_kills + %i WHERE steamid = '%s'", g_sDbPrefix, Counter, clientID);
 	SendSQLUpdate(query);
+
+	return Plugin_Handled;
 }
 
 // Perform minutely updates of player database.
 // Reports Disabled message if in Versus, Easy mode, not enough Human players, and if cheats are active.
-Action:Timer_UpdatePlayers(Handle timer, Handle hndl)
+Action Timer_UpdatePlayers(Handle timer, Handle hndl)
 {
 	if (CheckHumans())
 	{
-		if (GetConVarBool(g_hCvar_DisabledMessages))
-		{
+		if (g_hCvar_DisabledMessages.BoolValue)
 			StatsPrintToChatAllPreFormatted("Left 4 Dead Stats are \x04DISABLED\x01, not enough Human players!");
-		}
 
-		return;
+		return Plugin_Handled;
 	}
 
 	if (StatsDisabled())
-		return;
+		return Plugin_Handled;
 
 	UpdateMapStat("playtime", 1);
-
-	int maxplayers = MaxClients;
-	for (int i = 1; i <= maxplayers; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
 			CheckPlayerDB(i);
 	}
+
+	return Plugin_Handled;
 }
 
 // Display rank change.
-Action:timer_ShowRankChange(Handle timer, any client)
+Action Timer_ShowRankChange(Handle timer, int client)
 {
 	DoShowRankChange(client);
+	return Plugin_Handled;
 }

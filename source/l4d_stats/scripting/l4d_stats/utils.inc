@@ -64,6 +64,7 @@ bool ChangeRankPlayerTeam(int client, int team)
 bool IsRankClientInGameHuman(int client)
 {
 	if (client > 0) return (IsClientInGame(client) && !IsFakeClient(client));
+	return false;
 }
 
 /*
@@ -502,11 +503,6 @@ int ModifyScoreDifficulty(int BaseScore, int AdvMult, int ExpMult, int ClientTea
 	return ModifyScoreRealism(BaseScore, ClientTeam);
 }
 
-void NotServerConsoleCommand()
-{
-	PrintToConsole(0, "[RANK] Error: Most of the rank commands including this one are not available from server console.");
-}
-
 // Get Boomer points
 int GetBoomerPoints(int VictimCount)
 {
@@ -514,4 +510,103 @@ int GetBoomerPoints(int VictimCount)
 		return 0;
 
 	return (g_hCvar_BoomerSuccessScore.IntValue * VictimCount);
+}
+
+int GetInfType(int Client)
+{
+	// Client > 0 && ClientTeam == TEAM_INFECTED checks are done by the caller
+	int InfType = GetEntProp(Client, Prop_Send, "m_zombieClass");
+
+	// Make the conversion so that everything gets stored in the correct fields
+	EngineVersion ServerVersion = GetEngineVersion();
+	if (ServerVersion == Engine_Left4Dead)
+	{
+		if (InfType == INF_ID_WITCH_L4D1)
+			return INF_ID_WITCH_L4D2;
+
+		if (InfType == INF_ID_TANK_L4D1)
+			return INF_ID_TANK_L4D2;
+	}
+
+	return InfType;
+}
+
+float GetMedkitPointReductionFactor()
+{
+	if (g_iMedkitsUsedCounter <= 0)
+		return 1.0;
+
+	float Penalty = g_hCvar_MedkitUsedPointPenalty.FloatValue;
+
+	// If Penalty is set to ZERO: There is no reduction.
+	if (Penalty <= 0.0)
+		return 1.0;
+
+	int PenaltyFree = -1;
+
+	if (g_iCurrentGamemodeID == GAMEMODE_REALISM || g_iCurrentGamemodeID == GAMEMODE_REALISMVERSUS)
+		PenaltyFree = g_hCvar_MedkitUsedRealismFree.IntValue;
+
+	if (PenaltyFree < 0)
+		PenaltyFree = g_hCvar_MedkitUsedFree.IntValue;
+
+	if (PenaltyFree >= g_iMedkitsUsedCounter)
+		return 1.0;
+
+	Penalty *= g_iMedkitsUsedCounter - PenaltyFree;
+
+	float PenaltyMax = g_hCvar_MedkitUsedPointPenaltyMax.FloatValue;
+
+	if (Penalty > PenaltyMax)
+		return 1.0 - PenaltyMax;
+
+	return 1.0 - Penalty;
+}
+
+// Calculate the score with the medkit point reduction
+int GetMedkitPointReductionScore(int Score, bool ToCeil = false)
+{
+	float ReductionFactor = GetMedkitPointReductionFactor();
+
+	if (ReductionFactor == 1.0)
+		return Score;
+
+	if (ToCeil)
+		return RoundToCeil(Score * ReductionFactor);
+	else
+		return RoundToFloor(Score * ReductionFactor);
+}
+
+int GetClientInfectedType(int Client)
+{
+	if (Client > 0 && GetClientTeam(Client) == TEAM_INFECTED)
+		return GetInfType(Client);
+
+	return 0;
+}
+
+bool DoFastQuery(int Client, const char[] Query, any ...)
+{
+	char FormattedQuery[4096];
+	VFormat(FormattedQuery, sizeof(FormattedQuery), Query, 3);
+
+	char Error[1024];
+
+	if (!SQL_FastQuery(db, FormattedQuery))
+	{
+		if (SQL_GetError(db, Error, sizeof(Error)))
+		{
+			PrintToConsole(Client, "[RANK] Fast query failed! (Error = \"%s\") Query = \"%s\"", Error, FormattedQuery);
+			LogError("Fast query failed! (Error = \"%s\") Query = \"%s\"", Error, FormattedQuery);
+		}
+		else
+		{
+			PrintToConsole(Client, "[RANK] Fast query failed! Query = \"%s\"", FormattedQuery);
+			LogError("Fast query failed! Query = \"%s\"", FormattedQuery);
+		}
+
+		return false;
+	}
+
+	return true;
 }

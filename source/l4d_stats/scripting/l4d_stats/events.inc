@@ -477,7 +477,7 @@ IncrementMeleeKills(client)
 		CloseHandle(g_hMeleeKillTimer[client]);
 
 	g_iMeleeKillCounter[client]++;
-	g_hMeleeKillTimer[client] = CreateTimer(5.0, timer_MeleeKill, client);
+	g_hMeleeKillTimer[client] = CreateTimer(5.0, Timer_MeleeKill, client);
 }
 
 // Tank death code. Points are given to all players.
@@ -987,7 +987,7 @@ public Action:Event_FriendlyFire(Handle event, const char[] name, bool dontBroad
 
 			g_iFriendlyFirePrm[g_iFriendlyFirePrmCounter][0] = Attacker;
 			g_iFriendlyFirePrm[g_iFriendlyFirePrmCounter][1] = Target;
-			g_hFriendlyFireTimer[Attacker][Target] = CreateTimer(GetConVarFloat(g_hCvar_FriendlyFireCooldown), timer_g_bFriendlyFireCooldownEnd, g_iFriendlyFirePrmCounter++);
+			g_hFriendlyFireTimer[Attacker][Target] = CreateTimer(GetConVarFloat(g_hCvar_FriendlyFireCooldown), Timer_FriendlyFireCooldownEnd, g_iFriendlyFirePrmCounter++);
 		}
 	}
 	else if (FFMode == 2)
@@ -1233,7 +1233,7 @@ public Action:Event_PlayerBlind(Handle event, const char[] name, bool dontBroadc
 		g_hTimerBoomerPerfectCheck[Attacker] = INVALID_HANDLE;
 	}
 
-	g_hTimerBoomerPerfectCheck[Attacker] = CreateTimer(6.0, timer_BoomerBlindnessCheck, Attacker);
+	g_hTimerBoomerPerfectCheck[Attacker] = CreateTimer(6.0, Timer_BoomerBlindnessCheck, Attacker);
 }
 
 // Boomer Mob Survival with no Incaps code. Points are given to all players.
@@ -1249,7 +1249,7 @@ public Action:Event_PlayerBlindEnd(Handle event, const char[] name, bool dontBro
 		return;
 
 	if (Player > 0)
-		CreateTimer(INF_WEAROFF_TIME, timer_EndBoomerBlinded, Player);
+		CreateTimer(INF_WEAROFF_TIME, Timer_EndBoomerBlinded, Player);
 
 	int Mode = GetConVarInt(g_hCvar_AnnounceMode);
 
@@ -1488,7 +1488,7 @@ public Action:Event_PounceSave(Handle event, const char[] name, bool dontBroadca
 	int Victim = GetClientOfUserId(GetEventInt(event, "Victim"));
 
 	if (Victim > 0)
-		CreateTimer(INF_WEAROFF_TIME, timer_EndHunterLunged, Victim);
+		CreateTimer(INF_WEAROFF_TIME, Timer_EndHunterLunged, Victim);
 
 	HunterSmokerSave(Savior, Victim, GetConVarInt(g_hCvar_SaveFromInfectedAbilityScore[INF_ABILITY_CHOKE]), 2, 3, "Hunter", "award_hunter");
 }
@@ -1619,10 +1619,10 @@ public Action:Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadc
 	g_iJockeyDamageCounter[Player] = 0;
 	g_iChargerDamageCounter[Player] = 0;
 	g_iChargerImpactCounter[Player] = 0;
-	TankPointsCounter[Player] = 0;
-	TankDamageCounter[Player] = 0;
-	TankDamageTotalCounter[Player] = 0;
-	TankSurvivorKillCounter[Player] = 0;
+	g_iTankPointsCounter[Player] = 0;
+	g_iTankDamageCounter[Player] = 0;
+	g_iTankDamageTotalCounter[Player] = 0;
+	g_iTankSurvivorKillCounter[Player] = 0;
 	g_iChargerCarryVictim[Player] = 0;
 	g_iChargerPlummelVictim[Player] = 0;
 	g_iJockeyVictim[Player] = 0;
@@ -1642,7 +1642,7 @@ public Action:Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadc
 	g_iPlayerJockied[Player][1] = 0;
 
 	if (!IsClientBot(Player))
-		Setg_iClientInfectedType(Player);
+		SetClientInfectedType(Player);
 
 	if (g_hChargerImpactCounterTimer[Player] != INVALID_HANDLE)
 		CloseHandle(g_hChargerImpactCounterTimer[Player]);
@@ -1653,7 +1653,7 @@ public Action:Event_PlayerSpawn(Handle event, const char[] name, bool dontBroadc
 // Player hurt. Used for calculating damage points for the Infected players and also
 // the friendly fire damage when Friendly Fire Mode is set to Damage Based.
 
-public Action:Event_PlayerHurt(Handle event, const char[] name, bool dontBroadcast)
+public Action:Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
 	if (StatsDisabled() || g_bCampaignOver)
 		return;
@@ -1742,7 +1742,7 @@ public Action:Event_PlayerHurt(Handle event, const char[] name, bool dontBroadca
 				WritePackString(dp, AttackerName);
 
 				// This may fail! What happens when a player skips and another joins with the same Client ID (is this even possible in such short time?)
-				g_hFriendlyFireTimer[Attacker][0] = CreateTimer(5.0, timer_FriendlyFireDamageEnd, dp);
+				g_hFriendlyFireTimer[Attacker][0] = CreateTimer(5.0, Timer_FriendlyFireDamageEnd, dp);
 
 				return;
 			}
@@ -1925,7 +1925,7 @@ public Action:Event_JockeyRelease(Handle event, const char[] name, bool dontBroa
 	UpdateJockeyRideLength(Jockey, RideLength);
 
 	if (Victim > 0)
-		CreateTimer(INF_WEAROFF_TIME, timer_EndJockeyRide, Victim);
+		CreateTimer(INF_WEAROFF_TIME, Timer_EndJockeyRide, Victim);
 }
 
 public Action:Event_JockeyKilled(Handle event, const char[] name, bool dontBroadcast)
@@ -1941,7 +1941,7 @@ public Action:Event_JockeyKilled(Handle event, const char[] name, bool dontBroad
 	int Victim = GetClientOfUserId(GetEventInt(event, "victim"));
 
 	if (Victim > 0)
-		CreateTimer(INF_WEAROFF_TIME, timer_EndJockeyRide, Victim);
+		CreateTimer(INF_WEAROFF_TIME, Timer_EndJockeyRide, Victim);
 }
 
 // Charger events.
@@ -2090,7 +2090,7 @@ public Action:Event_ChargerCarryRelease(Handle event, const char[] name, bool do
 	//}
 
 	if (Victim > 0)
-		CreateTimer(INF_WEAROFF_TIME, timer_EndChargerCarry, Victim);
+		CreateTimer(INF_WEAROFF_TIME, Timer_EndChargerCarry, Victim);
 }
 
 public Action:Event_ChargerImpact(Handle event, const char[] name, bool dontBroadcast)
@@ -2112,7 +2112,7 @@ IncrementImpactCounter(client)
 	if (g_hChargerImpactCounterTimer[client] != INVALID_HANDLE)
 		CloseHandle(g_hChargerImpactCounterTimer[client]);
 
-	g_hChargerImpactCounterTimer[client] = CreateTimer(3.0, timer_EndCharge, client);
+	g_hChargerImpactCounterTimer[client] = CreateTimer(3.0, Timer_EndCharge, client);
 
 	g_iChargerImpactCounter[client]++;
 }
@@ -2155,7 +2155,7 @@ public Action:Event_ChargerPummelRelease(Handle event, const char[] name, bool d
 	}
 
 	if (Victim > 0)
-		CreateTimer(INF_WEAROFF_TIME, timer_EndChargerPlummel, Victim);
+		CreateTimer(INF_WEAROFF_TIME, Timer_EndChargerPlummel, Victim);
 }
 
 // Hunter events.
@@ -2168,7 +2168,7 @@ public Action:Event_HunterRelease(Handle event, const char[] name, bool dontBroa
 	int Player = GetClientOfUserId(GetEventInt(event, "victim"));
 
 	if (Player > 0)
-		CreateTimer(INF_WEAROFF_TIME, timer_EndHunterLunged, Player);
+		CreateTimer(INF_WEAROFF_TIME, Timer_EndHunterLunged, Player);
 }
 
 // Smoker events.
@@ -2181,7 +2181,7 @@ public Action:Event_SmokerRelease(Handle event, const char[] name, bool dontBroa
 	int Player = GetClientOfUserId(GetEventInt(event, "victim"));
 
 	if (Player > 0)
-		CreateTimer(INF_WEAROFF_TIME, timer_EndSmokerParalyzed, Player);
+		CreateTimer(INF_WEAROFF_TIME, Timer_EndSmokerParalyzed, Player);
 }
 
 // L4D2 ammo upgrade deployed event.
@@ -2790,7 +2790,7 @@ public Action:Event_Award_L4D1(Handle event, const char[] name, bool dontBroadca
 			g_hTimerProtectedFriendly[User] = INVALID_HANDLE;
 		}
 
-		g_hTimerProtectedFriendly[User] = CreateTimer(3.0, timer_ProtectedFriendly, User);
+		g_hTimerProtectedFriendly[User] = CreateTimer(3.0, Timer_ProtectedFriendly, User);
 
 		return;
 	}
@@ -3017,7 +3017,7 @@ public Action:Event_Award_L4D2(Handle event, const char[] name, bool dontBroadca
 			g_hTimerProtectedFriendly[User] = INVALID_HANDLE;
 		}
 
-		g_hTimerProtectedFriendly[User] = CreateTimer(3.0, timer_ProtectedFriendly, User);
+		g_hTimerProtectedFriendly[User] = CreateTimer(3.0, Timer_ProtectedFriendly, User);
 
 		return;
 	}

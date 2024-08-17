@@ -1121,7 +1121,7 @@ public RankVotePanelHandler(Handle menu, MenuAction:action, param1, param2)
 			StatsPrintToChatAll("Vote to shuffle teams by player PPM \x03%s \x01with \x04%i (yes) against %i (no)\x01.", (yesvotes >= WinningVoteCount ? "PASSED" : "DID NOT PASS"), yesvotes, novotes);
 
 			if (yesvotes >= WinningVoteCount)
-				CreateTimer(2.0, timer_ShuffleTeams);
+				CreateTimer(2.0, Timer_ShuffleTeams);
 		}
 
 		if (Oldg_iPlayerRankVote != RANKVOTE_NOVOTE)

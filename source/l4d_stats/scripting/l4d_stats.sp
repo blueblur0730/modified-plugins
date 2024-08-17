@@ -45,7 +45,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 // Here we go!
 public void OnPluginStart()
 {
-	g_bCommandsRegistered		= false;
+	g_bCommandsRegistered = false;
 
 	EngineVersion ServerVersion = GetEngineVersion();
 
@@ -64,7 +64,7 @@ public void OnPluginStart()
 	// Startup the plugin's timers
 	// CreateTimer(1.0, InitPlayers); // Called in OnMapStart
 	CreateTimer(60.0, Timer_UpdatePlayers, INVALID_HANDLE, TIMER_REPEAT);
-	g_hUpdateTimer = CreateTimer(GetConVarFloat(g_hCvar_UpdateRate), Timer_ShowTimerScore, INVALID_HANDLE, TIMER_REPEAT);
+	g_hUpdateTimer = CreateTimer(g_hCvar_UpdateRate.FloatValue, Timer_ShowTimerScore, INVALID_HANDLE, TIMER_REPEAT);
 
 	// Gamemode
 	g_hCvar_Gamemode.GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
@@ -110,7 +110,7 @@ public void OnConfigsExecuted()
 // Reset all boolean variables when a map changes.
 public void OnMapStart()
 {
-	GetConVarString(g_hCvar_Gamemode, g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
+	g_hCvar_Gamemode.GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
 	g_iCurrentGamemodeID = GetCurrentGamemodeID();
 	SetCurrentGamemodeName();
 	ResetVars();
@@ -136,9 +136,7 @@ public void OnPluginEnd()
 	if (!db)
 		return;
 
-	int maxplayers = MaxClients;
-
-	for (int i = 1; i <= maxplayers; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
 		{
@@ -196,9 +194,7 @@ public void OnClientDisconnect(int client)
 		}
 	}
 
-	int maxplayers = MaxClients;
-
-	for (int i = 1; i <= maxplayers; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (i != client && IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
 			return;

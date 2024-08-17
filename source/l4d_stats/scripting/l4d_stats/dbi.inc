@@ -1256,3 +1256,173 @@ public ClearStatsMapsHandler(Handle owner, Handle hndl, const char[] error, any 
 		PrintToConsole(client, "[RANK] Clear Stats: Stats succesfully cleared!", query);
 	}
 }
+
+void ExecuteTeamShuffle(Handle owner, Handle hndl, const char[] error, any data)
+{
+	if (hndl == INVALID_HANDLE)
+	{
+		LogError("ExecuteTeamShuffle failed! Reason: %s", error);
+		return;
+	}
+
+	char SteamID[MAX_LINE_WIDTH];
+	int i, team, maxplayers = MaxClients, client, topteam;
+	int SurvivorsLimit = GetConVarInt(g_hCvar_SurvivorLimit), InfectedLimit = GetConVarInt(g_hCvar_InfectedLimit);
+	Handle PlayersTrie = CreateTrie();
+	Handle InfectedArray = CreateArray();
+	Handle SurvivorArray = CreateArray();
+
+	for (i = 1; i <= maxplayers; i++)
+	{
+		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
+		{
+			GetClientRankAuthString(i, SteamID, sizeof(SteamID));
+
+			if (!SetTrieValue(PlayersTrie, SteamID, i, false))
+			{
+				LogError("ExecuteTeamShuffle failed! Reason: Duplicate SteamID while generating shuffled teams.");
+				StatsPrintToChatAllPreFormatted2(true, "Team shuffle failed in an error.");
+
+				SetConVarBool(g_hCvar_EnableRankVote, false);
+
+				ClearTrie(PlayersTrie);
+				CloseHandle(PlayersTrie);
+
+				CloseHandle(hndl);
+
+				return;
+			}
+
+			switch (GetClientTeam(i))
+			{
+				case TEAM_SURVIVORS:
+					PushArrayCell(SurvivorArray, i);
+				case TEAM_INFECTED:
+					PushArrayCell(InfectedArray, i);
+			}
+		}
+	}
+
+	int SurvivorCounter = GetArraySize(SurvivorArray);
+	int InfectedCounter = GetArraySize(InfectedArray);
+
+	i = 0;
+	topteam = 0;
+
+	while (SQL_FetchRow(hndl))
+	{
+		SQL_FetchString(hndl, 0, SteamID, sizeof(SteamID));
+
+		if (GetTrieValue(PlayersTrie, SteamID, client))
+		{
+			team = GetClientTeam(client);
+
+			if (i == 0)
+			{
+				if (team == TEAM_SURVIVORS)
+				{
+					RemoveFromArray(SurvivorArray, FindValueInArray(SurvivorArray, client));
+				}
+				else
+				{
+					RemoveFromArray(InfectedArray, FindValueInArray(InfectedArray, client));
+				}
+
+				topteam = team;
+				i++;
+
+				continue;
+			}
+
+			if (i++ % 2)
+			{
+				if (topteam == TEAM_SURVIVORS && team == TEAM_INFECTED)
+				{
+					RemoveFromArray(InfectedArray, FindValueInArray(InfectedArray, client));
+				}
+				else if (topteam == TEAM_INFECTED && team == TEAM_SURVIVORS)
+				{
+					RemoveFromArray(SurvivorArray, FindValueInArray(SurvivorArray, client));
+				}
+			}
+			else
+			{
+				if (topteam == TEAM_SURVIVORS && team == TEAM_SURVIVORS)
+				{
+					RemoveFromArray(SurvivorArray, FindValueInArray(SurvivorArray, client));
+				}
+				else if (topteam == TEAM_INFECTED && team == TEAM_INFECTED)
+				{
+					RemoveFromArray(InfectedArray, FindValueInArray(InfectedArray, client));
+				}
+			}
+		}
+	}
+
+	if (GetArraySize(SurvivorArray) > 0 || GetArraySize(InfectedArray) > 0)
+	{
+		new NewSurvivorCounter = SurvivorCounter - GetArraySize(SurvivorArray) + GetArraySize(InfectedArray);
+		new NewInfectedCounter = InfectedCounter - GetArraySize(InfectedArray) + GetArraySize(SurvivorArray);
+
+		if (NewSurvivorCounter > SurvivorsLimit || NewInfectedCounter > InfectedLimit)
+		{
+			LogError("ExecuteTeamShuffle failed! Reason: Team size limits block Rank Vote functionality. (Survivors Limit = %i [%i] / Infected Limit = %i [%i])", SurvivorsLimit, NewSurvivorCounter, InfectedLimit, NewInfectedCounter);
+			StatsPrintToChatAllPreFormatted2(true, "Team shuffle failed in an error.");
+
+			SetConVarBool(g_hCvar_EnableRankVote, false);
+		}
+		else
+		{
+			g_bCampaignOver = true;
+
+			char Name[32];
+
+			// Change Survivors team to Spectators (TEMPORARILY)
+			for (i = 0; i < GetArraySize(SurvivorArray); i++)
+			{
+				ChangeRankPlayerTeam(GetArrayCell(SurvivorArray, i), TEAM_SPECTATORS);
+			}
+
+			// Change Infected team to Survivors
+			for (i = 0; i < GetArraySize(InfectedArray); i++)
+			{
+				client = GetArrayCell(InfectedArray, i);
+				GetClientName(client, Name, sizeof(Name));
+
+				ChangeRankPlayerTeam(client, TEAM_SURVIVORS);
+
+				StatsPrintToChatAll2(true, "\x05%s \x01was swapped to team \x03Survivors\x01!", Name);
+			}
+
+			// Change Spectators (TEMPORARILY) team to Infected
+			for (i = 0; i < GetArraySize(SurvivorArray); i++)
+			{
+				client = GetArrayCell(SurvivorArray, i);
+				GetClientName(client, Name, sizeof(Name));
+
+				ChangeRankPlayerTeam(client, TEAM_INFECTED);
+
+				StatsPrintToChatAll2(true, "\x05%s \x01was swapped to team \x03Infected\x01!", Name);
+			}
+
+			StatsPrintToChatAllPreFormatted2(true, "Team shuffle by player PPM \x03DONE\x01.");
+
+			if (g_bEnableSounds_Rankvote && GetConVarBool(g_hCvar_SoundsEnabled))
+				EmitSoundToAll(SOUND_RANKVOTE);
+		}
+	}
+	else
+	{
+		StatsPrintToChatAllPreFormatted2(true, "Teams are already even by player PPM.");
+	}
+
+	ClearArray(SurvivorArray);
+	ClearArray(InfectedArray);
+	ClearTrie(PlayersTrie);
+
+	CloseHandle(SurvivorArray);
+	CloseHandle(InfectedArray);
+	CloseHandle(PlayersTrie);
+
+	CloseHandle(hndl);
+}

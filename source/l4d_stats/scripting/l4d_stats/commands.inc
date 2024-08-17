@@ -264,7 +264,7 @@ Action cmd_ShuffleTeams(int client, int args)
 	}
 
 	PrintToConsole(client, "[RANK] Executing team shuffle...");
-	CreateTimer(1.0, timer_ShuffleTeams);
+	CreateTimer(1.0, Timer_ShuffleTeams);
 
 	return Plugin_Handled;
 }
@@ -306,7 +306,7 @@ Action cmd_ClearRank(int client, int args)
 	PrintToConsole(client, "[RANK] Clear Stats: To clear the database, execute this command again in %.2f seconds!", CLEAR_DATABASE_CONFIRMTIME);
 	g_iClearDatabaseCaller = client;
 
-	g_hClearDatabaseTimer  = CreateTimer(CLEAR_DATABASE_CONFIRMTIME, timer_ClearDatabase);
+	g_hClearDatabaseTimer  = CreateTimer(CLEAR_DATABASE_CONFIRMTIME, Timer_ClearDatabase);
 
 	return Plugin_Handled;
 }
@@ -343,6 +343,7 @@ void ShowRankMuteUsage(int client)
 Action cmd_ShowMotd(int client, int args)
 {
 	ShowMOTD(client, true);
+	return Plugin_Handled
 }
 
 // Set client rank mute.

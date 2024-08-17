@@ -312,10 +312,10 @@ ConVar
     g_hCvar_TankScoreThrowRockSuccessScore;
 
 int 
-    TankDamageCounter[MAXPLAYERS + 1],
-    TankDamageTotalCounter[MAXPLAYERS + 1],
-    TankPointsCounter[MAXPLAYERS + 1],
-    TankSurvivorKillCounter[MAXPLAYERS + 1];
+    g_iTankDamageCounter[MAXPLAYERS + 1],
+    g_iTankDamageTotalCounter[MAXPLAYERS + 1],
+    g_iTankPointsCounter[MAXPLAYERS + 1],
+    g_iTankSurvivorKillCounter[MAXPLAYERS + 1];
 
 // SI Event related data
 int 
@@ -371,8 +371,10 @@ int
     g_iPillsIndex[MAX_ENTITIES],
     g_iAdrenalineIndex[MAX_ENTITIES];
 
+#if DEBUG
 char g_sQueryBuffer[MAX_QUERY_COUNTER][MAX_QUERY_COUNTER];
 int g_iQueryCounter = 0;
+#endif
 
 int g_iAnnounceCounter[MAXPLAYERS + 1];
 int g_iPostAdminCheckRetryCounter[MAXPLAYERS + 1];
