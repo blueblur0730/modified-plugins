@@ -221,6 +221,15 @@
 							// search either "scavenge_round_finished" "scavenge_match_finished" "scavenge_round_haltime" "ScavengeRoundInitialTime".
 			}
 
+			// int __cdecl CWeaponScavengeItemSpawn::InputSpawnScavengeItem(CBaseEntity *a1)
+			"CWeaponScavengeItemSpawn::InputSpawnScavengeItem"
+			{
+				"library"	"server"
+				"linux"		"@_ZN24CWeaponScavengeItemSpawn22InputSpawnScavengeItemER11inputdata_t"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x28\x56\x57\x8B\xF9"
+							/* 55 8B EC 83 EC 28 56 57 8B F9 */
+			}
+
 			// CNavArea *__cdecl CDirectorItemManager::GetNavAreaForScavengeItem(CDirectorItemManager *this, CBaseEntity *)
 			"CDirectorItemManager::GetNavAreaForScavengeItem"
 			{
