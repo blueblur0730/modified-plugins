@@ -2,7 +2,6 @@
 {
     "left4dead"
     {
-        "linux"    "@_ZN13CTerrorPlayer11TakeOverBotEb"
         "Signatures"
         {
             "TakeOverBot"
@@ -32,7 +31,7 @@
                 "linux"    "@_ZN13CTerrorPlayer11TakeOverBotEb"
                 "windows"  "\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\xA1\x2A\x2A\x2A\x2A\x33\xC5\x89\x45\xFC\x53\x56\x8D\x85"
             }
-            
+
             "SetHumanSpec"
             {
                 "library"  "server"
