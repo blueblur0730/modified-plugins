@@ -12,11 +12,11 @@
 // Plugin Info
 public Plugin myinfo =
 {
-	name = "[L4D/L4D2] Custom Player Stats",
+	name = "[L4D/L4D2] Custom Player Statistics",
 	author = "Mikko Andersson (muukis), blueblur",
 	version = PLUGIN_VERSION,
-	description = "Player Stats and Ranking for Left 4 Dead and Left 4 Dead 2.",
-	url = "http://www.sourcemod.com/"
+	description = "Player Stats and Ranking for Left 4 Dead (2).",
+	url = "https://github.com/blueblur0730/modified-plugins"
 };
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -27,6 +27,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 		strcopy(error, err_max, "Plugin only supports Left 4 Dead 2 and Left 4 Dead.");
 		return APLRes_SilentFailure;
 	}
+
+	if (test == Engine_Left4Dead)
+		g_bLeft4Dead = true;
+
+	if (test == Engine_Left4Dead2)
+		g_bLeft4Dead2 = true;
 
 	RegPluginLibrary("l4d_stats");
 	return APLRes_Success;
@@ -47,10 +53,8 @@ public void OnPluginStart()
 {
 	g_bCommandsRegistered = false;
 
-	EngineVersion ServerVersion = GetEngineVersion();
-
 	// setup all convars here
-	SetupConVars(ServerVersion);
+	SetupConVars();
 
 	// setup all commands here
 	RegCommands();
@@ -59,12 +63,12 @@ public void OnPluginStart()
 	AutoExecConfig(true, "l4d_stats");
 
 	// hook all events here
-	HookEvents(ServerVersion);
+	HookEvents();
 
 	// Startup the plugin's timers
 	// CreateTimer(1.0, InitPlayers); // Called in OnMapStart
-	CreateTimer(60.0, Timer_UpdatePlayers, INVALID_HANDLE, TIMER_REPEAT);
-	g_hUpdateTimer = CreateTimer(g_hCvar_UpdateRate.FloatValue, Timer_ShowTimerScore, INVALID_HANDLE, TIMER_REPEAT);
+	CreateTimer(60.0, Timer_UpdatePlayers, _, TIMER_REPEAT);
+	g_hUpdateTimer = CreateTimer(g_hCvar_UpdateRate.FloatValue, Timer_ShowTimerScore, _, TIMER_REPEAT);
 
 	// Gamemode
 	g_hCvar_Gamemode.GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
@@ -77,14 +81,14 @@ public void OnPluginStart()
 	IniStringMaps();
 
 	TopMenu topmenu;
-	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
+	if (LibraryExists("adminmenu") && (topmenu = GetAdminTopMenu()) != null)
 		OnAdminMenuReady(topmenu);
 
 	// Initialize SDKCalls
 	IniSDKCalls();
 
 	// prechae resources
-	PrechaeResources(ServerVersion);
+	PrechaeResources();
 }
 
 public void OnConfigsExecuted()
@@ -105,6 +109,19 @@ public void OnConfigsExecuted()
 
 	// Read the settings etc from the database.
 	ReadDb();
+}
+
+public void OnLibraryAdded(const char[] name)
+{
+	TopMenu topmenu = null;
+	if (StrEqual(name, "adminmenu") && (topmenu = GetAdminTopMenu()) != null)
+		OnAdminMenuReady(topmenu);
+}
+
+public void OnLibraryRemoved(const char[] name)
+{
+	if (StrEqual(name, "adminmenu"))
+		delete g_hTM_RankAdminMenu;
 }
 
 // Reset all boolean variables when a map changes.

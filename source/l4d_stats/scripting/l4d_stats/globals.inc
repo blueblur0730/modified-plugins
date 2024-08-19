@@ -68,6 +68,11 @@ char g_sMessageOfTheDay[1024];
 
 bool g_bCommandsRegistered = false;
 
+// Server Engine
+bool
+    g_bLeft4Dead2 = false;
+    g_bLeft4Dead = false;
+
 // Sounds
 bool 
     g_bEnableSounds_Rankvote = true,
@@ -198,8 +203,8 @@ ConVar g_hCvar_KillInfectedClassScore[CLASS_SIZE];
 
 enum
 {
-    ITEM_g_iPILLSIndex = 0,
-    ITEM_g_iADRENALINEIndex = 1,
+    ITEM_PILLS = 0,
+    ITEM_ADRENALINE = 1,
     ITEM_MEDKIT = 2,
     ITEM_DEFIB = 3,
 
@@ -236,7 +241,7 @@ ConVar
     g_hCvar_SurvivedBoomerHordeScore,
     g_hCvar_ReachedSafeHouseScore,
     g_hCvar_NotDisturbingWitchScore,
-    g_hcVAR_WitchCrownedScore,
+    g_hCvar_WitchCrownedScore,
     g_hCvar_VictorySurvivorsScore,
     g_hCvar_VictoryInfectedScore;
 

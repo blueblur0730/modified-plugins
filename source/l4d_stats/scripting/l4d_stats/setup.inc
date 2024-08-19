@@ -3,7 +3,7 @@
 #endif
 #define _l4d_stats_setup_included
 
-void SetupConVars(EngineVersion ServerVersion)
+void SetupConVars()
 {
 	// Plugin version public Cvar
 	CreateConVar("l4d_stats_version", PLUGIN_VERSION, "Custom Player Stats Version", FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DONTRECORD);
@@ -12,13 +12,26 @@ void SetupConVars(EngineVersion ServerVersion)
 	g_hCvar_Difficulty = FindConVar("z_difficulty");
 	g_hCvar_Gamemode   = FindConVar("mp_gamemode");
 	g_hCvar_Cheats	   = FindConVar("sv_cheats");
-
 	g_hCvar_Lan		   = FindConVar("sv_lan");
+
 	if (g_hCvar_Lan.IntValue)
 		LogMessage("ATTENTION! Plugin in LAN environment is based on IP address rather than Steam ID. The statistics are not reliable when they are base on IP!");
 
-	g_hCvar_SurvivorLimit										 = FindConVar("survivor_limit");
-	g_hCvar_InfectedLimit										 = FindConVar("z_max_player_zombies");
+	// Game cvars
+	g_hCvar_SurvivorLimit = FindConVar("survivor_limit");
+	g_hCvar_InfectedLimit = FindConVar("z_max_player_zombies");
+	g_iMaxPounceDamage	  = FindConVar("z_hunter_max_pounce_bonus_damage").IntValue;
+
+	if (g_bLeft4Dead)
+	{
+		g_iMaxPounceDistance = FindConVar("z_pounce_damage_range_max").IntValue;
+		g_iMinPounceDistance = FindConVar("z_pounce_damage_range_min").IntValue;
+	}
+	else if (g_bLeft4Dead2)
+	{
+		g_iMaxPounceDistance = 1024;
+		g_iMinPounceDistance = 300;
+	}
 
 	// Administrative Cvars
 	g_hCvar_AdminPlayerCleanLastOnTime							 = CreateConVar("l4d_stats_adm_cleanoldplayers", "2", "How many months old players (last online time) will be cleaned. 0 = Disabled", _, true, 0.0);
@@ -80,8 +93,8 @@ void SetupConVars(EngineVersion ServerVersion)
 	g_hCvar_InfectedDamagePerPoint								 = CreateConVar("l4d_stats_infected_damage", "2", "The amount of damage inflicted to Survivors to earn 1 point", _, true, 1.0);
 
 	// Misc personal gain Cvars
-	g_hCvar_GiveItemClassScore[ITEM_g_iPILLSIndex]				 = CreateConVar("l4d_stats_g_ipillsIndex", "15", "Base score for giving g_iPillsIndex to a friendly", _, true, 1.0);
-	g_hCvar_GiveItemClassScore[ITEM_g_iADRENALINEIndex]			 = CreateConVar("l4d_stats_g_iadrenalineIndex", "15", "[L4D2] Base score for giving g_iAdrenalineIndex to a friendly", _, true, 1.0);
+	g_hCvar_GiveItemClassScore[ITEM_PILLS]						 = CreateConVar("l4d_stats_g_ipillsIndex", "15", "Base score for giving g_iPillsIndex to a friendly", _, true, 1.0);
+	g_hCvar_GiveItemClassScore[ITEM_ADRENALINE]					 = CreateConVar("l4d_stats_g_iadrenalineIndex", "15", "[L4D2] Base score for giving g_iAdrenalineIndex to a friendly", _, true, 1.0);
 	g_hCvar_GiveItemClassScore[ITEM_MEDKIT]						 = CreateConVar("l4d_stats_medkit", "20", "Base score for using a Medkit on a friendly", _, true, 1.0);
 	g_hCvar_GiveItemClassScore[ITEM_DEFIB]						 = CreateConVar("l4d_stats_defib", "20", "[L4D2] Base score for using a Defibrillator on a friendly", _, true, 1.0);
 	g_hCvar_SaveFromInfectedAbilityScore[INF_ABILITY_TONGUEDRAG] = CreateConVar("l4d_stats_smokerdrag", "5", "Base score for saving a friendly from a Smoker Tongue Drag", _, true, 1.0);
@@ -94,7 +107,7 @@ void SetupConVars(EngineVersion ServerVersion)
 	g_hCvar_HelpScore[HELP_PROTECT]								 = CreateConVar("l4d_stats_protect", "3", "Base score for Protect a friendly in combat", _, true, 1.0);
 	g_hCvar_PlayerLedgeSuccessScore								 = CreateConVar("l4d_stats_ledgegrap", "15", "Base score for causing a survivor to grap a ledge", _, true, 1.0);
 	g_hCvar_MatadorScore										 = CreateConVar("l4d_stats_matador", "30", "[L4D2] Base score for killing a charging Charger with a melee weapon", _, true, 1.0);
-	g_hcVAR_WitchCrownedScore									 = CreateConVar("l4d_stats_witchcrowned", "30", "Base score for Crowning a Witch", _, true, 1.0);
+	g_hCvar_WitchCrownedScore									 = CreateConVar("l4d_stats_witchcrowned", "30", "Base score for Crowning a Witch", _, true, 1.0);
 
 	// Team gain Cvars
 	g_hCvar_KillTankScore										 = CreateConVar("l4d_stats_tank", "25", "Base team score for killing a Tank", _, true, 1.0);
@@ -130,41 +143,29 @@ void SetupConVars(EngineVersion ServerVersion)
 	g_hCvar_HunterNicePounceSuccess								 = CreateConVar("l4d_stats_nicepouncesuccess", "10", "Base score for a successful Nice Pounce", _, true, 1.0);
 	g_hCvar_HunterDamageCap										 = CreateConVar("l4d_stats_hunterdamagecap", "25", "Hunter stored damage cap", _, true, 25.0);
 
-	if (ServerVersion == Engine_Left4Dead)
-	{
-		g_iMaxPounceDistance = FindConVar("z_pounce_damage_range_max").IntValue;
-		g_iMinPounceDistance = FindConVar("z_pounce_damage_range_min").IntValue;
-	}
-	else
-	{
-		g_iMaxPounceDistance = 1024;
-		g_iMinPounceDistance = 300;
-	}
-	g_iMaxPounceDamage						 = FindConVar("z_hunter_max_pounce_bonus_damage").IntValue;
-
 	// Boomer point Cvars
-	g_hCvar_BoomerSuccessScore				 = CreateConVar("l4d_stats_boomersuccess", "5", "Base score for a successfully vomiting on survivor", _, true, 1.0);
-	g_hCvar_BoomerPerfectHits				 = CreateConVar("l4d_stats_boomerperfecthits", "4", "The number of survivors that needs to get blinded to earn Boomer Perfect Vomit Award and success points", _, true, 4.0);
-	g_hCvar_BoomerPerfectSuccessScore		 = CreateConVar("l4d_stats_boomerperfectsuccess", "30", "Base score for a successful Boomer Perfect Vomit", _, true, 1.0);
+	g_hCvar_BoomerSuccessScore									 = CreateConVar("l4d_stats_boomersuccess", "5", "Base score for a successfully vomiting on survivor", _, true, 1.0);
+	g_hCvar_BoomerPerfectHits									 = CreateConVar("l4d_stats_boomerperfecthits", "4", "The number of survivors that needs to get blinded to earn Boomer Perfect Vomit Award and success points", _, true, 4.0);
+	g_hCvar_BoomerPerfectSuccessScore							 = CreateConVar("l4d_stats_boomerperfectsuccess", "30", "Base score for a successful Boomer Perfect Vomit", _, true, 1.0);
 
 	// Tank point Cvars
-	g_hCvar_TankScoreDamageCap				 = CreateConVar("l4d_stats_tankdmgcap", "500", "Maximum inflicted damage done by Tank to earn Infected damagepoints", _, true, 150.0);
-	g_hCvar_TankScoreDamageTotal			 = CreateConVar("l4d_stats_bulldozer", "200", "Damage inflicted by Tank to earn Bulldozer Award and success points", _, true, 200.0);
-	g_hCvar_TankScoreDamageTotalSuccessScore = CreateConVar("l4d_stats_bulldozersuccess", "50", "Base score for Bulldozer Award", _, true, 1.0);
-	g_hCvar_TankScoreThrowRockSuccessScore	 = CreateConVar("l4d_stats_tankthrowrocksuccess", "5", "Base score for a Tank thrown rock hit", _, true, 0.0);
+	g_hCvar_TankScoreDamageCap									 = CreateConVar("l4d_stats_tankdmgcap", "500", "Maximum inflicted damage done by Tank to earn Infected damagepoints", _, true, 150.0);
+	g_hCvar_TankScoreDamageTotal								 = CreateConVar("l4d_stats_bulldozer", "200", "Damage inflicted by Tank to earn Bulldozer Award and success points", _, true, 200.0);
+	g_hCvar_TankScoreDamageTotalSuccessScore					 = CreateConVar("l4d_stats_bulldozersuccess", "50", "Base score for Bulldozer Award", _, true, 1.0);
+	g_hCvar_TankScoreThrowRockSuccessScore						 = CreateConVar("l4d_stats_tankthrowrocksuccess", "5", "Base score for a Tank thrown rock hit", _, true, 0.0);
 
 	// Charger point Cvars
-	g_hCvar_ChargerRamSuccessScore			 = CreateConVar("l4d_stats_chargerramsuccess", "40", "Base score for a successful Charger Scattering Ram", _, true, 1.0);
-	g_hCvar_ChargerRamHitsPerPoints			 = CreateConVar("l4d_stats_chargerramhits", "4", "The number of impacts on survivors to earn Scattering Ram Award and success points", _, true, 2.0);
+	g_hCvar_ChargerRamSuccessScore								 = CreateConVar("l4d_stats_chargerramsuccess", "40", "Base score for a successful Charger Scattering Ram", _, true, 1.0);
+	g_hCvar_ChargerRamHitsPerPoints								 = CreateConVar("l4d_stats_chargerramhits", "4", "The number of impacts on survivors to earn Scattering Ram Award and success points", _, true, 2.0);
 
 	// Misc L4D2 Cvars
-	g_hCvar_AmmoUpgradeAddedScore			 = CreateConVar("l4d_stats_deployammoupgrade", "10", "[L4D2] Base score for deploying ammo upgrade pack", _, true, 0.0);
-	g_hCvar_GascanPouredScore				 = CreateConVar("l4d_stats_gascanpoured", "5", "[L4D2] Base score for successfully pouring a gascan", _, true, 0.0);
+	g_hCvar_AmmoUpgradeAddedScore								 = CreateConVar("l4d_stats_deployammoupgrade", "10", "[L4D2] Base score for deploying ammo upgrade pack", _, true, 0.0);
+	g_hCvar_GascanPouredScore									 = CreateConVar("l4d_stats_gascanpoured", "5", "[L4D2] Base score for successfully pouring a gascan", _, true, 0.0);
 
 	// Other Cvars
-	g_hCvar_Top10PPMMin						 = CreateConVar("l4d_stats_top10ppmplaytime", "30", "Minimum playtime (minutes) to show in top10 ppm list", _, true, 1.0);
-	g_hCvar_RankVoteTime					 = CreateConVar("l4d_stats_rankvotetime", "20", "Time to wait people to vote", _, true, 10.0);
-	g_hCvar_SoundsEnabled					 = CreateConVar("l4d_stats_soundsenabled", "1", "Play sounds on certain events", _, true, 0.0, true, 1.0);
+	g_hCvar_Top10PPMMin											 = CreateConVar("l4d_stats_top10ppmplaytime", "30", "Minimum playtime (minutes) to show in top10 ppm list", _, true, 1.0);
+	g_hCvar_RankVoteTime										 = CreateConVar("l4d_stats_rankvotetime", "20", "Time to wait people to vote", _, true, 10.0);
+	g_hCvar_SoundsEnabled										 = CreateConVar("l4d_stats_soundsenabled", "1", "Play sounds on certain events", _, true, 0.0, true, 1.0);
 
 	g_hCvar_Lan.AddChangeHook(OnLanCvarChanged);
 	g_hCvar_UpdateRate.AddChangeHook(OnTimerCvarChanged);
@@ -211,9 +212,9 @@ void IniSDKCalls()
 	delete gd;
 }
 
-void PrechaeResources(EngineVersion ServerVersion)
+void PrechaeResources()
 {
-	if (ServerVersion == Engine_Left4Dead)
+	if (g_bLeft4Dead)
 	{
 		strcopy(g_sStatsSound_MapTime_Start, sizeof(g_sStatsSound_MapTime_Start), SOUND_MAPTIME_START_L4D1);
 		strcopy(g_SStatsSound_MapTime_Improve, sizeof(g_SStatsSound_MapTime_Improve), SOUND_MAPTIME_IMPROVE_L4D1);
@@ -222,7 +223,7 @@ void PrechaeResources(EngineVersion ServerVersion)
 		strcopy(g_sStatsSound_Hunter_Perfect, sizeof(g_sStatsSound_Hunter_Perfect), SOUND_HUNTER_PERFECT_L4D1);
 		strcopy(g_sStatsSound_Tank_Bulldozer, sizeof(g_sStatsSound_Tank_Bulldozer), SOUND_TANK_BULLDOZER_L4D1);
 	}
-	else
+	else if (g_bLeft4Dead2)
 	{
 		strcopy(g_sStatsSound_MapTime_Start, sizeof(g_sStatsSound_MapTime_Start), SOUND_MAPTIME_START_L4D2);
 		strcopy(g_SStatsSound_MapTime_Improve, sizeof(g_SStatsSound_MapTime_Improve), SOUND_MAPTIME_IMPROVE_L4D2);
@@ -241,7 +242,7 @@ void PrechaeResources(EngineVersion ServerVersion)
 	g_bEnableSounds_Hunter_Perfect	= PrecacheSound(g_sStatsSound_Hunter_Perfect);	   // Sound from a hunter perfect pounce (Death From Above)
 	g_bEnableSounds_Tank_Bulldozer	= PrecacheSound(g_sStatsSound_Tank_Bulldozer);	   // Sound from a tank bulldozer
 
-	if (ServerVersion != Engine_Left4Dead) g_bEnableSounds_Charger_Ram = PrecacheSound(SOUND_CHARGER_RAM);	  // Sound from a charger scattering ram
+	if (g_bLeft4Dead2) g_bEnableSounds_Charger_Ram = PrecacheSound(SOUND_CHARGER_RAM);	  // Sound from a charger scattering ram
 	else g_bEnableSounds_Charger_Ram = false;
 }
 
@@ -259,7 +260,7 @@ void OnDbPrefixCvarChanged(ConVar convar, const char[] oldValue, const char[] ne
 		if (StrEqual(g_sDbPrefix, newValue))
 			return;
 
-		if (db != INVALID_HANDLE && !CheckDatabaseValidity(g_sDbPrefix))
+		if (db && !CheckDatabaseValidity(g_sDbPrefix))
 		{
 			strcopy(g_sDbPrefix, sizeof(g_sDbPrefix), oldValue);
 			g_hCvar_DbTagPrefix.SetString(g_sDbPrefix);
@@ -274,10 +275,11 @@ void OnTimerCvarChanged(ConVar convar, const char[] oldValue, const char[] newVa
 {
 	if (convar == g_hCvar_UpdateRate)
 	{
-		delete g_hUpdateTimer;
+		if (g_hUpdateTimer != null)
+			delete g_hUpdateTimer;
 
 		int NewTime	   = StringToInt(newValue);
-		g_hUpdateTimer = CreateTimer(float(NewTime), Timer_ShowTimerScore, INVALID_HANDLE, TIMER_REPEAT);
+		g_hUpdateTimer = CreateTimer(float(NewTime), Timer_ShowTimerScore, _, TIMER_REPEAT);
 	}
 }
 
@@ -300,33 +302,4 @@ void OnGamemodeChanged(ConVar convar, const char[] oldValue, const char[] newVal
 		g_iCurrentGamemodeID = GetCurrentGamemodeID();
 		SetCurrentGamemodeName();
 	}
-}
-
-void SetCurrentGamemodeName()
-{
-	switch (g_iCurrentGamemodeID)
-	{
-		case GAMEMODE_COOP: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Coop");
-		case GAMEMODE_VERSUS: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Versus");
-		case GAMEMODE_REALISM: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Realism");
-		case GAMEMODE_SURVIVAL: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Survival");
-		case GAMEMODE_SCAVENGE: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Scavenge");
-		case GAMEMODE_REALISMVERSUS: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Realism Versus");
-		case GAMEMODE_OTHERMUTATIONS: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Mutations");
-		default:
-		{
-			Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Unknown");
-		}
-	}
-
-	if (g_iCurrentGamemodeID == GAMEMODE_OTHERMUTATIONS) g_hCvar_Gamemode.GetString(g_sCurrentMutation, sizeof(g_sCurrentMutation));
-	else g_sCurrentMutation[0] = 0;
-}
-
-int GetCurrentGamemodeID()
-{
-	char CurrentMode[16];
-	g_hCvar_Gamemode.GetString(CurrentMode, sizeof(CurrentMode));
-
-	return GetGamemodeID(CurrentMode);
 }

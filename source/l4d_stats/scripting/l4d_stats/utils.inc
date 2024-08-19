@@ -16,6 +16,14 @@ bool IsTeamGamemode()
 		   IsGamemode("community6");																																				 // Confogl
 }
 
+int GetCurrentGamemodeID()
+{
+	char CurrentMode[16];
+	g_hCvar_Gamemode.GetString(CurrentMode, sizeof(CurrentMode));
+
+	return GetGamemodeID(CurrentMode);
+}
+
 bool ChangeRankPlayerTeam(int client, int team)
 {
 	if (GetClientTeam(client) == team) return true;
@@ -52,29 +60,53 @@ bool ChangeRankPlayerTeam(int client, int team)
 	return true;
 }
 
-/*
-	From plugin:
-		name = "L4D2 Score/Team Manager",
-		author = "Downtown1 & AtomicStryker",
-		description = "Manage teams and scores in L4D2",
-		version = 1.1.2,
-		url = "http://forums.alliedmods.net/showthread.php?p=1029519"
-*/
+bool CheckDatabaseValidity(const char[] Prefix)
+{
+	if (!DoFastQuery(0, "SELECT * FROM %splayers WHERE 1 = 2", Prefix) ||
+			!DoFastQuery(0, "SELECT * FROM %smaps WHERE 1 = 2", Prefix) ||
+			!DoFastQuery(0, "SELECT * FROM %stimedmaps WHERE 1 = 2", Prefix) ||
+			!DoFastQuery(0, "SELECT * FROM %ssettings WHERE 1 = 2", Prefix))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool TimedMapsMenuInfoMarker(char[] Info, int MenuNumber)
+{
+	if (Info[0] == '\0' || MenuNumber < 2)
+		return false;
+
+	int Position = -1, TempPosition;
+	for (int i = 0; i < MenuNumber; i++)
+	{
+		TempPosition = FindCharInString(Info[Position + 1], '\\');
+
+		if (TempPosition < 0)
+		{
+			if (i + 2 == MenuNumber)
+				return true;
+			else
+				return false;
+		}
+
+		Position += 1 + TempPosition;
+		if (i + 2 >= MenuNumber)
+		{
+			Info[Position] = '\0';
+			return true;
+		}
+	}
+
+	return false;
+}
 
 bool IsRankClientInGameHuman(int client)
 {
 	if (client > 0) return (IsClientInGame(client) && !IsFakeClient(client));
 	return false;
 }
-
-/*
-	From plugin:
-		name = "L4D2 Score/Team Manager",
-		author = "Downtown1 & AtomicStryker",
-		description = "Manage teams and scores in L4D2",
-		version = 1.1.2,
-		url = "http://forums.alliedmods.net/showthread.php?p=1029519"
-*/
 
 int GetRankTeamHumanCount(int team)
 {
@@ -426,8 +458,7 @@ bool IsClientBot(int client)
 
 int ModifyScoreRealism(int BaseScore, int ClientTeam, bool ToCeil = true)
 {
-	EngineVersion ServerVersion = GetEngineVersion();
-	if (ServerVersion != Engine_Left4Dead)
+	if (g_bLeft4Dead2)
 	{
 		ConVar Multiplier;
 
@@ -518,8 +549,7 @@ int GetInfType(int Client)
 	int InfType = GetEntProp(Client, Prop_Send, "m_zombieClass");
 
 	// Make the conversion so that everything gets stored in the correct fields
-	EngineVersion ServerVersion = GetEngineVersion();
-	if (ServerVersion == Engine_Left4Dead)
+	if (g_bLeft4Dead)
 	{
 		if (InfType == INF_ID_WITCH_L4D1)
 			return INF_ID_WITCH_L4D2;
@@ -609,4 +639,40 @@ bool DoFastQuery(int Client, const char[] Query, any ...)
 	}
 
 	return true;
+}
+
+void FormatInGameMode(char[] sString, int maxlenth, bool bIsPanicEvent = false)
+{
+	if (!bIsPanicEvent)
+	{
+		switch (g_iCurrentGamemodeID)
+		{
+			case GAMEMODE_VERSUS: Format(sString, maxlenth, "points_survivors");
+			case GAMEMODE_REALISM: Format(sString, maxlenth, "points_realism");
+			case GAMEMODE_SURVIVAL: Format(sString, maxlenth, "points_survival");
+			case GAMEMODE_SCAVENGE: Format(sString, maxlenth, "points_scavenge_survivors");
+			case GAMEMODE_REALISMVERSUS: Format(sString, maxlenth, "points_realism_survivors");
+			case GAMEMODE_OTHERMUTATIONS: Format(sString, maxlenth, "points_mutations");
+			default:
+			{
+				Format(sString, maxlenth, "points");
+			}
+		}
+	}
+	else
+	{
+		switch (g_iCurrentGamemodeID)
+		{
+			case GAMEMODE_VERSUS: Format(sString, maxlenth, "points_survivors");
+			case GAMEMODE_REALISM: Format(sString, maxlenth, "points_realism");
+			case GAMEMODE_SCAVENGE: Format(sString, maxlenth, "points_scavenge_survivors");
+			case GAMEMODE_REALISMVERSUS: Format(sString, maxlenth, "points_realism_survivors");
+			case GAMEMODE_OTHERMUTATIONS: Format(sString, maxlenth, "points_mutations");
+			default:
+			{
+				Format(sString, maxlenth, "points");
+			}
+		}
+	}
+
 }

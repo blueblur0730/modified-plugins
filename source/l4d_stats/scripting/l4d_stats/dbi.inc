@@ -1,12 +1,12 @@
 #if defined _l4d_stats_dbi_included
- #endinput
+	#endinput
 #endif
 #define _l4d_stats_dbi_included
 
 // Make connection to database.
 bool ConnectDB()
 {
-    // database has connected already.
+	// database has connected already.
 	if (db)
 		return true;
 
@@ -15,7 +15,7 @@ bool ConnectDB()
 		char Error[256];
 		db = SQL_Connect(DB_CONF_NAME, true, Error, sizeof(Error));
 
-		if (db == INVALID_HANDLE)
+		if (!db)
 		{
 			LogError("Failed to connect to database: %s", Error);
 			return false;
@@ -43,19 +43,6 @@ bool ConnectDB()
 	return true;
 }
 
-bool CheckDatabaseValidity(const char[] Prefix)
-{
-	if (!DoFastQuery(0, "SELECT * FROM %splayers WHERE 1 = 2", Prefix) ||
-			!DoFastQuery(0, "SELECT * FROM %smaps WHERE 1 = 2", Prefix) ||
-			!DoFastQuery(0, "SELECT * FROM %stimedmaps WHERE 1 = 2", Prefix) ||
-			!DoFastQuery(0, "SELECT * FROM %ssettings WHERE 1 = 2", Prefix))
-	{
-		return false;
-	}
-
-	return true;
-}
-
 void QueryClientPoints(int Client, SQLTCallback callback = INVALID_FUNCTION)
 {
 	char SteamID[MAX_LINE_WIDTH];
@@ -70,9 +57,7 @@ void QueryClientPointsSteamID(int Client, const char[] SteamID, SQLTCallback cal
 		callback = GetClientPoints;
 
 	char query[512];
-
 	Format(query, sizeof(query), "SELECT %s FROM %splayers WHERE steamid = '%s'", DB_PLAYERS_TOTALPOINTS, g_sDbPrefix, SteamID);
-
 	SQL_TQuery(db, callback, query, Client);
 }
 
@@ -81,24 +66,20 @@ void QueryClientPointsDP(DataPack dp, SQLTCallback callback)
 	char query[1024], SteamID[MAX_LINE_WIDTH];
 
 	dp.Reset();
-
 	dp.ReadCell();
 	dp.ReadString(SteamID, sizeof(SteamID));
 
 	Format(query, sizeof(query), "SELECT %s FROM %splayers WHERE steamid = '%s'", DB_PLAYERS_TOTALPOINTS, g_sDbPrefix, SteamID);
-
 	SQL_TQuery(db, callback, query, dp);
 }
 
-void Queryg_iClientRank(int Client, SQLTCallback callback = INVALID_FUNCTION)
+void QueryClientRank(int Client, SQLTCallback callback = INVALID_FUNCTION)
 {
 	if (callback == INVALID_FUNCTION)
 		callback = GetClientRank;
 
 	char query[256];
-
 	Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE %s >= %i", g_sDbPrefix, DB_PLAYERS_TOTALPOINTS, g_iClientPoints[Client]);
-
 	SQL_TQuery(db, callback, query, Client);
 }
 
@@ -107,11 +88,9 @@ void QueryClientRankDP(DataPack dp, SQLTCallback callback)
 	char query[256];
 
 	dp.Reset();
-
 	int Client = dp.ReadCell();
 
 	Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE %s >= %i", g_sDbPrefix, DB_PLAYERS_TOTALPOINTS, g_iClientPoints[Client]);
-
 	SQL_TQuery(db, callback, query, dp);
 }
 
@@ -174,12 +153,12 @@ void QueryClientGameModeRankDP(DataPack dp, SQLTCallback callback)
 
 		switch (g_iCurrentGamemodeID)
 		{
-			case GAMEMODE_VERSUS:Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_versus > 0 AND points_survivors + points_infected >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_VERSUS]);
-			case GAMEMODE_REALISM:Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_realism > 0 AND points_realism >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_REALISM]);
-			case GAMEMODE_SURVIVAL:Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_survival > 0 AND points_survival >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_SURVIVAL]);
-			case GAMEMODE_SCAVENGE:Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_scavenge > 0 AND points_scavenge_survivors + points_scavenge_infected >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_SCAVENGE]);
-			case GAMEMODE_REALISMVERSUS:Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_realismversus > 0 AND points_realism_survivors + points_realism_infected >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_REALISMVERSUS]);
-			case GAMEMODE_OTHERMUTATIONS:Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_mutations > 0 AND points_mutations >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_OTHERMUTATIONS]);
+			case GAMEMODE_VERSUS: Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_versus > 0 AND points_survivors + points_infected >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_VERSUS]);
+			case GAMEMODE_REALISM: Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_realism > 0 AND points_realism >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_REALISM]);
+			case GAMEMODE_SURVIVAL: Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_survival > 0 AND points_survival >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_SURVIVAL]);
+			case GAMEMODE_SCAVENGE: Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_scavenge > 0 AND points_scavenge_survivors + points_scavenge_infected >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_SCAVENGE]);
+			case GAMEMODE_REALISMVERSUS: Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_realismversus > 0 AND points_realism_survivors + points_realism_infected >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_REALISMVERSUS]);
+			case GAMEMODE_OTHERMUTATIONS: Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_mutations > 0 AND points_mutations >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_OTHERMUTATIONS]);
 			default:
 			{
 				Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime > 0 AND points >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_COOP]);
@@ -215,12 +194,10 @@ void QueryClientGameModePointsDP(DataPack dp, SQLTCallback callback)
 	char query[1024], SteamID[MAX_LINE_WIDTH];
 
 	dp.Reset();
-
 	dp.ReadCell();
 	dp.ReadString(SteamID, sizeof(SteamID));
 
 	Format(query, sizeof(query), "SELECT points, points_survivors + points_infected, points_realism, points_survival, points_scavenge_survivors + points_scavenge_infected, points_realism_survivors + points_realism_infected, points_mutations FROM %splayers WHERE steamid = '%s'", g_sDbPrefix, SteamID);
-
 	SQL_TQuery(db, callback, query, dp);
 }
 /*
@@ -236,9 +213,7 @@ void QueryRank_1(DataPack dp = null, SQLTCallback callback = INVALID_FUNCTION)
 		callback = GetRankTotal;
 
 	char query[1024];
-
 	Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers", g_sDbPrefix);
-
 	SQL_TQuery(db, callback, query, dp);
 }
 
@@ -251,30 +226,12 @@ void QueryRank_2(DataPack dp = null, SQLTCallback callback = INVALID_FUNCTION)
 
 	switch (g_iCurrentGamemodeID)
 	{
-		case GAMEMODE_VERSUS:
-		{
-			Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_versus > 0", g_sDbPrefix);
-		}
-		case GAMEMODE_REALISM:
-		{
-			Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_realism > 0", g_sDbPrefix);
-		}
-		case GAMEMODE_SURVIVAL:
-		{
-			Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_survival > 0", g_sDbPrefix);
-		}
-		case GAMEMODE_SCAVENGE:
-		{
-			Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_scavenge > 0", g_sDbPrefix);
-		}
-		case GAMEMODE_REALISMVERSUS:
-		{
-			Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_realismversus > 0", g_sDbPrefix);
-		}
-		case GAMEMODE_OTHERMUTATIONS:
-		{
-			Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_mutations > 0", g_sDbPrefix);
-		}
+		case GAMEMODE_VERSUS: Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_versus > 0", g_sDbPrefix);
+		case GAMEMODE_REALISM: Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_realism > 0", g_sDbPrefix);
+		case GAMEMODE_SURVIVAL: Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_survival > 0", g_sDbPrefix);
+		case GAMEMODE_SCAVENGE: Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_scavenge > 0", g_sDbPrefix);
+		case GAMEMODE_REALISMVERSUS: Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_realismversus > 0", g_sDbPrefix);
+		case GAMEMODE_OTHERMUTATIONS: Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_mutations > 0", g_sDbPrefix);
 		default:
 		{
 			Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime > 0", g_sDbPrefix);
@@ -308,7 +265,7 @@ void QueryClientStatsDP(DataPack dp)
 	QueryClientGameModePointsDP(dp, QueryClientStatsDP_1);
 }
 
-void QueryClientStatsDP_1(Handle owner, Handle hndl, const char[] error, DataPack dp)
+void QueryClientStatsDP_1(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -317,12 +274,11 @@ void QueryClientStatsDP_1(Handle owner, Handle hndl, const char[] error, DataPac
 	}
 
 	dp.Reset();
-	GetClientGameModePoints(owner, hndl, error, dp.ReadCell());
-
+	GetClientGameModePoints(hndl, error, dp.ReadCell());
 	QueryClientPointsDP(dp, QueryClientStatsDP_2);
 }
 
-void QueryClientStatsDP_2(Handle owner, Handle hndl, const char[] error, DataPack dp)
+void QueryClientStatsDP_2(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -332,11 +288,10 @@ void QueryClientStatsDP_2(Handle owner, Handle hndl, const char[] error, DataPac
 
 	dp.Reset();
 	GetClientPoints(owner, hndl, error, dp.ReadCell());
-
 	QueryClientGameModeRankDP(dp, QueryClientStatsDP_3);
 }
 
-void QueryClientStatsDP_3(Handle owner, Handle hndl, const char[] error, DataPack dp)
+void QueryClientStatsDP_3(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -345,12 +300,11 @@ void QueryClientStatsDP_3(Handle owner, Handle hndl, const char[] error, DataPac
 	}
 
 	dp.Reset();
-	GetClientGameModeRank(owner, hndl, error, dp.ReadCell());
-
+	GetClientGameModeRank(hndl, error, dp.ReadCell());
 	QueryClientRankDP(dp, QueryClientStatsDP_4);
 }
 
-void QueryClientStatsDP_4(Handle owner, Handle hndl, const char[] error, DataPack dp)
+void QueryClientStatsDP_4(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -360,11 +314,10 @@ void QueryClientStatsDP_4(Handle owner, Handle hndl, const char[] error, DataPac
 
 	dp.Reset();
 	GetClientRank(owner, hndl, error, dp.ReadCell());
-
 	QueryRank_1(dp, QueryClientStatsDP_5);
 }
 
-void QueryClientStatsDP_5(Handle owner, Handle hndl, const char[] error, DataPack dp)
+void QueryClientStatsDP_5(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -374,11 +327,10 @@ void QueryClientStatsDP_5(Handle owner, Handle hndl, const char[] error, DataPac
 
 	dp.Reset();
 	GetRankTotal(owner, hndl, error, dp.ReadCell());
-
 	QueryRank_2(dp, QueryClientStatsDP_6);
 }
 
-void QueryClientStatsDP_6(Handle owner, Handle hndl, const char[] error, DataPack dp)
+void QueryClientStatsDP_6(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -406,7 +358,7 @@ void QueryClientStatsDP_6(Handle owner, Handle hndl, const char[] error, DataPac
 	else if (CallingMethod == CM_NEXTRANKFULL) QueryClientStatsDP_NextRankFull(Client, SteamID);
 
 	// Clean your mess up
-    delete dp;
+	delete dp;
 }
 
 void QueryClientStatsDP_Rank(int Client, const char[] SteamID)
@@ -427,7 +379,7 @@ void QueryClientStatsDP_NextRank(int Client, const char[] SteamID)
 {
 	char query[1024];
 	Format(query, sizeof(query), "SELECT (%s + 1) - %i FROM %splayers WHERE (%s) >= %i AND steamid <> '%s' ORDER BY (%s) ASC LIMIT 1", DB_PLAYERS_TOTALPOINTS, g_iClientPoints[Client], g_sDbPrefix, DB_PLAYERS_TOTALPOINTS, g_iClientPoints[Client], SteamID, DB_PLAYERS_TOTALPOINTS);
-	SQL_TQuery(db, Displayg_iClientNextRank, query, Client);
+	SQL_TQuery(db, DisplayClientNextRank, query, Client);
 
 	if (g_hTimerRankChangeCheck[Client] != null)
 		TriggerTimer(g_hTimerRankChangeCheck[Client], true);
@@ -437,7 +389,7 @@ void QueryClientStatsDP_NextRankFull(int Client, const char[] SteamID)
 {
 	char query[2048];
 	Format(query, sizeof(query), "SELECT (%s + 1) - %i FROM %splayers WHERE (%s) >= %i AND steamid <> '%s' ORDER BY (%s) ASC LIMIT 1", DB_PLAYERS_TOTALPOINTS, g_iClientPoints[Client], g_sDbPrefix, DB_PLAYERS_TOTALPOINTS, g_iClientPoints[Client], SteamID, DB_PLAYERS_TOTALPOINTS);
-	SQL_TQuery(db, Getg_iClientNextRank, query, Client);
+	SQL_TQuery(db, GetClientNextRank, query, Client);
 
 	char query1[1024], query2[256], query3[1024];
 	Format(query1, sizeof(query1), "SELECT name, (%s) AS totalpoints FROM %splayers WHERE (%s) >= %i AND steamid <> '%s' ORDER BY totalpoints ASC LIMIT 3", DB_PLAYERS_TOTALPOINTS, g_sDbPrefix, DB_PLAYERS_TOTALPOINTS, g_iClientPoints[Client], SteamID);
@@ -462,12 +414,11 @@ void CheckCurrentMapDB()
 
 	char query[512];
 	Format(query, sizeof(query), "SELECT name FROM %smaps WHERE LOWER(name) = LOWER('%s') AND gamemode = %i AND mutation = '%s'", g_sDbPrefix, MapName, GetCurrentGamemodeID(), g_sCurrentMutation);
-
 	SQL_TQuery(db, InsertMapDB, query);
 }
 
 // Insert a map into the database if they do not already exist.
-void InsertMapDB(Handle owner, Handle hndl, const char[] error, DataPack data)
+void InsertMapDB(Handle owner, DBResultSet hndl, const char[] error, DataPack data)
 {
 	if (!db)
 		return;
@@ -475,14 +426,13 @@ void InsertMapDB(Handle owner, Handle hndl, const char[] error, DataPack data)
 	if (StatsDisabled(true))
 		return;
 
-	if (!SQL_GetRowCount(hndl))
+	if (!hndl.RowCount)
 	{
 		char MapName[MAX_LINE_WIDTH];
 		GetCurrentMap(MapName, sizeof(MapName));
 
 		char query[512];
 		Format(query, sizeof(query), "INSERT IGNORE INTO %smaps SET name = LOWER('%s'), custom = 1, gamemode = %i", g_sDbPrefix, MapName, GetCurrentGamemodeID());
-
 		SQL_TQuery(db, SQLErrorCheckCallback, query);
 	}
 }
@@ -523,7 +473,7 @@ void ReadClientRankMuteSteamID(int Client, const char[] SteamID)
 }
 
 // Insert a player into the database if they do not already exist.
-void InsertPlayerDB(Handle owner, Handle hndl, const char[] error, int client)
+void InsertPlayerDB(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!db || IsClientBot(client))
 		return;
@@ -537,7 +487,7 @@ void InsertPlayerDB(Handle owner, Handle hndl, const char[] error, int client)
 	if (StatsDisabled())
 		return;
 
-	if (!SQL_GetRowCount(hndl))
+	if (!hndl.RowCount)
 	{
 		char SteamID[MAX_LINE_WIDTH];
 		GetClientRankAuthString(client, SteamID, sizeof(SteamID));
@@ -551,7 +501,7 @@ void InsertPlayerDB(Handle owner, Handle hndl, const char[] error, int client)
 }
 
 // Insert a player into the settings database if they do not already exist.
-void SetClientRankMute(Handle owner, Handle hndl, const char[] error, int client)
+void SetClientRankMute(DBResultSet owner, Handle hndl, const char[] error, int client)
 {
 	if (!db || IsClientBot(client))
 		return;
@@ -565,7 +515,7 @@ void SetClientRankMute(Handle owner, Handle hndl, const char[] error, int client
 	if (StatsDisabled())
 		return;
 
-	if (SQL_GetAffectedRows(owner) == 0)
+	if (owner.AffectedRows == 0)
 	{
 		// Something went wrong!
 		g_bClientRankMute[client] = false;
@@ -576,7 +526,7 @@ void SetClientRankMute(Handle owner, Handle hndl, const char[] error, int client
 }
 
 // Insert a player into the settings database if they do not already exist.
-void GetClientRankMute(Handle owner, Handle hndl, const char[] error, any client)
+void GetClientRankMute(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!db || IsClientBot(client))
 		return;
@@ -590,7 +540,7 @@ void GetClientRankMute(Handle owner, Handle hndl, const char[] error, any client
 	if (StatsDisabled())
 		return;
 
-	if (!SQL_GetRowCount(hndl))
+	if (!hndl.RowCount)
 	{
 		char SteamID[MAX_LINE_WIDTH];
 		GetClientRankAuthString(client, SteamID, sizeof(SteamID));
@@ -601,9 +551,9 @@ void GetClientRankMute(Handle owner, Handle hndl, const char[] error, any client
 	}
 	else
 	{
-		while (SQL_FetchRow(hndl))
+		while (hndl.FetchRow())
 		{
-			g_bClientRankMute[client] = (SQL_FetchInt(hndl, 0) != 0);
+			g_bClientRankMute[client] = (hndl.FetchInt(0) != 0);
 		}
 	}
 }
@@ -627,9 +577,8 @@ void SendSQLUpdate(const char[] query, SQLTCallback callback = INVALID_FUNCTION)
 
 	SQL_TQuery(db, callback, query, queryid);
 #else
-    SQL_TQuery(db, callback, query);
+	SQL_TQuery(db, callback, query);
 #endif
-
 }
 
 // Report error on sql query;
@@ -638,12 +587,12 @@ void SQLErrorCheckCallback(Handle owner, Handle hndl, const char[] error, int qu
 	if (!db)
 		return;
 
-	if(!StrEqual("", error))
+	if (!StrEqual("", error))
 	{
 #if DEBUG
-        LogError("SQL Error: %s (Query: \"%s\")", error, g_sQueryBuffer[queryid]);
+		LogError("SQL Error: %s (Query: \"%s\")", error, g_sQueryBuffer[queryid]);
 #else
-        LogError("SQL Error: %s", error);
+		LogError("SQL Error: %s", error);
 #endif
 	}
 }
@@ -675,21 +624,18 @@ void UpdatePlayer(int client)
 }
 
 // Perform player update of name, playtime, and timestamp.
-
 void UpdatePlayerFull(int Client, const char[] SteamID, const char[] Name)
 {
 	// Client can be ZERO! Look at UpdatePlayerCallback.
-
 	char Playtime[32];
-
 	switch (g_iCurrentGamemodeID)
 	{
-		case GAMEMODE_VERSUS:Format(Playtime, sizeof(Playtime), "playtime_versus");
-		case GAMEMODE_REALISM:Format(Playtime, sizeof(Playtime), "playtime_realism");
-		case GAMEMODE_SURVIVAL:Format(Playtime, sizeof(Playtime), "playtime_survival");
-		case GAMEMODE_SCAVENGE:Format(Playtime, sizeof(Playtime), "playtime_scavenge");
-		case GAMEMODE_REALISMVERSUS:Format(Playtime, sizeof(Playtime), "playtime_realismversus");
-		case GAMEMODE_OTHERMUTATIONS:Format(Playtime, sizeof(Playtime), "playtime_mutations");
+		case GAMEMODE_VERSUS: Format(Playtime, sizeof(Playtime), "playtime_versus");
+		case GAMEMODE_REALISM: Format(Playtime, sizeof(Playtime), "playtime_realism");
+		case GAMEMODE_SURVIVAL: Format(Playtime, sizeof(Playtime), "playtime_survival");
+		case GAMEMODE_SCAVENGE: Format(Playtime, sizeof(Playtime), "playtime_scavenge");
+		case GAMEMODE_REALISMVERSUS: Format(Playtime, sizeof(Playtime), "playtime_realismversus");
+		case GAMEMODE_OTHERMUTATIONS: Format(Playtime, sizeof(Playtime), "playtime_mutations");
 		default:
 		{
 			Format(Playtime, sizeof(Playtime), "playtime");
@@ -762,7 +708,7 @@ void UpdateMapStatFloat(const char[] Field, float Value)
 
 	char DiffSQL[MAX_LINE_WIDTH];
 	char Difficulty[MAX_LINE_WIDTH];
-	GetConVarString(g_hCvar_Difficulty, Difficulty, sizeof(Difficulty));
+	g_hCvar_Difficulty.GetString(Difficulty, sizeof(Difficulty));
 
 	if (StrEqual(Difficulty, "normal", false)) Format(DiffSQL, sizeof(DiffSQL), "nor");
 	else if (StrEqual(Difficulty, "hard", false)) Format(DiffSQL, sizeof(DiffSQL), "adv");
@@ -789,7 +735,7 @@ void ReadDbMotd()
 	SQL_TQuery(db, ReadDbMotdCallback, query);
 }
 
-void ReadDbMotdCallback(Handle owner, Handle hndl, const char[] error, any data)
+void ReadDbMotdCallback(Handle owner, DBResultSet hndl, const char[] error, int data)
 {
 	if (!hndl)
 	{
@@ -797,13 +743,13 @@ void ReadDbMotdCallback(Handle owner, Handle hndl, const char[] error, any data)
 		return;
 	}
 
-	if (SQL_FetchRow(hndl))
-		SQL_FetchString(hndl, 0, g_sMessageOfTheDay, sizeof(g_sMessageOfTheDay));
+	if (hndl.FetchRow())
+		hndl.FetchString(0, g_sMessageOfTheDay, sizeof(g_sMessageOfTheDay));
 }
 
 bool UpdateServerSettings(Client, const char[] Key, const char[] Value, const char[] Desc)
 {
-	Handle statement = null;
+	DBStatement statement = null;
 	char error[1024], query[2048];
 
 	// Add a row if it does not previously exist
@@ -814,7 +760,6 @@ bool UpdateServerSettings(Client, const char[] Key, const char[] Value, const ch
 	}
 
 	Format(query, sizeof(query), "UPDATE %sserver_settings SET svalue = ? WHERE sname = '%s'", g_sDbPrefix, Key);
-
 	statement = SQL_PrepareQuery(db, query, error, sizeof(error));
 
 	if (!statement)
@@ -824,7 +769,7 @@ bool UpdateServerSettings(Client, const char[] Key, const char[] Value, const ch
 	}
 
 	bool retval = true;
-	SQL_BindParamString(statement, 0, Value, false);
+	statement.BindString(0, Value, false);
 
 	if (!SQL_Execute(statement))
 	{
@@ -838,7 +783,7 @@ bool UpdateServerSettings(Client, const char[] Key, const char[] Value, const ch
 			PrintToConsole(Client, "[RANK] %s: Update failed!", Desc);
 			LogError("%s: Update failed!", Desc);
 		}
-		
+
 		retval = false;
 	}
 	else
@@ -853,48 +798,47 @@ bool UpdateServerSettings(Client, const char[] Key, const char[] Value, const ch
 	}
 
 	delete statement;
-	
 	return retval;
 }
 
-public UpdateMapTimingStat(Handle owner, Handle hndl, const char[] error, any dp)
+void UpdateMapTimingStat(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
-		if (dp != INVALID_HANDLE)
-			CloseHandle(dp);
+		if (dp)
+			delete dp;
 
 		LogError("UpdateMapTimingStat Query failed: %s", error);
 		return;
 	}
 
-	ResetPack(dp);
+	dp.Reset();
 
-	char MapName[MAX_LINE_WIDTH], ClientID[MAX_LINE_WIDTH], query[512], TimeLabel[32], Mutation[MAX_LINE_WIDTH];
+	char  MapName[MAX_LINE_WIDTH], ClientID[MAX_LINE_WIDTH], query[512], TimeLabel[32], Mutation[MAX_LINE_WIDTH];
 	int GamemodeID, Client, PlayerCounter, GameDifficulty;
 	float TotalTime, OldTime;
 
-	ReadPackString(dp, MapName, sizeof(MapName));
-	GamemodeID = ReadPackCell(dp);
-	ReadPackString(dp, ClientID, sizeof(ClientID));
-	TotalTime = ReadPackFloat(dp);
-	Client = ReadPackCell(dp);
-	PlayerCounter = ReadPackCell(dp);
-	GameDifficulty = ReadPackCell(dp);
-	ReadPackString(dp, Mutation, sizeof(Mutation));
+	dp.ReadString(MapName, sizeof(MapName));
+	GamemodeID = dp.ReadCell();
+	dp.ReadString(ClientID, sizeof(ClientID));
+	TotalTime	   = dp.ReadFloat();
+	Client		   = dp.ReadCell();
+	PlayerCounter  = dp.ReadCell();
+	GameDifficulty = dp.ReadCell();
+	dp.ReadString(Mutation, sizeof(Mutation));
 
-	CloseHandle(dp);
+	delete dp;
 
 	// Return if client is not a human player
 	if (IsClientBot(Client) || !IsClientInGame(Client))
 		return;
 
-	int Mode = GetConVarInt(g_hCvar_AnnounceMode);
+	int Mode = g_hCvar_AnnounceMode.IntValue;
 
-	if (SQL_GetRowCount(hndl) > 0)
+	if (hndl.RowCount > 0)
 	{
-		SQL_FetchRow(hndl);
-		OldTime = SQL_FetchFloat(hndl, 0);
+		hndl.FetchRow();
+		OldTime = hndl.FetchFloat(0);
 
 		if ((g_iCurrentGamemodeID != GAMEMODE_SURVIVAL && OldTime <= TotalTime) || (g_iCurrentGamemodeID == GAMEMODE_SURVIVAL && OldTime >= TotalTime))
 		{
@@ -916,7 +860,7 @@ public UpdateMapTimingStat(Handle owner, Handle hndl, const char[] error, any dp
 
 			Format(query, sizeof(query), "UPDATE %stimedmaps SET plays = plays + 1, time = %f, players = %i, modified = NOW() WHERE map = '%s' AND gamemode = %i AND difficulty = %i AND mutation = '%s' AND steamid = '%s'", g_sDbPrefix, TotalTime, PlayerCounter, MapName, GamemodeID, GameDifficulty, Mutation, ClientID);
 
-			if (g_bEnableSounds_Maptime_Improve && GetConVarBool(g_hCvar_SoundsEnabled))
+			if (g_bEnableSounds_Maptime_Improve && g_hCvar_SoundsEnabled.BoolValue)
 				EmitSoundToClient(Client, g_SStatsSound_MapTime_Improve);
 		}
 	}
@@ -951,7 +895,7 @@ void GetClientFromTop10PPM(int client, int rank)
 }
 
 // Send the Top 10 player's info to the client.
-void GetClientTop10(Handle owner, Handle hndl, const char[] error, any client)
+void GetClientTop10(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client || !hndl)
 	{
@@ -961,133 +905,128 @@ void GetClientTop10(Handle owner, Handle hndl, const char[] error, any client)
 
 	char SteamID[MAX_LINE_WIDTH];
 
-	while (SQL_FetchRow(hndl))
+	while (hndl.FetchRow())
 	{
-		SQL_FetchString(hndl, 1, SteamID, sizeof(SteamID));
+		hndl.FetchString(1, SteamID, sizeof(SteamID));
 		QueryClientStatsSteamID(client, SteamID, CM_TOP10);
 	}
 }
 
 // Generate client's point total.
-public GetClientPointsPlayerJoined(Handle owner, Handle hndl, const char[] error, any client)
+void GetClientPointsPlayerJoined(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	GetClientPointsWorker(owner, hndl, error, client, GetClientRankPlayerJoined);
 }
 
 // Generate client's point total.
-public GetClientPointsRankChange(Handle owner, Handle hndl, const char[] error, any client)
+void GetClientPointsRankChange(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	GetClientPointsWorker(owner, hndl, error, client, GetClientRankRankChange);
 }
 
 // Generate client's point total.
-GetClientPointsWorker(Handle owner, Handle hndl, const char[] error, any client, SQLTCallback:callback=INVALID_FUNCTION)
+void GetClientPointsWorker(Handle owner, DBResultSet hndl, const char[] error, int client, SQLTCallback callback = INVALID_FUNCTION)
 {
 	if (!client)
-	{
 		return;
-	}
-	
+
 	if (callback == INVALID_FUNCTION)
 	{
 		LogError("GetClientPointsWorker method invoke failed: SQLTCallback:callback=INVALID_FUNCTION");
 		return;
 	}
 
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("GetClientPointsWorker Query failed: %s", error);
 		return;
 	}
 
 	GetClientPoints(owner, hndl, error, client);
-	Queryg_iClientRank(client, callback);
+	QueryClientRank(client, callback);
 }
 
 // Generate client's point total.
-public GetClientPoints(Handle owner, Handle hndl, const char[] error, any client)
+void GetClientPoints(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
 
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("GetClientPoints Query failed: %s", error);
 		return;
 	}
 
-	if (SQL_FetchRow(hndl))
-	{
-		g_iClientPoints[client] = SQL_FetchInt(hndl, 0);
-	}
+	if (hndl.FetchRow())
+		g_iClientPoints[client] = hndl.FetchInt(0);
 }
 
 // Generate client's gamemode point total.
-public GetClientGameModePoints(Handle owner, Handle hndl, const char[] error, any client)
+void GetClientGameModePoints(DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
 
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("GetClientGameModePoints Query failed: %s", error);
 		return;
 	}
 
-	while (SQL_FetchRow(hndl))
+	while (hndl.FetchRow())
 	{
-		g_iClientGameModePoints[client][GAMEMODE_COOP] = SQL_FetchInt(hndl, GAMEMODE_COOP);
-		g_iClientGameModePoints[client][GAMEMODE_VERSUS] = SQL_FetchInt(hndl, GAMEMODE_VERSUS);
-		g_iClientGameModePoints[client][GAMEMODE_REALISM] = SQL_FetchInt(hndl, GAMEMODE_REALISM);
-		g_iClientGameModePoints[client][GAMEMODE_SURVIVAL] = SQL_FetchInt(hndl, GAMEMODE_SURVIVAL);
-		g_iClientGameModePoints[client][GAMEMODE_SCAVENGE] = SQL_FetchInt(hndl, GAMEMODE_SCAVENGE);
-		g_iClientGameModePoints[client][GAMEMODE_REALISMVERSUS] = SQL_FetchInt(hndl, GAMEMODE_REALISMVERSUS);
-		g_iClientGameModePoints[client][GAMEMODE_OTHERMUTATIONS] = SQL_FetchInt(hndl, GAMEMODE_OTHERMUTATIONS);
+		g_iClientGameModePoints[client][GAMEMODE_COOP]			 = hndl.FetchInt(GAMEMODE_COOP);
+		g_iClientGameModePoints[client][GAMEMODE_VERSUS]		 = hndl.FetchInt(GAMEMODE_VERSUS);
+		g_iClientGameModePoints[client][GAMEMODE_REALISM]		 = hndl.FetchInt(GAMEMODE_REALISM);
+		g_iClientGameModePoints[client][GAMEMODE_SURVIVAL]		 = hndl.FetchInt(GAMEMODE_SURVIVAL);
+		g_iClientGameModePoints[client][GAMEMODE_SCAVENGE]		 = hndl.FetchInt(GAMEMODE_SCAVENGE);
+		g_iClientGameModePoints[client][GAMEMODE_REALISMVERSUS]	 = hndl.FetchInt(GAMEMODE_REALISMVERSUS);
+		g_iClientGameModePoints[client][GAMEMODE_OTHERMUTATIONS] = hndl.FetchInt(GAMEMODE_OTHERMUTATIONS);
 	}
 }
 
 // Generate client's next rank.
-public Displayg_iClientNextRank(Handle owner, Handle hndl, const char[] error, any client)
+void DisplayClientNextRank(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
 
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("GetClientRankRankChange Query failed: %s", error);
 		return;
 	}
 
-	Getg_iClientNextRank(owner, hndl, error, client);
-
+	GetClientNextRank(owner, hndl, error, client);
 	DisplayNextRank(client);
 }
 
 // Generate client's next rank.
-public Getg_iClientNextRank(Handle owner, Handle hndl, const char[] error, any client)
+void GetClientNextRank(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
 
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("GetClientRankRankChange Query failed: %s", error);
 		return;
 	}
 
-	if (SQL_FetchRow(hndl))
-		g_iClientNextRank[client] = SQL_FetchInt(hndl, 0);
+	if (hndl.FetchRow())
+		g_iClientNextRank[client] = hndl.FetchInt(0);
 	else
 		g_iClientNextRank[client] = 0;
 }
 
 // Generate client's rank.
-public GetClientRankRankChange(Handle owner, Handle hndl, const char[] error, any client)
+void GetClientRankRankChange(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
 
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("GetClientRankRankChange Query failed: %s", error);
 		return;
@@ -1097,7 +1036,7 @@ public GetClientRankRankChange(Handle owner, Handle hndl, const char[] error, an
 
 	if (g_iRankChangeLastRank[client] != g_iClientRank[client])
 	{
-		new RankChange = g_iRankChangeLastRank[client] - g_iClientRank[client];
+		int RankChange = g_iRankChangeLastRank[client] - g_iClientRank[client];
 
 		if (!g_bRankChangeFirstCheck[client] && RankChange == 0)
 			return;
@@ -1110,7 +1049,7 @@ public GetClientRankRankChange(Handle owner, Handle hndl, const char[] error, an
 			return;
 		}
 
-		if (!GetConVarInt(g_hCvar_AnnounceMode) || !GetConVarBool(g_hCvar_AnnounceRankChange))
+		if (!g_hCvar_AnnounceMode.IntValue || !g_hCvar_AnnounceRankChange.BoolValue)
 			return;
 
 		char Label[16];
@@ -1128,12 +1067,12 @@ public GetClientRankRankChange(Handle owner, Handle hndl, const char[] error, an
 }
 
 // Generate client's rank.
-public GetClientRankPlayerJoined(Handle owner, Handle hndl, const char[] error, any client)
+void GetClientRankPlayerJoined(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
 
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("GetClientRankPlayerJoined Query failed: %s", error);
 		return;
@@ -1149,66 +1088,66 @@ public GetClientRankPlayerJoined(Handle owner, Handle hndl, const char[] error, 
 }
 
 // Generate client's rank.
-public GetClientRank(Handle owner, Handle hndl, const char[] error, any client)
+void GetClientRank(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
 
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("GetClientRank Query failed: %s", error);
 		return;
 	}
 
-	if (SQL_FetchRow(hndl))
-		g_iClientRank[client] = SQL_FetchInt(hndl, 0);
+	if (hndl.FetchRow())
+		g_iClientRank[client] = hndl.FetchInt(0);
 }
 
 // Generate client's rank.
-public GetClientGameModeRank(Handle owner, Handle hndl, const char[] error, any client)
+void GetClientGameModeRank(DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
 
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("GetClientGameModeRank Query failed: %s", error);
 		return;
 	}
 
-	while (SQL_FetchRow(hndl))
-		g_iClientGameModeRank[client] = SQL_FetchInt(hndl, 0);
+	while (hndl.FetchRow())
+		g_iClientGameModeRank[client] = hndl.FetchInt(0);
 }
 
 // Generate total rank amount.
-public GetRankTotal(Handle owner, Handle hndl, const char[] error, any data)
+void GetRankTotal(Handle owner, DBResultSet hndl, const char[] error, int data)
 {
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("GetRankTotal Query failed: %s", error);
 		return;
 	}
 
-	while (SQL_FetchRow(hndl))
-		g_iRankTotal = SQL_FetchInt(hndl, 0);
+	while (hndl.FetchRow())
+		g_iRankTotal = hndl.FetchInt(0);
 }
 
 // Generate total gamemode rank amount.
-public GetGameModeRankTotal(Handle owner, Handle hndl, const char[] error, any data)
+void GetGameModeRankTotal(Handle owner, DBResultSet hndl, const char[] error, int data)
 {
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("GetGameModeRankTotal Query failed: %s", error);
 		return;
 	}
 
-	while (SQL_FetchRow(hndl))
-		g_iGameModeRankTotal = SQL_FetchInt(hndl, 0);
+	while (hndl.FetchRow())
+		g_iGameModeRankTotal = hndl.FetchInt(0);
 }
 
-public ClearStatsMapsHandler(Handle owner, Handle hndl, const char[] error, any client)
+void ClearStatsMapsHandler(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		PrintToConsole(client, "[RANK] Clear Stats: Query failed! (%s)", error);
 		DoFastQuery(client, "ROLLBACK");
@@ -1216,29 +1155,23 @@ public ClearStatsMapsHandler(Handle owner, Handle hndl, const char[] error, any 
 		return;
 	}
 
-	int FieldCount = SQL_GetFieldCount(hndl);
+	int	 FieldCount = hndl.FieldCount;
 	char FieldName[MAX_LINE_WIDTH];
 	char FieldSet[MAX_LINE_WIDTH];
 
-	int Counter = 0;
+	int	 Counter = 0;
 	char query[4096];
 	Format(query, sizeof(query), "UPDATE %smaps SET", g_sDbPrefix);
 
 	for (int i = 0; i < FieldCount; i++)
 	{
-		SQL_FieldNumToName(hndl, i, FieldName, sizeof(FieldName));
+		hndl.FieldNumToName(i, FieldName, sizeof(FieldName));
 
-		if (StrEqual(FieldName, "name", false) ||
-				StrEqual(FieldName, "gamemode", false) ||
-				StrEqual(FieldName, "custom", false))
-		{
+		if (StrEqual(FieldName, "name", false) || StrEqual(FieldName, "gamemode", false) || StrEqual(FieldName, "custom", false))
 			continue;
-		}
 
 		if (Counter++ > 0)
-		{
 			StrCat(query, sizeof(query), ",");
-		}
 
 		Format(FieldSet, sizeof(FieldSet), " %s = 0", FieldName);
 		StrCat(query, sizeof(query), FieldSet);
@@ -1257,76 +1190,63 @@ public ClearStatsMapsHandler(Handle owner, Handle hndl, const char[] error, any 
 	}
 }
 
-void ExecuteTeamShuffle(Handle owner, Handle hndl, const char[] error, any data)
+void ExecuteTeamShuffle(Handle owner, DBResultSet hndl, const char[] error, int data)
 {
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("ExecuteTeamShuffle failed! Reason: %s", error);
 		return;
 	}
 
 	char SteamID[MAX_LINE_WIDTH];
-	int i, team, maxplayers = MaxClients, client, topteam;
-	int SurvivorsLimit = GetConVarInt(g_hCvar_SurvivorLimit), InfectedLimit = GetConVarInt(g_hCvar_InfectedLimit);
-	Handle PlayersTrie = CreateTrie();
-	Handle InfectedArray = CreateArray();
-	Handle SurvivorArray = CreateArray();
+	int	i, team, client, topteam;
+	int	SurvivorsLimit = g_hCvar_SurvivorLimit.IntValue, InfectedLimit = g_hCvar_InfectedLimit.IntValue;
+	StringMap PlayersTrie	= new StringMap();
+	ArrayList InfectedArray = new ArrayList();
+	ArrayList SurvivorArray = new ArrayList();
 
-	for (i = 1; i <= maxplayers; i++)
+	for (i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
 		{
 			GetClientRankAuthString(i, SteamID, sizeof(SteamID));
-
-			if (!SetTrieValue(PlayersTrie, SteamID, i, false))
+			if (!PlayersTrie.SetValue(SteamID, i, false))
 			{
 				LogError("ExecuteTeamShuffle failed! Reason: Duplicate SteamID while generating shuffled teams.");
 				StatsPrintToChatAllPreFormatted2(true, "Team shuffle failed in an error.");
+				g_hCvar_EnableRankVote.BoolValue = false;
 
-				SetConVarBool(g_hCvar_EnableRankVote, false);
-
-				ClearTrie(PlayersTrie);
-				CloseHandle(PlayersTrie);
-
-				CloseHandle(hndl);
-
+				PlayersTrie.Clear();
+				delete PlayersTrie;
+				delete hndl;
 				return;
 			}
 
 			switch (GetClientTeam(i))
 			{
-				case TEAM_SURVIVORS:
-					PushArrayCell(SurvivorArray, i);
-				case TEAM_INFECTED:
-					PushArrayCell(InfectedArray, i);
+				case TEAM_SURVIVORS: SurvivorArray.Push(i);
+				case TEAM_INFECTED: InfectedArray.Push(i);
 			}
 		}
 	}
 
-	int SurvivorCounter = GetArraySize(SurvivorArray);
-	int InfectedCounter = GetArraySize(InfectedArray);
+	int SurvivorCounter = SurvivorArray.Length;
+	int InfectedCounter = InfectedArray.Length;
 
 	i = 0;
-	topteam = 0;
+	topteam	= 0;
 
-	while (SQL_FetchRow(hndl))
+	while (hndl.FetchRow())
 	{
-		SQL_FetchString(hndl, 0, SteamID, sizeof(SteamID));
+		hndl.FetchString(0, SteamID, sizeof(SteamID));
 
-		if (GetTrieValue(PlayersTrie, SteamID, client))
+		if (PlayersTrie.GetValue(SteamID, client))
 		{
 			team = GetClientTeam(client);
-
 			if (i == 0)
 			{
-				if (team == TEAM_SURVIVORS)
-				{
-					RemoveFromArray(SurvivorArray, FindValueInArray(SurvivorArray, client));
-				}
-				else
-				{
-					RemoveFromArray(InfectedArray, FindValueInArray(InfectedArray, client));
-				}
+				if (team == TEAM_SURVIVORS) SurvivorArray.Erase(SurvivorArray.FindValue(client));
+				else if (team == TEAM_INFECTED) InfectedArray.Erase(InfectedArray.FindValue(client));
 
 				topteam = team;
 				i++;
@@ -1336,40 +1256,28 @@ void ExecuteTeamShuffle(Handle owner, Handle hndl, const char[] error, any data)
 
 			if (i++ % 2)
 			{
-				if (topteam == TEAM_SURVIVORS && team == TEAM_INFECTED)
-				{
-					RemoveFromArray(InfectedArray, FindValueInArray(InfectedArray, client));
-				}
-				else if (topteam == TEAM_INFECTED && team == TEAM_SURVIVORS)
-				{
-					RemoveFromArray(SurvivorArray, FindValueInArray(SurvivorArray, client));
-				}
+				if (topteam == TEAM_SURVIVORS && team == TEAM_INFECTED) InfectedArray.Erase(InfectedArray.FindValue(client));
+				else if (topteam == TEAM_INFECTED && team == TEAM_SURVIVORS) SurvivorArray.Erase(SurvivorArray.FindValue(client));
 			}
 			else
 			{
-				if (topteam == TEAM_SURVIVORS && team == TEAM_SURVIVORS)
-				{
-					RemoveFromArray(SurvivorArray, FindValueInArray(SurvivorArray, client));
-				}
-				else if (topteam == TEAM_INFECTED && team == TEAM_INFECTED)
-				{
-					RemoveFromArray(InfectedArray, FindValueInArray(InfectedArray, client));
-				}
+				if (topteam == TEAM_SURVIVORS && team == TEAM_SURVIVORS) SurvivorArray.Erase(SurvivorArray.FindValue(client));
+				else if (topteam == TEAM_INFECTED && team == TEAM_INFECTED) InfectedArray.Erase(InfectedArray.FindValue(client));
 			}
 		}
 	}
 
-	if (GetArraySize(SurvivorArray) > 0 || GetArraySize(InfectedArray) > 0)
+	if (SurvivorArray.Length > 0 || InfectedArray.Length > 0)
 	{
-		new NewSurvivorCounter = SurvivorCounter - GetArraySize(SurvivorArray) + GetArraySize(InfectedArray);
-		new NewInfectedCounter = InfectedCounter - GetArraySize(InfectedArray) + GetArraySize(SurvivorArray);
+		int NewSurvivorCounter = SurvivorCounter - SurvivorArray.Length + InfectedArray.Length;
+		int NewInfectedCounter = InfectedCounter - InfectedArray.Length + SurvivorArray.Length;
 
 		if (NewSurvivorCounter > SurvivorsLimit || NewInfectedCounter > InfectedLimit)
 		{
 			LogError("ExecuteTeamShuffle failed! Reason: Team size limits block Rank Vote functionality. (Survivors Limit = %i [%i] / Infected Limit = %i [%i])", SurvivorsLimit, NewSurvivorCounter, InfectedLimit, NewInfectedCounter);
 			StatsPrintToChatAllPreFormatted2(true, "Team shuffle failed in an error.");
 
-			SetConVarBool(g_hCvar_EnableRankVote, false);
+			g_hCvar_EnableRankVote.BoolValue = false;
 		}
 		else
 		{
@@ -1378,51 +1286,43 @@ void ExecuteTeamShuffle(Handle owner, Handle hndl, const char[] error, any data)
 			char Name[32];
 
 			// Change Survivors team to Spectators (TEMPORARILY)
-			for (i = 0; i < GetArraySize(SurvivorArray); i++)
-			{
-				ChangeRankPlayerTeam(GetArrayCell(SurvivorArray, i), TEAM_SPECTATORS);
-			}
+			for (i = 0; i < SurvivorArray.Length; i++)
+				ChangeRankPlayerTeam(SurvivorArray.Get(i), TEAM_SPECTATORS);
 
 			// Change Infected team to Survivors
-			for (i = 0; i < GetArraySize(InfectedArray); i++)
+			for (i = 0; i < InfectedArray.Length; i++)
 			{
-				client = GetArrayCell(InfectedArray, i);
+				client = InfectedArray.Get(i);
 				GetClientName(client, Name, sizeof(Name));
-
 				ChangeRankPlayerTeam(client, TEAM_SURVIVORS);
-
 				StatsPrintToChatAll2(true, "\x05%s \x01was swapped to team \x03Survivors\x01!", Name);
 			}
 
 			// Change Spectators (TEMPORARILY) team to Infected
-			for (i = 0; i < GetArraySize(SurvivorArray); i++)
+			for (i = 0; i < SurvivorArray.Length; i++)
 			{
-				client = GetArrayCell(SurvivorArray, i);
+				client = SurvivorArray.Get(i);
 				GetClientName(client, Name, sizeof(Name));
-
 				ChangeRankPlayerTeam(client, TEAM_INFECTED);
-
 				StatsPrintToChatAll2(true, "\x05%s \x01was swapped to team \x03Infected\x01!", Name);
 			}
 
 			StatsPrintToChatAllPreFormatted2(true, "Team shuffle by player PPM \x03DONE\x01.");
 
-			if (g_bEnableSounds_Rankvote && GetConVarBool(g_hCvar_SoundsEnabled))
+			if (g_bEnableSounds_Rankvote && g_hCvar_SoundsEnabled.BoolValue)
 				EmitSoundToAll(SOUND_RANKVOTE);
 		}
 	}
 	else
-	{
 		StatsPrintToChatAllPreFormatted2(true, "Teams are already even by player PPM.");
-	}
 
-	ClearArray(SurvivorArray);
-	ClearArray(InfectedArray);
-	ClearTrie(PlayersTrie);
+	SurvivorArray.Clear();
+	InfectedArray.Clear();
+	PlayersTrie.Clear();
 
-	CloseHandle(SurvivorArray);
-	CloseHandle(InfectedArray);
-	CloseHandle(PlayersTrie);
+	delete SurvivorArray;
+	delete InfectedArray;
+	delete PlayersTrie;
 
-	CloseHandle(hndl);
+	delete hndl;
 }

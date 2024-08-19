@@ -6,25 +6,25 @@
 void RegCommands()
 {
 	// Hook chat commands for rank panels
-	RegConsoleCmd("say", cmd_Say);
-	RegConsoleCmd("say_team", cmd_Say);
+	RegConsoleCmd("say", Cmd_Say);
+	RegConsoleCmd("say_team", Cmd_Say);
 
 	// Register console commands for rank panels
-	RegConsoleCmd("sm_rank", cmd_ShowRank);
-	RegConsoleCmd("sm_top10", cmd_ShowTop10);
-	RegConsoleCmd("sm_top10ppm", cmd_ShowTop10PPM);
-	RegConsoleCmd("sm_nextrank", cmd_ShowNextRank);
-	RegConsoleCmd("sm_showtimer", cmd_ShowTimedMapsTimer);
-	RegConsoleCmd("sm_showrank", cmd_ShowRanks);
-	RegConsoleCmd("sm_showppm", cmd_ShowPPMs);
-	RegConsoleCmd("sm_rankvote", cmd_RankVote);
-	RegConsoleCmd("sm_timedmaps", cmd_TimedMaps);
-	RegConsoleCmd("sm_maptimes", cmd_MapTimes);
-	RegConsoleCmd("sm_showmaptimes", cmd_ShowMapTimes);
-	RegConsoleCmd("sm_rankmenu", cmd_ShowRankMenu);
-	RegConsoleCmd("sm_rankmutetoggle", cmd_ToggleClientRankMute);
+	RegConsoleCmd("sm_rank", Cmd_ShowRank);
+	RegConsoleCmd("sm_top10", Cmd_ShowTop10);
+	RegConsoleCmd("sm_top10ppm", Cmd_ShowTop10PPM);
+	RegConsoleCmd("sm_nextrank", Cmd_ShowNextRank);
+	RegConsoleCmd("sm_showtimer", Cmd_ShowTimedMapsTimer);
+	RegConsoleCmd("sm_showrank", Cmd_ShowRanks);
+	RegConsoleCmd("sm_showppm", Cmd_ShowPPMs);
+	RegConsoleCmd("sm_rankvote", Cmd_RankVote);
+	RegConsoleCmd("sm_timedmaps", Cmd_TimedMaps);
+	RegConsoleCmd("sm_maptimes", Cmd_MapTimes);
+	RegConsoleCmd("sm_showmaptimes", Cmd_ShowMapTimes);
+	RegConsoleCmd("sm_rankmenu", Cmd_ShowRankMenu);
+	RegConsoleCmd("sm_rankmutetoggle", Cmd_ToggleClientRankMute);
 	RegConsoleCmd("sm_rankmute", cmd_ClientRankMute);
-	RegConsoleCmd("sm_showmotd", cmd_ShowMotd);
+	RegConsoleCmd("sm_showmotd", Cmd_ShowMotd);
 
 	// Register administrator command for clearing all stats (BE CAREFUL)
 	// RegAdminCmd("sm_rank_admin", cmd_RankAdmin, ADMFLAG_ROOT, "Display admin panel for Rank");
@@ -56,98 +56,98 @@ Action HandleCommands(int client, const char[] Text)
 {
 	if (strcmp(Text, "rankmenu", false) == 0)
 	{
-		cmd_ShowRankMenu(client, 0);
+		Cmd_ShowRankMenu(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "rank", false) == 0)
 	{
-		cmd_ShowRank(client, 0);
+		Cmd_ShowRank(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "showrank", false) == 0)
 	{
-		cmd_ShowRanks(client, 0);
+		Cmd_ShowRanks(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "showppm", false) == 0)
 	{
-		cmd_ShowPPMs(client, 0);
+		Cmd_ShowPPMs(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "top10", false) == 0)
 	{
-		cmd_ShowTop10(client, 0);
+		Cmd_ShowTop10(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "top10ppm", false) == 0)
 	{
-		cmd_ShowTop10PPM(client, 0);
+		Cmd_ShowTop10PPM(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "nextrank", false) == 0)
 	{
-		cmd_ShowNextRank(client, 0);
+		Cmd_ShowNextRank(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "showtimer", false) == 0)
 	{
-		cmd_ShowTimedMapsTimer(client, 0);
+		Cmd_ShowTimedMapsTimer(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "timedmaps", false) == 0)
 	{
-		cmd_TimedMaps(client, 0);
+		Cmd_TimedMaps(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "showmaptime", false) == 0)
 	{
-		cmd_ShowMapTimes(client, 0);
+		Cmd_ShowMapTimes(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "maptimes", false) == 0)
 	{
-		cmd_MapTimes(client, 0);
+		Cmd_MapTimes(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "rankvote", false) == 0)
 	{
-		cmd_RankVote(client, 0);
+		Cmd_RankVote(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "rankmutetoggle", false) == 0)
 	{
-		cmd_ToggleClientRankMute(client, 0);
+		Cmd_ToggleClientRankMute(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
 
 	else if (strcmp(Text, "showmotd", false) == 0)
 	{
-		cmd_ShowMotd(client, 0);
+		Cmd_ShowMotd(client, 0);
 		if (g_hCvar_SilenceChat.BoolValue)
 			return Plugin_Handled;
 	}
@@ -156,7 +156,7 @@ Action HandleCommands(int client, const char[] Text)
 }
 
 // Parse chat for RANK and TOP10 triggers.
-Action cmd_Say(int client, int args)
+Action Cmd_Say(int client, int args)
 {
 	char Text[192];
 	// char Command[64];
@@ -184,7 +184,7 @@ Action cmd_Say(int client, int args)
 }
 
 // Show current Timed Maps timer.
-Action cmd_ShowTimedMapsTimer(int client, int args)
+Action Cmd_ShowTimedMapsTimer(int client, int args)
 {
 	if (client != 0 && !IsClientConnected(client) && !IsClientInGame(client))
 		return Plugin_Handled;
@@ -212,7 +212,7 @@ Action cmd_ShowTimedMapsTimer(int client, int args)
 }
 
 // Begin generating the NEXTRANK display panel.
-Action cmd_ShowNextRank(int client, int args)
+Action Cmd_ShowNextRank(int client, int args)
 {
 	if (!IsClientConnected(client) && !IsClientInGame(client))
 		return Plugin_Handled;
@@ -312,7 +312,7 @@ Action cmd_ClearRank(int client, int args)
 }
 
 // Toggle client rank mute.
-Action cmd_ToggleClientRankMute(int client, int args)
+Action Cmd_ToggleClientRankMute(int client, int args)
 {
 	if (client == 0)
 		return Plugin_Handled;
@@ -340,7 +340,7 @@ void ShowRankMuteUsage(int client)
 }
 
 // Show current message of the day.
-Action cmd_ShowMotd(int client, int args)
+Action Cmd_ShowMotd(int client, int args)
 {
 	ShowMOTD(client, true);
 	return Plugin_Handled
@@ -390,7 +390,7 @@ void AnnounceClientRankMute(int client)
 }
 
 // Start RANKVOTE.
-Action cmd_RankVote(int client, int args)
+Action Cmd_RankVote(int client, int args)
 {
 	if (client == 0)
 	{
@@ -418,7 +418,7 @@ Action cmd_RankVote(int client, int args)
 }
 
 // Generate the TIMEDMAPS display menu.
-Action cmd_TimedMaps(int client, int args)
+Action Cmd_TimedMaps(int client, int args)
 {
 	if (client == 0 || !IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
 		return Plugin_Handled;
@@ -431,7 +431,7 @@ Action cmd_TimedMaps(int client, int args)
 }
 
 // Generate the MAPTIME display menu.
-Action cmd_MapTimes(int client, int args)
+Action Cmd_MapTimes(int client, int args)
 {
 	if (client == 0 || !IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
 		return Plugin_Handled;
@@ -447,7 +447,7 @@ Action cmd_MapTimes(int client, int args)
 }
 
 // Generate the SHOWMAPTIME display menu.
-Action cmd_ShowMapTimes(int client, int args)
+Action Cmd_ShowMapTimes(int client, int args)
 {
 	if (client == 0 || !IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
 		return Plugin_Handled;
@@ -458,7 +458,7 @@ Action cmd_ShowMapTimes(int client, int args)
 }
 
 // Generate the SHOWPPM display menu.
-Action cmd_ShowPPMs(int client, int args)
+Action Cmd_ShowPPMs(int client, int args)
 {
 	if (!IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
 		return Plugin_Handled;
@@ -490,7 +490,7 @@ Action cmd_ShowPPMs(int client, int args)
 
 	if (counter == 1)
 	{
-		cmd_ShowRank(client, 0);
+		Cmd_ShowRank(client, 0);
 		return Plugin_Handled;
 	}
 
@@ -501,7 +501,7 @@ Action cmd_ShowPPMs(int client, int args)
 }
 
 // Generate the SHOWRANK display menu.
-Action cmd_ShowRanks(int client, int args)
+Action Cmd_ShowRanks(int client, int args)
 {
 	if (!IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
 		return Plugin_Handled;
@@ -533,7 +533,7 @@ Action cmd_ShowRanks(int client, int args)
 
 	if (counter == 1)
 	{
-		cmd_ShowRank(client, 0);
+		Cmd_ShowRank(client, 0);
 		return Plugin_Handled;
 	}
 
@@ -545,7 +545,7 @@ Action cmd_ShowRanks(int client, int args)
 }
 
 // Generate the TOPPPM display panel.
-Action cmd_ShowTop10PPM(int client, int args)
+Action Cmd_ShowTop10PPM(int client, int args)
 {
 	if (!IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
 		return Plugin_Handled;
@@ -561,7 +561,7 @@ Action cmd_ShowTop10PPM(int client, int args)
 }
 
 // Generate the TOP10 display panel.
-Action cmd_ShowTop10(int client, int args)
+Action Cmd_ShowTop10(int client, int args)
 {
 	if (!IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
 		return Plugin_Handled;
@@ -577,11 +577,11 @@ Action cmd_ShowTop10(int client, int args)
 }
 
 // Begin generating the RANK display panel.
-Action cmd_ShowRank(int client, int args)
+Action Cmd_ShowRank(int client, int args)
 {
 	if (client == 0)
 	{
-		NotServerConsoleCommand();
+		PrintToConsole(0, "[RANK] Error: Most of the rank commands including this one are not available from server console.");
 		return Plugin_Handled;
 	}
 
@@ -599,7 +599,7 @@ Action cmd_ShowRank(int client, int args)
 }
 
 // Begin generating the RANKMENU display panel.
-Action cmd_ShowRankMenu(int client, int args)
+Action Cmd_ShowRankMenu(int client, int args)
 {
 	if (client <= 0)
 	{

@@ -3,12 +3,31 @@
 #endif
 #define _l4d_stats_actions_included
 
+void SetCurrentGamemodeName()
+{
+	switch (g_iCurrentGamemodeID)
+	{
+		case GAMEMODE_COOP: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Coop");
+		case GAMEMODE_VERSUS: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Versus");
+		case GAMEMODE_REALISM: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Realism");
+		case GAMEMODE_SURVIVAL: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Survival");
+		case GAMEMODE_SCAVENGE: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Scavenge");
+		case GAMEMODE_REALISMVERSUS: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Realism Versus");
+		case GAMEMODE_OTHERMUTATIONS: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Mutations");
+		default:
+		{
+			Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Unknown");
+		}
+	}
+
+	if (g_iCurrentGamemodeID == GAMEMODE_OTHERMUTATIONS) g_hCvar_Gamemode.GetString(g_sCurrentMutation, sizeof(g_sCurrentMutation));
+	else g_sCurrentMutation[0] = 0;
+}
+
 void DoInfectedFinalChecks(int Client, int ClientInfType = -1)
 {
 	if (Client == 0)
 		return;
-
-	EngineVersion ServerVersion = GetEngineVersion();
 
 	if (ClientInfType < 0)
 		ClientInfType = g_iClientInfectedType[Client];
@@ -19,20 +38,20 @@ void DoInfectedFinalChecks(int Client, int ClientInfType = -1)
 		g_iSmokerDamageCounter[Client] = 0;
 		UpdateSmokerDamage(Client, Damage);
 	}
-	else if (ServerVersion != Engine_Left4Dead && ClientInfType == INF_ID_SPITTER_L4D2)
+	else if (g_bLeft4Dead2 && ClientInfType == INF_ID_SPITTER_L4D2)
 	{
 		int Damage = g_iSpitterDamageCounter[Client];
 		g_iSpitterDamageCounter[Client] = 0;
 		UpdateSpitterDamage(Client, Damage);
 	}
-	else if (ServerVersion != Engine_Left4Dead && ClientInfType == INF_ID_JOCKEY_L4D2)
+	else if (g_bLeft4Dead2 && ClientInfType == INF_ID_JOCKEY_L4D2)
 	{
 		int Damage = g_iJockeyDamageCounter[Client];
 		g_iJockeyDamageCounter[Client] = 0;
 		UpdateJockeyDamage(Client, Damage);
 		UpdateJockeyRideLength(Client);
 	}
-	else if (ServerVersion != Engine_Left4Dead && ClientInfType == INF_ID_CHARGER_L4D2)
+	else if (g_bLeft4Dead2 && ClientInfType == INF_ID_CHARGER_L4D2)
 	{
 		int Damage = g_iChargerDamageCounter[Client];
 		g_iChargerDamageCounter[Client] = 0;
@@ -145,6 +164,121 @@ int TankDamage(int Client, int Damage)
 	return Damage;
 }
 
+// Check player validity before calling this method!
+void IncrementMeleeKills(int client)
+{
+	if (g_hMeleeKillTimer[client] != null)
+		delete g_hMeleeKillTimer[client];
+
+	g_iMeleeKillCounter[client]++;
+	g_hMeleeKillTimer[client] = CreateTimer(5.0, Timer_MeleeKill, client);
+}
+
+// Adrenaline give code. Special note, Adrenaline can only be given once. (Even if it's initially given by a bot!)
+void GiveAdrenaline(int Giver, int Recipient, int g_iAdrenalineIndexID = -1)
+{
+	// Stats enabled is checked by the caller
+
+	if (g_iCurrentGamemodeID == GAMEMODE_SURVIVAL && !g_bSurvivalStarted)
+		return;
+
+	if (g_iAdrenalineIndexID < 0)
+		g_iAdrenalineIndexID = GetPlayerWeaponSlot(Recipient, 4);
+
+	if (g_iAdrenalineIndexID < 0 || g_iAdrenalineIndex[g_iAdrenalineIndexID] == 1)
+		return;
+	else
+		g_iAdrenalineIndex[g_iAdrenalineIndexID] = 1;
+
+	if (IsClientBot(Giver))
+		return;
+
+	char RecipientName[MAX_LINE_WIDTH];
+	GetClientName(Recipient, RecipientName, sizeof(RecipientName));
+	char RecipientID[MAX_LINE_WIDTH];
+	GetClientRankAuthString(Recipient, RecipientID, sizeof(RecipientID));
+
+	char GiverName[MAX_LINE_WIDTH];
+	GetClientName(Giver, GiverName, sizeof(GiverName));
+	char GiverID[MAX_LINE_WIDTH];
+	GetClientRankAuthString(Giver, GiverID, sizeof(GiverID));
+
+	int Score = ModifyScoreDifficulty(g_hCvar_GiveItemClassScore[ITEM_ADRENALINE].IntValue, 2, 4, TEAM_SURVIVORS);
+	char UpdatePoints[32];
+
+	FormatInGameMode(UpdatePoints, sizeof(UpdatePoints));
+
+	char query[1024];
+	Format(query, sizeof(query), "UPDATE %splayers SET %s = %s + %i, award_adrenaline = award_adrenaline + 1 WHERE steamid = '%s'", g_sDbPrefix, UpdatePoints, UpdatePoints, Score, GiverID);
+	SendSQLUpdate(query);
+
+	UpdateMapStat("points", Score);
+	AddScore(Giver, Score);
+
+	if (Score > 0)
+	{
+		int Mode = g_hCvar_AnnounceMode.IntValue;
+
+		if (Mode == 1 || Mode == 2)
+			StatsPrintToChat(Giver, "You have earned \x04%i \x01points for giving adrenaline to \x05%s\x01!", Score, RecipientName);
+		else if (Mode == 3)
+			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for giving adrenaline to \x05%s\x01!", GiverName, Score, RecipientName);
+	}
+}
+
+
+// Pill give code. Special note, g_iPillsIndex can only be given once. (Even if it's initially given by a bot!)
+void GivePills(int Giver, int Recipient, int PillsIndex = -1)
+{
+	// Stats enabled is checked by the caller
+
+	if (g_iCurrentGamemodeID == GAMEMODE_SURVIVAL && !g_bSurvivalStarted)
+		return;
+
+	if (PillsIndex < 0)
+		PillsIndex = GetPlayerWeaponSlot(Recipient, 4);
+
+	if (PillsIndex < 0 || g_iPillsIndex[PillsIndex] == 1)
+		return;
+	else
+		g_iPillsIndex[PillsIndex] = 1;
+
+	if (IsClientBot(Giver))
+		return;
+
+	char RecipientName[MAX_LINE_WIDTH];
+	GetClientName(Recipient, RecipientName, sizeof(RecipientName));
+	char RecipientID[MAX_LINE_WIDTH];
+	GetClientRankAuthString(Recipient, RecipientID, sizeof(RecipientID));
+
+	char GiverName[MAX_LINE_WIDTH];
+	GetClientName(Giver, GiverName, sizeof(GiverName));
+	char GiverID[MAX_LINE_WIDTH];
+	GetClientRankAuthString(Giver, GiverID, sizeof(GiverID));
+
+	int Score = ModifyScoreDifficulty(g_hCvar_GiveItemClassScore[ITEM_PILLS].IntValue, 2, 4, TEAM_SURVIVORS);
+	char UpdatePoints[32];
+
+	FormatInGameMode(UpdatePoints, sizeof(UpdatePoints));
+
+	char query[1024];
+	Format(query, sizeof(query), "UPDATE %splayers SET %s = %s + %i, award_pills = award_pills + 1 WHERE steamid = '%s'", g_sDbPrefix, UpdatePoints, UpdatePoints, Score, GiverID);
+	SendSQLUpdate(query);
+
+	UpdateMapStat("points", Score);
+	AddScore(Giver, Score);
+
+	if (Score > 0)
+	{
+		int Mode = g_hCvar_AnnounceMode.IntValue;
+
+		if (Mode == 1 || Mode == 2)
+			StatsPrintToChat(Giver, "You have earned \x04%i \x01points for giving pills to \x05%s\x01!", Score, RecipientName);
+		else if (Mode == 3)
+			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for giving pills to \x05%s\x01!", GiverName, Score, RecipientName);
+	}
+}
+
 void UpdateFriendlyFire(int Attacker, int Victim)
 {
 	char AttackerName[MAX_LINE_WIDTH];
@@ -170,19 +304,7 @@ void UpdateFriendlyFire(int Attacker, int Victim)
 	}
 
 	char UpdatePoints[32];
-	switch (g_iCurrentGamemodeID)
-	{
-		case GAMEMODE_VERSUS: Format(UpdatePoints, sizeof(UpdatePoints), "points_survivors");
-		case GAMEMODE_REALISM: Format(UpdatePoints, sizeof(UpdatePoints), "points_realism");
-		case GAMEMODE_SURVIVAL: Format(UpdatePoints, sizeof(UpdatePoints), "points_survival");
-		case GAMEMODE_SCAVENGE: Format(UpdatePoints, sizeof(UpdatePoints), "points_scavenge_survivors");
-		case GAMEMODE_REALISMVERSUS: Format(UpdatePoints, sizeof(UpdatePoints), "points_realism_survivors");
-		case GAMEMODE_OTHERMUTATIONS: Format(UpdatePoints, sizeof(UpdatePoints), "points_mutations");
-		default:
-		{
-			Format(UpdatePoints, sizeof(UpdatePoints), "points");
-		}
-	}
+	FormatInGameMode(UpdatePoints, sizeof(UpdatePoints));
 
 	char query[1024];
 	Format(query, sizeof(query), "UPDATE %splayers SET %s = %s - %i, award_friendlyfire = award_friendlyfire + 1 WHERE steamid = '%s'", g_sDbPrefix, UpdatePoints, UpdatePoints, Score, AttackerID);
@@ -332,7 +454,6 @@ void UpdateTankSniperSteamID(const char[] ClientID)
 }
 
 // Survivor died.
-
 void SurvivorDied(int Attacker, int Victim, int AttackerInfType = -1, int Mode = -1)
 {
 	if (!Attacker || !Victim || StatsGetClientTeam(Attacker) != TEAM_INFECTED || StatsGetClientTeam(Victim) != TEAM_SURVIVORS)
@@ -347,7 +468,6 @@ void SurvivorDied(int Attacker, int Victim, int AttackerInfType = -1, int Mode =
 }
 
 // An Infected player killed a Survivor.
-
 void SurvivorDiedNamed(int Attacker, int Victim, const char[] VictimName, const char[] AttackerID, int AttackerInfType = -1, int Mode = -1)
 {
 	if (!Attacker || !Victim || StatsGetClientTeam(Attacker) != TEAM_INFECTED || StatsGetClientTeam(Victim) != TEAM_SURVIVORS)
@@ -363,8 +483,7 @@ void SurvivorDiedNamed(int Attacker, int Victim, const char[] VictimName, const 
 		AttackerInfType = g_iClientInfectedType[Attacker];
 	}
 
-	EngineVersion ServerVersion = GetEngineVersion();
-	if (ServerVersion == Engine_Left4Dead)
+	if (g_bLeft4Dead)
 	{
 		if (AttackerInfType != INF_ID_SMOKER
 			&& AttackerInfType != INF_ID_BOOMER
@@ -372,7 +491,7 @@ void SurvivorDiedNamed(int Attacker, int Victim, const char[] VictimName, const 
 			&& AttackerInfType != INF_ID_TANK_L4D2)	   // SetClientInfectedType sets tank id to L4D2
 			return;
 	}
-	else
+	else if (g_bLeft4Dead2)
 	{
 		if (AttackerInfType != INF_ID_SMOKER
 			&& AttackerInfType != INF_ID_BOOMER
@@ -418,6 +537,201 @@ void SurvivorDiedNamed(int Attacker, int Victim, const char[] VictimName, const 
 	UpdateMapStat("survivor_kills", 1);
 	UpdateMapStat("points_infected", Score);
 	AddScore(Attacker, Score);
+}
+
+void PlayerDeathExternal(int Victim)
+{
+	if (!Victim || StatsGetClientTeam(Victim) != TEAM_SURVIVORS)
+		return;
+
+	CheckSurvivorsAllDown();
+
+	int Attacker = 0;
+
+	if (g_iPlayerBlinded[Victim][0] && g_iPlayerBlinded[Victim][1])
+	{
+		Attacker = g_iPlayerBlinded[Victim][1];
+
+		if (Attacker && !IsClientBot(Attacker) && IsClientInGame(Attacker))
+			SurvivorDied(Attacker, Victim, INF_ID_BOOMER);
+	}
+
+	if (g_iPlayerParalyzed[Victim][0] && g_iPlayerParalyzed[Victim][1])
+	{
+		Attacker = g_iPlayerParalyzed[Victim][1];
+
+		if (Attacker && !IsClientBot(Attacker) && IsClientInGame(Attacker))
+			SurvivorDied(Attacker, Victim, INF_ID_SMOKER);
+	}
+	else if (g_iPlayerLunged[Victim][0] && g_iPlayerLunged[Victim][1])
+	{
+		Attacker = g_iPlayerLunged[Victim][1];
+
+		if (Attacker && !IsClientBot(Attacker) && IsClientInGame(Attacker))
+			SurvivorDied(Attacker, Victim, INF_ID_HUNTER);
+	}
+	else if (g_iPlayerJockied[Victim][0] && g_iPlayerJockied[Victim][1])
+	{
+		Attacker = g_iPlayerJockied[Victim][1];
+
+		if (Attacker && !IsClientBot(Attacker) && IsClientInGame(Attacker))
+			SurvivorDied(Attacker, Victim, INF_ID_HUNTER);
+	}
+	else if (g_iPlayerCarried[Victim][0] && g_iPlayerCarried[Victim][1])
+	{
+		Attacker = g_iPlayerCarried[Victim][1];
+
+		if (Attacker && !IsClientBot(Attacker) && IsClientInGame(Attacker))
+			SurvivorDied(Attacker, Victim, INF_ID_HUNTER);
+	}
+	else if (g_iPlayerPummeled[Victim][0] && g_iPlayerPummeled[Victim][1])
+	{
+		Attacker = g_iPlayerPummeled[Victim][1];
+
+		if (Attacker && !IsClientBot(Attacker) && IsClientInGame(Attacker))
+			SurvivorDied(Attacker, Victim, INF_ID_HUNTER);
+	}
+}
+
+// Friendly Incapicitate code. Also handles if players should be awarded
+// points for surviving a Panic Event or Boomer Mob without incaps.
+void PlayerIncap(int Attacker, int Victim)
+{
+	// Stats enabled and g_bCampaignOver is checked by the caller
+
+	if (g_bPanicEvent)
+		g_bPanicEventIncap = true;
+
+	if (g_bPlayerVomited)
+		g_bPlayerVomitedIncap = true;
+
+	if (Victim <= 0)
+		return;
+
+	if (!Attacker || IsClientBot(Attacker))
+	{
+		// Attacker is normal indected but the Victim was infected by blinding and/or paralysation.
+		if (Attacker == 0
+				&& Victim > 0
+				&& (g_iPlayerBlinded[Victim][0] && g_iPlayerBlinded[Victim][1]
+					|| g_iPlayerParalyzed[Victim][0] && g_iPlayerParalyzed[Victim][1]
+					|| g_iPlayerLunged[Victim][0] && g_iPlayerLunged[Victim][1]
+					|| g_iPlayerCarried[Victim][0] && g_iPlayerCarried[Victim][1]
+					|| g_iPlayerPummeled[Victim][0] && g_iPlayerPummeled[Victim][1]
+					|| g_iPlayerJockied[Victim][0] && g_iPlayerJockied[Victim][1])
+				&& IsGamemodeVersus())
+			PlayerIncapExternal(Victim);
+
+		if (g_iCurrentGamemodeID == GAMEMODE_SURVIVAL && Victim > 0)
+			CheckSurvivorsAllDown();
+
+		return;
+	}
+
+	int AttackerTeam = GetClientTeam(Attacker);
+	int VictimTeam = GetClientTeam(Victim);
+	int Mode = g_hCvar_AnnounceMode.IntValue;
+
+	if (VictimTeam == TEAM_SURVIVORS)
+		CheckSurvivorsAllDown();
+
+	// Attacker is a Survivor
+	if (AttackerTeam == TEAM_SURVIVORS && VictimTeam == TEAM_SURVIVORS)
+	{
+		char AttackerID[MAX_LINE_WIDTH];
+		GetClientRankAuthString(Attacker, AttackerID, sizeof(AttackerID));
+		char AttackerName[MAX_LINE_WIDTH];
+		GetClientName(Attacker, AttackerName, sizeof(AttackerName));
+
+		char VictimName[MAX_LINE_WIDTH];
+		GetClientName(Victim, VictimName, sizeof(VictimName));
+
+		int Score = 0;
+		if (g_hCvar_EnableNegativeScore.BoolValue)
+		{
+			if (!IsClientBot(Victim))
+				Score = ModifyScoreDifficultyNR(g_hCvar_ActionScore[ACT_FFINCAP].IntValue, 2, 4, TEAM_SURVIVORS);
+			else
+			{
+				float BotScoreMultiplier = g_hCvar_BotScoreMultiplier.FloatValue;
+				if (BotScoreMultiplier > 0.0)
+					Score = RoundToNearest(ModifyScoreDifficultyNR(g_hCvar_ActionScore[ACT_FFINCAP].IntValue, 2, 4, TEAM_SURVIVORS) * BotScoreMultiplier);
+			}
+		}
+		else
+			Mode = 0;
+
+		char UpdatePoints[32];
+
+		switch (g_iCurrentGamemodeID)
+		{
+			case GAMEMODE_VERSUS: Format(UpdatePoints, sizeof(UpdatePoints), "points_survivors");
+			case GAMEMODE_REALISM: Format(UpdatePoints, sizeof(UpdatePoints), "points_realism");
+			case GAMEMODE_SURVIVAL: Format(UpdatePoints, sizeof(UpdatePoints), "points_survival");
+			case GAMEMODE_SCAVENGE: Format(UpdatePoints, sizeof(UpdatePoints), "points_scavenge_survivors");
+			case GAMEMODE_REALISMVERSUS: Format(UpdatePoints, sizeof(UpdatePoints), "points_realism_survivors");
+			case GAMEMODE_OTHERMUTATIONS: Format(UpdatePoints, sizeof(UpdatePoints), "points_mutations");
+			default:
+			{
+				Format(UpdatePoints, sizeof(UpdatePoints), "points");
+			}
+		}
+
+		char query[512];
+		Format(query, sizeof(query), "UPDATE %splayers SET %s = %s - %i, award_fincap = award_fincap + 1 WHERE steamid = '%s'", g_sDbPrefix, UpdatePoints, UpdatePoints, Score, AttackerID);
+		SendSQLUpdate(query);
+
+		if (Mode == 1 || Mode == 2)
+			StatsPrintToChat(Attacker, "You have \x03LOST \x04%i \x01points for \x03Incapicitating \x05%s\x01!", Score, VictimName);
+		else if (Mode == 3)
+			StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for \x03Incapicitating \x05%s\x01!", AttackerName, Score, VictimName);
+	}
+
+	// Attacker is an Infected
+	else if (AttackerTeam == TEAM_INFECTED && VictimTeam == TEAM_SURVIVORS)
+		SurvivorIncappedByInfected(Attacker, Victim, Mode);
+}
+
+void PlayerIncapExternal(int Victim)
+{
+	if (!Victim || StatsGetClientTeam(Victim) != TEAM_SURVIVORS)
+		return;
+
+	CheckSurvivorsAllDown();
+
+	int Attacker = 0;
+
+	if (g_iPlayerBlinded[Victim][0] && g_iPlayerBlinded[Victim][1])
+	{
+		Attacker = g_iPlayerBlinded[Victim][1];
+		SurvivorIncappedByInfected(Attacker, Victim);
+	}
+
+	if (g_iPlayerParalyzed[Victim][0] && g_iPlayerParalyzed[Victim][1])
+	{
+		Attacker = g_iPlayerParalyzed[Victim][1];
+		SurvivorIncappedByInfected(Attacker, Victim);
+	}
+	else if (g_iPlayerLunged[Victim][0] && g_iPlayerLunged[Victim][1])
+	{
+		Attacker = g_iPlayerLunged[Victim][1];
+		SurvivorIncappedByInfected(Attacker, Victim);
+	}
+	else if (g_iPlayerPummeled[Victim][0] && g_iPlayerPummeled[Victim][1])
+	{
+		Attacker = g_iPlayerPummeled[Victim][1];
+		SurvivorIncappedByInfected(Attacker, Victim);
+	}
+	else if (g_iPlayerCarried[Victim][0] && g_iPlayerCarried[Victim][1])
+	{
+		Attacker = g_iPlayerCarried[Victim][1];
+		SurvivorIncappedByInfected(Attacker, Victim);
+	}
+	else if (g_iPlayerJockied[Victim][0] && g_iPlayerJockied[Victim][1])
+	{
+		Attacker = g_iPlayerJockied[Victim][1];
+		SurvivorIncappedByInfected(Attacker, Victim);
+	}
 }
 
 // Survivor got hurt.
@@ -566,102 +880,6 @@ void SurvivorHurtExternal(Event event, int Victim)
 	}
 }
 
-void PlayerDeathExternal(int Victim)
-{
-	if (!Victim || StatsGetClientTeam(Victim) != TEAM_SURVIVORS)
-		return;
-
-	CheckSurvivorsAllDown();
-
-	int Attacker = 0;
-
-	if (g_iPlayerBlinded[Victim][0] && g_iPlayerBlinded[Victim][1])
-	{
-		Attacker = g_iPlayerBlinded[Victim][1];
-
-		if (Attacker && !IsClientBot(Attacker) && IsClientInGame(Attacker))
-			SurvivorDied(Attacker, Victim, INF_ID_BOOMER);
-	}
-
-	if (g_iPlayerParalyzed[Victim][0] && g_iPlayerParalyzed[Victim][1])
-	{
-		Attacker = g_iPlayerParalyzed[Victim][1];
-
-		if (Attacker && !IsClientBot(Attacker) && IsClientInGame(Attacker))
-			SurvivorDied(Attacker, Victim, INF_ID_SMOKER);
-	}
-	else if (g_iPlayerLunged[Victim][0] && g_iPlayerLunged[Victim][1])
-	{
-		Attacker = g_iPlayerLunged[Victim][1];
-
-		if (Attacker && !IsClientBot(Attacker) && IsClientInGame(Attacker))
-			SurvivorDied(Attacker, Victim, INF_ID_HUNTER);
-	}
-	else if (g_iPlayerJockied[Victim][0] && g_iPlayerJockied[Victim][1])
-	{
-		Attacker = g_iPlayerJockied[Victim][1];
-
-		if (Attacker && !IsClientBot(Attacker) && IsClientInGame(Attacker))
-			SurvivorDied(Attacker, Victim, INF_ID_HUNTER);
-	}
-	else if (g_iPlayerCarried[Victim][0] && g_iPlayerCarried[Victim][1])
-	{
-		Attacker = g_iPlayerCarried[Victim][1];
-
-		if (Attacker && !IsClientBot(Attacker) && IsClientInGame(Attacker))
-			SurvivorDied(Attacker, Victim, INF_ID_HUNTER);
-	}
-	else if (g_iPlayerPummeled[Victim][0] && g_iPlayerPummeled[Victim][1])
-	{
-		Attacker = g_iPlayerPummeled[Victim][1];
-
-		if (Attacker && !IsClientBot(Attacker) && IsClientInGame(Attacker))
-			SurvivorDied(Attacker, Victim, INF_ID_HUNTER);
-	}
-}
-
-void PlayerIncapExternal(int Victim)
-{
-	if (!Victim || StatsGetClientTeam(Victim) != TEAM_SURVIVORS)
-		return;
-
-	CheckSurvivorsAllDown();
-
-	int Attacker = 0;
-
-	if (g_iPlayerBlinded[Victim][0] && g_iPlayerBlinded[Victim][1])
-	{
-		Attacker = g_iPlayerBlinded[Victim][1];
-		SurvivorIncappedByInfected(Attacker, Victim);
-	}
-
-	if (g_iPlayerParalyzed[Victim][0] && g_iPlayerParalyzed[Victim][1])
-	{
-		Attacker = g_iPlayerParalyzed[Victim][1];
-		SurvivorIncappedByInfected(Attacker, Victim);
-	}
-	else if (g_iPlayerLunged[Victim][0] && g_iPlayerLunged[Victim][1])
-	{
-		Attacker = g_iPlayerLunged[Victim][1];
-		SurvivorIncappedByInfected(Attacker, Victim);
-	}
-	else if (g_iPlayerPummeled[Victim][0] && g_iPlayerPummeled[Victim][1])
-	{
-		Attacker = g_iPlayerPummeled[Victim][1];
-		SurvivorIncappedByInfected(Attacker, Victim);
-	}
-	else if (g_iPlayerCarried[Victim][0] && g_iPlayerCarried[Victim][1])
-	{
-		Attacker = g_iPlayerCarried[Victim][1];
-		SurvivorIncappedByInfected(Attacker, Victim);
-	}
-	else if (g_iPlayerJockied[Victim][0] && g_iPlayerJockied[Victim][1])
-	{
-		Attacker = g_iPlayerJockied[Victim][1];
-		SurvivorIncappedByInfected(Attacker, Victim);
-	}
-}
-
 void SurvivorIncappedByInfected(int Attacker, int Victim, int Mode = -1)
 {
 	if (Attacker > 0 && !IsClientConnected(Attacker) || Attacker > 0 && IsClientBot(Attacker))
@@ -698,6 +916,57 @@ void SurvivorIncappedByInfected(int Attacker, int Victim, int Mode = -1)
 		StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for Incapacitating \x05%s\x01!", AttackerName, Score, VictimName);
 }
 
+void HunterSmokerSave(int Savior, int Victim, int BasePoints, int AdvMult, int ExpertMult, char[] SaveFrom, char[] SQLField)
+{
+	if (StatsDisabled())
+		return;
+
+	if (IsClientBot(Savior) || IsClientBot(Victim))
+		return;
+
+	int	 Mode = g_hCvar_AnnounceMode.IntValue;
+
+	char SaviorName[MAX_LINE_WIDTH];
+	GetClientName(Savior, SaviorName, sizeof(SaviorName));
+	char SaviorID[MAX_LINE_WIDTH];
+	GetClientRankAuthString(Savior, SaviorID, sizeof(SaviorID));
+
+	char VictimName[MAX_LINE_WIDTH];
+	GetClientName(Victim, VictimName, sizeof(VictimName));
+	char VictimID[MAX_LINE_WIDTH];
+	GetClientRankAuthString(Victim, VictimID, sizeof(VictimID));
+
+	if (StrEqual(SaviorID, VictimID))
+		return;
+
+	int	 Score = ModifyScoreDifficulty(BasePoints, AdvMult, ExpertMult, TEAM_SURVIVORS);
+	char UpdatePoints[32];
+
+	FormatInGameMode(UpdatePoints, sizeof(UpdatePoints));
+
+	char query[1024];
+	Format(query, sizeof(query), "UPDATE %splayers SET %s = %s + %i, %s = %s + 1 WHERE steamid = '%s'", g_sDbPrefix, UpdatePoints, UpdatePoints, Score, SQLField, SQLField, SaviorID);
+	SendSQLUpdate(query);
+
+	if (Score <= 0)
+		return;
+
+	if (Mode)
+		StatsPrintToChat(Savior, "You have earned \x04%i \x01points for saving \x05%s\x01 from \x04%s\x01!", Score, VictimName, SaveFrom);
+
+	UpdateMapStat("points", Score);
+	AddScore(Savior, Score);
+}
+
+void IncrementImpactCounter(int client)
+{
+	if (g_hChargerImpactCounterTimer[client] != null)
+		delete g_hChargerImpactCounterTimer[client];
+
+	g_hChargerImpactCounterTimer[client] = CreateTimer(3.0, Timer_EndCharge, client);
+	g_iChargerImpactCounter[client]++;
+}
+
 void AnnounceMedkitPenalty(int Mode = -1)
 {
 	float ReductionFactor = GetMedkitPointReductionFactor();
@@ -709,10 +978,7 @@ void AnnounceMedkitPenalty(int Mode = -1)
 		Mode = g_hCvar_AnnounceMode.IntValue;
 
 	if (Mode)
-	{
-		EngineVersion ServerVersion = GetEngineVersion();
-		StatsPrintToChatTeam(TEAM_SURVIVORS, "\x03ALL SURVIVORS \x01now earns only \x04%i percent \x01of their normal points after using their \x05%i%s Medkit%s\x01!", RoundToNearest(ReductionFactor * 100), g_iMedkitsUsedCounter, (g_iMedkitsUsedCounter == 1 ? "st" : (g_iMedkitsUsedCounter == 2 ? "nd" : (g_iMedkitsUsedCounter == 3 ? "rd" : "th"))), (ServerVersion == Engine_Left4Dead ? "" : " or Defibrillator"));
-	}
+		StatsPrintToChatTeam(TEAM_SURVIVORS, "\x03ALL SURVIVORS \x01now earns only \x04%i percent \x01of their normal points after using their \x05%i%s Medkit%s\x01!", RoundToNearest(ReductionFactor * 100), g_iMedkitsUsedCounter, (g_iMedkitsUsedCounter == 1 ? "st" : (g_iMedkitsUsedCounter == 2 ? "nd" : (g_iMedkitsUsedCounter == 3 ? "rd" : "th"))), (g_bLeft4Dead ? "" : " or Defibrillator"));
 }
 
 void InitializeClientInf(int Client)
@@ -745,11 +1011,6 @@ void InitializeClientInf(int Client)
 			g_iPlayerJockied[i][1] = 0;
 		}
 	}
-}
-
-void NotServerConsoleCommand()
-{
-	PrintToConsole(0, "[RANK] Error: Most of the rank commands including this one are not available from server console.");
 }
 
 void StartMapTiming()
@@ -894,9 +1155,8 @@ void InitializeRankVote(int client)
 		if (client == 0) PrintToConsole(0, "[RANK] The Rank Vote is not enabled in this gamemode!");
 		else
 		{
-			EngineVersion ServerVersion = GetEngineVersion();
-			if (ServerVersion == Engine_Left4Dead) StatsPrintToChatPreFormatted2(client, true, "The \x04Rank Vote \x01is enabled in \x03Versus \x01gamemode!");
-			else StatsPrintToChatPreFormatted2(client, true, "The \x04Rank Vote \x01is enabled in \x03Versus\x01, \x03Realism Versus \x01and \x03Scavenge \x01gamemodes!");
+			if (g_bLeft4Dead) StatsPrintToChatPreFormatted2(client, true, "The \x04Rank Vote \x01is enabled in \x03Versus \x01gamemode!");
+			else if (g_bLeft4Dead2) StatsPrintToChatPreFormatted2(client, true, "The \x04Rank Vote \x01is enabled in \x03Versus\x01, \x03Realism Versus \x01and \x03Scavenge \x01gamemodes!");
 		}
 
 		return;
@@ -1443,60 +1703,6 @@ void AnnouncePlayerConnect(int client)
 	DoShowPlayerJoined(client);
 }
 
-void HunterSmokerSave(int Savior, int Victim, int BasePoints, int AdvMult, int ExpertMult, char[] SaveFrom, char[] SQLField)
-{
-	if (StatsDisabled())
-		return;
-
-	if (IsClientBot(Savior) || IsClientBot(Victim))
-		return;
-
-	int	 Mode = g_hCvar_AnnounceMode.IntValue;
-
-	char SaviorName[MAX_LINE_WIDTH];
-	GetClientName(Savior, SaviorName, sizeof(SaviorName));
-	char SaviorID[MAX_LINE_WIDTH];
-	GetClientRankAuthString(Savior, SaviorID, sizeof(SaviorID));
-
-	char VictimName[MAX_LINE_WIDTH];
-	GetClientName(Victim, VictimName, sizeof(VictimName));
-	char VictimID[MAX_LINE_WIDTH];
-	GetClientRankAuthString(Victim, VictimID, sizeof(VictimID));
-
-	if (StrEqual(SaviorID, VictimID))
-		return;
-
-	int	 Score = ModifyScoreDifficulty(BasePoints, AdvMult, ExpertMult, TEAM_SURVIVORS);
-	char UpdatePoints[32];
-
-	switch (g_iCurrentGamemodeID)
-	{
-		case GAMEMODE_VERSUS: Format(UpdatePoints, sizeof(UpdatePoints), "points_survivors");
-		case GAMEMODE_REALISM: Format(UpdatePoints, sizeof(UpdatePoints), "points_realism");
-		case GAMEMODE_SURVIVAL: Format(UpdatePoints, sizeof(UpdatePoints), "points_survival");
-		case GAMEMODE_SCAVENGE: Format(UpdatePoints, sizeof(UpdatePoints), "points_scavenge_survivors");
-		case GAMEMODE_REALISMVERSUS: Format(UpdatePoints, sizeof(UpdatePoints), "points_realism_survivors");
-		case GAMEMODE_OTHERMUTATIONS: Format(UpdatePoints, sizeof(UpdatePoints), "points_mutations");
-		default:
-		{
-			Format(UpdatePoints, sizeof(UpdatePoints), "points");
-		}
-	}
-
-	char query[1024];
-	Format(query, sizeof(query), "UPDATE %splayers SET %s = %s + %i, %s = %s + 1 WHERE steamid = '%s'", g_sDbPrefix, UpdatePoints, UpdatePoints, Score, SQLField, SQLField, SaviorID);
-	SendSQLUpdate(query);
-
-	if (Score <= 0)
-		return;
-
-	if (Mode)
-		StatsPrintToChat(Savior, "You have earned \x04%i \x01points for saving \x05%s\x01 from \x04%s\x01!", Score, VictimName, SaveFrom);
-
-	UpdateMapStat("points", Score);
-	AddScore(Savior, Score);
-}
-
 void StartRankVote(int client)
 {
 	if (!g_hCvar_EnableRankVote.BoolValue)
@@ -1514,20 +1720,7 @@ void InterstitialPlayerUpdate(int client)
 	GetClientRankAuthString(client, ClientID, sizeof(ClientID));
 
 	char UpdatePoints[32];
-
-	switch (g_iCurrentGamemodeID)
-	{
-		case GAMEMODE_VERSUS: Format(UpdatePoints, sizeof(UpdatePoints), "points_survivors");
-		case GAMEMODE_REALISM: Format(UpdatePoints, sizeof(UpdatePoints), "points_realism");
-		case GAMEMODE_SURVIVAL: Format(UpdatePoints, sizeof(UpdatePoints), "points_survival");
-		case GAMEMODE_SCAVENGE: Format(UpdatePoints, sizeof(UpdatePoints), "points_scavenge_survivors");
-		case GAMEMODE_REALISMVERSUS: Format(UpdatePoints, sizeof(UpdatePoints), "points_realism_survivors");
-		case GAMEMODE_OTHERMUTATIONS: Format(UpdatePoints, sizeof(UpdatePoints), "points_mutations");
-		default:
-		{
-			Format(UpdatePoints, sizeof(UpdatePoints), "points");
-		}
-	}
+	FormatInGameMode(UpdatePoints, sizeof(UpdatePoints));
 
 	int	 len = 0;
 	char query[1024];

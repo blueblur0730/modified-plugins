@@ -33,12 +33,6 @@ public void OnAdminMenuReady(Handle TopMenuHandle)
 	g_TMO_MenuClear = g_hTM_RankAdminMenu.AddItem("sm_rank_admin_clear", ClearRankTopItemHandler, statscommands, "sm_rank_admin_clear", ADMFLAG_ROOT);
 }
 
-public void OnLibraryRemoved(const char[] name)
-{
-	if (StrEqual(name, "adminmenu"))
-		g_hTM_RankAdminMenu = null;
-}
-
 // This handles the top level "Player Stats" category and how it is displayed on the core admin menu
 void ClearRankCategoryHandler(TopMenu topmenu, TopMenuAction action, TopMenuObject object_id, int client, char[] buffer, int maxlength)
 {
@@ -55,10 +49,8 @@ void Menu_CreateClearMenu(int client)
 	menu.SetTitle("Clear:");
 	menu.ExitBackButton = true;
 	menu.ExitButton = true;
-
 	menu.AddItem("cps", "Clear stats from currently playing player...");
 	menu.AddItem("ctm", "Clear timed maps...");
-
 	menu.Display(client, 30);
 }
 
@@ -95,17 +87,15 @@ void Menu_CreateClearTMMenu(int client)
 	menu.SetTitle("Clear Timed Maps:");
 	menu.ExitBackButton = true;
 	menu.ExitButton = true;
-
 	menu.AddItem("ctma",  "All");
 	menu.AddItem("ctmc",  "Coop");
 	menu.AddItem("ctmsu", "Survival");
 	menu.AddItem("ctmr",  "Realism");
 	menu.AddItem("ctmm",  "Mutations");
-
 	menu.Display(client, 30);
 }
 
-int Menu_CreateClearTMMenuHandler(Handle menu, MenuAction action, int param1, int param2)
+int Menu_CreateClearTMMenuHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	switch (action)
 	{
@@ -135,7 +125,7 @@ int Menu_CreateClearTMMenuHandler(Handle menu, MenuAction action, int param1, in
 }
 
 // This deals with what happens someone opens the "Player Stats" category from the menu
-void ClearRankTopItemHandler(Handle topmenu, TopMenuAction action, TopMenuObject object_id, client, char[] buffer, maxlength)
+void ClearRankTopItemHandler(Handle topmenu, TopMenuAction action, TopMenuObject object_id, int client, char[] buffer, int maxlength)
 {
 	// When an item is displayed to a player tell the menu to format the item
 	if (action == TopMenuAction_DisplayOption)
@@ -162,298 +152,119 @@ void ClearRankTopItemHandler(Handle topmenu, TopMenuAction action, TopMenuObject
 	}
 }
 
-void CreateRanksMenu(Handle owner, Handle hndl, const char[] error, any client)
-{
-	if (!client || hndl == INVALID_HANDLE)
-	{
-		LogError("CreateRanksMenu failed! Reason: %s", error);
-		return;
-	}
-
-	char SteamID[MAX_LINE_WIDTH];
-	Handle menu = CreateMenu(Menu_CreateRanksMenuHandler);
-
-	char Name[32], DisplayName[MAX_LINE_WIDTH];
-
-	SetMenuTitle(menu, "Player Ranks:");
-	SetMenuExitBackButton(menu, false);
-	SetMenuExitButton(menu, true);
-
-	while (SQL_FetchRow(hndl))
-	{
-		SQL_FetchString(hndl, 0, SteamID, sizeof(SteamID));
-		SQL_FetchString(hndl, 1, Name, sizeof(Name));
-
-		ReplaceString(Name, sizeof(Name), "&lt;", "<");
-		ReplaceString(Name, sizeof(Name), "&gt;", ">");
-		ReplaceString(Name, sizeof(Name), "&#37;", "%");
-		ReplaceString(Name, sizeof(Name), "&#61;", "=");
-		ReplaceString(Name, sizeof(Name), "&#42;", "*");
-
-		Format(DisplayName, sizeof(DisplayName), "%s (%i points)", Name, SQL_FetchInt(hndl, 2));
-
-		AddMenuItem(menu, SteamID, DisplayName);
-	}
-
-	DisplayMenu(menu, client, 30);
-}
-
-public CreateTimedMapsMenu(Handle owner, Handle hndl, const char[] error, any client)
-{
-	if (!client || hndl == INVALID_HANDLE)
-	{
-		LogError("CreateTimedMapsMenu failed! Reason: %s", error);
-		return;
-	}
-
-	if (SQL_GetRowCount(hndl) <= 0)
-	{
-		Handle TimedMapsPanel = CreatePanel();
-		SetPanelTitle(TimedMapsPanel, "Timed Maps:");
-
-		DrawPanelText(TimedMapsPanel, "There are no recorded map timings!");
-		DrawPanelItem(TimedMapsPanel, "Close");
-
-		SendPanelToClient(TimedMapsPanel, client, TimedMapsPanelHandler, 30);
-		CloseHandle(TimedMapsPanel);
-
-		return;
-	}
-
-	int Gamemode;
-	Handle menu = CreateMenu(Menu_CreateTimedMapsMenuHandler);
-	char GamemodeTitle[32], GamemodeInfo[2]; //, MutationInfo[MAX_LINE_WIDTH];
-
-	SetMenuTitle(menu, "Timed Maps:");
-	SetMenuExitBackButton(menu, false);
-	SetMenuExitButton(menu, true);
-
-	while (SQL_FetchRow(hndl))
-	{
-		Gamemode = SQL_FetchInt(hndl, 0);
-		IntToString(Gamemode, GamemodeInfo, sizeof(GamemodeInfo));
-
-		switch (Gamemode)
-		{
-			case GAMEMODE_COOP:
-				strcopy(GamemodeTitle, sizeof(GamemodeTitle), "Co-op");
-			case GAMEMODE_SURVIVAL:
-				strcopy(GamemodeTitle, sizeof(GamemodeTitle), "Survival");
-			case GAMEMODE_REALISM:
-				strcopy(GamemodeTitle, sizeof(GamemodeTitle), "Realism");
-			case GAMEMODE_OTHERMUTATIONS:
-			{
-				strcopy(GamemodeTitle, sizeof(GamemodeTitle), "Mutations");
-				//SQL_FetchString(hndl, 1, MutationInfo, sizeof(MutationInfo));
-				//Format(GamemodeTitle, sizeof(GamemodeTitle), "Mutations (%s)", MutationInfo);
-			}
-			default:
-				continue;
-		}
-
-		if (g_iCurrentGamemodeID == Gamemode)
-			StrCat(GamemodeTitle, sizeof(GamemodeTitle), TM_MENU_CURRENT);
-
-		AddMenuItem(menu, GamemodeInfo, GamemodeTitle);
-	}
-
-	DisplayMenu(menu, client, 30);
-
-	return;
-}
-
-DisplayYesNoPanel(client, const char[] title, MenuHandler:handler, delay=30)
+void DisplayYesNoPanel(int client, const char[] title, MenuHandler handler, int delay = 30)
 {
 	if (!client)
 		return;
 
-	Handle panel = CreatePanel();
+	Panel panel = new Panel();
 
-	SetPanelTitle(panel, title);
+	panel.SetTitle(title);
+	panel.DrawItem("Yes");
+	panel.DrawItem("No");
+	panel.Send(client, handler, delay);
 
-	DrawPanelItem(panel, "Yes");
-	DrawPanelItem(panel, "No");
-
-	SendPanelToClient(panel, client, handler, delay);
-	CloseHandle(panel);
+	delete panel;
 }
 
-public Menu_CreateTimedMapsMenuHandler(Handle menu, MenuAction:action, param1, param2)
+int Menu_CreateTimedMapsMenuHandler(Menu menu, MenuAction action, int param1, int param2)
 {
-	if (menu == INVALID_HANDLE)
-		return;
+	if (!menu)
+		return 0;
 
 	if (action == MenuAction_End)
-		CloseHandle(menu);
+		delete menu;
 
 	if (action != MenuAction_Select || param1 <= 0 || IsClientBot(param1))
-		return;
+		return 0;
 
 	char Info[2];
-	bool found = GetMenuItem(menu, param2, Info, sizeof(Info));
+	bool found = menu.GetItem(param2, Info, sizeof(Info));
 
 	if (!found)
-		return;
+		return 0;
 
 	DisplayTimedMapsMenu2FromInfo(param1, Info);
+
+	return 0;
 }
 
-bool TimedMapsMenuInfoMarker(char[] Info, MenuNumber)
-{
-	if (Info[0] == '\0' || MenuNumber < 2)
-		return false;
-
-	int Position = -1, TempPosition;
-
-	for (int i = 0; i < MenuNumber; i++)
-	{
-		TempPosition = FindCharInString(Info[Position + 1], '\\');
-
-		if (TempPosition < 0)
-		{
-			if (i + 2 == MenuNumber)
-				return true;
-			else
-				return false;
-		}
-
-		Position += 1 + TempPosition;
-
-		if (i + 2 >= MenuNumber)
-		{
-			Info[Position] = '\0';
-			return true;
-		}
-	}
-
-	return false;
-}
-
-public DisplayTimedMapsMenu2FromInfo(client, char[] Info)
+void DisplayTimedMapsMenu2FromInfo(int client, char[] Info)
 {
 	if (!TimedMapsMenuInfoMarker(Info, 2))
 	{
-		cmd_TimedMaps(client, 0);
+		Cmd_TimedMaps(client, 0);
 		return;
 	}
 
 	strcopy(g_sMapTimingMenuInfo[client], MAX_LINE_WIDTH, Info);
 
 	int Gamemode = StringToInt(Info);
-
 	DisplayTimedMapsMenu2(client, Gamemode);
 }
 
-public DisplayTimedMapsMenu2(client, Gamemode)
+void DisplayTimedMapsMenu2(int client, int Gamemode)
 {
 	char query[256];
 	Format(query, sizeof(query), "SELECT DISTINCT tm.gamemode, tm.map FROM %stimedmaps AS tm INNER JOIN %splayers AS p ON tm.steamid = p.steamid WHERE tm.gamemode = %i ORDER BY tm.map ASC", g_sDbPrefix, g_sDbPrefix, Gamemode);
 	SQL_TQuery(db, CreateTimedMapsMenu2, query, client);
 }
 
-public CreateTimedMapsMenu2(Handle owner, Handle hndl, const char[] error, any client)
+int Menu_CreateTimedMapsMenu2Hndl(Menu menu, MenuAction action, int param1, int param2)
 {
-	if (!client || hndl == INVALID_HANDLE)
-	{
-		LogError("CreateTimedMapsMenu2 failed! Reason: %s", error);
-		return;
-	}
-
-	if (SQL_GetRowCount(hndl) <= 0)
-	{
-		Panel TimedMapsPanel = CreatePanel();
-		SetPanelTitle(TimedMapsPanel, "Timed Maps:");
-
-		DrawPanelText(TimedMapsPanel, "There are no recorded times for this gamemode!");
-		DrawPanelItem(TimedMapsPanel, "Close");
-
-		SendPanelToClient(TimedMapsPanel, client, TimedMapsPanelHandler, 30);
-		CloseHandle(TimedMapsPanel);
-
-		return;
-	}
-
-	Handle menu = CreateMenu(Menu_CreateTimedMapsMenu2Hndl);
-	int Gamemode;
-	char Map[MAX_LINE_WIDTH], Info[MAX_LINE_WIDTH], CurrentMapName[MAX_LINE_WIDTH];
-
-	GetCurrentMap(CurrentMapName, sizeof(CurrentMapName));
-
-	SetMenuTitle(menu, "Timed Maps:");
-	SetMenuExitBackButton(menu, true);
-	SetMenuExitButton(menu, true);
-
-	while (SQL_FetchRow(hndl))
-	{
-		Gamemode = SQL_FetchInt(hndl, 0);
-		SQL_FetchString(hndl, 1, Map, sizeof(Map));
-
-		Format(Info, sizeof(Info), "%i\\%s", Gamemode, Map);
-
-		if (g_iCurrentGamemodeID == Gamemode && StrEqual(CurrentMapName, Map))
-			StrCat(Map, sizeof(Map), TM_MENU_CURRENT);
-
-		AddMenuItem(menu, Info, Map);
-	}
-
-	DisplayMenu(menu, client, 30);
-}
-
-public Menu_CreateTimedMapsMenu2Hndl(Handle menu, MenuAction:action, param1, param2)
-{
-	if (menu == INVALID_HANDLE)
-		return;
+	if (!menu)
+		return 0;
 
 	if (action == MenuAction_End)
-		CloseHandle(menu);
+		delete menu;
 
 	if (action == MenuAction_Cancel)
 	{
 		if (param2 == MenuCancel_ExitBack)
-			cmd_TimedMaps(param1, 0);
+			Cmd_TimedMaps(param1, 0);
 
-		return;
+		return 0;
 	}
 
 	if (action != MenuAction_Select || param1 <= 0 || IsClientBot(param1))
-		return;
+		return 0;
 
 	char Info[MAX_LINE_WIDTH];
-	bool found = GetMenuItem(menu, param2, Info, sizeof(Info));
+	bool found = menu.GetItem(param2, Info, sizeof(Info));
 
 	if (!found)
-		return;
+		return 0;
 
 	DisplayTimedMapsMenu3FromInfo(param1, Info);
+
+	return 0;
 }
 
-public DisplayTimedMapsMenu3FromInfo(client, char[] Info)
+void DisplayTimedMapsMenu3FromInfo(int client, char[] Info)
 {
 	if (!TimedMapsMenuInfoMarker(Info, 3))
 	{
-		cmd_TimedMaps(client, 0);
+		Cmd_TimedMaps(client, 0);
 		return;
 	}
 
 	strcopy(g_sMapTimingMenuInfo[client], MAX_LINE_WIDTH, Info);
 
 	char GamemodeInfo[2], Map[MAX_LINE_WIDTH];
-
 	strcopy(GamemodeInfo, sizeof(GamemodeInfo), Info);
 	GamemodeInfo[1] = 0;
 
 	strcopy(Map, sizeof(Map), Info[2]);
-
 	DisplayTimedMapsMenu3(client, StringToInt(GamemodeInfo), Map);
 }
 
-public DisplayTimedMapsMenu3(client, Gamemode, const char[] Map)
+void DisplayTimedMapsMenu3(int client, int Gamemode, const char[] Map)
 {
-	Handle dp = CreateDataPack();
+	DataPack dp = new DataPack();
 
-	WritePackCell(dp, client);
-	WritePackCell(dp, Gamemode);
-	WritePackString(dp, Map);
+	dp.WriteCell(client);
+	dp.WriteCell(Gamemode);
+	dp.WriteString(Map);
 
 	char SteamID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(client, SteamID, sizeof(SteamID));
@@ -463,129 +274,51 @@ public DisplayTimedMapsMenu3(client, Gamemode, const char[] Map)
 	SQL_TQuery(db, DisplayTimedMapsMenu3_2, query, dp);
 }
 
-public DisplayTimedMapsMenu3_2(Handle owner, Handle hndl, const char[] error, any dp)
+int Menu_CreateTimedMapsMenu3Hndl(Menu menu, MenuAction action, int param1, int param2)
 {
-	if (hndl == INVALID_HANDLE)
-	{
-		if (dp != INVALID_HANDLE)
-			CloseHandle(dp);
-
-		LogError("DisplayTimedMapsMenu3_2 failed! Reason: %s", error);
-		return;
-	}
-
-	ResetPack(dp);
-
-	int client = ReadPackCell(dp);
-	int Gamemode = ReadPackCell(dp);
-	char Map[MAX_LINE_WIDTH];
-	ReadPackString(dp, Map, sizeof(Map));
-
-	CloseHandle(dp);
-
-	if (SQL_FetchRow(hndl))
-		g_fClientMapTime[client] = SQL_FetchFloat(hndl, 0);
-	else
-		g_fClientMapTime[client] = 0.0;
-
-	char query[256];
-	Format(query, sizeof(query), "SELECT DISTINCT tm.gamemode, tm.map, tm.time FROM %stimedmaps AS tm INNER JOIN %splayers AS p ON tm.steamid = p.steamid WHERE tm.gamemode = %i AND tm.map = '%s' ORDER BY tm.time %s", g_sDbPrefix, g_sDbPrefix, Gamemode, Map, (Gamemode == GAMEMODE_SURVIVAL ? "DESC" : "ASC"));
-	SQL_TQuery(db, CreateTimedMapsMenu3, query, client);
-}
-
-public CreateTimedMapsMenu3(Handle owner, Handle hndl, const char[] error, any client)
-{
-	if (!client || hndl == INVALID_HANDLE)
-	{
-		LogError("CreateTimedMapsMenu3 failed! Reason: %s", error);
-		return;
-	}
-
-	if (SQL_GetRowCount(hndl) <= 0)
-	{
-		Handle TimedMapsPanel = CreatePanel();
-		SetPanelTitle(TimedMapsPanel, "Timed Maps:");
-
-		DrawPanelText(TimedMapsPanel, "There are no recorded times for this map!");
-		DrawPanelItem(TimedMapsPanel, "Close");
-
-		SendPanelToClient(TimedMapsPanel, client, TimedMapsPanelHandler, 30);
-		CloseHandle(TimedMapsPanel);
-
-		return;
-	}
-
-	Handle menu = CreateMenu(Menu_CreateTimedMapsMenu3Hndl);
-	float MapTime;
-	char Map[MAX_LINE_WIDTH], Info[MAX_LINE_WIDTH], Value[MAX_LINE_WIDTH];
-
-	SetMenuTitle(menu, "Timed Maps:");
-	SetMenuExitBackButton(menu, true);
-	SetMenuExitButton(menu, true);
-
-	while (SQL_FetchRow(hndl))
-	{
-		SQL_FetchString(hndl, 1, Map, sizeof(Map));
-		MapTime = SQL_FetchFloat(hndl, 2);
-
-		SetTimeLabel(MapTime, Value, sizeof(Value));
-
-		Format(Info, sizeof(Info), "%i\\%s\\%f", SQL_FetchInt(hndl, 0), Map, MapTime);
-
-		if (g_fClientMapTime[client] > 0.0 && g_fClientMapTime[client] == MapTime)
-			StrCat(Value, sizeof(Value), TM_MENU_CURRENT);
-
-		AddMenuItem(menu, Info, Value);
-	}
-
-	DisplayMenu(menu, client, 30);
-}
-
-public Menu_CreateTimedMapsMenu3Hndl(Handle menu, MenuAction:action, param1, param2)
-{
-	if (menu == INVALID_HANDLE)
-		return;
+	if (!menu)
+		return 0;
 
 	if (action == MenuAction_End)
-		CloseHandle(menu);
+		delete menu;
 
 	if (action == MenuAction_Cancel)
 	{
 		if (param2 == MenuCancel_ExitBack)
 			DisplayTimedMapsMenu2FromInfo(param1, g_sMapTimingMenuInfo[param1]);
 
-		return;
+		return 0;
 	}
 
 	if (action != MenuAction_Select || param1 <= 0 || IsClientBot(param1))
-		return;
+		return 0;
 
 	char Info[MAX_LINE_WIDTH];
-	bool found = GetMenuItem(menu, param2, Info, sizeof(Info));
+	bool found = menu.GetItem(param2, Info, sizeof(Info));
 
 	if (!found)
-		return;
+		return 0;
 
 	DisplayTimedMapsMenu4FromInfo(param1, Info);
+
+	return 0;
 }
 
-public DisplayTimedMapsMenu4FromInfo(client, char[] Info)
+void DisplayTimedMapsMenu4FromInfo(int client, char[] Info)
 {
 	if (!TimedMapsMenuInfoMarker(Info, 4))
 	{
-		cmd_TimedMaps(client, 0);
+		Cmd_TimedMaps(client, 0);
 		return;
 	}
 
 	strcopy(g_sMapTimingMenuInfo[client], MAX_LINE_WIDTH, Info);
 
 	char GamemodeInfo[2], Map[MAX_LINE_WIDTH];
-
 	strcopy(GamemodeInfo, sizeof(GamemodeInfo), Info);
 	GamemodeInfo[1] = 0;
 
 	int Position = FindCharInString(Info[2], '\\');
-
 	if (Position < 0)
 	{
 		LogError("Timed Maps menu 4 error: Info = \"%s\"", Info);
@@ -599,299 +332,176 @@ public DisplayTimedMapsMenu4FromInfo(client, char[] Info)
 
 	char MapTime[MAX_LINE_WIDTH];
 	strcopy(MapTime, sizeof(MapTime), Info[Position + 1]);
-
 	DisplayTimedMapsMenu4(client, StringToInt(GamemodeInfo), Map, StringToFloat(MapTime));
 }
 
-public DisplayTimedMapsMenu4(client, Gamemode, const char[] Map, float MapTime)
+void DisplayTimedMapsMenu4(int client, int Gamemode, const char[] Map, float MapTime)
 {
 	char query[256];
 	Format(query, sizeof(query), "SELECT tm.steamid, p.name FROM %stimedmaps AS tm INNER JOIN %splayers AS p ON tm.steamid = p.steamid WHERE tm.gamemode = %i AND tm.map = '%s' AND tm.time = %f ORDER BY p.name ASC", g_sDbPrefix, g_sDbPrefix, Gamemode, Map, MapTime);
 	SQL_TQuery(db, CreateTimedMapsMenu4, query, client);
 }
 
-public CreateTimedMapsMenu4(Handle owner, Handle hndl, const char[] error, any client)
+int Menu_CreateTimedMapsMenu4Hndl(Menu menu, MenuAction action, int param1, int param2)
 {
-	if (!client || hndl == INVALID_HANDLE)
-	{
-		LogError("CreateTimedMapsMenu4 failed! Reason: %s", error);
-		return;
-	}
-
-	Handle menu = CreateMenu(Menu_CreateTimedMapsMenu4Hndl);
-
-	char Name[32], SteamID[MAX_LINE_WIDTH];
-
-	SetMenuTitle(menu, "Timed Maps:");
-	SetMenuExitBackButton(menu, true);
-	SetMenuExitButton(menu, true);
-
-	while (SQL_FetchRow(hndl))
-	{
-		SQL_FetchString(hndl, 0, SteamID, sizeof(SteamID));
-		SQL_FetchString(hndl, 1, Name, sizeof(Name));
-
-		ReplaceString(Name, sizeof(Name), "&lt;", "<");
-		ReplaceString(Name, sizeof(Name), "&gt;", ">");
-		ReplaceString(Name, sizeof(Name), "&#37;", "%");
-		ReplaceString(Name, sizeof(Name), "&#61;", "=");
-		ReplaceString(Name, sizeof(Name), "&#42;", "*");
-
-		AddMenuItem(menu, SteamID, Name);
-	}
-
-	DisplayMenu(menu, client, 30);
-}
-
-public Menu_CreateTimedMapsMenu4Hndl(Handle menu, MenuAction:action, param1, param2)
-{
-	if (menu == INVALID_HANDLE)
-		return;
+	if (!menu)
+		return 0;
 
 	if (action == MenuAction_End)
-		CloseHandle(menu);
+		delete menu;
 
 	if (action == MenuAction_Cancel)
 	{
 		if (param2 == MenuCancel_ExitBack)
 			DisplayTimedMapsMenu3FromInfo(param1, g_sMapTimingMenuInfo[param1]);
 
-		return;
+		return 0;
 	}
 
 	if (action != MenuAction_Select || param1 <= 0 || IsClientBot(param1))
-		return;
+		return 0;
 
 	char SteamID[MAX_LINE_WIDTH];
-	bool found = GetMenuItem(menu, param2, SteamID, sizeof(SteamID));
+	bool found = menu.GetItem(param2, SteamID, sizeof(SteamID));
 
 	if (!found)
-		return;
+		return 0;
 
 	QueryClientStatsSteamID(param1, SteamID, CM_RANK);
+
+	return 0;
 }
 
-public CreatePPMMenu(Handle owner, Handle hndl, const char[] error, any client)
+int Menu_CreateRanksMenuHandler(Menu menu, MenuAction action, int param1, int param2)
 {
-	if (!client || hndl == INVALID_HANDLE)
-	{
-		LogError("CreatePPMMenu failed! Reason: %s", error);
-		return;
-	}
-
-	char SteamID[MAX_LINE_WIDTH];
-	Handle menu = CreateMenu(Menu_CreateRanksMenuHandler);
-
-	char Name[32], DisplayName[MAX_LINE_WIDTH];
-
-	SetMenuTitle(menu, "Player PPM:");
-	SetMenuExitBackButton(menu, false);
-	SetMenuExitButton(menu, true);
-
-	while (SQL_FetchRow(hndl))
-	{
-		SQL_FetchString(hndl, 0, SteamID, sizeof(SteamID));
-		SQL_FetchString(hndl, 1, Name, sizeof(Name));
-
-		ReplaceString(Name, sizeof(Name), "&lt;", "<");
-		ReplaceString(Name, sizeof(Name), "&gt;", ">");
-		ReplaceString(Name, sizeof(Name), "&#37;", "%");
-		ReplaceString(Name, sizeof(Name), "&#61;", "=");
-		ReplaceString(Name, sizeof(Name), "&#42;", "*");
-
-		Format(DisplayName, sizeof(DisplayName), "%s (PPM: %.2f)", Name, SQL_FetchFloat(hndl, 2));
-
-		AddMenuItem(menu, SteamID, DisplayName);
-	}
-
-	DisplayMenu(menu, client, 30);
-}
-
-public Menu_CreateRanksMenuHandler(Handle menu, MenuAction:action, param1, param2)
-{
-	if (menu == INVALID_HANDLE)
-		return;
+	if (!menu)
+		return 0;
 
 	if (action == MenuAction_End)
-		CloseHandle(menu);
+		delete menu;
 
 	if (action != MenuAction_Select || param1 <= 0 || IsClientBot(param1))
-		return;
+		return 0;
 
 	char SteamID[MAX_LINE_WIDTH];
-	bool found = GetMenuItem(menu, param2, SteamID, sizeof(SteamID));
+	bool found = menu.GetItem(param2, SteamID, sizeof(SteamID));
 
 	if (!found)
-		return;
+		return 0;
 
 	QueryClientStatsSteamID(param1, SteamID, CM_RANK);
+
+	return 0;
 }
 
-public Menu_CreateRankMenuHandler(Handle menu, MenuAction:action, param1, param2)
+int Menu_CreateRankMenuHandler(Menu menu, MenuAction action, int param1, int param2)
 {
-	if (menu == INVALID_HANDLE)
-		return;
+	if (!menu)
+		return 0;
 
 	if (action == MenuAction_End)
-		CloseHandle(menu);
+		delete menu;
 
 	if (action != MenuAction_Select || param1 <= 0 || IsClientBot(param1))
-		return;
+		return 0;
 
 	char Info[MAX_LINE_WIDTH];
-	bool found = GetMenuItem(menu, param2, Info, sizeof(Info));
+	bool found = menu.GetItem(param2, Info, sizeof(Info));
 
 	if (!found)
-		return;
+		return 0;
 
 	if (strcmp(Info, "rankabout", false) == 0)
 	{
 		DisplayAboutPanel(param1);
-		return;
+		return 0;
 	}
 
 	else if (strcmp(Info, "showsettings", false) == 0)
 	{
 		DisplaySettingsPanel(param1);
-		return;
+		return 0;
 	}
 
 	HandleCommands(param1, Info);
+
+	return 0;
 }
 
 // Send the RANKABOUT panel to the client's display.
-public DisplayAboutPanel(client)
+void DisplayAboutPanel(int client)
 {
 	char Value[MAX_LINE_WIDTH];
 
-	Handle panel = CreatePanel();
+	Panel panel = new Panel();
 
 	Format(Value, sizeof(Value), "About [L4D] Statistic:");
-	SetPanelTitle(panel, Value);
+	panel.SetTitle(Value);
 
 	Format(Value, sizeof(Value), "Version: %s", PLUGIN_VERSION);
-	DrawPanelText(panel, Value);
+	panel.DrawText(Value);
 
 	Format(Value, sizeof(Value), "Author: %s", "Mikko Andersson (muukis)");
-	DrawPanelText(panel, Value);
+	panel.DrawText(Value);
 
 	Format(Value, sizeof(Value), "Description: %s", "Record player statistics.");
-	DrawPanelText(panel, Value);
+	panel.DrawText(Value);
 
-	DrawPanelItem(panel, "Back");
-	DrawPanelItem(panel, "Close");
+	panel.DrawItem("Back");
+	panel.DrawItem("Close");
 
-	SendPanelToClient(panel, client, AboutPanelHandler, 30);
-	CloseHandle(panel);
+	panel.Send(client, AboutPanelHandler, 30);
+	delete panel;
 }
 
 // Send the RANKABOUT panel to the client's display.
-public DisplaySettingsPanel(client)
+void DisplaySettingsPanel(int client)
 {
 	char Value[MAX_LINE_WIDTH];
 
-	Handle panel = CreatePanel();
+	Panel panel = new Panel();
 
 	Format(Value, sizeof(Value), "Plugin Settings:");
-	SetPanelTitle(panel, Value);
+	panel.SetTitle(Value);
 
-	DrawPanelItem(panel, (g_bClientRankMute[client] ? "Unmute (Currently: Muted)" : "Mute (Currently: Not muted)"));
+	panel.DrawItem((g_bClientRankMute[client] ? "Unmute (Currently: Muted)" : "Mute (Currently: Not muted)"));
 
-	DrawPanelItem(panel, "Back");
-	DrawPanelItem(panel, "Close");
+	panel.DrawItem("Back");
+	panel.DrawItem("Close");
 
-	SendPanelToClient(panel, client, SettingsPanelHandler, 30);
-	CloseHandle(panel);
-}
-
-// Send the TOP10 panel to the client's display.
-public DisplayTop10(Handle owner, Handle hndl, const char[] error, any client)
-{
-	if (!client || hndl == INVALID_HANDLE)
-	{
-		LogError("DisplayTop10 failed! Reason: %s", error);
-		return;
-	}
-
-	char Name[32];
-
-	Handle Top10Panel = CreatePanel();
-	SetPanelTitle(Top10Panel, "Top 10 Players");
-
-	while (SQL_FetchRow(hndl))
-	{
-		SQL_FetchString(hndl, 0, Name, sizeof(Name));
-
-		ReplaceString(Name, sizeof(Name), "&lt;", "<");
-		ReplaceString(Name, sizeof(Name), "&gt;", ">");
-		ReplaceString(Name, sizeof(Name), "&#37;", "%");
-		ReplaceString(Name, sizeof(Name), "&#61;", "=");
-		ReplaceString(Name, sizeof(Name), "&#42;", "*");
-
-		DrawPanelItem(Top10Panel, Name);
-	}
-
-	SendPanelToClient(Top10Panel, client, Top10PanelHandler, 30);
-	CloseHandle(Top10Panel);
-}
-
-// Send the TOP10PPM panel to the client's display.
-public DisplayTop10PPM(Handle owner, Handle hndl, const char[] error, any client)
-{
-	if (!client || hndl == INVALID_HANDLE)
-	{
-		LogError("DisplayTop10PPM failed! Reason: %s", error);
-		return;
-	}
-
-	char Name[32], Disp[MAX_LINE_WIDTH];
-
-	Handle TopPPMPanel = CreatePanel();
-	SetPanelTitle(TopPPMPanel, "Top 10 PPM Players");
-
-	while (SQL_FetchRow(hndl))
-	{
-		SQL_FetchString(hndl, 0, Name, sizeof(Name));
-
-		ReplaceString(Name, sizeof(Name), "&lt;", "<");
-		ReplaceString(Name, sizeof(Name), "&gt;", ">");
-		ReplaceString(Name, sizeof(Name), "&#37;", "%");
-		ReplaceString(Name, sizeof(Name), "&#61;", "=");
-		ReplaceString(Name, sizeof(Name), "&#42;", "*");
-
-		Format(Disp, sizeof(Disp), "%s (PPM: %.2f)", Name, SQL_FetchFloat(hndl, 1));
-
-		DrawPanelItem(TopPPMPanel, Disp);
-	}
-
-	SendPanelToClient(TopPPMPanel, client, Top10PPMPanelHandler, 30);
-	CloseHandle(TopPPMPanel);
+	panel.Send(client, SettingsPanelHandler, 30);
+	delete panel;
 }
 
 // Handler for RANK panel.
-public RankPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int RankPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
+	return 0;
 }
 
 // Handler for NEXTRANK panel.
-public NextRankPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int NextRankPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (param2 == 1)
 		QueryClientStats(param1, CM_NEXTRANKFULL);
+
+	return 0;
 }
 
 // Handler for NEXTRANK panel.
-public NextRankFullPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int NextRankFullPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
+	return 0;
 }
 
 // Handler for TIMEDMAPS panel.
-public TimedMapsPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int TimedMapsPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
+	return 0;
 }
 
 // Handler for RANKADMIN panel.
-//public RankAdminPanelHandler(Handle menu, MenuAction:action, param1, param2)
+//public RankAdminPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 //{
 //	if (action != MenuAction_Select)
 //		return;
@@ -907,10 +517,10 @@ public TimedMapsPanelHandler(Handle menu, MenuAction:action, param1, param2)
 //}
 
 // Handler for RANKADMIN panel.
-public ClearPlayersPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int ClearPlayersPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action != MenuAction_Select)
-		return;
+		return 0;
 
 	if (param2 == 1)
 	{
@@ -919,13 +529,15 @@ public ClearPlayersPanelHandler(Handle menu, MenuAction:action, param1, param2)
 	}
 	//else if (param2 == 2)
 	//	cmd_RankAdmin(param1, 0);
+
+	return 0;
 }
 
 // Handler for RANKADMIN panel.
-public ClearMapsPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int ClearMapsPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action != MenuAction_Select)
-		return;
+		return 0;
 
 	if (param2 == 1)
 	{
@@ -934,13 +546,15 @@ public ClearMapsPanelHandler(Handle menu, MenuAction:action, param1, param2)
 	}
 	//else if (param2 == 2)
 	//	cmd_RankAdmin(param1, 0);
+
+	return 0;
 }
 
 // Handler for RANKADMIN panel.
-public ClearAllPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int ClearAllPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action != MenuAction_Select)
-		return;
+		return 0;
 
 	if (param2 == 1)
 	{
@@ -949,18 +563,20 @@ public ClearAllPanelHandler(Handle menu, MenuAction:action, param1, param2)
 	}
 	//else if (param2 == 2)
 	//	cmd_RankAdmin(param1, 0);
+
+	return 0;
 }
 
 // Handler for RANKADMIN panel.
-public CleanPlayersPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int CleanPlayersPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action != MenuAction_Select)
-		return;
+		return 0;
 
 	if (param2 == 1)
 	{
-		new LastOnTimeMonths = GetConVarInt(g_hCvar_AdminPlayerCleanLastOnTime);
-		new PlaytimeMinutes = GetConVarInt(g_hCvar_AdminPlayerCleanPlatime);
+		int LastOnTimeMonths = g_hCvar_AdminPlayerCleanLastOnTime.IntValue;
+		int PlaytimeMinutes = g_hCvar_AdminPlayerCleanPlatime.IntValue;
 
 		if (LastOnTimeMonths || PlaytimeMinutes)
 		{
@@ -982,13 +598,15 @@ public CleanPlayersPanelHandler(Handle menu, MenuAction:action, param1, param2)
 	}
 	//else if (param2 == 2)
 	//	cmd_RankAdmin(param1, 0);
+
+	return 0;
 }
 
 // Handler for RANKADMIN panel.
-public RemoveCustomMapsPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int RemoveCustomMapsPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action != MenuAction_Select)
-		return;
+		return 0;
 
 	if (param2 == 1)
 	{
@@ -999,13 +617,15 @@ public RemoveCustomMapsPanelHandler(Handle menu, MenuAction:action, param1, para
 	}
 	//else if (param2 == 2)
 	//	cmd_RankAdmin(param1, 0);
+
+	return 0;
 }
 
 // Handler for RANKADMIN panel.
-public ClearTMAllPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int ClearTMAllPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action != MenuAction_Select)
-		return;
+		return 0;
 
 	if (param2 == 1)
 	{
@@ -1016,13 +636,15 @@ public ClearTMAllPanelHandler(Handle menu, MenuAction:action, param1, param2)
 	}
 	//else if (param2 == 2)
 	//	cmd_RankAdmin(param1, 0);
+
+	return 0;
 }
 
 // Handler for RANKADMIN panel.
-public ClearTMCoopPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int ClearTMCoopPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action != MenuAction_Select)
-		return;
+		return 0;
 
 	if (param2 == 1)
 	{
@@ -1033,13 +655,15 @@ public ClearTMCoopPanelHandler(Handle menu, MenuAction:action, param1, param2)
 	}
 	//else if (param2 == 2)
 	//	cmd_RankAdmin(param1, 0);
+
+	return 0;
 }
 
 // Handler for RANKADMIN panel.
-public ClearTMSurvivalPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int ClearTMSurvivalPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action != MenuAction_Select)
-		return;
+		return 0;
 
 	if (param2 == 1)
 	{
@@ -1050,13 +674,15 @@ public ClearTMSurvivalPanelHandler(Handle menu, MenuAction:action, param1, param
 	}
 	//else if (param2 == 2)
 	//	cmd_RankAdmin(param1, 0);
+
+	return 0;
 }
 
 // Handler for RANKADMIN panel.
-public ClearTMRealismPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int ClearTMRealismPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action != MenuAction_Select)
-		return;
+		return 0;
 
 	if (param2 == 1)
 	{
@@ -1067,13 +693,15 @@ public ClearTMRealismPanelHandler(Handle menu, MenuAction:action, param1, param2
 	}
 	//else if (param2 == 2)
 	//	cmd_RankAdmin(param1, 0);
+
+	return 0;
 }
 
 // Handler for RANKADMIN panel.
-public ClearTMMutationsPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int ClearTMMutationsPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action != MenuAction_Select)
-		return;
+		return 0;
 
 	if (param2 == 1)
 	{
@@ -1084,39 +712,37 @@ public ClearTMMutationsPanelHandler(Handle menu, MenuAction:action, param1, para
 	}
 	//else if (param2 == 2)
 	//	cmd_RankAdmin(param1, 0);
+
+	return 0;
 }
 
 // Handler for RANKVOTE panel.
-public RankVotePanelHandler(Handle menu, MenuAction:action, param1, param2)
+int RankVotePanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
-	if (action != MenuAction_Select || g_hRankVoteTimer == INVALID_HANDLE || param1 <= 0 || IsClientBot(param1))
-		return;
+	if (action != MenuAction_Select || !g_hRankVoteTimer || param1 <= 0 || IsClientBot(param1))
+		return 0;
 
 	if (param2 == 1 || param2 == 2)
 	{
-		new team = GetClientTeam(param1);
+		int team = GetClientTeam(param1);
 
 		if (team != TEAM_SURVIVORS && team != TEAM_INFECTED)
-			return;
+			return 0;
 
-		new Oldg_iPlayerRankVote = g_iPlayerRankVote[param1];
+		int OldPlayerRankVote = g_iPlayerRankVote[param1];
 
 		if (param2 == 1)
 			g_iPlayerRankVote[param1] = RANKVOTE_YES;
 		else if (param2 == 2)
 			g_iPlayerRankVote[param1] = RANKVOTE_NO;
 
-		new humans = 0, votes = 0, yesvotes = 0, novotes = 0, WinningVoteCount = 0;
-
+		int humans = 0, votes = 0, yesvotes = 0, novotes = 0, WinningVoteCount = 0;
 		CheckRankVotes(humans, votes, yesvotes, novotes, WinningVoteCount);
 
 		if (yesvotes >= WinningVoteCount || novotes >= WinningVoteCount)
 		{
-			if (g_hRankVoteTimer != INVALID_HANDLE)
-			{
-				CloseHandle(g_hRankVoteTimer);
-				g_hRankVoteTimer = INVALID_HANDLE;
-			}
+			if (g_hRankVoteTimer != null)
+				delete g_hRankVoteTimer;
 
 			StatsPrintToChatAll("Vote to shuffle teams by player PPM \x03%s \x01with \x04%i (yes) against %i (no)\x01.", (yesvotes >= WinningVoteCount ? "PASSED" : "DID NOT PASS"), yesvotes, novotes);
 
@@ -1124,17 +750,18 @@ public RankVotePanelHandler(Handle menu, MenuAction:action, param1, param2)
 				CreateTimer(2.0, Timer_ShuffleTeams);
 		}
 
-		if (Oldg_iPlayerRankVote != RANKVOTE_NOVOTE)
-			return;
+		if (OldPlayerRankVote != RANKVOTE_NOVOTE)
+			return 0;
 
 		char Name[32];
 		GetClientName(param1, Name, sizeof(Name));
-
 		StatsPrintToChatAll("\x05%s \x01voted. \x04%i/%i \x01players have voted.", Name, votes, humans);
 	}
+
+	return 0;
 }
 
-CheckRankVotes(&Humans, &Votes, &YesVotes, &NoVotes, &WinningVoteCount)
+void CheckRankVotes(int &Humans, int &Votes, int &YesVotes, int &NoVotes, int &WinningVoteCount)
 {
 	Humans = 0;
 	Votes = 0;
@@ -1142,22 +769,18 @@ CheckRankVotes(&Humans, &Votes, &YesVotes, &NoVotes, &WinningVoteCount)
 	NoVotes = 0;
 	WinningVoteCount = 0;
 
-	int i, team, maxplayers = MaxClients;
-
-	for (i = 1; i <= maxplayers; i++)
+	int team;
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
 		{
 			team = GetClientTeam(i);
-
 			if (team == TEAM_SURVIVORS || team == TEAM_INFECTED)
 			{
 				Humans++;
-
 				if (g_iPlayerRankVote[i] != RANKVOTE_NOVOTE)
 				{
 					Votes++;
-
 					if (g_iPlayerRankVote[i] == RANKVOTE_YES)
 						YesVotes++;
 				}
@@ -1170,7 +793,7 @@ CheckRankVotes(&Humans, &Votes, &YesVotes, &NoVotes, &WinningVoteCount)
 	NoVotes = Votes - YesVotes;
 }
 
-DisplayClearPanel(client, delay=30)
+void DisplayClearPanel(int client, int delay = 30)
 {
 	if (!client)
 		return;
@@ -1181,11 +804,10 @@ DisplayClearPanel(client, delay=30)
 	//	ClearPlayerMenu = INVALID_HANDLE;
 	//}
 
-	Handle ClearPlayerMenu = CreateMenu(DisplayClearPanelHandler);
-	int maxplayers = MaxClients;
+	Menu ClearPlayerMenu = new Menu(DisplayClearPanelHandler);
 	char id[3], Name[32];
 
-	for (int i = 1; i <= maxplayers; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientBot(i) || !IsClientConnected(i) || !IsClientInGame(i))
 			continue;
@@ -1193,30 +815,30 @@ DisplayClearPanel(client, delay=30)
 		GetClientName(i, Name, sizeof(Name));
 		IntToString(i, id, sizeof(id));
 
-		AddMenuItem(ClearPlayerMenu, id, Name);
+		ClearPlayerMenu.AddItem(id, Name);
 	}
 
-	SetMenuTitle(ClearPlayerMenu, "Clear player stats:");
-	DisplayMenu(ClearPlayerMenu, client, delay);
+	ClearPlayerMenu.SetTitle("Clear player stats:");
+	ClearPlayerMenu.Display(client, delay);
 }
 
 // Handler for RANKADMIN panel.
-public DisplayClearPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int DisplayClearPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
-	if (menu == INVALID_HANDLE)
-		return;
+	if (!menu)
+		return 0;
 
 	if (action == MenuAction_End)
-		CloseHandle(menu);
+		delete menu;
 
 	if (action != MenuAction_Select || param1 <= 0 || IsClientBot(param1))
-		return;
+		return 0;
 
 	char id[3];
-	bool found = GetMenuItem(menu, param2, id, sizeof(id));
+	bool found = menu.GetItem(param2, id, sizeof(id));
 
 	if (!found)
-		return;
+		return 0;
 
 	int client = StringToInt(id);
 
@@ -1239,32 +861,38 @@ public DisplayClearPanelHandler(Handle menu, MenuAction:action, param1, param2)
 	}
 	else
 		StatsPrintToChatPreFormatted(param1, "Clearing player stats failed!");
+
+	return 0;
 }
 
 // Handler for RANKABOUT panel.
-public AboutPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int AboutPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
 		if (param2 == 1)
-			cmd_ShowRankMenu(param1, 0);
+			Cmd_ShowRankMenu(param1, 0);
 	}
+
+	return 0;
 }
 
 // Handler for RANK SETTINGS panel.
-public SettingsPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int SettingsPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
 		if (param2 == 1)
-			cmd_ToggleClientRankMute(param1, 0);
+			Cmd_ToggleClientRankMute(param1, 0);
 		if (param2 == 2)
-			cmd_ShowRankMenu(param1, 0);
+			Cmd_ShowRankMenu(param1, 0);
 	}
+
+	return 0;
 }
 
 // Handler for TOP10 panel.
-public Top10PanelHandler(Handle menu, MenuAction:action, param1, param2)
+int Top10PanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1273,10 +901,12 @@ public Top10PanelHandler(Handle menu, MenuAction:action, param1, param2)
 
 		GetClientFromTop10(param1, param2 - 1);
 	}
+
+	return 0;
 }
 
 // Handler for TOP10PPM panel.
-public Top10PPMPanelHandler(Handle menu, MenuAction:action, param1, param2)
+int Top10PPMPanelHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
@@ -1285,91 +915,474 @@ public Top10PPMPanelHandler(Handle menu, MenuAction:action, param1, param2)
 
 		GetClientFromTop10PPM(param1, param2 - 1);
 	}
+
+	return 0;
 }
 
 // Send the NEXTRANK panel to the client's display.
-public DisplayNextRank(client)
+void DisplayNextRank(int client)
 {
 	if (!client)
 		return;
 
-	Handle NextRankPanel = CreatePanel();
+	Panel NextRankPanel = new Panel();
 	char Value[MAX_LINE_WIDTH];
 
-	SetPanelTitle(NextRankPanel, "Next Rank:");
+	NextRankPanel.SetTitle("Next Rank:");
 
 	if (g_iClientNextRank[client])
 	{
 		Format(Value, sizeof(Value), "Points required: %i", g_iClientNextRank[client]);
-		DrawPanelText(NextRankPanel, Value);
+		NextRankPanel.DrawText(Value);
 
 		Format(Value, sizeof(Value), "Current rank: %i", g_iClientRank[client]);
-		DrawPanelText(NextRankPanel, Value);
+		NextRankPanel.DrawText(Value);
 	}
 	else
-		DrawPanelText(NextRankPanel, "You are 1st");
+		NextRankPanel.DrawText("You are 1st");
 
-	DrawPanelItem(NextRankPanel, "More...");
-	DrawPanelItem(NextRankPanel, "Close");
-	SendPanelToClient(NextRankPanel, client, NextRankPanelHandler, 30);
-	CloseHandle(NextRankPanel);
+	NextRankPanel.DrawItem("More...");
+	NextRankPanel.DrawItem("Close");
+	NextRankPanel.Send(client, NextRankPanelHandler, 30);
+	delete NextRankPanel;
+}
+
+void DisplayRankMenu(int client)
+{
+	char Title[MAX_LINE_WIDTH];
+
+	Format(Title, sizeof(Title), "[L4D] Statistic:");
+
+	Menu menu = new Menu(Menu_CreateRankMenuHandler);
+
+	menu.SetTitle(Title);
+	menu.ExitBackButton = false;
+	menu.ExitButton = true;
+
+	menu.AddItem("rank", "Show my rank");
+	menu.AddItem("top10", "Show top 10");
+	menu.AddItem("top10ppm", "Show top 10 PPM");
+	menu.AddItem("nextrank", "Show my next rank");
+	menu.AddItem("showtimer", "Show current timer");
+	menu.AddItem("showrank", "Show others rank");
+	menu.AddItem("showppm", "Show others PPM");
+	if (g_hCvar_EnableRankVote.BoolValue && IsTeamGamemode())
+		menu.AddItem("rankvote", "Vote for team shuffle by PPM");
+
+	menu.AddItem("timedmaps", "Show all map timings");
+
+	if (IsSingleTeamGamemode())
+		menu.AddItem("maptimes", "Show current map timings");
+
+	if (g_hCvar_AnnounceMode.IntValue)
+		menu.AddItem("showsettings", "Modify rank settings");
+
+	//AddMenuItem(menu, "showmaptimes", "Show others current map timings");
+
+	Format(Title, sizeof(Title), "About [L4D] Statistic");
+	menu.AddItem("rankabout", Title);
+	menu.Display(client, 30);
+
+	if (g_bEnableSounds_Rankmenu_Show && g_hCvar_SoundsEnabled.BoolValue)
+		EmitSoundToClient(client, g_sStatsSound_Rankmenu_Show);
+}
+
+void CreateRanksMenu(Handle owner, DBResultSet hndl, const char[] error, int client)
+{
+	if (!client || !hndl)
+	{
+		LogError("CreateRanksMenu failed! Reason: %s", error);
+		return;
+	}
+
+	char SteamID[MAX_LINE_WIDTH];
+	Menu menu = new Menu(Menu_CreateRanksMenuHandler);
+
+	char Name[32], DisplayName[MAX_LINE_WIDTH];
+	menu.SetTitle("Player Ranks:");
+	menu.ExitBackButton = false;
+	menu.ExitButton = true;
+
+	while (hndl.FetchRow())
+	{
+		hndl.FetchString(0, SteamID, sizeof(SteamID));
+		hndl.FetchString(1, Name, sizeof(Name));
+
+		ReplaceString(Name, sizeof(Name), "&lt;", "<");
+		ReplaceString(Name, sizeof(Name), "&gt;", ">");
+		ReplaceString(Name, sizeof(Name), "&#37;", "%");
+		ReplaceString(Name, sizeof(Name), "&#61;", "=");
+		ReplaceString(Name, sizeof(Name), "&#42;", "*");
+
+		Format(DisplayName, sizeof(DisplayName), "%s (%i points)", Name, hndl.FetchInt(2));
+		menu.AddItem(SteamID, DisplayName);
+	}
+
+	menu.Display(client, 30);
+}
+
+void CreateTimedMapsMenu(Handle owner, DBResultSet hndl, const char[] error, int client)
+{
+	if (!client || !hndl)
+	{
+		LogError("CreateTimedMapsMenu failed! Reason: %s", error);
+		return;
+	}
+
+	if (hndl.RowCount <= 0)
+	{
+		Panel TimedMapsPanel = new Panel();
+		TimedMapsPanel.SetTitle("Timed Maps:");
+		TimedMapsPanel.DrawText("There are no recorded map timings!");
+		TimedMapsPanel.DrawItem("Close");
+		TimedMapsPanel.Send(client, TimedMapsPanelHandler, 30);
+
+		delete TimedMapsPanel;
+		return;
+	}
+
+	int Gamemode;
+	Menu menu = new Menu(Menu_CreateTimedMapsMenuHandler);
+	char GamemodeTitle[32], GamemodeInfo[2]; //, MutationInfo[MAX_LINE_WIDTH];
+
+	menu.SetTitle("Timed Maps:");
+	menu.ExitBackButton = false;
+	menu.ExitButton = true;
+
+	while (hndl.FetchRow())
+	{
+		Gamemode = hndl.FetchInt(0);
+		IntToString(Gamemode, GamemodeInfo, sizeof(GamemodeInfo));
+
+		switch (Gamemode)
+		{
+			case GAMEMODE_COOP: strcopy(GamemodeTitle, sizeof(GamemodeTitle), "Co-op");
+			case GAMEMODE_SURVIVAL: strcopy(GamemodeTitle, sizeof(GamemodeTitle), "Survival");
+			case GAMEMODE_REALISM: strcopy(GamemodeTitle, sizeof(GamemodeTitle), "Realism");
+			case GAMEMODE_OTHERMUTATIONS:
+			{
+				strcopy(GamemodeTitle, sizeof(GamemodeTitle), "Mutations");
+				//SQL_FetchString(hndl, 1, MutationInfo, sizeof(MutationInfo));
+				//Format(GamemodeTitle, sizeof(GamemodeTitle), "Mutations (%s)", MutationInfo);
+			}
+			default:
+				continue;
+		}
+
+		if (g_iCurrentGamemodeID == Gamemode)
+			StrCat(GamemodeTitle, sizeof(GamemodeTitle), TM_MENU_CURRENT);
+
+		menu.AddItem(GamemodeInfo, GamemodeTitle);
+	}
+
+	menu.Display(client, 30);
+}
+
+void CreateTimedMapsMenu2(Handle owner, DBResultSet hndl, const char[] error, int client)
+{
+	if (!client || !hndl)
+	{
+		LogError("CreateTimedMapsMenu2 failed! Reason: %s", error);
+		return;
+	}
+
+	if (hndl.RowCount <= 0)
+	{
+		Panel TimedMapsPanel = new Panel();
+		TimedMapsPanel.SetTitle("Timed Maps:");
+		TimedMapsPanel.DrawText("There are no recorded times for this gamemode!");
+		TimedMapsPanel.DrawItem("Close");
+		TimedMapsPanel.Send(client, TimedMapsPanelHandler, 30);
+		delete TimedMapsPanel;
+
+		return;
+	}
+
+	Menu menu = new Menu(Menu_CreateTimedMapsMenu2Hndl);
+	int Gamemode;
+	char Map[MAX_LINE_WIDTH], Info[MAX_LINE_WIDTH], CurrentMapName[MAX_LINE_WIDTH];
+	GetCurrentMap(CurrentMapName, sizeof(CurrentMapName));
+
+	menu.SetTitle("Timed Maps:");
+	menu.ExitBackButton = true;
+	menu.ExitButton = true;
+
+	while (hndl.FetchRow())
+	{
+		Gamemode = hndl.FetchInt(0);
+		hndl.FetchString(1, Map, sizeof(Map));
+
+		Format(Info, sizeof(Info), "%i\\%s", Gamemode, Map);
+
+		if (g_iCurrentGamemodeID == Gamemode && StrEqual(CurrentMapName, Map))
+			StrCat(Map, sizeof(Map), TM_MENU_CURRENT);
+
+		menu.AddItem(Info, Map);
+	}
+
+	menu.Display(client, 30);
+}
+
+void DisplayTimedMapsMenu3_2(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
+{
+	if (!hndl)
+	{
+		if (dp)
+			delete dp;
+
+		LogError("DisplayTimedMapsMenu3_2 failed! Reason: %s", error);
+		return;
+	}
+
+	dp.Reset();
+
+	int client = dp.ReadCell();
+	int Gamemode = dp.ReadCell();
+	char Map[MAX_LINE_WIDTH];
+	dp.ReadString(Map, sizeof(Map));
+
+	delete dp;
+
+	if (hndl.FetchRow())
+		g_fClientMapTime[client] = hndl.FetchFloat(0);
+	else
+		g_fClientMapTime[client] = 0.0;
+
+	char query[256];
+	Format(query, sizeof(query), "SELECT DISTINCT tm.gamemode, tm.map, tm.time FROM %stimedmaps AS tm INNER JOIN %splayers AS p ON tm.steamid = p.steamid WHERE tm.gamemode = %i AND tm.map = '%s' ORDER BY tm.time %s", g_sDbPrefix, g_sDbPrefix, Gamemode, Map, (Gamemode == GAMEMODE_SURVIVAL ? "DESC" : "ASC"));
+	SQL_TQuery(db, CreateTimedMapsMenu3, query, client);
+}
+
+void CreateTimedMapsMenu3(Handle owner, DBResultSet hndl, const char[] error, int client)
+{
+	if (!client || !hndl)
+	{
+		LogError("CreateTimedMapsMenu3 failed! Reason: %s", error);
+		return;
+	}
+
+	if (hndl.RowCount <= 0)
+	{
+		Panel TimedMapsPanel = new Panel();
+		TimedMapsPanel.SetTitle("Timed Maps:");
+		TimedMapsPanel.DrawText("There are no recorded times for this map!");
+		TimedMapsPanel.DrawItem("Close");
+		TimedMapsPanel.Send(client, TimedMapsPanelHandler, 30);
+		delete TimedMapsPanel;
+
+		return;
+	}
+
+	Menu menu = new Menu(Menu_CreateTimedMapsMenu3Hndl);
+	float MapTime;
+	char Map[MAX_LINE_WIDTH], Info[MAX_LINE_WIDTH], Value[MAX_LINE_WIDTH];
+
+	menu.SetTitle("Timed Maps:");
+	menu.ExitBackButton = true;
+	menu.ExitButton = true;
+
+	while (hndl.FetchRow())
+	{
+		hndl.FetchString(1, Map, sizeof(Map));
+		MapTime = hndl.FetchFloat(2);
+
+		SetTimeLabel(MapTime, Value, sizeof(Value));
+		Format(Info, sizeof(Info), "%i\\%s\\%f", hndl.FetchInt(0), Map, MapTime);
+
+		if (g_fClientMapTime[client] > 0.0 && g_fClientMapTime[client] == MapTime)
+			StrCat(Value, sizeof(Value), TM_MENU_CURRENT);
+
+		menu.AddItem(Info, Value);
+	}
+
+	menu.Display(client, 30);
+}
+
+void CreateTimedMapsMenu4(Handle owner, DBResultSet hndl, const char[] error, int client)
+{
+	if (!client || !hndl)
+	{
+		LogError("CreateTimedMapsMenu4 failed! Reason: %s", error);
+		return;
+	}
+
+	Menu menu = new Menu(Menu_CreateTimedMapsMenu4Hndl);
+
+	char Name[32], SteamID[MAX_LINE_WIDTH];
+	menu.SetTitle("Timed Maps:");
+	menu.ExitBackButton = true;
+	menu.ExitButton = true;
+
+	while (hndl.FetchRow())
+	{
+		hndl.FetchString(0, SteamID, sizeof(SteamID));
+		hndl.FetchString(1, Name, sizeof(Name));
+
+		ReplaceString(Name, sizeof(Name), "&lt;", "<");
+		ReplaceString(Name, sizeof(Name), "&gt;", ">");
+		ReplaceString(Name, sizeof(Name), "&#37;", "%");
+		ReplaceString(Name, sizeof(Name), "&#61;", "=");
+		ReplaceString(Name, sizeof(Name), "&#42;", "*");
+
+		menu.AddItem(SteamID, Name);
+	}
+
+	menu.Display(client, 30);
+}
+
+void CreatePPMMenu(Handle owner, DBResultSet hndl, const char[] error, int client)
+{
+	if (!client || !hndl)
+	{
+		LogError("CreatePPMMenu failed! Reason: %s", error);
+		return;
+	}
+
+	char SteamID[MAX_LINE_WIDTH];
+	Menu menu = new Menu(Menu_CreateRanksMenuHandler);
+
+	char Name[32], DisplayName[MAX_LINE_WIDTH];
+
+	menu.SetTitle("Player PPM:");
+	menu.ExitBackButton = false;
+	menu.ExitButton = true;
+
+	while (hndl.FetchRow())
+	{
+		hndl.FetchString(0, SteamID, sizeof(SteamID));
+		hndl.FetchString(1, Name, sizeof(Name));
+
+		ReplaceString(Name, sizeof(Name), "&lt;", "<");
+		ReplaceString(Name, sizeof(Name), "&gt;", ">");
+		ReplaceString(Name, sizeof(Name), "&#37;", "%");
+		ReplaceString(Name, sizeof(Name), "&#61;", "=");
+		ReplaceString(Name, sizeof(Name), "&#42;", "*");
+
+		Format(DisplayName, sizeof(DisplayName), "%s (PPM: %.2f)", Name, hndl.FetchFloat(2));
+		menu.AddItem(SteamID, DisplayName);
+	}
+
+	menu.Display(client, 30);
+}
+
+// Send the TOP10 panel to the client's display.
+public DisplayTop10(Handle owner, DBResultSet hndl, const char[] error, int client)
+{
+	if (!client || !hndl)
+	{
+		LogError("DisplayTop10 failed! Reason: %s", error);
+		return;
+	}
+
+	char Name[32];
+	Panel Top10Panel = new Panel();
+	Top10Panel.SetTitle("Top 10 Players");
+
+	while (hndl.FetchRow())
+	{
+		hndl.FetchString(0, Name, sizeof(Name));
+
+		ReplaceString(Name, sizeof(Name), "&lt;", "<");
+		ReplaceString(Name, sizeof(Name), "&gt;", ">");
+		ReplaceString(Name, sizeof(Name), "&#37;", "%");
+		ReplaceString(Name, sizeof(Name), "&#61;", "=");
+		ReplaceString(Name, sizeof(Name), "&#42;", "*");
+
+		Top10Panel.DrawItem(Name);
+	}
+
+	Top10Panel.Send(client, Top10PanelHandler, 30);
+	delete Top10Panel;
+}
+
+// Send the TOP10PPM panel to the client's display.
+void DisplayTop10PPM(Handle owner, DBResultSet hndl, const char[] error, int client)
+{
+	if (!client || !hndl)
+	{
+		LogError("DisplayTop10PPM failed! Reason: %s", error);
+		return;
+	}
+
+	char Name[32], Disp[MAX_LINE_WIDTH];
+
+	Panel TopPPMPanel = new Panel();
+	TopPPMPanel.SetTitle("Top 10 PPM Players");
+
+	while (hndl.FetchRow())
+	{
+		hndl.FetchString(0, Name, sizeof(Name));
+
+		ReplaceString(Name, sizeof(Name), "&lt;", "<");
+		ReplaceString(Name, sizeof(Name), "&gt;", ">");
+		ReplaceString(Name, sizeof(Name), "&#37;", "%");
+		ReplaceString(Name, sizeof(Name), "&#61;", "=");
+		ReplaceString(Name, sizeof(Name), "&#42;", "*");
+
+		Format(Disp, sizeof(Disp), "%s (PPM: %.2f)", Name, hndl.FetchFloat(1));
+
+		TopPPMPanel.DrawItem(Disp);
+	}
+
+	TopPPMPanel.Send(client, Top10PPMPanelHandler, 30);
+	delete TopPPMPanel;
 }
 
 // Send the NEXTRANK panel to the client's display.
-public DisplayNextRankFull(Handle owner, Handle hndl, const char[] error, any client)
+void DisplayNextRankFull(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
 
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("DisplayNextRankFull Query failed: %s", error);
 		return;
 	}
 
-	if(SQL_GetRowCount(hndl) <= 1)
+	if(hndl.RowCount <= 1)
 		return;
 
 	int Points;
 	char Name[32];
 
-	Handle NextRankPanel = CreatePanel();
+	Panel NextRankPanel = new Panel();
 	char Value[MAX_LINE_WIDTH];
 
-	SetPanelTitle(NextRankPanel, "Next Rank:");
+	NextRankPanel.SetTitle("Next Rank:");
 
 	if (g_iClientNextRank[client])
 	{
 		Format(Value, sizeof(Value), "Points required: %i", g_iClientNextRank[client]);
-		DrawPanelText(NextRankPanel, Value);
+		NextRankPanel.DrawText(Value);
 
 		Format(Value, sizeof(Value), "Current rank: %i", g_iClientRank[client]);
-		DrawPanelText(NextRankPanel, Value);
+		NextRankPanel.DrawText(Value);
 	}
 	else
-		DrawPanelText(NextRankPanel, "You are 1st");
+		NextRankPanel.DrawText("You are 1st");
 
-	while (SQL_FetchRow(hndl))
+	while (hndl.FetchRow())
 	{
-		SQL_FetchString(hndl, 0, Name, sizeof(Name));
-		Points = SQL_FetchInt(hndl, 1);
+		hndl.FetchString(0, Name, sizeof(Name));
+		Points = hndl.FetchInt(1);
 
 		Format(Value, sizeof(Value), "%i points: %s", Points, Name);
-		DrawPanelText(NextRankPanel, Value);
+		NextRankPanel.DrawText(Value);
 	}
 
-	DrawPanelItem(NextRankPanel, "Close");
-	SendPanelToClient(NextRankPanel, client, NextRankFullPanelHandler, 30);
-	CloseHandle(NextRankPanel);
+	NextRankPanel.DrawItem("Close");
+	NextRankPanel.Send(client, NextRankFullPanelHandler, 30);
+	delete NextRankPanel;
 }
 
 // Send the RANK panel to the client's display.
-public DisplayRank(Handle owner, Handle hndl, const char[] error, any client)
+void DisplayRank(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
 
-	if (hndl == INVALID_HANDLE)
+	if (!hndl)
 	{
 		LogError("DisplayRank Query failed: %s", error);
 		return;
@@ -1379,14 +1392,14 @@ public DisplayRank(Handle owner, Handle hndl, const char[] error, any client)
 	int Playtime, Points, InfectedKilled, SurvivorsKilled, Headshots;
 	char Name[32];
 
-	if (SQL_FetchRow(hndl))
+	if (hndl.FetchRow())
 	{
-		SQL_FetchString(hndl, 0, Name, sizeof(Name));
-		Playtime = SQL_FetchInt(hndl, 1);
-		Points = SQL_FetchInt(hndl, 2);
-		InfectedKilled = SQL_FetchInt(hndl, 3);
-		SurvivorsKilled = SQL_FetchInt(hndl, 4);
-		Headshots = SQL_FetchInt(hndl, 5);
+		hndl.FetchString(0, Name, sizeof(Name));
+		Playtime = hndl.FetchInt(1);
+		Points = hndl.FetchInt(2);
+		InfectedKilled = hndl.FetchInt(3);
+		SurvivorsKilled = hndl.FetchInt(4);
+		Headshots = hndl.FetchInt(5);
 		PPM = float(Points) / float(Playtime);
 	}
 	else
@@ -1400,105 +1413,62 @@ public DisplayRank(Handle owner, Handle hndl, const char[] error, any client)
 		PPM = 0.0;
 	}
 
-	Handle RankPanel = CreatePanel();
+	Panel RankPanel = new Panel();
 	char Value[MAX_LINE_WIDTH];
 	char URL[MAX_LINE_WIDTH];
 
-	GetConVarString(g_hCvar_SiteURL, URL, sizeof(URL));
+	g_hCvar_SiteURL.GetString(URL, sizeof(URL));
 	float HeadshotRatio = Headshots == 0 ? 0.00 : (float(Headshots)/float(InfectedKilled))*100;
 
 	Format(Value, sizeof(Value), "Ranking of %s" , Name);
-	SetPanelTitle(RankPanel, Value);
+	RankPanel.SetTitle(Value);
 
 	Format(Value, sizeof(Value), "Rank: %i of %i" , g_iClientRank[client], g_iRankTotal);
-	DrawPanelText(RankPanel, Value);
+	RankPanel.DrawText(Value);
 
 	if (!InvalidGameMode())
 	{
 		Format(Value, sizeof(Value), "%s Rank: %i of %i" ,g_sCurrentGamemodeLabel , g_iClientGameModeRank[client], g_iGameModeRankTotal);
-		DrawPanelText(RankPanel, Value);
+		RankPanel.DrawText(Value);
 	}
 
 	if (Playtime > 60)
 	{
 		Format(Value, sizeof(Value), "Playtime: %.2f hours" , float(Playtime)/60.0);
-		DrawPanelText(RankPanel, Value);
+		RankPanel.DrawText(Value);
 	}
 	else
 	{
 		Format(Value, sizeof(Value), "Playtime: %i min" , Playtime);
-		DrawPanelText(RankPanel, Value);
+		RankPanel.DrawText(Value);
 	}
 
 	Format(Value, sizeof(Value), "Points: %i" , Points);
-	DrawPanelText(RankPanel, Value);
+	RankPanel.DrawText(Value);
 
 	Format(Value, sizeof(Value), "PPM: %.2f" , PPM);
-	DrawPanelText(RankPanel, Value);
+	RankPanel.DrawText(Value);
 
 	Format(Value, sizeof(Value), "Infected Killed: %i" , InfectedKilled);
-	DrawPanelText(RankPanel, Value);
+	RankPanel.DrawText(Value);
 
 	Format(Value, sizeof(Value), "Survivors Killed: %i" , SurvivorsKilled);
-	DrawPanelText(RankPanel, Value);
+	RankPanel.DrawText(Value);
 
 	Format(Value, sizeof(Value), "Headshots: %i" , Headshots);
-	DrawPanelText(RankPanel, Value);
+	RankPanel.DrawText(Value);
 
 	Format(Value, sizeof(Value), "Headshot Ratio: %.2f %" , HeadshotRatio);
-	DrawPanelText(RankPanel, Value);
+	RankPanel.DrawText(Value);
 
 	if (!StrEqual(URL, "", false))
 	{
 		Format(Value, sizeof(Value), "For full stats visit %s", URL);
-		DrawPanelText(RankPanel, Value);
+		RankPanel.DrawText(Value);
 	}
 
 	//DrawPanelItem(RankPanel, "Next Rank");
-	DrawPanelItem(RankPanel, "Close");
-	SendPanelToClient(RankPanel, client, RankPanelHandler, 30);
-	CloseHandle(RankPanel);
-}
-
-public DisplayRankMenu(client)
-{
-	char Title[MAX_LINE_WIDTH];
-
-	Format(Title, sizeof(Title), "[L4D] Statistic:");
-
-	Handle menu = CreateMenu(Menu_CreateRankMenuHandler);
-
-	SetMenuTitle(menu, Title);
-	SetMenuExitBackButton(menu, false);
-	SetMenuExitButton(menu, true);
-
-	AddMenuItem(menu, "rank", "Show my rank");
-	AddMenuItem(menu, "top10", "Show top 10");
-	AddMenuItem(menu, "top10ppm", "Show top 10 PPM");
-	AddMenuItem(menu, "nextrank", "Show my next rank");
-	AddMenuItem(menu, "showtimer", "Show current timer");
-	AddMenuItem(menu, "showrank", "Show others rank");
-	AddMenuItem(menu, "showppm", "Show others PPM");
-	if (GetConVarBool(g_hCvar_EnableRankVote) && IsTeamGamemode())
-	{
-		AddMenuItem(menu, "rankvote", "Vote for team shuffle by PPM");
-	}
-	AddMenuItem(menu, "timedmaps", "Show all map timings");
-	if (IsSingleTeamGamemode())
-	{
-		AddMenuItem(menu, "maptimes", "Show current map timings");
-	}
-	if (GetConVarInt(g_hCvar_AnnounceMode))
-	{
-		AddMenuItem(menu, "showsettings", "Modify rank settings");
-	}
-	//AddMenuItem(menu, "showmaptimes", "Show others current map timings");
-
-	Format(Title, sizeof(Title), "About [L4D] Statistic");
-	AddMenuItem(menu, "rankabout", Title);
-
-	DisplayMenu(menu, client, 30);
-
-	if (g_bEnableSounds_Rankmenu_Show && GetConVarBool(g_hCvar_SoundsEnabled))
-		EmitSoundToClient(client, g_sStatsSound_Rankmenu_Show);
+	RankPanel.DrawItem("Close");
+	RankPanel.Send(client, RankPanelHandler, 30);
+	delete RankPanel;
 }
