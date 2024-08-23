@@ -23,14 +23,14 @@ void RegCommands()
 	RegConsoleCmd("sm_showmaptimes", Cmd_ShowMapTimes);
 	RegConsoleCmd("sm_rankmenu", Cmd_ShowRankMenu);
 	RegConsoleCmd("sm_rankmutetoggle", Cmd_ToggleClientRankMute);
-	RegConsoleCmd("sm_rankmute", cmd_ClientRankMute);
+	RegConsoleCmd("sm_rankmute", Cmd_ClientRankMute);
 	RegConsoleCmd("sm_showmotd", Cmd_ShowMotd);
 
 	// Register administrator command for clearing all stats (BE CAREFUL)
 	// RegAdminCmd("sm_rank_admin", cmd_RankAdmin, ADMFLAG_ROOT, "Display admin panel for Rank");
-	RegAdminCmd("sm_rank_clear", cmd_ClearRank, ADMFLAG_ROOT, "Clear all stats from database (asks a confirmation before clearing the database)");
-	RegAdminCmd("sm_rank_shuffle", cmd_ShuffleTeams, ADMFLAG_KICK, "Shuffle teams by player PPM (Points Per Minute)");
-	RegAdminCmd("sm_rank_motd", cmd_SetMotd, ADMFLAG_GENERIC, "Set Message Of The Day");
+	RegAdminCmd("sm_rank_clear", Cmd_ClearRank, ADMFLAG_ROOT, "Clear all stats from database (asks a confirmation before clearing the database)");
+	RegAdminCmd("sm_rank_shuffle", Cmd_ShuffleTeams, ADMFLAG_KICK, "Shuffle teams by player PPM (Points Per Minute)");
+	RegAdminCmd("sm_rank_motd", Cmd_SetMotd, ADMFLAG_GENERIC, "Set Message Of The Day");
 }
 
 /*
@@ -249,7 +249,7 @@ Action Cmd_ShowNextRank(int client, int args)
 //}
 
 // Run Team Shuffle.
-Action cmd_ShuffleTeams(int client, int args)
+Action Cmd_ShuffleTeams(int client, int args)
 {
 	if (!IsTeamGamemode())
 	{
@@ -270,7 +270,7 @@ Action cmd_ShuffleTeams(int client, int args)
 }
 
 // Set Message Of The Day.
-Action cmd_SetMotd(int client, int args)
+Action Cmd_SetMotd(int client, int args)
 {
 	char arg[1024], msofd[1024];
 
@@ -283,7 +283,7 @@ Action cmd_SetMotd(int client, int args)
 }
 
 // Clear database.
-Action cmd_ClearRank(int client, int args)
+Action Cmd_ClearRank(int client, int args)
 {
 	if (client == 0)
 	{
@@ -334,11 +334,6 @@ Action Cmd_ToggleClientRankMute(int client, int args)
 	return Plugin_Handled;
 }
 
-void ShowRankMuteUsage(int client)
-{
-	PrintToConsole(client, "[RANK] Command usage: sm_rankmute <0|1>");
-}
-
 // Show current message of the day.
 Action Cmd_ShowMotd(int client, int args)
 {
@@ -347,7 +342,7 @@ Action Cmd_ShowMotd(int client, int args)
 }
 
 // Set client rank mute.
-Action cmd_ClientRankMute(int client, int args)
+Action Cmd_ClientRankMute(int client, int args)
 {
 	if (client == 0)
 		return Plugin_Handled;
@@ -357,7 +352,7 @@ Action cmd_ClientRankMute(int client, int args)
 
 	if (args != 1)
 	{
-		ShowRankMuteUsage(client);
+		PrintToConsole(client, "[RANK] Command usage: sm_rankmute <0|1>");
 		return Plugin_Handled;
 	}
 
@@ -366,7 +361,7 @@ Action cmd_ClientRankMute(int client, int args)
 
 	if (!StrEqual(arg, "0") && !StrEqual(arg, "1"))
 	{
-		ShowRankMuteUsage(client);
+		PrintToConsole(client, "[RANK] Command usage: sm_rankmute <0|1>");
 		return Plugin_Handled;
 	}
 
@@ -538,7 +533,6 @@ Action Cmd_ShowRanks(int client, int args)
 	}
 
 	StrCat(query, sizeof(query), "ORDER BY totalpoints DESC");
-
 	SQL_TQuery(db, CreateRanksMenu, query, client);
 
 	return Plugin_Handled;
@@ -554,7 +548,7 @@ Action Cmd_ShowTop10PPM(int client, int args)
 	Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers", g_sDbPrefix);
 	SQL_TQuery(db, GetRankTotal, query);
 
-	Format(query, sizeof(query), "SELECT name, (%s) / (%s) AS ppm FROM %splayers WHERE (%s) >= %i ORDER BY ppm DESC, (%s) DESC LIMIT 10", DB_PLAYERS_TOTALPOINTS, DB_PLAYERS_TOTALPLAYTIME, g_sDbPrefix, DB_PLAYERS_TOTALPLAYTIME, GetConVarInt(g_hCvar_Top10PPMMin), DB_PLAYERS_TOTALPLAYTIME);
+	Format(query, sizeof(query), "SELECT name, (%s) / (%s) AS ppm FROM %splayers WHERE (%s) >= %i ORDER BY ppm DESC, (%s) DESC LIMIT 10", DB_PLAYERS_TOTALPOINTS, DB_PLAYERS_TOTALPLAYTIME, g_sDbPrefix, DB_PLAYERS_TOTALPLAYTIME, g_hCvar_Top10PPMMin.IntValue, DB_PLAYERS_TOTALPLAYTIME);
 	SQL_TQuery(db, DisplayTop10PPM, query, client);
 
 	return Plugin_Handled;

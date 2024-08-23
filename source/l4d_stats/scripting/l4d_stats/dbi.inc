@@ -249,7 +249,7 @@ void QueryClientStats(int Client, int CallingMethod = CM_UNKNOWN)
 	QueryClientStatsSteamID(Client, SteamID, CallingMethod);
 }
 
-void QueryClientStatsSteamID(int Client, const char[] SteamID, CallingMethod = CM_UNKNOWN)
+void QueryClientStatsSteamID(int Client, const char[] SteamID, int CallingMethod = CM_UNKNOWN)
 {
 	DataPack dp = new DataPack();
 
@@ -402,23 +402,8 @@ void QueryClientStatsDP_NextRankFull(int Client, const char[] SteamID)
 		TriggerTimer(g_hTimerRankChangeCheck[Client], true);
 }
 
-// Check if a map is already in the DB.
-
-void CheckCurrentMapDB()
-{
-	if (StatsDisabled(true))
-		return;
-
-	char MapName[MAX_LINE_WIDTH];
-	GetCurrentMap(MapName, sizeof(MapName));
-
-	char query[512];
-	Format(query, sizeof(query), "SELECT name FROM %smaps WHERE LOWER(name) = LOWER('%s') AND gamemode = %i AND mutation = '%s'", g_sDbPrefix, MapName, GetCurrentGamemodeID(), g_sCurrentMutation);
-	SQL_TQuery(db, InsertMapDB, query);
-}
-
 // Insert a map into the database if they do not already exist.
-void InsertMapDB(Handle owner, DBResultSet hndl, const char[] error, DataPack data)
+void InsertMapDB(Handle owner, DBResultSet hndl, const char[] error, any data)
 {
 	if (!db)
 		return;
@@ -435,33 +420,6 @@ void InsertMapDB(Handle owner, DBResultSet hndl, const char[] error, DataPack da
 		Format(query, sizeof(query), "INSERT IGNORE INTO %smaps SET name = LOWER('%s'), custom = 1, gamemode = %i", g_sDbPrefix, MapName, GetCurrentGamemodeID());
 		SQL_TQuery(db, SQLErrorCheckCallback, query);
 	}
-}
-
-// Check if a player is already in the DB, and update their timestamp and playtime.
-void CheckPlayerDB(int client)
-{
-	if (StatsDisabled())
-		return;
-
-	if (IsClientBot(client))
-		return;
-
-	char SteamID[MAX_LINE_WIDTH];
-	GetClientRankAuthString(client, SteamID, sizeof(SteamID));
-
-	char query[512];
-	Format(query, sizeof(query), "SELECT steamid FROM %splayers WHERE steamid = '%s'", g_sDbPrefix, SteamID);
-	SQL_TQuery(db, InsertPlayerDB, query, client);
-	ReadClientRankMuteSteamID(client, SteamID);
-}
-
-void ReadClientRankMute(int Client)
-{
-	// Check stats disabled and is client bot before calling this method!
-
-	char SteamID[MAX_LINE_WIDTH];
-	GetClientRankAuthString(Client, SteamID, sizeof(SteamID));
-	ReadClientRankMuteSteamID(Client, SteamID);
 }
 
 void ReadClientRankMuteSteamID(int Client, const char[] SteamID)
@@ -523,6 +481,14 @@ void SetClientRankMute(DBResultSet owner, Handle hndl, const char[] error, int c
 	}
 
 	ReadClientRankMute(client);
+}
+
+void ReadClientRankMute(int Client)
+{
+	// Check stats disabled and is client bot before calling this method!
+	char SteamID[MAX_LINE_WIDTH];
+	GetClientRankAuthString(Client, SteamID, sizeof(SteamID));
+	ReadClientRankMuteSteamID(Client, SteamID);
 }
 
 // Insert a player into the settings database if they do not already exist.
@@ -598,7 +564,6 @@ void SQLErrorCheckCallback(Handle owner, Handle hndl, const char[] error, int qu
 }
 
 // Perform player update of name, playtime, and timestamp.
-
 void UpdatePlayer(int client)
 {
 	if (!IsClientConnected(client))
@@ -651,7 +616,6 @@ void UpdatePlayerFull(int Client, const char[] SteamID, const char[] Name)
 }
 
 // Report error on sql query;
-
 void UpdatePlayerCallback(Handle owner, Handle hndl, const char[] error, int client)
 {
 	if (!db)
@@ -904,7 +868,6 @@ void GetClientTop10(Handle owner, DBResultSet hndl, const char[] error, int clie
 	}
 
 	char SteamID[MAX_LINE_WIDTH];
-
 	while (hndl.FetchRow())
 	{
 		hndl.FetchString(1, SteamID, sizeof(SteamID));

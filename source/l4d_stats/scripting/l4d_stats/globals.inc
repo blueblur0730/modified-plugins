@@ -13,6 +13,7 @@
 #define MAX_QUERY_COUNTER 256
 #define MAX_ENTITIES 2048
 #define DB_CONF_NAME "l4dstats"
+#define TRANSLATION_PATH "l4d_stats"
 #define RANKVOTE_QUESTION "Do you want to shuffle teams by player PPM?"
 #define MOTD_TITLE "Message Of The Day"
 
