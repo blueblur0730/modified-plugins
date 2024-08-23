@@ -49,7 +49,7 @@ Chat/command handling and panels for Rank and Top10
 //	PrintToConsole(0, "Added 10 seconds to maps table current map.");
 //	float ReductionFactor = GetMedkitPointReductionFactor();
 //
-//	StatsPrintToChat(client, "\x03ALL SURVIVORS \x01now earns only \x04%i percent \x01of their normal points after using their \x05%i%s Medkit\x01!", RoundToNearest(ReductionFactor * 100), g_iMedkitsUsedCounter, (g_iMedkitsUsedCounter == 1 ? "st" : (g_iMedkitsUsedCounter == 2 ? "nd" : (g_iMedkitsUsedCounter == 3 ? "rd" : "th"))), GetClientTeam(client));
+//	StatsPrintToChat(client, "{lightgreen}ALL SURVIVORS {default}now earns only {green}%i percent {default}of their normal points after using their {olive}%i%s Medkit{default}!", RoundToNearest(ReductionFactor * 100), g_iMedkitsUsedCounter, (g_iMedkitsUsedCounter == 1 ? "st" : (g_iMedkitsUsedCounter == 2 ? "nd" : (g_iMedkitsUsedCounter == 3 ? "rd" : "th"))), GetClientTeam(client));
 //}
 
 Action HandleCommands(int client, const char[] Text)
@@ -206,7 +206,7 @@ Action Cmd_ShowTimedMapsTimer(int client, int args)
 	SetTimeLabel(CurrentMapTimer, TimeLabel, sizeof(TimeLabel));
 
 	if (client == 0) PrintToConsole(0, "[RANK] Current map timer: %s", TimeLabel);
-	else StatsPrintToChat(client, "Current map timer: \x04%s", TimeLabel);
+	else StatsPrintToChat(client, "Current map timer: {green}%s", TimeLabel);
 
 	return Plugin_Handled;
 }
@@ -381,7 +381,7 @@ Action Cmd_ClientRankMute(int client, int args)
 
 void AnnounceClientRankMute(int client)
 {
-	StatsPrintToChat2(client, true, "You %s \x01the \x05Plugin\x01.", (g_bClientRankMute[client] ? "\x04MUTED" : "\x03UNMUTED"));
+	StatsPrintToChat2(client, true, "You %s {default}the {olive}Plugin{default}.", (g_bClientRankMute[client] ? "{green}MUTED" : "{lightgreen}UNMUTED"));
 }
 
 // Start RANKVOTE.
@@ -403,7 +403,7 @@ Action Cmd_RankVote(int client, int args)
 
 	if (!IsAdmin && ClientTeam != TEAM_SURVIVORS && ClientTeam != TEAM_INFECTED)
 	{
-		StatsPrintToChatPreFormatted2(client, true, "The spectators cannot initiate the \x04Rank Vote\x01.");
+		StatsPrintToChatPreFormatted2(client, true, "The spectators cannot initiate the {green}Rank Vote{default}.");
 		return Plugin_Handled;
 	}
 
@@ -447,7 +447,7 @@ Action Cmd_ShowMapTimes(int client, int args)
 	if (client == 0 || !IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
 		return Plugin_Handled;
 
-	StatsPrintToChatPreFormatted2(client, true, "\x05NOT IMPLEMENTED YET");
+	StatsPrintToChatPreFormatted2(client, true, "{olive}NOT IMPLEMENTED YET");
 
 	return Plugin_Handled;
 }

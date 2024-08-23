@@ -4,7 +4,7 @@
 #include <sourcemod>
 //#include <clientprefs>	// to do
 #include <sdktools>
-//#include <colors>			// to do
+#include <colors>
 #undef REQUIRE_PLUGIN
 #include <adminmenu>
 

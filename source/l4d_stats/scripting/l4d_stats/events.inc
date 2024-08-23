@@ -275,9 +275,9 @@ void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		SendSQLUpdate(query);
 
 		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Attacker, "You have \x03LOST \x04%i \x01points for \x03Team Killing \x05%s\x01!", Score, VictimName);
+			StatsPrintToChat(Attacker, "You have {lightgreen}LOST {green}%i {default}points for {lightgreen}Team Killing {olive}%s{default}!", Score, VictimName);
 		else if (Mode == 3)
-			StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for \x03Team Killing \x05%s\x01!", AttackerName, Score, VictimName);
+			StatsPrintToChatAll("{olive}%s {default}has {lightgreen}LOST {green}%i {default}points for {lightgreen}Team Killing {olive}%s{default}!", AttackerName, Score, VictimName);
 	}
 
 	// Attacker is a Survivor
@@ -356,20 +356,20 @@ void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 				if (Mode > 1)
 				{
 					GetClientName(Attacker, AttackerName, sizeof(AttackerName));
-					StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for killing%s \x05%s \x01with a \x04HEAD SHOT\x01!", AttackerName, Score, (VictimIsBot ? " a" : ""), VictimName);
+					StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for killing%s {olive}%s {default}with a {green}HEAD SHOT{default}!", AttackerName, Score, (VictimIsBot ? " a" : ""), VictimName);
 				}
 				else
-					StatsPrintToChat(Attacker, "You have earned \x04%i \x01points for killing%s \x05%s \x01with a \x04HEAD SHOT\x01!", Score, (VictimIsBot ? " a" : ""), VictimName);
+					StatsPrintToChat(Attacker, "You have earned {green}%i {default}points for killing%s {olive}%s {default}with a {green}HEAD SHOT{default}!", Score, (VictimIsBot ? " a" : ""), VictimName);
 			}
 			else
 			{
 				if (Mode > 2)
 				{
 					GetClientName(Attacker, AttackerName, sizeof(AttackerName));
-					StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for killing%s \x05%s\x01!", AttackerName, Score, (VictimIsBot ? " a" : ""), VictimName);
+					StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for killing%s {olive}%s{default}!", AttackerName, Score, (VictimIsBot ? " a" : ""), VictimName);
 				}
 				else
-					StatsPrintToChat(Attacker, "You have earned \x04%i \x01points for killing%s \x05%s\x01!", Score, (VictimIsBot ? " a" : ""), VictimName);
+					StatsPrintToChat(Attacker, "You have earned {green}%i {default}points for killing%s {olive}%s{default}!", Score, (VictimIsBot ? " a" : ""), VictimName);
 			}
 		}
 
@@ -477,7 +477,7 @@ void Event_TankKilled(Event event, const char[] name, bool dontBroadcast)
 	}
 
 	if (Mode && Score > 0)
-		StatsPrintToChatTeam(TEAM_SURVIVORS, "\x03ALL SURVIVORS \x01have earned \x04%i \x01points for killing a Tank with \x05%i Deaths\x01!", Score, Deaths);
+		StatsPrintToChatTeam(TEAM_SURVIVORS, "{lightgreen}ALL SURVIVORS {default}have earned {green}%i {default}points for killing a Tank with {olive}%i Deaths{default}!", Score, Deaths);
 
 	UpdateMapStat("kills", 1);
 	UpdateMapStat("points", Score);
@@ -558,9 +558,9 @@ void Event_DefibPlayer(Event event, const char[] name, bool dontBroadcast)
 	{
 		int Mode = g_hCvar_AnnounceMode.IntValue;
 		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Giver, "You have earned \x04%i \x01points for Reviving \x05%s\x01 using a Defibrillator!", Score, RecipientName);
+			StatsPrintToChat(Giver, "You have earned {green}%i {default}points for Reviving {olive}%s{default} using a Defibrillator!", Score, RecipientName);
 		else if (Mode == 3)
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for Reviving \x05%s\x01 using a Defibrillator!", GiverName, Score, RecipientName);
+			StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for Reviving {olive}%s{default} using a Defibrillator!", GiverName, Score, RecipientName);
 	}
 }
 
@@ -622,9 +622,9 @@ void Event_HealPlayer(Event event, const char[] name, bool dontBroadcast)
 	{
 		int Mode = g_hCvar_AnnounceMode.IntValue;
 		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Giver, "You have earned \x04%i \x01points for healing \x05%s\x01!", Score, RecipientName);
+			StatsPrintToChat(Giver, "You have earned {green}%i {default}points for healing {olive}%s{default}!", Score, RecipientName);
 		else if (Mode == 3)
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for healing \x05%s\x01!", GiverName, Score, RecipientName);
+			StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for healing {olive}%s{default}!", GiverName, Score, RecipientName);
 	}
 }
 
@@ -763,10 +763,10 @@ void Event_CampaignWin(Event event, const char[] name, bool dontBroadcast)
 
 	if (Mode && Score > 0)
 	{
-		StatsPrintToChatTeam(TEAM_SURVIVORS, "\x03ALL SURVIVORS \x01have earned \x04%i \x01points for winning the \x04Campaign Finale \x01with \x05%i survivors\x01!", Score, SurvivorCount);
+		StatsPrintToChatTeam(TEAM_SURVIVORS, "{lightgreen}ALL SURVIVORS {default}have earned {green}%i {default}points for winning the {green}Campaign Finale {default}with {olive}%i survivors{default}!", Score, SurvivorCount);
 
 		if (NegativeScore)
-			StatsPrintToChatTeam(TEAM_INFECTED, "\x03ALL INFECTED \x01have \x03LOST \x04%i \x01points for loosing the \x04Campaign Finale \x01to \x05%i survivors\x01!", Score, SurvivorCount);
+			StatsPrintToChatTeam(TEAM_INFECTED, "{lightgreen}ALL INFECTED {default}have {lightgreen}LOST {green}%i {default}points for loosing the {green}Campaign Finale {default}to {olive}%i survivors{default}!", Score, SurvivorCount);
 	}
 }
 
@@ -886,7 +886,7 @@ void Event_PlayerBlindEnd(Event event, const char[] name, bool dontBroadcast)
 			}
 
 			if (Mode)
-				StatsPrintToChatTeam(TEAM_SURVIVORS, "\x03ALL SURVIVORS \x01have earned \x04%i \x01points for \x05No Incapicitates Or Deaths After Boomer Mob\x01!", Score);
+				StatsPrintToChatTeam(TEAM_SURVIVORS, "{lightgreen}ALL SURVIVORS {default}have earned {green}%i {default}points for {olive}No Incapicitates Or Deaths After Boomer Mob{default}!", Score);
 		}
 	}
 
@@ -1034,12 +1034,12 @@ void Event_PlayerLedge(Event event, const char[] name, bool dontBroadcast)
 		UpdateMapStat("points_infected", Score);
 
 		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Attacker, "You have earned \x04%i \x01points for causing player \x05%s\x01 to grab a ledge!", Score, VictimName);
+			StatsPrintToChat(Attacker, "You have earned {green}%i {default}points for causing player {olive}%s{default} to grab a ledge!", Score, VictimName);
 		else if (Mode == 3)
 		{
 			char AttackerName[MAX_LINE_WIDTH];
 			GetClientName(Attacker, AttackerName, sizeof(AttackerName));
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for causing player \x05%s\x01 to grab a ledge!", AttackerName, Score, VictimName);
+			StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for causing player {olive}%s{default} to grab a ledge!", AttackerName, Score, VictimName);
 		}
 	}
 }
@@ -1218,12 +1218,12 @@ void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 //		Mode = GetConVarInt(g_hCvar_AnnounceMode);
 //
 //		if (Mode == 1 || Mode == 2)
-//			StatsPrintToChat(Attacker, "You have \x03LOST \x04%i \x01points for \x03Friendly Firing \x05%s\x01!", Score, VictimName);
+//			StatsPrintToChat(Attacker, "You have {lightgreen}LOST {green}%i {default}points for {lightgreen}Friendly Firing {olive}%s{default}!", Score, VictimName);
 //		else if (Mode == 3)
 //		{
 //			char AttackerName[MAX_LINE_WIDTH];
 //			GetClientName(Attacker, AttackerName, sizeof(AttackerName));
-//			StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for \x03Friendly Firing \x05%s\x01!", AttackerName, Score, VictimName);
+//			StatsPrintToChatAll("{olive}%s {default}has {lightgreen}LOST {green}%i {default}points for {lightgreen}Friendly Firing {olive}%s{default}!", AttackerName, Score, VictimName);
 //		}
 //
 //		return;
@@ -1319,11 +1319,11 @@ void Event_JockeyRelease(Event event, const char[] name, bool dontBroadcast)
 		if (Score > 0)
 		{
 			if (Mode == 1 || Mode == 2)
-				StatsPrintToChat(Rescuer, "You have earned \x04%i \x01points for saving \x05%s \x01from \x04%s\x01!", Score, VictimName, JockeyName);
+				StatsPrintToChat(Rescuer, "You have earned {green}%i {default}points for saving {olive}%s {default}from {green}%s{default}!", Score, VictimName, JockeyName);
 			else if (Mode == 3)
 			{
 				GetClientName(Rescuer, RescuerName, sizeof(RescuerName));
-				StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for saving \x05%s \x01from \x04%s\x01!", RescuerName, Score, VictimName, JockeyName);
+				StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for saving {olive}%s {default}from {green}%s{default}!", RescuerName, Score, VictimName, JockeyName);
 			}
 		}
 	}
@@ -1404,9 +1404,9 @@ void Event_ChargerKilled(Event event, const char[] name, bool dontBroadcast)
 		if (IsMatador)
 		{
 			if (Mode == 1 || Mode == 2)
-				StatsPrintToChat(Killer, "You have earned \x04%i \x01points for \x04Leveling a Charge\x01!", Score);
+				StatsPrintToChat(Killer, "You have earned {green}%i {default}points for {green}Leveling a Charge{default}!", Score);
 			else if (Mode == 3)
-				StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for \x04Leveling a Charge\x01!", KillerName, Score);
+				StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for {green}Leveling a Charge{default}!", KillerName, Score);
 		}
 		else
 		{
@@ -1415,15 +1415,15 @@ void Event_ChargerKilled(Event event, const char[] name, bool dontBroadcast)
 			if (g_iChargerCarryVictim[Charger] > 0 && (IsClientBot(g_iChargerCarryVictim[Charger]) || (IsClientConnected(g_iChargerCarryVictim[Charger]) && IsClientInGame(g_iChargerCarryVictim[Charger]))))
 			{
 				GetClientName(g_iChargerCarryVictim[Charger], VictimName, sizeof(VictimName));
-				Format(VictimName, sizeof(VictimName), "\x05%s\x01", VictimName);
+				Format(VictimName, sizeof(VictimName), "{olive}%s{default}", VictimName);
 			}
 			else
 				Format(VictimName, sizeof(VictimName), "a survivor");
 
 			if (Mode == 1 || Mode == 2)
-				StatsPrintToChat(Killer, "You have earned \x04%i \x01points for saving %s from \x04%s\x01!", Score, VictimName, ChargerName);
+				StatsPrintToChat(Killer, "You have earned {green}%i {default}points for saving %s from {green}%s{default}!", Score, VictimName, ChargerName);
 			else if (Mode == 3)
-				StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for saving %s from \x04%s\x01!", KillerName, Score, VictimName, ChargerName);
+				StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for saving %s from {green}%s{default}!", KillerName, Score, VictimName, ChargerName);
 		}
 	}
 }
@@ -1589,12 +1589,12 @@ void Event_UpgradePackAdded(Event event, const char[] name, bool dontBroadcast)
 			strcopy(ModelName, sizeof(ModelName), "UNKNOWN");
 
 		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Player, "You have earned \x04%i \x01points for deploying \x05%s\x01!", Score, ModelName);
+			StatsPrintToChat(Player, "You have earned {green}%i {default}points for deploying {olive}%s{default}!", Score, ModelName);
 		else if (Mode == 3)
 		{
 			char PlayerName[MAX_LINE_WIDTH];
 			GetClientName(Player, PlayerName, sizeof(PlayerName));
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for deploying \x05%s\x01!", PlayerName, Score, ModelName);
+			StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for deploying {olive}%s{default}!", PlayerName, Score, ModelName);
 		}
 	}
 }
@@ -1630,12 +1630,12 @@ void Event_GascanPoured(Event event, const char[] name, bool dontBroadcast)
 		int Mode = g_hCvar_AnnounceMode.IntValue;
 
 		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Player, "You have earned \x04%i \x01points for successfully \x05Pouring a Gascan\x01!", Score);
+			StatsPrintToChat(Player, "You have earned {green}%i {default}points for successfully {olive}Pouring a Gascan{default}!", Score);
 		else if (Mode == 3)
 		{
 			char PlayerName[MAX_LINE_WIDTH];
 			GetClientName(Player, PlayerName, sizeof(PlayerName));
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for successfully \x05Pouring a Gascan\x01!", PlayerName, Score);
+			StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for successfully {olive}Pouring a Gascan{default}!", PlayerName, Score);
 		}
 	}
 }
@@ -1867,9 +1867,9 @@ void Event_PlayerPounced(Event event, const char[] name, bool dontBroadcast)
 	UpdateMapStat("points_infected", Score);
 
 	if (Mode == 1 || Mode == 2)
-		StatsPrintToChat(Attacker, "You have earned \x04%i \x01points for landing a \x05%s \x01Pounce on \x05%s\x01!", Score, Label, VictimName);
+		StatsPrintToChat(Attacker, "You have earned {green}%i {default}points for landing a {olive}%s {default}Pounce on {olive}%s{default}!", Score, Label, VictimName);
 	else if (Mode == 3)
-		StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for landing a \x05%s \x01Pounce on \x05%s\x01!", AttackerName, Score, Label, VictimName);
+		StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for landing a {olive}%s {default}Pounce on {olive}%s{default}!", AttackerName, Score, Label, VictimName);
 }
 
 // Revive friendly code.
@@ -1916,9 +1916,9 @@ void Event_RevivePlayer(Event event, const char[] name, bool dontBroadcast)
 	if (Score > 0)
 	{
 		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Savior, "You have earned \x04%i \x01points for Reviving \x05%s\x01!", Score, VictimName);
+			StatsPrintToChat(Savior, "You have earned {green}%i {default}points for Reviving {olive}%s{default}!", Score, VictimName);
 		else if (Mode == 3)
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for Reviving \x05%s\x01!", SaviorName, Score, VictimName);
+			StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for Reviving {olive}%s{default}!", SaviorName, Score, VictimName);
 	}
 }
 
@@ -2041,9 +2041,9 @@ void Event_Award_L4D1(Event event, const char[] name, bool dontBroadcast)
 		if (Score > 0)
 		{
 			if (Mode == 1 || Mode == 2)
-				StatsPrintToChat(User, "You have earned \x04%i \x01points for Rescuing \x05%s\x01!", Score, RecipientName);
+				StatsPrintToChat(User, "You have earned {green}%i {default}points for Rescuing {olive}%s{default}!", Score, RecipientName);
 			else if (Mode == 3)
-				StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for Rescuing \x05%s\x01!", UserName, Score, RecipientName);
+				StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for Rescuing {olive}%s{default}!", UserName, Score, RecipientName);
 		}
 	}
 	else if (AwardID == 80) // Kill Tank with no deaths
@@ -2064,9 +2064,9 @@ void Event_Award_L4D1(Event event, const char[] name, bool dontBroadcast)
 //		Score = Score * -1;
 //
 //		if (Mode == 1 || Mode == 2)
-//			StatsPrintToChat(User, "You have \x03LOST \x04%i \x01points for \x03Team Killing!", Score);
+//			StatsPrintToChat(User, "You have {lightgreen}LOST {green}%i {default}points for {lightgreen}Team Killing!", Score);
 //		else if (Mode == 3)
-//			StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for \x03Team Killing!", UserName, Score);
+//			StatsPrintToChatAll("{olive}%s {default}has {lightgreen}LOST {green}%i {default}points for {lightgreen}Team Killing!", UserName, Score);
 //	}
 	else if (AwardID == 85) // Left friendly for dead
 	{
@@ -2084,9 +2084,9 @@ void Event_Award_L4D1(Event event, const char[] name, bool dontBroadcast)
 			Mode = 0;
 
 		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(User, "You have \x03LOST \x04%i \x01points for letting \x03Infected In The Safe Room!", Score);
+			StatsPrintToChat(User, "You have {lightgreen}LOST {green}%i {default}points for letting {lightgreen}Infected In The Safe Room!", Score);
 		else if (Mode == 3)
-			StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for letting \x03Infected In The Safe Room!", UserName, Score);
+			StatsPrintToChatAll("{olive}%s {default}has {lightgreen}LOST {green}%i {default}points for letting {lightgreen}Infected In The Safe Room!", UserName, Score);
 
 		Score = Score * -1;
 	}
@@ -2101,7 +2101,7 @@ void Event_Award_L4D1(Event event, const char[] name, bool dontBroadcast)
 		Score = 400 - Score;
 
 		if (Mode)
-			StatsPrintToChat(User, "\x03ALL SURVIVORS \x01have \x03LOST \x04%i \x01points for \x03All Survivors Dying!", Score);
+			StatsPrintToChat(User, "{lightgreen}ALL SURVIVORS {default}have {lightgreen}LOST {green}%i {default}points for {lightgreen}All Survivors Dying!", Score);
 
 		Score = Score * -1;
 	}
@@ -2245,8 +2245,8 @@ void Event_Award_L4D2(Event event, const char[] name, bool dontBroadcast)
 
 		if (Score > 0)
 		{
-			if (Mode == 1 || Mode == 2) StatsPrintToChat(User, "You have earned \x04%i \x01points for Rescuing \x05%s\x01!", Score, RecipientName);
-			else if (Mode == 3) StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for Rescuing \x05%s\x01!", UserName, Score, RecipientName);
+			if (Mode == 1 || Mode == 2) StatsPrintToChat(User, "You have earned {green}%i {default}points for Rescuing {olive}%s{default}!", Score, RecipientName);
+			else if (Mode == 3) StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for Rescuing {olive}%s{default}!", UserName, Score, RecipientName);
 		}
 	}
 	else if (AwardID == 81) // Kill Tank with no deaths
@@ -2267,9 +2267,9 @@ void Event_Award_L4D2(Event event, const char[] name, bool dontBroadcast)
 //		Score = Score * -1;
 //
 //		if (Mode == 1 || Mode == 2)
-//			StatsPrintToChat(User, "You have \x03LOST \x04%i \x01points for \x03Team Killing!", Score);
+//			StatsPrintToChat(User, "You have {lightgreen}LOST {green}%i {default}points for {lightgreen}Team Killing!", Score);
 //		else if (Mode == 3)
-//			StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for \x03Team Killing!", UserName, Score);
+//			StatsPrintToChatAll("{olive}%s {default}has {lightgreen}LOST {green}%i {default}points for {lightgreen}Team Killing!", UserName, Score);
 //	}
 	else if (AwardID == 86) // Left friendly for dead
 	{
@@ -2286,8 +2286,8 @@ void Event_Award_L4D2(Event event, const char[] name, bool dontBroadcast)
 		else
 			Mode = 0;
 
-		if (Mode == 1 || Mode == 2) StatsPrintToChat(User, "You have \x03LOST \x04%i \x01points for letting \x03Infected In The Safe Room!", Score);
-		else if (Mode == 3) StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for letting \x03Infected In The Safe Room!", UserName, Score);
+		if (Mode == 1 || Mode == 2) StatsPrintToChat(User, "You have {lightgreen}LOST {green}%i {default}points for letting {lightgreen}Infected In The Safe Room!", Score);
+		else if (Mode == 3) StatsPrintToChatAll("{olive}%s {default}has {lightgreen}LOST {green}%i {default}points for letting {lightgreen}Infected In The Safe Room!", UserName, Score);
 
 		Score = Score * -1;
 	}
@@ -2302,7 +2302,7 @@ void Event_Award_L4D2(Event event, const char[] name, bool dontBroadcast)
 		Score = 400 - Score;
 
 		if (Mode)
-			StatsPrintToChat(User, "\x03ALL SURVIVORS \x01have \x03LOST \x04%i \x01points for \x03All Survivors Dying!", Score);
+			StatsPrintToChat(User, "{lightgreen}ALL SURVIVORS {default}have {lightgreen}LOST {green}%i {default}points for {lightgreen}All Survivors Dying!", Score);
 
 		Score = Score * -1;
 	}
@@ -2389,7 +2389,7 @@ void Event_CarAlarm(Event event, const char[] name, bool dontBroadcast)
 			SendSQLUpdate(query);
 
 			if (Mode)
-				StatsPrintToChat(i, "\x03ALL SURVIVORS \x01have \x03LOST \x04%i \x01points for \x03Triggering the Car Alarm\x01!", Score);
+				StatsPrintToChat(i, "{lightgreen}ALL SURVIVORS {default}have {lightgreen}LOST {green}%i {default}points for {lightgreen}Triggering the Car Alarm{default}!", Score);
 		}
 	}
 }
@@ -2442,7 +2442,7 @@ void Event_WitchCrowned(Event event, const char[] name, bool dontBroadcast)
 		{
 			char Name[MAX_LINE_WIDTH];
 			GetClientName(Killer, Name, sizeof(Name));
-			StatsPrintToChatTeam(TEAM_SURVIVORS, "\x05%s \x01has earned \x04%i \x01points for \x04Crowning the Witch\x01!", Name, Score);
+			StatsPrintToChatTeam(TEAM_SURVIVORS, "{olive}%s {default}has earned {green}%i {default}points for {green}Crowning the Witch{default}!", Name, Score);
 		}
 	}
 }

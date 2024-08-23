@@ -809,7 +809,7 @@ void UpdateMapTimingStat(Handle owner, DBResultSet hndl, const char[] error, Dat
 			if (Mode)
 			{
 				SetTimeLabel(OldTime, TimeLabel, sizeof(TimeLabel));
-				StatsPrintToChat(Client, "You did not improve your best time \x04%s \x01to finish this map!", TimeLabel);
+				StatsPrintToChat(Client, "You did not improve your best time {green}%s {default}to finish this map!", TimeLabel);
 			}
 
 			Format(query, sizeof(query), "UPDATE %stimedmaps SET plays = plays + 1, modified = NOW() WHERE map = '%s' AND gamemode = %i AND difficulty = %i AND mutation = '%s' AND steamid = '%s'", g_sDbPrefix, MapName, GamemodeID, GameDifficulty, Mutation, ClientID);
@@ -819,7 +819,7 @@ void UpdateMapTimingStat(Handle owner, DBResultSet hndl, const char[] error, Dat
 			if (Mode)
 			{
 				SetTimeLabel(TotalTime, TimeLabel, sizeof(TimeLabel));
-				StatsPrintToChat(Client, "Your new best time to finish this map is \x04%s\x01!", TimeLabel);
+				StatsPrintToChat(Client, "Your new best time to finish this map is {green}%s{default}!", TimeLabel);
 			}
 
 			Format(query, sizeof(query), "UPDATE %stimedmaps SET plays = plays + 1, time = %f, players = %i, modified = NOW() WHERE map = '%s' AND gamemode = %i AND difficulty = %i AND mutation = '%s' AND steamid = '%s'", g_sDbPrefix, TotalTime, PlayerCounter, MapName, GamemodeID, GameDifficulty, Mutation, ClientID);
@@ -833,7 +833,7 @@ void UpdateMapTimingStat(Handle owner, DBResultSet hndl, const char[] error, Dat
 		if (Mode)
 		{
 			SetTimeLabel(TotalTime, TimeLabel, sizeof(TimeLabel));
-			StatsPrintToChat(Client, "It took \x04%s \x01to finish this map!", TimeLabel);
+			StatsPrintToChat(Client, "It took {green}%s {default}to finish this map!", TimeLabel);
 		}
 
 		Format(query, sizeof(query), "INSERT INTO %stimedmaps (map, gamemode, difficulty, mutation, steamid, plays, time, players, modified, created) VALUES ('%s', %i, %i, '%s', '%s', 1, %f, %i, NOW(), NOW())", g_sDbPrefix, MapName, GamemodeID, GameDifficulty, Mutation, ClientID, TotalTime, PlayerCounter);
@@ -1025,7 +1025,7 @@ void GetClientRankRankChange(Handle owner, DBResultSet hndl, const char[] error,
 		}
 
 		if (!IsClientBot(client) && IsClientConnected(client) && IsClientInGame(client))
-			StatsPrintToChat(client, "You've \x04%s \x01rank for \x04%i position%s\x01! \x05(Rank: %i)", Label, RankChange, (RankChange > 1 ? "s" : ""), g_iRankChangeLastRank[client]);
+			StatsPrintToChat(client, "You've {green}%s {default}rank for {green}%i position%s{default}! {olive}(Rank: %i)", Label, RankChange, (RankChange > 1 ? "s" : ""), g_iRankChangeLastRank[client]);
 	}
 }
 
@@ -1046,8 +1046,8 @@ void GetClientRankPlayerJoined(Handle owner, DBResultSet hndl, const char[] erro
 	char userName[MAX_LINE_WIDTH];
 	GetClientName(client, userName, sizeof(userName));
 
-	if (g_iClientRank[client] > 0) StatsPrintToChatAll("Player \x05%s \x01joined the game! (Rank: \x03%i \x01/ Points: \x03%i\x01)", userName, g_iClientRank[client], g_iClientPoints[client]);
-	else StatsPrintToChatAll("Player \x05%s \x01joined the game! (No ranking yet)", userName);
+	if (g_iClientRank[client] > 0) StatsPrintToChatAll("Player {olive}%s {default}joined the game! (Rank: {lightgreen}%i {default}/ Points: {lightgreen}%i{default})", userName, g_iClientRank[client], g_iClientPoints[client]);
+	else StatsPrintToChatAll("Player {olive}%s {default}joined the game! (No ranking yet)", userName);
 }
 
 // Generate client's rank.
@@ -1258,7 +1258,7 @@ void ExecuteTeamShuffle(Handle owner, DBResultSet hndl, const char[] error, int 
 				client = InfectedArray.Get(i);
 				GetClientName(client, Name, sizeof(Name));
 				ChangeRankPlayerTeam(client, TEAM_SURVIVORS);
-				StatsPrintToChatAll2(true, "\x05%s \x01was swapped to team \x03Survivors\x01!", Name);
+				StatsPrintToChatAll2(true, "{olive}%s {default}was swapped to team {lightgreen}Survivors{default}!", Name);
 			}
 
 			// Change Spectators (TEMPORARILY) team to Infected
@@ -1267,10 +1267,10 @@ void ExecuteTeamShuffle(Handle owner, DBResultSet hndl, const char[] error, int 
 				client = SurvivorArray.Get(i);
 				GetClientName(client, Name, sizeof(Name));
 				ChangeRankPlayerTeam(client, TEAM_INFECTED);
-				StatsPrintToChatAll2(true, "\x05%s \x01was swapped to team \x03Infected\x01!", Name);
+				StatsPrintToChatAll2(true, "{olive}%s {default}was swapped to team {lightgreen}Infected{default}!", Name);
 			}
 
-			StatsPrintToChatAllPreFormatted2(true, "Team shuffle by player PPM \x03DONE\x01.");
+			StatsPrintToChatAllPreFormatted2(true, "Team shuffle by player PPM {lightgreen}DONE{default}.");
 
 			if (g_bEnableSounds_Rankvote && g_hCvar_SoundsEnabled.BoolValue)
 				EmitSoundToAll(SOUND_RANKVOTE);

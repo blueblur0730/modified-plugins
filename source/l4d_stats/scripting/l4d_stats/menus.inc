@@ -744,7 +744,7 @@ int RankVotePanelHandler(Menu menu, MenuAction action, int param1, int param2)
 			if (g_hRankVoteTimer != null)
 				delete g_hRankVoteTimer;
 
-			StatsPrintToChatAll("Vote to shuffle teams by player PPM \x03%s \x01with \x04%i (yes) against %i (no)\x01.", (yesvotes >= WinningVoteCount ? "PASSED" : "DID NOT PASS"), yesvotes, novotes);
+			StatsPrintToChatAll("Vote to shuffle teams by player PPM {lightgreen}%s {default}with {green}%i (yes) against %i (no){default}.", (yesvotes >= WinningVoteCount ? "PASSED" : "DID NOT PASS"), yesvotes, novotes);
 
 			if (yesvotes >= WinningVoteCount)
 				CreateTimer(2.0, Timer_ShuffleTeams);
@@ -755,7 +755,7 @@ int RankVotePanelHandler(Menu menu, MenuAction action, int param1, int param2)
 
 		char Name[32];
 		GetClientName(param1, Name, sizeof(Name));
-		StatsPrintToChatAll("\x05%s \x01voted. \x04%i/%i \x01players have voted.", Name, votes, humans);
+		StatsPrintToChatAll("{olive}%s {default}voted. {green}%i/%i {default}players have voted.", Name, votes, humans);
 	}
 
 	return 0;
@@ -857,7 +857,7 @@ int DisplayClearPanelHandler(Menu menu, MenuAction action, int param1, int param
 
 		StatsPrintToChatPreFormatted(client, "Your player stats were cleared!");
 		if (client != param1)
-			StatsPrintToChat(param1, "Player \x05%s \x01stats cleared!", Name);
+			StatsPrintToChat(param1, "Player {olive}%s {default}stats cleared!", Name);
 	}
 	else
 		StatsPrintToChatPreFormatted(param1, "Clearing player stats failed!");

@@ -185,7 +185,6 @@ void StatsPrintToChatAll(const char[] Message, any...)
 {
 	char FormattedMessage[MAX_MESSAGE_WIDTH];
 	VFormat(FormattedMessage, sizeof(FormattedMessage), Message, 2);
-
 	StatsPrintToChatAllPreFormatted(FormattedMessage);
 }
 
@@ -193,7 +192,6 @@ void StatsPrintToChatAll2(bool Forced, const char[] Message, any...)
 {
 	char FormattedMessage[MAX_MESSAGE_WIDTH];
 	VFormat(FormattedMessage, sizeof(FormattedMessage), Message, 2);
-
 	StatsPrintToChatAllPreFormatted2(Forced, FormattedMessage);
 }
 
@@ -248,7 +246,7 @@ void StatsPrintToChatPreFormatted2(int Client, bool Forced, const char[] Message
 	if (!Forced && g_bClientRankMute[Client])
 		return;
 
-	PrintToChat(Client, "\x04[\x03RANK\x04] \x01%s", Message);
+	CPrintToChat(Client, "{default}[{lightgreen}RANK{default}] %s", Message);
 }
 
 int StatsGetClientTeam(int client)

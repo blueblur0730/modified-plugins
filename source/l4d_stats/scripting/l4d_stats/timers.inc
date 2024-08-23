@@ -61,7 +61,7 @@ Action Timer_AnnounceConnect(Handle timer, int client)
 	g_iAnnounceCounter[client]++;
 
 	ShowMOTD(client);
-	StatsPrintToChat2(client, true, "Type \x05RANKMENU \x01to operate \x04the Plugin\x01!");
+	StatsPrintToChat2(client, true, "Type {olive}RANKMENU {default}to operate {green}the Plugin{default}!");
 
 	return Plugin_Handled;
 }
@@ -96,9 +96,9 @@ Action Timer_ProtectedFriendly(Handle timer, int data)
 		int Mode = g_hCvar_AnnounceMode.IntValue;
 
 		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(data, "You have earned \x04%i \x01points for Protecting \x05%i friendlies\x01!", Score, ProtectedFriendlies);
+			StatsPrintToChat(data, "You have earned {green}%i {default}points for Protecting {olive}%i friendlies{default}!", Score, ProtectedFriendlies);
 		else if (Mode == 3)
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for Protecting \x05%i friendlies\x01!", UserName, Score, ProtectedFriendlies);
+			StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for Protecting {olive}%i friendlies{default}!", UserName, Score, ProtectedFriendlies);
 	}
 
 	return Plugin_Handled;
@@ -165,18 +165,18 @@ Action Timer_InfectedDamageCheck(Handle timer, int data)
 		if (Mode == 1 || Mode == 2)
 		{
 			if (InfectedDamage > 1)
-				StatsPrintToChat(data, "You have earned \x04%i \x01points for doing \x04%i \x01points of damage to the Survivors!", Score, DamageCounter);
+				StatsPrintToChat(data, "You have earned {green}%i {default}points for doing {green}%i {default}points of damage to the Survivors!", Score, DamageCounter);
 			else
-				StatsPrintToChat(data, "You have earned \x04%i \x01points for doing damage to the Survivors!", Score, DamageCounter);
+				StatsPrintToChat(data, "You have earned {green}%i {default}points for doing damage to the Survivors!", Score, DamageCounter);
 		}
 		else if (Mode == 3)
 		{
 			char Name[MAX_LINE_WIDTH];
 			GetClientName(data, Name, sizeof(Name));
 			if (InfectedDamage > 1)
-				StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for doing \x04%i \x01points of damage to the Survivors!", Name, Score, DamageCounter);
+				StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for doing {green}%i {default}points of damage to the Survivors!", Name, Score, DamageCounter);
 			else
-				StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for doing damage to the Survivors!", Name, Score, DamageCounter);
+				StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for doing damage to the Survivors!", Name, Score, DamageCounter);
 		}
 	}
 
@@ -211,11 +211,11 @@ Action Timer_ShowTimerScore(Handle timer)
 			if (g_iTimerPoints[i] > 0 && g_iTimerKills[i] > 0)
 			{
 				if (Mode == 1 || Mode == 2)
-					StatsPrintToChat(i, "You have earned \x04%i \x01points for killing \x05%i \x01Infected!", g_iTimerPoints[i], g_iTimerKills[i]);
+					StatsPrintToChat(i, "You have earned {green}%i {default}points for killing {olive}%i {default}Infected!", g_iTimerPoints[i], g_iTimerKills[i]);
 				else if (Mode == 3)
 				{
 					GetClientName(i, Name, sizeof(Name));
-					StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for killing \x05%i \x01Infected!", Name, g_iTimerPoints[i], g_iTimerKills[i]);
+					StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for killing {olive}%i {default}Infected!", Name, g_iTimerPoints[i], g_iTimerKills[i]);
 				}
 			}
 			InterstitialPlayerUpdate(i);
@@ -272,7 +272,7 @@ Action Timer_PanicEventEnd(Handle timer)
 			}
 
 			if (Mode)
-				StatsPrintToChatTeam(TEAM_SURVIVORS, "\x03ALL SURVIVORS \x01have earned \x04%i \x01points for \x05No Incapicitates Or Deaths After Panic Event\x01!", Score);
+				StatsPrintToChatTeam(TEAM_SURVIVORS, "{lightgreen}ALL SURVIVORS {default}have earned {green}%i {default}points for {olive}No Incapicitates Or Deaths After Panic Event{default}!", Score);
 		}
 	}
 
@@ -333,15 +333,15 @@ Action Timer_BoomerBlindnessCheck(Handle timer, int data)
 
 			if (Mode == 1 || Mode == 2)
 			{
-				if (AwardCounter > 0) StatsPrintToChat(data, "You have earned \x04%i \x01points from \x05Perfect Blindness\x01!", Score);
-				else StatsPrintToChat(data, "You have earned \x04%i \x01points for blinding \x05%i Survivors\x01!", Score, OriginalHitCounter);
+				if (AwardCounter > 0) StatsPrintToChat(data, "You have earned {green}%i {default}points from {olive}Perfect Blindness{default}!", Score);
+				else StatsPrintToChat(data, "You have earned {green}%i {default}points for blinding {olive}%i Survivors{default}!", Score, OriginalHitCounter);
 			}
 			else if (Mode == 3)
 			{
 				char Name[MAX_LINE_WIDTH];
 				GetClientName(data, Name, sizeof(Name));
-				if (AwardCounter > 0) StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points from \x05Perfect Blindness\x01!", Name, Score);
-				else StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for blinding \x05%i Survivors\x01!", Name, Score, OriginalHitCounter);
+				if (AwardCounter > 0) StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points from {olive}Perfect Blindness{default}!", Name, Score);
+				else StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for blinding {olive}%i Survivors{default}!", Name, Score, OriginalHitCounter);
 			}
 		}
 
@@ -457,12 +457,12 @@ Action Timer_EndCharge(Handle timer, int data)
 		Mode = g_hCvar_AnnounceMode.IntValue;
 
 	if ((Mode == 1 || Mode == 2) && IsClientConnected(data) && IsClientInGame(data))
-		StatsPrintToChat(data, "You have earned \x04%i \x01points for charging a \x05Scattering Ram \x01on \x03%i \x01victims!", Score, Counter);
+		StatsPrintToChat(data, "You have earned {green}%i {default}points for charging a {olive}Scattering Ram {default}on {lightgreen}%i {default}victims!", Score, Counter);
 	else if (Mode == 3)
 	{
 		char AttackerName[MAX_LINE_WIDTH];
 		GetClientName(data, AttackerName, sizeof(AttackerName));
-		StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for charging a \x05Scattering Ram \x01on \x03%i \x01victims!", AttackerName, Score, Counter);
+		StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for charging a {olive}Scattering Ram {default}on {lightgreen}%i {default}victims!", AttackerName, Score, Counter);
 	}
 
 	return Plugin_Handled;
@@ -538,9 +538,9 @@ Action Timer_FriendlyFireDamageEnd(Handle timer, DataPack dp)
 		Mode = g_hCvar_AnnounceMode.IntValue;
 
 	if ((Mode == 1 || Mode == 2) && IsClientConnected(Attacker) && IsClientInGame(Attacker))
-		StatsPrintToChat(Attacker, "You have \x03LOST \x04%i \x01points for inflicting \x03Friendly Fire Damage \x05(%i HP)\x01!", Score, HumanDamage + BotDamage);
+		StatsPrintToChat(Attacker, "You have {lightgreen}LOST {green}%i {default}points for inflicting {lightgreen}Friendly Fire Damage {olive}(%i HP){default}!", Score, HumanDamage + BotDamage);
 	else if (Mode == 3)
-		StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for inflicting \x03Friendly Fire Damage \x05(%i HP)\x01!", AttackerName, Score, HumanDamage + BotDamage);
+		StatsPrintToChatAll("{olive}%s {default}has {lightgreen}LOST {green}%i {default}points for inflicting {lightgreen}Friendly Fire Damage {olive}(%i HP){default}!", AttackerName, Score, HumanDamage + BotDamage);
 
 	return Plugin_Handled;
 }
@@ -576,7 +576,7 @@ Action Timer_ShuffleTeams(Handle timer)
 
 	if (counter <= 1)
 	{
-		StatsPrintToChatAllPreFormatted2(true, "Team shuffle by player PPM failed because there was \x03not enough players\x01!");
+		StatsPrintToChatAllPreFormatted2(true, "Team shuffle by player PPM failed because there was {greeen}not enough players{default}!");
 		return Plugin_Handled;
 	}
 
@@ -597,7 +597,7 @@ Action Timer_RankVote(Handle timer)
 	{
 		int humans = 0, votes = 0, yesvotes = 0, novotes = 0, WinningVoteCount = 0;
 		CheckRankVotes(humans, votes, yesvotes, novotes, WinningVoteCount);
-		StatsPrintToChatAll2(true, "Vote to shuffle teams by player PPM \x03%s \x01with \x04%i (yes) against %i (no)\x01.", (yesvotes > novotes ? "PASSED" : "DID NOT PASS"), yesvotes, novotes);
+		StatsPrintToChatAll2(true, "Vote to shuffle teams by player PPM {lightgreen}%s {default}with {green}%i {default}(yes) against {green}%i {default}(no).", (yesvotes > novotes ? "PASSED" : "DID NOT PASS"), yesvotes, novotes);
 
 		if (yesvotes > novotes)
 			CreateTimer(3.0, Timer_ShuffleTeams);
@@ -644,7 +644,7 @@ Action Timer_UpdatePlayers(Handle timer)
 	if (CheckHumans())
 	{
 		if (g_hCvar_DisabledMessages.BoolValue)
-			StatsPrintToChatAllPreFormatted("Left 4 Dead Stats are \x04DISABLED\x01, not enough Human players!");
+			StatsPrintToChatAllPreFormatted("Left 4 Dead Stats are {green}DISABLED{default}, not enough Human players!");
 
 		return Plugin_Handled;
 	}
