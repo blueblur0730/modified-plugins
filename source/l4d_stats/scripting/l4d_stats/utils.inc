@@ -73,6 +73,38 @@ bool CheckDatabaseValidity(const char[] Prefix)
 	return true;
 }
 
+// Check if a map is already in the DB.
+void CheckCurrentMapDB()
+{
+	if (StatsDisabled(true))
+		return;
+
+	char MapName[MAX_LINE_WIDTH];
+	GetCurrentMap(MapName, sizeof(MapName));
+
+	char query[512];
+	Format(query, sizeof(query), "SELECT name FROM %smaps WHERE LOWER(name) = LOWER('%s') AND gamemode = %i AND mutation = '%s'", g_sDbPrefix, MapName, GetCurrentGamemodeID(), g_sCurrentMutation);
+	SQL_TQuery(db, InsertMapDB, query);
+}
+
+// Check if a player is already in the DB, and update their timestamp and playtime.
+void CheckPlayerDB(int client)
+{
+	if (StatsDisabled())
+		return;
+
+	if (IsClientBot(client))
+		return;
+
+	char SteamID[MAX_LINE_WIDTH];
+	GetClientRankAuthString(client, SteamID, sizeof(SteamID));
+
+	char query[512];
+	Format(query, sizeof(query), "SELECT steamid FROM %splayers WHERE steamid = '%s'", g_sDbPrefix, SteamID);
+	SQL_TQuery(db, InsertPlayerDB, query, client);
+	ReadClientRankMuteSteamID(client, SteamID);
+}
+
 bool TimedMapsMenuInfoMarker(char[] Info, int MenuNumber)
 {
 	if (Info[0] == '\0' || MenuNumber < 2)
@@ -430,9 +462,8 @@ bool CheckHumans()
 {
 	int MinHumans  = g_hCvar_HumansNeeded.IntValue;
 	int Humans	   = 0;
-	int maxplayers = MaxClients;
 
-	for (int i = 1; i <= maxplayers; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
 			Humans++;

@@ -1,8 +1,10 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #include <sourcemod>
-#include <clientprefs>
+//#include <clientprefs>	// to do
 #include <sdktools>
+//#include <colors>			// to do
 #undef REQUIRE_PLUGIN
 #include <adminmenu>
 
@@ -19,6 +21,19 @@ public Plugin myinfo =
 	url = "https://github.com/blueblur0730/modified-plugins"
 };
 
+// Modules here
+#include "l4d_stats/setup.inc"
+#include "l4d_stats/commands.inc"
+#include "l4d_stats/menus.inc"
+#include "l4d_stats/events.inc"
+#include "l4d_stats/dbi.inc"
+#include "l4d_stats/actions.inc"
+#include "l4d_stats/timers.inc"
+#include "l4d_stats/utils.inc"
+
+// here to define the include functions.
+#include "l4d_stats/natives.inc"
+
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	EngineVersion test = GetEngineVersion();
@@ -34,24 +49,19 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	if (test == Engine_Left4Dead2)
 		g_bLeft4Dead2 = true;
 
+	CreateNatives();
+
 	RegPluginLibrary("l4d_stats");
 	return APLRes_Success;
 }
-
-// Modules here
-#include "l4d_stats/setup.inc"
-#include "l4d_stats/commands.inc"
-#include "l4d_stats/menus.inc"
-#include "l4d_stats/events.inc"
-#include "l4d_stats/dbi.inc"
-#include "l4d_stats/actions.inc"
-#include "l4d_stats/timers.inc"
-#include "l4d_stats/utils.inc"
 
 // Here we go!
 public void OnPluginStart()
 {
 	g_bCommandsRegistered = false;
+
+	// load translation here
+	// LoadTranslation();
 
 	// setup all convars here
 	SetupConVars();
@@ -222,4 +232,18 @@ public void OnClientDisconnect(int client)
 
 	if (g_hRankVoteTimer != null)
 		delete g_hRankVoteTimer;
+}
+
+stock void LoadTranslation(const char[] translation)
+{
+	char
+		sPath[PLATFORM_MAX_PATH],
+		sName[64];
+
+	Format(sName, sizeof(sName), "translations/%s.txt", translation);
+	BuildPath(Path_SM, sPath, sizeof(sPath), sName);
+	if (!FileExists(sPath))
+		SetFailState("Missing translation file %s.txt", translation);
+
+	LoadTranslations(translation);
 }

@@ -435,13 +435,13 @@ void DisplayAboutPanel(int client)
 
 	Panel panel = new Panel();
 
-	Format(Value, sizeof(Value), "About [L4D] Statistic:");
+	Format(Value, sizeof(Value), "About [L4D/L4D2] Statistic:");
 	panel.SetTitle(Value);
 
 	Format(Value, sizeof(Value), "Version: %s", PLUGIN_VERSION);
 	panel.DrawText(Value);
 
-	Format(Value, sizeof(Value), "Author: %s", "Mikko Andersson (muukis)");
+	Format(Value, sizeof(Value), "Author: %s", "Mikko Andersson (muukis), blueblur (Modifieder)");
 	panel.DrawText(Value);
 
 	Format(Value, sizeof(Value), "Description: %s", "Record player statistics.");
@@ -1266,7 +1266,7 @@ void CreatePPMMenu(Handle owner, DBResultSet hndl, const char[] error, int clien
 }
 
 // Send the TOP10 panel to the client's display.
-public DisplayTop10(Handle owner, DBResultSet hndl, const char[] error, int client)
+void DisplayTop10(Handle owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client || !hndl)
 	{

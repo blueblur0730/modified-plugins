@@ -246,6 +246,21 @@ void PrechaeResources()
 	else g_bEnableSounds_Charger_Ram = false;
 }
 
+void CreateNatives()
+{
+	CreateNative("L4DStats.TotalPlayer.get", Native_GetTotalPlayer);
+	CreateNative("L4DStats.Connected", Native_IsConnected);
+	CreateNative("L4DStats.CheckDBValidity", Native_CheckDBValidity)
+	CreateNative("L4DStats.CheckMap", Native_CheckMap);
+	CreateNative("L4DStats.CheckPlayer", Native_CheckPlayer);
+	CreateNative("L4DStats.GetSteamID", Native_GetPlayerSteamID);
+	CreateNative("L4DStats.GetName", Native_GetPlayerName);
+	CreateNative("L4DStats.GetPoints", Native_GetPlayerPoints);
+	CreateNative("L4DStats.GetTime", Native_GetPlayerTime);
+	CreateNative("L4DStats.GetPPM", Native_GetPlayerPPM);
+	CreateNative("L4DStats.GetRank", Native_GetPlayerRank);
+}
+
 void OnLanCvarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
 	if (g_hCvar_Lan.IntValue)
