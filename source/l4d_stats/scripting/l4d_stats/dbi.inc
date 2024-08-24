@@ -106,30 +106,12 @@ void QueryClientGameModeRank(Client, SQLTCallback callback = INVALID_FUNCTION)
 
 		switch (g_iCurrentGamemodeID)
 		{
-			case GAMEMODE_VERSUS:
-			{
-				Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_versus > 0 AND points_survivors + points_infected >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_VERSUS]);
-			}
-			case GAMEMODE_REALISM:
-			{
-				Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_realism > 0 AND points_realism >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_REALISM]);
-			}
-			case GAMEMODE_SURVIVAL:
-			{
-				Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_survival > 0 AND points_survival >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_SURVIVAL]);
-			}
-			case GAMEMODE_SCAVENGE:
-			{
-				Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_scavenge > 0 AND points_scavenge_survivors + points_scavenge_infected >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_SCAVENGE]);
-			}
-			case GAMEMODE_REALISMVERSUS:
-			{
-				Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_realismversus > 0 AND points_realism_survivors + points_realism_infected >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_REALISMVERSUS]);
-			}
-			case GAMEMODE_OTHERMUTATIONS:
-			{
-				Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_mutations > 0 AND points_mutations >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_OTHERMUTATIONS]);
-			}
+			case GAMEMODE_VERSUS:Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_versus > 0 AND points_survivors + points_infected >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_VERSUS]);
+			case GAMEMODE_REALISM:Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_realism > 0 AND points_realism >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_REALISM]);
+			case GAMEMODE_SURVIVAL:Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_survival > 0 AND points_survival >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_SURVIVAL]);
+			case GAMEMODE_SCAVENGE:Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_scavenge > 0 AND points_scavenge_survivors + points_scavenge_infected >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_SCAVENGE]);
+			case GAMEMODE_REALISMVERSUS:Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_realismversus > 0 AND points_realism_survivors + points_realism_infected >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_REALISMVERSUS]);
+			case GAMEMODE_OTHERMUTATIONS:Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime_mutations > 0 AND points_mutations >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_OTHERMUTATIONS]);
 			default:
 			{
 				Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers WHERE playtime > 0 AND points >= %i", g_sDbPrefix, g_iClientGameModePoints[Client][GAMEMODE_COOP]);
@@ -809,7 +791,8 @@ void UpdateMapTimingStat(Handle owner, DBResultSet hndl, const char[] error, Dat
 			if (Mode)
 			{
 				SetTimeLabel(OldTime, TimeLabel, sizeof(TimeLabel));
-				StatsPrintToChat(Client, "You did not improve your best time {green}%s {default}to finish this map!", TimeLabel);
+				if (!g_bClientRankMute[Client])
+					CPrintToChat(Client, "%t %t", "Tag","DidNotImprove", TimeLabel);
 			}
 
 			Format(query, sizeof(query), "UPDATE %stimedmaps SET plays = plays + 1, modified = NOW() WHERE map = '%s' AND gamemode = %i AND difficulty = %i AND mutation = '%s' AND steamid = '%s'", g_sDbPrefix, MapName, GamemodeID, GameDifficulty, Mutation, ClientID);
@@ -819,7 +802,8 @@ void UpdateMapTimingStat(Handle owner, DBResultSet hndl, const char[] error, Dat
 			if (Mode)
 			{
 				SetTimeLabel(TotalTime, TimeLabel, sizeof(TimeLabel));
-				StatsPrintToChat(Client, "Your new best time to finish this map is {green}%s{default}!", TimeLabel);
+				if (!g_bClientRankMute[Client])
+					CPrintToChat(Client, "%t %t", "Tag", "NewBestTime", TimeLabel);
 			}
 
 			Format(query, sizeof(query), "UPDATE %stimedmaps SET plays = plays + 1, time = %f, players = %i, modified = NOW() WHERE map = '%s' AND gamemode = %i AND difficulty = %i AND mutation = '%s' AND steamid = '%s'", g_sDbPrefix, TotalTime, PlayerCounter, MapName, GamemodeID, GameDifficulty, Mutation, ClientID);
@@ -833,7 +817,8 @@ void UpdateMapTimingStat(Handle owner, DBResultSet hndl, const char[] error, Dat
 		if (Mode)
 		{
 			SetTimeLabel(TotalTime, TimeLabel, sizeof(TimeLabel));
-			StatsPrintToChat(Client, "It took {green}%s {default}to finish this map!", TimeLabel);
+			if (!g_bClientRankMute[Client])
+				CPrintToChat(Client, "%t %t", "Tag", "TookTime", TimeLabel);
 		}
 
 		Format(query, sizeof(query), "INSERT INTO %stimedmaps (map, gamemode, difficulty, mutation, steamid, plays, time, players, modified, created) VALUES ('%s', %i, %i, '%s', '%s', 1, %f, %i, NOW(), NOW())", g_sDbPrefix, MapName, GamemodeID, GameDifficulty, Mutation, ClientID, TotalTime, PlayerCounter);
@@ -1017,15 +1002,17 @@ void GetClientRankRankChange(Handle owner, DBResultSet hndl, const char[] error,
 
 		char Label[16];
 		if (RankChange > 0)
-			Format(Label, sizeof(Label), "GAINED");
+			Format(Label, sizeof(Label), "%T", "GAINED", client);
 		else
 		{
 			RankChange *= -1;
-			Format(Label, sizeof(Label), "DROPPED");
+			Format(Label, sizeof(Label), "%T", "DROPPED", client);
 		}
 
-		if (!IsClientBot(client) && IsClientConnected(client) && IsClientInGame(client))
-			StatsPrintToChat(client, "You've {green}%s {default}rank for {green}%i position%s{default}! {olive}(Rank: %i)", Label, RankChange, (RankChange > 1 ? "s" : ""), g_iRankChangeLastRank[client]);
+		char plural[4];
+		Format(plural, sizeof(plural), "%T", "Plural", client);
+		if (!IsClientBot(client) && IsClientInGame(client) && !g_bClientRankMute[client])
+			CPrintToChat(client, "%t", "RankChange", Label, RankChange, (RankChange > 1 ? plural : ""), g_iRankChangeLastRank[client]);
 	}
 }
 
@@ -1043,11 +1030,22 @@ void GetClientRankPlayerJoined(Handle owner, DBResultSet hndl, const char[] erro
 
 	GetClientRank(owner, hndl, error, client);
 
-	char userName[MAX_LINE_WIDTH];
-	GetClientName(client, userName, sizeof(userName));
-
-	if (g_iClientRank[client] > 0) StatsPrintToChatAll("Player {olive}%s {default}joined the game! (Rank: {lightgreen}%i {default}/ Points: {lightgreen}%i{default})", userName, g_iClientRank[client], g_iClientPoints[client]);
-	else StatsPrintToChatAll("Player {olive}%s {default}joined the game! (No ranking yet)", userName);
+	if (g_iClientRank[client] > 0)
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (!g_bClientRankMute[i])
+				CPrintToChat(i, "%t %t", "Tag", "JoinedWithRank", client, g_iClientRank[client], g_iClientPoints[client]);
+		}
+	} 
+	else
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (!g_bClientRankMute[i])
+				CPrintToChat(i, "%t %t", "Tag", "JoinedWithoutRank", client);
+		}
+	}
 }
 
 // Generate client's rank.
@@ -1170,13 +1168,13 @@ void ExecuteTeamShuffle(Handle owner, DBResultSet hndl, const char[] error, int 
 
 	for (i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
+		if (IsClientInGame(i) && !IsClientBot(i))
 		{
 			GetClientRankAuthString(i, SteamID, sizeof(SteamID));
 			if (!PlayersTrie.SetValue(SteamID, i, false))
 			{
 				LogError("ExecuteTeamShuffle failed! Reason: Duplicate SteamID while generating shuffled teams.");
-				StatsPrintToChatAllPreFormatted2(true, "Team shuffle failed in an error.");
+				CPrintToChatAll("%t %t", "Tag", "TeamShuffleError");
 				g_hCvar_EnableRankVote.BoolValue = false;
 
 				PlayersTrie.Clear();
@@ -1202,7 +1200,6 @@ void ExecuteTeamShuffle(Handle owner, DBResultSet hndl, const char[] error, int 
 	while (hndl.FetchRow())
 	{
 		hndl.FetchString(0, SteamID, sizeof(SteamID));
-
 		if (PlayersTrie.GetValue(SteamID, client))
 		{
 			team = GetClientTeam(client);
@@ -1238,15 +1235,13 @@ void ExecuteTeamShuffle(Handle owner, DBResultSet hndl, const char[] error, int 
 		if (NewSurvivorCounter > SurvivorsLimit || NewInfectedCounter > InfectedLimit)
 		{
 			LogError("ExecuteTeamShuffle failed! Reason: Team size limits block Rank Vote functionality. (Survivors Limit = %i [%i] / Infected Limit = %i [%i])", SurvivorsLimit, NewSurvivorCounter, InfectedLimit, NewInfectedCounter);
-			StatsPrintToChatAllPreFormatted2(true, "Team shuffle failed in an error.");
+			CPrintToChatAll("%t %t", "Tag", "TeamShuffleError");
 
 			g_hCvar_EnableRankVote.BoolValue = false;
 		}
 		else
 		{
 			g_bCampaignOver = true;
-
-			char Name[32];
 
 			// Change Survivors team to Spectators (TEMPORARILY)
 			for (i = 0; i < SurvivorArray.Length; i++)
@@ -1256,28 +1251,26 @@ void ExecuteTeamShuffle(Handle owner, DBResultSet hndl, const char[] error, int 
 			for (i = 0; i < InfectedArray.Length; i++)
 			{
 				client = InfectedArray.Get(i);
-				GetClientName(client, Name, sizeof(Name));
 				ChangeRankPlayerTeam(client, TEAM_SURVIVORS);
-				StatsPrintToChatAll2(true, "{olive}%s {default}was swapped to team {lightgreen}Survivors{default}!", Name);
+				CPrintToChatAll("%t %t", "Tag", "SwapToSurvivors", client);
 			}
 
 			// Change Spectators (TEMPORARILY) team to Infected
 			for (i = 0; i < SurvivorArray.Length; i++)
 			{
 				client = SurvivorArray.Get(i);
-				GetClientName(client, Name, sizeof(Name));
 				ChangeRankPlayerTeam(client, TEAM_INFECTED);
-				StatsPrintToChatAll2(true, "{olive}%s {default}was swapped to team {lightgreen}Infected{default}!", Name);
+				CPrintToChatAll("%t %t", "Tag", "SwapToInfected", client);
 			}
 
-			StatsPrintToChatAllPreFormatted2(true, "Team shuffle by player PPM {lightgreen}DONE{default}.");
+			CPrintToChatAll("%t %t", "Tag", "TeamShuffleSuccess");
 
 			if (g_bEnableSounds_Rankvote && g_hCvar_SoundsEnabled.BoolValue)
 				EmitSoundToAll(SOUND_RANKVOTE);
 		}
 	}
 	else
-		StatsPrintToChatAllPreFormatted2(true, "Teams are already even by player PPM.");
+		CPrintToChatAll("%t %t", "Tag", "TeamShuffleAlready");
 
 	SurvivorArray.Clear();
 	InfectedArray.Clear();

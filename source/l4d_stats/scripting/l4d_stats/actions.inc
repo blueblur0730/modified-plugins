@@ -136,13 +136,15 @@ int TankDamage(int Client, int Damage)
 
 				int Mode = g_hCvar_AnnounceMode.IntValue;
 
-				if (Mode == 1 || Mode == 2)
-					StatsPrintToChat(Client, "You have earned {green}%i {default}points for Bulldozing the Survivors worth %i points of damage!", Score, TankDamageTotal);
+				if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Client])
+					CPrintToChat(Client, "%t %t", "Tag", "BulldozingSurvivors_Mode1or2", Score, TankDamageTotal);
 				else if (Mode == 3)
 				{
-					char Name[MAX_LINE_WIDTH];
-					GetClientName(Client, Name, sizeof(Name));
-					StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for Bulldozing the Survivors worth %i points of damage!", Name, Score, TankDamageTotal);
+					for (int i = 1; i <= MaxClients; i++)
+					{
+						if (!g_bClientRankMute[i])
+							CPrintToChat(i, "%t %t", "Tag", "BulldozingSurvivors_Mode3", Client, Score, TankDamageTotal);
+					}
 				}
 
 				if (g_bEnableSounds_Tank_Bulldozer && g_hCvar_SoundsEnabled.BoolValue)
@@ -193,13 +195,9 @@ void GiveAdrenaline(int Giver, int Recipient, int g_iAdrenalineIndexID = -1)
 	if (IsClientBot(Giver))
 		return;
 
-	char RecipientName[MAX_LINE_WIDTH];
-	GetClientName(Recipient, RecipientName, sizeof(RecipientName));
 	char RecipientID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Recipient, RecipientID, sizeof(RecipientID));
 
-	char GiverName[MAX_LINE_WIDTH];
-	GetClientName(Giver, GiverName, sizeof(GiverName));
 	char GiverID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Giver, GiverID, sizeof(GiverID));
 
@@ -219,13 +217,18 @@ void GiveAdrenaline(int Giver, int Recipient, int g_iAdrenalineIndexID = -1)
 	{
 		int Mode = g_hCvar_AnnounceMode.IntValue;
 
-		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Giver, "You have earned {green}%i {default}points for giving adrenaline to {olive}%s{default}!", Score, RecipientName);
+		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Giver])
+			CPrintToChat(Giver, "%t %t", "Tag", "GivingAdrenaline_Mode1or2", Score, Recipient);
 		else if (Mode == 3)
-			StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for giving adrenaline to {olive}%s{default}!", GiverName, Score, RecipientName);
+		{
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "GivingAdrenaline_Mode3", Giver, Score, Recipient);
+			}
+		}
 	}
 }
-
 
 // Pill give code. Special note, g_iPillsIndex can only be given once. (Even if it's initially given by a bot!)
 void GivePills(int Giver, int Recipient, int PillsIndex = -1)
@@ -246,13 +249,9 @@ void GivePills(int Giver, int Recipient, int PillsIndex = -1)
 	if (IsClientBot(Giver))
 		return;
 
-	char RecipientName[MAX_LINE_WIDTH];
-	GetClientName(Recipient, RecipientName, sizeof(RecipientName));
 	char RecipientID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Recipient, RecipientID, sizeof(RecipientID));
 
-	char GiverName[MAX_LINE_WIDTH];
-	GetClientName(Giver, GiverName, sizeof(GiverName));
 	char GiverID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Giver, GiverID, sizeof(GiverID));
 
@@ -272,22 +271,23 @@ void GivePills(int Giver, int Recipient, int PillsIndex = -1)
 	{
 		int Mode = g_hCvar_AnnounceMode.IntValue;
 
-		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Giver, "You have earned {green}%i {default}points for giving pills to {olive}%s{default}!", Score, RecipientName);
+		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Giver])
+			CPrintToChat(Giver, "%t %t", Score, Recipient);
 		else if (Mode == 3)
-			StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for giving pills to {olive}%s{default}!", GiverName, Score, RecipientName);
+		{
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "GivingPills_Mode3", Giver, Score, Recipient);
+			}
+		}
 	}
 }
 
 void UpdateFriendlyFire(int Attacker, int Victim)
 {
-	char AttackerName[MAX_LINE_WIDTH];
-	GetClientName(Attacker, AttackerName, sizeof(AttackerName));
 	char AttackerID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Attacker, AttackerID, sizeof(AttackerID));
-
-	char VictimName[MAX_LINE_WIDTH];
-	GetClientName(Victim, VictimName, sizeof(VictimName));
 
 	int Score = 0;
 	if (g_hCvar_EnableNegativeScore.BoolValue)
@@ -314,10 +314,17 @@ void UpdateFriendlyFire(int Attacker, int Victim)
 	if (Score > 0)
 		Mode = g_hCvar_AnnounceMode.IntValue;
 
-	if (Mode == 1 || Mode == 2)
-		StatsPrintToChat(Attacker, "You have {lightgreen}LOST {green}%i {default}points for {lightgreen}Friendly Firing {olive}%s{default}!", Score, VictimName);
+	if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Attacker])
+		CPrintToChat(Attacker, "%t %t", "Tag", "FriendlyFireAt_Mode1or2", Score, Victim);
 	else if (Mode == 3)
-		StatsPrintToChatAll("{olive}%s {default}has {lightgreen}LOST {green}%i {default}points for {lightgreen}Friendly Firing {olive}%s{default}!", AttackerName, Score, VictimName);
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (!g_bClientRankMute[i])
+				CPrintToChat(i, "%t %t", "Tag", "FriendlyFireAt_Mode3", Attacker, Score, Victim);
+		}
+	}
+		
 }
 
 void UpdateHunterDamage(int Client, int Damage)
@@ -461,14 +468,11 @@ void SurvivorDied(int Attacker, int Victim, int AttackerInfType = -1, int Mode =
 
 	char AttackerID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Attacker, AttackerID, sizeof(AttackerID));
-
-	char VictimName[MAX_LINE_WIDTH];
-	GetClientName(Victim, VictimName, sizeof(VictimName));
-	SurvivorDiedNamed(Attacker, Victim, VictimName, AttackerID, AttackerInfType, Mode);
+	SurvivorDiedNamed(Attacker, Victim, AttackerID, AttackerInfType, Mode);
 }
 
 // An Infected player killed a Survivor.
-void SurvivorDiedNamed(int Attacker, int Victim, const char[] VictimName, const char[] AttackerID, int AttackerInfType = -1, int Mode = -1)
+void SurvivorDiedNamed(int Attacker, int Victim, const char[] AttackerID, int AttackerInfType = -1, int Mode = -1)
 {
 	if (!Attacker || !Victim || StatsGetClientTeam(Attacker) != TEAM_INFECTED || StatsGetClientTeam(Victim) != TEAM_SURVIVORS)
 		return;
@@ -526,12 +530,14 @@ void SurvivorDiedNamed(int Attacker, int Victim, const char[] VictimName, const 
 	{
 		if (Mode > 2)
 		{
-			char AttackerName[MAX_LINE_WIDTH];
-			GetClientName(Attacker, AttackerName, sizeof(AttackerName));
-			StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for killing {olive}%s{default}!", AttackerName, Score, VictimName);
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "SurvivorDied_Mode3", Attacker, Score, Victim);
+			}
 		}
-		else
-			StatsPrintToChat(Attacker, "You have earned {green}%i {default}points for killing {olive}%s{default}!", Score, VictimName);
+		else if (!g_bClientRankMute[Attacker])
+			CPrintToChat(Attacker, "%t %t", "Tag", "SurvivorDied_Mode1or2", Score, Victim);
 	}
 
 	UpdateMapStat("survivor_kills", 1);
@@ -640,11 +646,6 @@ void PlayerIncap(int Attacker, int Victim)
 	{
 		char AttackerID[MAX_LINE_WIDTH];
 		GetClientRankAuthString(Attacker, AttackerID, sizeof(AttackerID));
-		char AttackerName[MAX_LINE_WIDTH];
-		GetClientName(Attacker, AttackerName, sizeof(AttackerName));
-
-		char VictimName[MAX_LINE_WIDTH];
-		GetClientName(Victim, VictimName, sizeof(VictimName));
 
 		int Score = 0;
 		if (g_hCvar_EnableNegativeScore.BoolValue)
@@ -681,10 +682,16 @@ void PlayerIncap(int Attacker, int Victim)
 		Format(query, sizeof(query), "UPDATE %splayers SET %s = %s - %i, award_fincap = award_fincap + 1 WHERE steamid = '%s'", g_sDbPrefix, UpdatePoints, UpdatePoints, Score, AttackerID);
 		SendSQLUpdate(query);
 
-		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Attacker, "You have {lightgreen}LOST {green}%i {default}points for {lightgreen}Incapicitating {olive}%s{default}!", Score, VictimName);
+		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Attacker])
+			CPrintToChat(Attacker, "%t %t", "Tag", "FriendlyIncap_Mode1or2", Score, Victim);
 		else if (Mode == 3)
-			StatsPrintToChatAll("{olive}%s {default}has {lightgreen}LOST {green}%i {default}points for {lightgreen}Incapicitating {olive}%s{default}!", AttackerName, Score, VictimName);
+		{
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "FriendlyIncap_Mode3", Attacker, Score, Victim);
+			}
+		}
 	}
 
 	// Attacker is an Infected
@@ -792,13 +799,15 @@ void SurvivorHurt(int Attacker, int Victim, int Damage, int AttackerInfType = -1
 
 			int Mode = g_hCvar_AnnounceMode.IntValue;
 
-			if (Mode == 1 || Mode == 2)
-				StatsPrintToChat(Attacker, "You have earned {green}%i {default}points for throwing a rock at {olive}%s{default}!", RockHit, VictimName);
+			if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Attacker])
+				CPrintToChat(Attacker, "%t %t", "Tag", "ThrowingRockAt_Mode1or2", RockHit, VictimName);
 			else if (Mode == 3)
 			{
-				char AttackerName[MAX_LINE_WIDTH];
-				GetClientName(Attacker, AttackerName, sizeof(AttackerName));
-				StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for throwing a rock at {olive}%s{default}!", AttackerName, RockHit, VictimName);
+				for (int i = 1; i <= MaxClients; i++)
+				{
+					if (!g_bClientRankMute[i])
+						CPrintToChat(i, "%t %t", "Tag", "ThrowingRockAt_Mode3", Attacker, RockHit, VictimName);
+				}
 			}
 		}
 	}
@@ -887,11 +896,6 @@ void SurvivorIncappedByInfected(int Attacker, int Victim, int Mode = -1)
 
 	char AttackerID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Attacker, AttackerID, sizeof(AttackerID));
-	char AttackerName[MAX_LINE_WIDTH];
-	GetClientName(Attacker, AttackerName, sizeof(AttackerName));
-
-	char VictimName[MAX_LINE_WIDTH];
-	GetClientName(Victim, VictimName, sizeof(VictimName));
 
 	int Score = ModifyScoreDifficultyFloat(g_hCvar_SurvivorIncapScore.IntValue, 0.75, 0.5, TEAM_INFECTED);
 
@@ -910,10 +914,16 @@ void SurvivorIncappedByInfected(int Attacker, int Victim, int Mode = -1)
 	if (Mode < 0)
 		Mode = g_hCvar_AnnounceMode.IntValue;
 
-	if (Mode == 1 || Mode == 2)
-		StatsPrintToChat(Attacker, "You have earned {green}%i {default}points for Incapacitating {olive}%s{default}!", Score, VictimName);
+	if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Attacker])
+		CPrintToChat(Attacker, "%t %t", "Tag", "IncapSurvivors_Mode1or2", Score, Victim);
 	else if (Mode == 3)
-		StatsPrintToChatAll("{olive}%s {default}has earned {green}%i {default}points for Incapacitating {olive}%s{default}!", AttackerName, Score, VictimName);
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (!g_bClientRankMute[i])
+				CPrintToChat(i, "%t %t", "Tag", "IncapSurvivors_Mode3", Attacker, Score, Victim);
+		}
+	}
 }
 
 void HunterSmokerSave(int Savior, int Victim, int BasePoints, int AdvMult, int ExpertMult, char[] SaveFrom, char[] SQLField)
@@ -926,13 +936,9 @@ void HunterSmokerSave(int Savior, int Victim, int BasePoints, int AdvMult, int E
 
 	int	 Mode = g_hCvar_AnnounceMode.IntValue;
 
-	char SaviorName[MAX_LINE_WIDTH];
-	GetClientName(Savior, SaviorName, sizeof(SaviorName));
 	char SaviorID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Savior, SaviorID, sizeof(SaviorID));
 
-	char VictimName[MAX_LINE_WIDTH];
-	GetClientName(Victim, VictimName, sizeof(VictimName));
 	char VictimID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Victim, VictimID, sizeof(VictimID));
 
@@ -951,8 +957,8 @@ void HunterSmokerSave(int Savior, int Victim, int BasePoints, int AdvMult, int E
 	if (Score <= 0)
 		return;
 
-	if (Mode)
-		StatsPrintToChat(Savior, "You have earned {green}%i {default}points for saving {olive}%s{default} from {green}%s{default}!", Score, VictimName, SaveFrom);
+	if (Mode && !g_bClientRankMute[Savior])
+		CPrintToChat(Savior, "%t %t", "Tag", "SavingTeammate", Score, Victim, SaveFrom);
 
 	UpdateMapStat("points", Score);
 	AddScore(Savior, Score);
@@ -978,7 +984,22 @@ void AnnounceMedkitPenalty(int Mode = -1)
 		Mode = g_hCvar_AnnounceMode.IntValue;
 
 	if (Mode)
-		StatsPrintToChatTeam(TEAM_SURVIVORS, "{lightgreen}ALL SURVIVORS {default}now earns only {green}%i percent {default}of their normal points after using their {olive}%i%s Medkit%s{default}!", RoundToNearest(ReductionFactor * 100), g_iMedkitsUsedCounter, (g_iMedkitsUsedCounter == 1 ? "st" : (g_iMedkitsUsedCounter == 2 ? "nd" : (g_iMedkitsUsedCounter == 3 ? "rd" : "th"))), (g_bLeft4Dead ? "" : " or Defibrillator"));
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS && !g_bClientRankMute[i])
+			{
+				char st[16], nd[16], rd[16], th[16], ordefibrillator[16];
+				Format(st, sizeof(st), "%T", "First", i);
+				Format(nd, sizeof(nd), "%T", "Second", i);
+				Format(rd, sizeof(rd), "%T", "Third", i);
+				Format(th, sizeof(th), "%T", "Fourth", i);
+				Format(ordefibrillator, sizeof(ordefibrillator), "%T", "orDefibrillator", i);
+				CPrintToChat(i, "%t %t", "Tag", "PercentageReduct", RoundToNearest(ReductionFactor * 100), g_iMedkitsUsedCounter, (g_iMedkitsUsedCounter == 1 ? st : (g_iMedkitsUsedCounter == 2 ? nd : (g_iMedkitsUsedCounter == 3 ? rd : th))), (g_bLeft4Dead ? "" : ordefibrillator));
+			}	
+		}
+	}
+		
 }
 
 void InitializeClientInf(int Client)
@@ -1134,7 +1155,7 @@ void StopMapTiming()
 void DisplayRankVote(int client)
 {
 	char question[128];
-	strcopy(question, sizeof(question), RANKVOTE_QUESTION);
+	Format(question, sizeof(question), "%T", "Menu_ShuffleTeamsByPPM", client);
 	DisplayYesNoPanel(client, question, RankVotePanelHandler, RoundToNearest(g_hCvar_RankVoteTime.FloatValue));
 }
 
@@ -1144,7 +1165,7 @@ void InitializeRankVote(int client)
 	if (StatsDisabled())
 	{
 		if (client == 0) PrintToConsole(0, "[RANK] Cannot initiate vote when the plugin is disabled!");
-		else StatsPrintToChatPreFormatted2(client, true, "Cannot initiate vote when the plugin is disabled!");
+		else CPrintToChat(client, "%t %t", "Tag", "RankVote_PluginDisabled");
 
 		return;
 	}
@@ -1155,8 +1176,8 @@ void InitializeRankVote(int client)
 		if (client == 0) PrintToConsole(0, "[RANK] The Rank Vote is not enabled in this gamemode!");
 		else
 		{
-			if (g_bLeft4Dead) StatsPrintToChatPreFormatted2(client, true, "The {green}Rank Vote {default}is enabled in {lightgreen}Versus {default}gamemode!");
-			else if (g_bLeft4Dead2) StatsPrintToChatPreFormatted2(client, true, "The {green}Rank Vote {default}is enabled in {lightgreen}Versus{default}, {lightgreen}Realism Versus {default}and {lightgreen}Scavenge {default}gamemodes!");
+			if (g_bLeft4Dead) CPrintToChat(client, "%t %t", "Tag", "RankVote_OnlyGamemodes");
+			else if (g_bLeft4Dead2) CPrintToChat(client, "%t %t", "Tag", "RankVote_OnlyGamemodes_WithRealismVersus");
 		}
 
 		return;
@@ -1177,7 +1198,7 @@ void InitializeRankVote(int client)
 
 	if (!IsAdmin && client > 0 && g_hPlayerRankVoteTrie.GetValue(ClientID, team))
 	{
-		StatsPrintToChatPreFormatted2(client, true, "You can initiate a {green}Rank Vote {default}only once per map!");
+		CPrintToChat(client, "%t %t", "Tag", "RankVote_OnlyPerOnce");
 		return;
 	}
 
@@ -1205,13 +1226,8 @@ void InitializeRankVote(int client)
 		}
 	}
 
-	if (client > 0)
-	{
-		char UserName[MAX_LINE_WIDTH];
-		GetClientName(client, UserName, sizeof(UserName));
-		StatsPrintToChatAll2(true, "The {green}Rank Vote {default}was initiated by {olive}%s{default}!", UserName);
-	}
-	else StatsPrintToChatAllPreFormatted2(true, "The {green}Rank Vote {default}was initiated from Server Console!");
+	if (client > 0) CPrintToChatAll("%t %t", "Tag", "RankVote_IniByPlayer",client);
+	else CPrintToChatAll("%t %t", "Tag", "RankVote_IniByConsole");
 }
 
 void CheckSurvivorsAllDown()
@@ -1316,7 +1332,14 @@ void CheckSurvivorsAllDown()
 		UpdateMapStat("points_infected", Score);
 
 	if (Score > 0 && Mode)
-		StatsPrintToChatTeam(TEAM_INFECTED, "{lightgreen}ALL INFECTED {default}have earned {green}%i {default}points for killing all survivors!", Score);
+	{
+		for (i = 0; i < MaxClients; i++)
+		{
+			if (IsClientInGame(i) && !IsClientBot(i)&& GetClientTeam(i) == TEAM_INFECTED && !g_bClientRankMute[i])
+				CPrintToChat(i, "%t %t", "Tag", "AllInfectedGainPoints", Score);
+		}
+	}
+		
 
 	if (!g_hCvar_EnableNegativeScore.BoolValue)
 		return;
@@ -1348,7 +1371,13 @@ void CheckSurvivorsAllDown()
 	}
 
 	if (Mode)
-		StatsPrintToChatTeam(TEAM_SURVIVORS, "{lightgreen}ALL SURVIVORS {default}have {lightgreen}LOST {green}%i {default}points for {lightgreen}All Survivors Dying{default}!", Score);
+	{
+		for (i = 0; i < MaxClients; i++)
+		{
+			if (IsClientInGame(i) && !IsClientBot(i)&& GetClientTeam(i) == TEAM_SURVIVORS && !g_bClientRankMute[i])
+				CPrintToChat(i, "%t %t", "Tag", "AllSurvivorsLosePoints_AllDied", Score);
+		}
+	}
 }
 
 void UpdateSmokerDamage(int Client, int Damage)
@@ -1491,7 +1520,13 @@ public CheckSurvivorsWin()
 		}
 
 		if (Mode)
-			StatsPrintToChatTeam(TEAM_SURVIVORS, "{lightgreen}ALL SURVIVORS {default}have earned {green}%i {default}points for {olive}Not Disturbing A Witch!", Score);
+		{
+			for (int i = 0; i < MaxClients; i++)
+			{
+				if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS && !g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "AllSurvivorsLosePoints_NotDisturbingWitch", Score);
+			}
+		}
 	}
 
 	Score = 0;
@@ -1500,7 +1535,7 @@ public CheckSurvivorsWin()
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS)
+		if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS)
 		{
 			if (IsPlayerAlive(i))
 				Score = Score + BaseScore;
@@ -1515,7 +1550,7 @@ public CheckSurvivorsWin()
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
+		if (IsClientInGame(i) && !IsClientBot(i))
 		{
 			ClientTeam = GetClientTeam(i);
 
@@ -1544,10 +1579,20 @@ public CheckSurvivorsWin()
 
 	if (Mode && Score > 0)
 	{
-		StatsPrintToChatTeam(TEAM_SURVIVORS, "{lightgreen}ALL SURVIVORS {default}have earned {green}%i {default}points for reaching a Safe House with {olive}%i Deaths!", Score, Deaths);
+		for (int i = 0; i < MaxClients; i++)
+		{
+			if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS && !g_bClientRankMute[i])
+				CPrintToChat(i, "%t %t", "Tag", "AllSurvivorsGainPoints_ReachedSafeHouse", Score, Deaths);
+		}
 
 		if (NegativeScore)
-			StatsPrintToChatTeam(TEAM_INFECTED, "{lightgreen}ALL INFECTED {default}have {lightgreen}LOST {green}%i {default}points for letting the survivors reach a Safe House!", Score);
+		{
+			for (int i = 0; i < MaxClients; i++)
+			{
+				if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_INFECTED && !g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "AllInfectedLosePoints_ReachedSafeHouse", Score);
+			}
+		}
 	}
 
 	g_bPlayerVomited = false;
@@ -1607,8 +1652,8 @@ void ResetInfVars()
 
 void ResetVars()
 {
-	ClearTrie(g_hFriendlyFireDamageTrie);
-	ClearTrie(g_hPlayerRankVoteTrie);
+	g_hFriendlyFireDamageTrie.Clear();
+	g_hPlayerRankVoteTrie.Clear();
 
 	g_bPlayerVomited	  = false;
 	g_bPlayerVomitedIncap = false;
@@ -1682,17 +1727,23 @@ void ShowMOTDAll()
 {
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
+		if (IsClientInGame(i) && !IsClientBot(i))
 			ShowMOTD(i);
 	}
 }
 
 void ShowMOTD(int client, bool forced = false)
 {
-	if (!forced && !g_hCvar_AnnounceMotd.BoolValue)
+	if (!g_hCvar_AnnounceMotd.BoolValue)
 		return;
 
-	StatsPrintToChat2(client, forced, "{olive}%s: {default}%s", MOTD_TITLE, g_sMessageOfTheDay);
+	if (forced)
+		CPrintToChat(client, "%t {olive}%s: {default}%s", "Tag", MOTD_TITLE, g_sMessageOfTheDay);
+	else
+	{
+		if (!g_bClientRankMute[client])
+			CPrintToChat(client, "%t {olive}%s: {default}%s", "Tag", MOTD_TITLE, g_sMessageOfTheDay);
+	}
 }
 
 void AnnouncePlayerConnect(int client)
@@ -1707,7 +1758,7 @@ void StartRankVote(int client)
 {
 	if (!g_hCvar_EnableRankVote.BoolValue)
 	{
-		if (client > 0) StatsPrintToChatPreFormatted(client, "The {green}Rank Vote {default}is {lightgreen}DISABLED{default}.");
+		if (client > 0) CPrintToChat(client, "%t %t", "Tag", "RankVote_Disabled");
 		else PrintToConsole(0, "[RANK] The Rank Vote is DISABLED.");
 	}
 	else InitializeRankVote(client);

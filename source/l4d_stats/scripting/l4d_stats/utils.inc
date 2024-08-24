@@ -181,74 +181,6 @@ void GetClientRankAuthString(int client, char[] auth, int maxlength)
 	}
 }
 
-void StatsPrintToChatAll(const char[] Message, any...)
-{
-	char FormattedMessage[MAX_MESSAGE_WIDTH];
-	VFormat(FormattedMessage, sizeof(FormattedMessage), Message, 2);
-	StatsPrintToChatAllPreFormatted(FormattedMessage);
-}
-
-void StatsPrintToChatAll2(bool Forced, const char[] Message, any...)
-{
-	char FormattedMessage[MAX_MESSAGE_WIDTH];
-	VFormat(FormattedMessage, sizeof(FormattedMessage), Message, 2);
-	StatsPrintToChatAllPreFormatted2(Forced, FormattedMessage);
-}
-
-void StatsPrintToChatAllPreFormatted(const char[] Message)
-{
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
-			StatsPrintToChatPreFormatted(i, Message);
-	}
-}
-
-void StatsPrintToChatAllPreFormatted2(bool Forced, const char[] Message)
-{
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
-			StatsPrintToChatPreFormatted2(i, Forced, Message);
-	}
-}
-
-void StatsPrintToChat(int Client, const char[] Message, any...)
-{
-	// CHECK IF CLIENT HAS MUTED THE PLUGIN
-	if (g_bClientRankMute[Client])
-		return;
-
-	char FormattedMessage[MAX_MESSAGE_WIDTH];
-	VFormat(FormattedMessage, sizeof(FormattedMessage), Message, 3);
-	StatsPrintToChatPreFormatted(Client, FormattedMessage);
-}
-
-void StatsPrintToChat2(int Client, bool Forced, const char[] Message, any...)
-{
-	// CHECK IF CLIENT HAS MUTED THE PLUGIN
-	if (!Forced && g_bClientRankMute[Client])
-		return;
-
-	char FormattedMessage[MAX_MESSAGE_WIDTH];
-	VFormat(FormattedMessage, sizeof(FormattedMessage), Message, 4);
-	StatsPrintToChatPreFormatted2(Client, Forced, FormattedMessage);
-}
-
-void StatsPrintToChatPreFormatted(int Client, const char[] Message)
-{
-	StatsPrintToChatPreFormatted2(Client, false, Message);
-}
-
-void StatsPrintToChatPreFormatted2(int Client, bool Forced, const char[] Message)
-{
-	// CHECK IF CLIENT HAS MUTED THE PLUGIN
-	if (!Forced && g_bClientRankMute[Client])
-		return;
-
-	CPrintToChat(Client, "{default}[{lightgreen}RANK{default}] %s", Message);
-}
-
 int StatsGetClientTeam(int client)
 {
 	if (client <= 0 || !IsClientConnected(client))
@@ -293,30 +225,6 @@ int GetCurrentDifficulty()
 bool MapTimingEnabled()
 {
 	return (g_bMapTimingBlocked || g_iCurrentGamemodeID == GAMEMODE_COOP || g_iCurrentGamemodeID == GAMEMODE_SURVIVAL || g_iCurrentGamemodeID == GAMEMODE_REALISM || g_iCurrentGamemodeID == GAMEMODE_OTHERMUTATIONS);
-}
-
-// Print a chat message to a specific team instead of all players
-void StatsPrintToChatTeam(int Team, const char[] Message, any...)
-{
-	char FormattedMessage[MAX_MESSAGE_WIDTH];
-	VFormat(FormattedMessage, sizeof(FormattedMessage), Message, 3);
-
-	int AnnounceToTeam = g_hCvar_AnnounceToTeam.IntValue;
-	if (Team > 0 && AnnounceToTeam)
-	{
-		int ClientTeam;
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
-			{
-				ClientTeam = GetClientTeam(i);
-				if (ClientTeam == Team || (ClientTeam == TEAM_SPECTATORS && AnnounceToTeam == 2))
-					StatsPrintToChatPreFormatted(i, FormattedMessage);
-			}
-		}
-	}
-	else
-		StatsPrintToChatAllPreFormatted(FormattedMessage);
 }
 
 bool IsClientIncapacitated(int client)

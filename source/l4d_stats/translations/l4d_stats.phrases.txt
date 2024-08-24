@@ -1,0 +1,1241 @@
+"Phrases"
+{
+    // utils.inc
+    "Tag"
+    {
+        "en"        "{default}[{lightgreen}RANK{default}]"
+    }
+
+    // timers.inc
+    "ToOperate"
+    {
+        "en"        "Type {olive}RANKMENU {default}to operate {green}the Plugin{default}!"
+    }
+
+    "ProtectingFriendlies_Mode1or2"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "You have earned {green}{1} {default}points for Protecting {olive}{2} friendlies{default}!"
+    }
+
+    "ProtectingFriendlies_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for Protecting {olive}{3} friendlies{default}!"
+    }
+
+    "DamagedSurvivors_Amount_Mode1or2_Alone"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "You have earned {green}{1} {default}points for doing {green}{1} {default}points of damage to the Survivors!"
+    }
+
+    "DamagedSurvivors_Mode3_Alone"
+    {
+        "#format"   "{1:i}"
+        "en"        "You have earned {green}{1} {default}points for doing damage to the Survivors!"
+    }
+
+    "DamagedSurvivors_Amount_Mode1or2_All"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for doing {green}{3} {default}points of damage to the Survivors!"
+    }
+
+    "DamagedSurvivors_Amount_Mode3_All"
+    {
+        "#format"   "{1:N},{2:i}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for doing damage to the Survivors!"
+    }
+    "GainPointsByKillingInf_Mode1or2"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "You have earned {green}{1} {default}points for killing {olive}{2} {default}Infected!"
+    }
+
+    "GainPointsByKillingInf_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for killing {olive}{3} {default}Infected!"
+    }
+
+    "AwardAfterPanicEvent"
+    {
+        "#format"   "{1:i}"
+        "en"        "{lightgreen}ALL SURVIVORS {default}have earned {green}{1} {default}points for {olive}No Incapicitates Or Deaths After Panic Event{default}!"
+    }
+
+    "PerfectBlindNess_Mode1or2"
+    {
+        "#format"   "{1:i}"
+        "en"        "You have earned {green}{1] {default}points from {olive}Perfect Blindness{default}!"
+    }
+
+    "BlindSurvivors_Mode1or2"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "You have earned {green}{1} {default}points for blinding {olive}{2} Survivors{default}!"
+    }
+
+    "PerfectBlindNess_Mode3"
+    {
+        "#format"   "{1:N},{2:i}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points from {olive}Perfect Blindness{default}!"
+    }
+
+    "BlindSurvivors_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for blinding {olive}{3} Survivors{default}!"
+    }
+
+    "ScatteringRam_Mode1or2"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "You have earned {green}{1} {default}points for charging a {olive}Scattering Ram {default}on {lightgreen}{2} {default}victims!"
+    }
+
+    "ScatteringRam_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for charging a {olive}Scattering Ram {default}on {lightgreen}{3} {default}victims!"
+    }
+
+    "FriendlyFire_Mode1or2"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "You have {lightgreen}LOST {green}{1} {default}points for inflicting {lightgreen}Friendly Fire Damage {olive}({2} HP){default}!"
+    }
+
+    "FriendlyFire_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "en"        "{olive}{1} {default}has {lightgreen}LOST {green}{2} {default}points for inflicting {lightgreen}Friendly Fire Damage {olive}({3} HP){default}!"
+    }
+
+    "TeamShuffleFailed"
+    {
+        "en"        "Team shuffle by player PPM failed because there was {greeen}not enough players{default}!"
+    }
+
+    "VoteToShuffle"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "en"        "Vote to shuffle teams by player PPM {lightgreen}{1} {default}with {green}{2} {default}(yes) against {green}{3} {default}(no)."
+    }
+
+    "PASSED"
+    {
+        "en"        "PASSED"
+    }
+
+    "DID_NOT_PASS"
+    {
+        "en"        "DID NOT PASS"
+    }
+
+    "NotEnoughPlayers"
+    {
+        "en"        "Left 4 Dead (2) Stats are {green}DISABLED{default}, not enough Human players!"
+    }
+
+    // dbi.inc
+    "DidNotImprove"
+    {
+        "#format"   "{1:s}"
+        "en"        "You did not improve your best time {green}{1} {default}to finish this map!"
+    }
+
+    "NewBestTime"
+    {
+        "#format"   "{1:s}"
+        "en"        "Your new best time to finish this map is {green}{1} {default}!"
+    }
+
+    "TookTime"
+    {
+        "#format"   "{1:s}"
+        "en"        "It took {green}{1} {default}to finish this map!"
+    }
+
+    "GAINED"
+    {
+        "en"        "GAINED"
+    }
+
+    "DROPPED"
+    {
+        "en"        "DROPPED"
+    }
+
+    "Plural"
+    {
+        "en"        "s"
+    }
+
+    "RankChange"
+    {
+        "#format"   "{1:s},{2:i},{3:s},{4:i}"
+        "en"        "You've {green}{1} {default}rank for {green}{2} position{3} {default}! {olive}(Rank: {4})"
+    }
+
+    "JoinedWithRank"
+    {
+        "#format"   "{1:N}.{2:i},{3:i}"
+        "en"        "Player {olive}{1} {default}joined the game! (Rank: {lightgreen}{2} {default}/ Points: {lightgreen}{3}{default})"
+    }
+
+    "JoinedWithoutRank"
+    {
+        "#format"   "{1:N}"
+        "en"        "Player {olive}{1} {default}joined the game! (No ranking yet)"
+    }
+
+    "TeamShuffleError"
+    {
+        "en"        "Team shuffle failed in an error."
+    }
+
+    "SwapToSurvivors"
+    {
+        "#format"   "{1:N}"
+        "en"        "{olive}{1} {default}was swapped to team {lightgreen}Survivors{default}!"
+    }
+
+    "SwapToInfected"
+    {
+        "#format"   "{1:N}"
+        "en"        "{olive}{1} {default}was swapped to team {lightgreen}Infected{default}!"
+    }
+
+    "TeamShuffleSuccess"
+    {
+        "en"        "Team shuffle by player PPM {lightgreen}DONE{default}."
+    }
+
+    "TeamShuffleAlready"
+    {
+        "en"        "Teams are already even by player PPM."
+    }
+
+    // actions.inc
+    "BulldozingSurvivors_Mode1or2"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "You have earned {green}{1} {default}points for Bulldozing the Survivors worth {1} points of damage!"
+    }
+
+    "BulldozingSurvivors_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for Bulldozing the Survivors worth {3} points of damage!"
+    }
+
+    "GivingAdrenaline_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "en"        "You have earned {green}{1} {default}points for giving adrenaline to {olive}{2} {default}!"
+    }
+
+    "GivingAdrenaline_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for giving adrenaline to {olive}{3}{default}!"
+    }
+
+    "GivingPills_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "en"        "You have earned {green}{1} {default}points for giving pills to {olive}{2}{default}!"
+    }
+
+    "GivingPills_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for giving pills to {olive}{3}{default}!"
+    }
+
+    "FriendlyFireAt_Mode1or2"
+    {
+        "#format"   "{1:1},{2:N}"
+        "en"        "You have {lightgreen}LOST {green}{1} {default}points for {lightgreen}Friendly Firing {olive}{2}{default}!"
+    }
+
+    "FriendlyFireAt_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "en"        "{olive}{1} {default}has {lightgreen}LOST {green}{2} {default}points for {lightgreen}Friendly Firing {olive}{3}{default}!"
+    }
+
+    "SurvivorDied_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for killing {olive}{3}{default}!"
+    }
+
+    "SurvivorDied_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "en"        "You have earned {green}{1} {default}points for killing {olive}{2}{default}!"
+    }
+
+    "FriendlyIncap_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "en"        "You have {lightgreen}LOST {green}{1} {default}points for {lightgreen}Incapicitating {olive}{2}{default}!"
+    }
+
+    "FriendlyIncap_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "en"        "{olive}{1} {default}has {lightgreen}LOST {green}{2} {default}points for {lightgreen}Incapicitating {olive}{3}{default}!"
+    }
+
+    "ThrowingRockAt_Mode1or2"
+    {
+        "#format"   "{1:i},{2:s}"
+        "en"        "You have earned {green}{1} {default}points for throwing a rock at {olive}{2}{default}!"
+    }
+
+    "ThrowingRockAt_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:s}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for throwing a rock at {olive}{3}{default}!"
+    }
+
+    "IncapSurvivors_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "en"        "You have earned {green}{1} {default}points for Incapacitating {olive}{2}{default}!"
+    }
+
+    "IncapSurvivors_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for Incapacitating {olive}{3}{default}!"
+    }
+
+    "SavingTeammate"
+    {
+        "#format"   "{1:i},{2:N},{3:s}"
+        "en"        "You have earned {green}%i {default}points for saving {olive}%s{default} from {green}%s{default}!"
+    }
+
+    "PercentageReduct"
+    {
+        "#format"   "{1:i},{2:i},{3:s},{4:s}"
+        "en"        "{lightgreen}ALL SURVIVORS {default}now earns only {green}{1} percent {default}of their normal points after using their {olive}{2}{3} Medkit{4}{default}!"
+    }
+
+    "st"
+    {
+        "en"        "st"
+    }
+
+    "nd"
+    {
+        "en"        "nd"
+    }
+
+    "rd"
+    {
+        "en"        "rd"
+    }
+
+    "th"
+    {
+        "en"        "th"
+    }
+
+    "orDefibrillator"
+    {
+        "en"        " or Defibrillator"
+    }
+
+    "RankVote_OnlyGamemodes"
+    {
+        "en"        "The {green}Rank Vote {default}is enabled in {lightgreen}Versus {default}gamemode!"
+    }
+
+    "RankVote_OnlyGamemodes_WithRealismVersus"
+    {
+        "en"        "The {green}Rank Vote {default}is enabled in {lightgreen}Versus{default}, {lightgreen}Realism Versus {default}and {lightgreen}Scavenge {default}gamemodes!"
+    }
+
+    // no color tags are allowed on this one.
+    "Menu_ShuffleTeamsByPPM"
+    {
+        "en"        "Do you want to shuffle teams by player PPM?"
+    }
+
+    "RankVote_PluginDisabled"
+    {
+        "en"        "Cannot initiate vote when the plugin is disabled!"
+    }
+
+    "RankVote_OnlyPerOnce"
+    {
+        "en"        "You can initiate a {green}Rank Vote {default}only once per map!"
+    }
+
+    "RankVote_IniByPlayer"
+    {
+        "#format"   "{1:N}"
+        "en"        "The {green}Rank Vote {default}was initiated by {olive}{1}{default}!"
+    }
+
+    "RankVote_IniByConsole"
+    {
+        "en"        "The {green}Rank Vote {default}was initiated from Server Console!"
+    }
+
+    "AllInfectedGainPoints"
+    {
+        "#format"   "{1:i}"
+        "en"        "{lightgreen}ALL INFECTED {default}have earned {green}{1} {default}points for killing all survivors!"
+    }
+
+    "AllSurvivorsLosePoints_AllDied"
+    {
+        "#format"   "{1:i}"
+        "en"        "{lightgreen}ALL SURVIVORS {default}have {lightgreen}LOST {green}{1} {default}points for {lightgreen}All Survivors Dying{default}!"
+    }
+
+    "AllSurvivorsLosePoints_NotDisturbingWitch"
+    {
+        "#format"   "{1:i}"
+        "en"        "{lightgreen}ALL SURVIVORS {default}have earned {green}{1} {default}points for {olive}Not Disturbing A Witch!"
+    }
+
+    "AllSurvivorsGainPoints_ReachedSafeHouse"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "{lightgreen}ALL SURVIVORS {default}have earned {green}{1} {default}points for reaching a Safe House with {olive}{2} Deaths!"
+    }
+
+    "AllInfectedLosePoints_ReachedSafeHouse"
+    {
+        "#format"   "{1:i}"
+        "en"        "{lightgreen}ALL INFECTED {default}have {lightgreen}LOST {green}{1} {default}points for letting the survivors reach a Safe House!"
+    }
+
+    "RankVote_Disabled"
+    {
+        "en"        "The {green}Rank Vote {default}is {lightgreen}DISABLED{default}."
+    }
+
+    // menus.inc
+    // on this section no color tags are allowed on 'Menu_' tagged phrases.
+    "Menu_TileClear"
+    {
+        "en"        "Clear:"
+    }
+
+    "Menu_OptionClearPlayers"
+    {
+        "en"        "Clear stats from currently playing player..."
+    }
+
+    "Menu_OptionClearTimedMaps"
+    {
+        "en"        "Clear timed maps..."
+    }
+
+    "Menu_TileClearTM"
+    {
+        "en"        "Clear Timed Maps:"
+    }
+
+    "Menu_OptionClearAll"
+    {
+        "en"        "All"
+    }
+
+    "Menu_OptionClearCoop"
+    {
+        "en"        "Coop"
+    }
+
+    "Menu_OptionClearSurvival"
+    {
+        "en"        "Survival"
+    }
+
+    "Menu_OptionClearRealism"
+    {
+        "en"        "Realism"
+    }
+
+    "Menu_OptionClearMutations"
+    {
+        "en"        "Mutation"
+    }
+
+    "Menu_AskClearAllMapTimings"
+    {
+        "en"        "Do you really want to clear all map timings?"
+    }
+
+    "Menu_AskClearAllCoopMapTimings"
+    {
+        "en"        "Do you really want to clear all Coop map timings?"
+    }
+
+    "Menu_AskClearAllSurvivalMapTimings"
+    {
+        "en"        "Do you really want to clear all Survival map timings?"
+    }
+
+    "Menu_AskClearAllRealismMapTimings"
+    {
+        "en"        "Do you really want to clear all Realism map timings?"
+    }
+
+    "Menu_AskClearAllMutationMapTimings"
+    {
+        "en"        "Do you really want to clear all Mutations map timings?"
+    }
+
+    "Menu_AskClearPlayers"
+    {
+        "en"        "Do you really want to clear the player stats?"
+    }
+
+    "Menu_AskClearAllMaps"
+    {
+        "en"        "Do you really want to clear the map stats?"
+    }
+
+    "Menu_AskClearAll"
+    {
+        "en"        "Do you really want to clear all stats?"
+    }
+
+    "Menu_AskClearTimedMaps"
+    {
+        "en"        "Do you really want to clear all map timings?"
+    }
+
+    "Menu_AskRemoveCustomMaps"
+    {
+
+        "en"        "Do you really want to remove the custom maps?"
+    }
+
+    "Menu_AskCleanPlayers"
+    {
+        "en"        "Do you really want to clean the player stats?"
+    }
+
+    "Menu_Yes"
+    {
+        "en"        "Yes"
+    }
+
+    "Menu_No"
+    {
+        "en"        "No"
+    }
+
+    "Menu_AboutPlugin"
+    {
+        "en"        "About [L4D/L4D2] Statistic:"
+    }
+
+    "Menu_Version"
+    {
+        "#format"   "{1:s}"
+        "en"        "Version: {1}"
+    }
+
+    // hey you can add yourself here xd
+    "Menu_Author"
+    {
+        "en"        "Author: Mikko Andersson (muukis), blueblur"
+    }
+
+    "Menu_Description"
+    {
+        "en"        "Description: Records player gameplay statistics in SQL database."
+    }
+
+    "Menu_Back"
+    {
+        "en"        "Back"
+    }
+
+    "Menu_Close"
+    {
+        "en"        "Close"
+    }
+
+    "Menu_PluginSettings"
+    {
+        "en"        "Plugin Settings:"
+    }
+
+    "Menu_Unmute"
+    {
+        "en"        "Unmute (Currently: Muted)"
+    }
+
+    "Menu_Mute"
+    {
+        "en"        "Mute (Currently: Not muted)"
+    }
+
+    "AllPlayerStatsCleared"
+    {
+        "en"        "All player stats cleared!"
+    }
+
+    "AllMapStatsCleared"
+    {
+        "en"        "All map stats cleared!"
+    }
+
+    "AllStatsCleared"
+    {
+        "en"        "All stats cleared!"
+    }
+
+    "PlayerCleaningSuccessful"
+    {
+        "en"        "Player cleaning successful!"
+    }
+
+    "PlayerCleaningFalied"
+    {
+        "en"        "Player cleaning failed!"
+    }
+
+    "PlayerCleaningDisabled"
+    {
+        "en"        "Player cleaning is disabled by configurations!"
+    }
+
+    "AllCustomeMapsRemoved"
+    {
+        "en"        "All custom maps removed!"
+    }
+
+    "CustomMapsRemovalFailed"
+    {
+        "en"        "Removing custom maps failed!"
+    }
+
+    "AllMapTimingsCleared"
+    {
+        "en"        "All map timings removed!"
+    }
+
+    "MapTimingsRemovalFailed"
+    {
+        "en"        "Removing map timings failed!"
+    }
+
+    "AllCoopMapTimingsCleared"
+    {
+        "en"        "Clearing map timings for Coop successful!"
+    }
+
+    "CoopMapTimingsRemovalFailed"
+    {
+        "en"        "Clearing map timings for Coop failed!"
+    }
+
+    "AllSurvivalMapTimingsCleared"
+    {
+        "en"        "Clearing map timings for Survival successful!"
+    }
+
+    "SurvivalMapTimingsRemovalFailed"
+    {
+        "en"        "Clearing map timings for Survival failed!"
+    }
+
+    "AllRealismMapTimingsCleared"
+    {
+        "en"        "Clearing map timings for Realism successful!"
+    }
+
+    "RealismMapTimingsRemovalFailed"
+    {
+        "en"        "Clearing map timings for Realism failed!"
+    }
+
+    "AllMutationsMapTimingsCleared"
+    {
+        "en"        "Clearing map timings for Mutations successful!"
+    }
+
+    "MutationsMapTimingsRemovalFailed"
+    {
+        "en"        "Clearing map timings for Mutations failed!"
+    }
+
+    "PlayerVoted"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "en"        "{olive}{1} {default}voted. {green}{2}/{3} {default}players have voted."
+    }
+
+    "Menu_ClearplayerstatsTitle"
+    {
+        "en"        "Clear player stats:"
+    }
+
+    "YourPlayerStatsCleared"
+    {
+        "en"        "Your player stats were cleared!"
+    }
+
+    "PlayerStatsCleared"
+    {
+        "#format"   "{1:s}"
+        "en"        "Player {olive}{1} {default}stats cleared!"
+    }
+
+    "ClearingPlayerStatsFailed"
+    {
+        "en"        "Clearing player stats failed!"
+    }
+
+    "Menu_NextrankTitle"
+    {
+        "en"        "Next Rank:"
+    }
+
+    "Menu_PointsRequired"
+    {
+        "#format"   "{1:i}"
+        "en"        "Points required: {1}"
+    }
+
+    "Menu_CurrentRank"
+    {
+        "#format"   "{1:i}"
+        "en"        "Current rank: {1}"
+    }
+
+    "Menu_YourAreFirst"
+    {
+        "en"        "You are 1st"
+    }
+
+    "Menu_More"
+    {
+        "en"        "More..."
+    }
+
+    "Menu_PluginStyledTitle"
+    {
+        "en"        "[L4D] Statistic:"
+    }
+
+    "Menu_ShowMyRank"
+    {
+        "en"        "Show my rank"
+    }
+
+    "Menu_ShowTop10"
+    {
+        "en"        "Show top 10"
+    }
+
+    "Menu_ShowTop10PPM"
+    {
+        "en"        "Show top 10 PPM"
+    }
+
+    "Menu_ShowMyNextrank"
+    {
+        "en"        "Show my next rank"
+    }
+
+    "Menu_ShowCurrentTimer"
+    {
+        "en"        "Show current timer"
+    }
+
+    "Menu_ShowOthersRank"
+    {
+        "en"        "Show others rank"
+    }
+
+    "Menu_ShowOthersPPM"
+    {
+        "en"        "Show others PPM"
+    }
+
+    "Menu_VoteForShuffle"
+    {
+        "en"        "Vote for team shuffle by PPM"
+    }
+
+    "Menu_ShowAllMapTimings"
+    {
+        "en"        "Show all map timings"
+    }
+
+    "Menu_ShowCurrentMapTimes"
+    {
+        "en"        "Show current map timings"
+    }
+
+    "Menu_ModifyRankSettings"
+    {
+        "en"        "Modify rank settings"
+    }
+
+    "Menu_PlayerRanksTitle"
+    {
+        "en"        "Player Ranks:"
+    }
+
+    "Menu_PlayerRank"
+    {
+        "#format"   "{1:s},{2:i}"
+        "en"        "{1} ({2} points)"
+    }
+
+    "Menu_TimedMapsTitle"
+    {
+        "en"        "Timed Maps:"
+    }
+
+    "Menu_NoTimedMaps"
+    {
+        "en"        "There are no recorded map timings!"
+    }
+
+    "Menu_Co-op"
+    {
+        "en"        "Co-op"
+    }
+
+    "Menu_Survival"
+    {
+        "en"        "Survival"
+    }
+
+    "Menu_Realism"
+    {
+        "en"        "Realism"
+    }
+
+    "Menu_Mutations"
+    {
+        "en"        "Mutations"
+    }
+
+    "Menu_NoTimedMapsForGameMode"
+    {
+        "en"        "There are no recorded times for this gamemode!"
+    }
+
+    "Menu_NoTimedMapsForRecords"
+    {
+        "en"        "There are no recorded times for this map!"
+    }
+
+    "Menu_PlayerPPMTitle"
+    {
+        "en"        "Player PPM:"
+    }
+
+    "Menu_PlayerPPM"
+    {
+        "#format"   "{1:s},{2:.2f}"
+        "en"        "{1} (PPM: {2})"
+    }
+
+    "Menu_Top10Title"
+    {
+        "en"        "Top 10 Players:"
+    }
+
+    "Menu_Top10PPMTitle"
+    {
+        "en"        "Top 10 PPM Players:"
+    }
+
+    "Menu_NextRankTitle"
+    {
+        "en"        "Next Rank:"
+    }
+
+    "Menu_PlayerPoints"
+    {
+        "#format"   "{1:i},{2:s}"
+        "en"        "{1} points: {2}"
+    }
+
+    "Menu_TitleRankOf"
+    {
+        "#format"   "{1:s}"
+        "en"        "Ranking of {1}"
+    }
+
+    "Menu_Rank"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "Rank: {1} of {2}"
+    }
+
+    "Menu_GameModeRank"
+    {
+        "#format"   "{1:s},{2:i},{3:i}"
+        "en"        "{1} Rank: {2} of {3}"
+    }
+
+    "Menu_PlayTime"
+    {
+        "#format"   "{1:.2f}"
+        "en"        "Playtime: {1} hours"
+    }
+
+    "Menu_PlayTimeMinute"
+    {
+        "#format"   "{1:i}"
+        "en"        "Playtime: {1} min"
+    }
+
+    "Menu_Points"
+    {
+        "#format"   "{1:i}"
+        "en"        "Points: {1}"
+    }
+
+    "Menu_PPM"
+    {
+        "#format"   "{1:.2f}"
+        "en"        "PPM: {1}"
+    }
+
+    "Menu_InfectedKilled"
+    {
+        "#format"   "{1:i}"
+        "en"        "Infected Killed: {1}"
+    }
+
+    "Menu_SurvivorsKilled"
+    {
+        "#format"   "{1:i}"
+        "en"        "Survivors Killed: {1}"
+    }
+
+    "Menu_HeadShots"
+    {
+        "#format"   "{1:i}"
+        "en"        "Headshots: {1}"
+    }
+
+    "Menu_HeadShotRatio"
+    {
+        "#format"   "{1:.2f}"
+        "en"        "Headshot Ratio: {1}%%"
+    }
+
+    "Menu_FullStats"
+    {
+        "#format"   "{1:s}"
+        "en"        "For full stats visit {1}"
+    }
+
+    // commands.inc
+    "MapTimerNotStarted"
+    {
+        "en"        "Map timer has not started"
+    }
+
+    "CurrentMapTimer"
+    {
+        "#format"   "{1:s}"
+        "en"        "Current map timer: {green}{1}"
+    }
+
+    "ShuffledByAdmin"
+    {
+        "en"        "Team shuffle executed by administrator."
+    }
+
+    "YouMutedPlugin"
+    {
+        "#format"   "{1:s}"
+        "en"        "You {1} {default}the {olive}Plugin{default}."
+    }
+
+    "Muted"
+    {
+        "en"        "{green}MUTED"
+    }
+
+    "Unmuted"
+    {
+        "en"        "{lightgreen}UNMUTED"
+    }
+
+    "SpecNoteAllowed"
+    {
+        "en"        "The spectators cannot initiate the {green}Rank Vote{default}."
+    }
+
+    // events.inc
+    "PlayerDeath_FF_Mode1or2"
+    {
+        "#format"   "{1:i},{2:s}"
+        "en"        "You have {lightgreen}LOST {green}{1} {default}points for {lightgreen}Team Killing {olive}{2}{default}!"
+    }
+
+    "PlayerDeath_FF_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "en"        "{olive}{1} {default}has {lightgreen}LOST {green}{2} {default}points for {lightgreen}Team Killing {olive}{3}{default}!"
+    }
+
+    "DefiniteArticle"
+    {
+        "en"        " a"
+    }
+
+    "PlayerDeath_KillInfected_Headshot_Mode2or3"
+    {
+        "#format"   "{1:N},{2:i},{3:s},{4:s}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for killing{3} {olive}{4} {default}with a {green}HEAD SHOT{default}!"
+    }
+
+    "PlayerDeath_KillInfected_Headshot_Mode1"
+    {
+        "#format"   "{1:i},{2:s},{3:s}"
+        "en"        "You have earned {green}{1} {default}points for killing{2} {olive}{3} {default}with a {green}HEAD SHOT{default}!"
+    }
+
+    "PlayerDeath_KillInfected_Mode3"
+    {
+        "#format"   "{1:s},{2:i},{3:s},{4:s}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for killing{3} {olive}{4}{default}!"
+    }
+
+    "PlayerDeath_KillInfected_Mode1or2"
+    {
+        "#format"   "{1:i},{2:s},{3:s}"
+        "en"        "You have earned {green}{1} {default}points for killing{2} {olive}{3}{default}!"
+    }
+
+    "GainPointsByKillTank"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "{lightgreen}ALL SURVIVORS {default}have earned {green}{1} {default}points for killing a Tank with {olive}{2} Deaths{default}!"
+    }
+
+    "DefibPlayer_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "en"        "You have earned {green}{1} {default}points for Reviving {olive}{2}{default} using a Defibrillator!"
+    }
+
+    "DefibPlayer_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for Reviving {olive}{3}{default} using a Defibrillator!"
+    }
+
+    "HealPlayer_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "en"        "You have earned {green}{1} {default}points for healing {olive}{2}{default}!"
+    }
+
+    "HealPlayer_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for healing {olive}{3}{default}!"
+    }
+
+    "AllSurvivorsWinCampaign"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "{lightgreen}ALL SURVIVORS {default}have earned {green}{1} {default}points for winning the {green}Campaign Finale {default}with {olive}{2} survivors{default}!"
+    }
+
+    "AllInfectedLoseCampaign"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "{lightgreen}ALL INFECTED {default}have {lightgreen}LOST {green}{1} {default}points for loosing the {green}Campaign Finale {default}to {olive}{2} survivors{default}!"
+    }
+
+    "AllSurvivorsSurvivedBoomerHorde"
+    {
+        "#format"   "{1:i}"
+        "en"        "{lightgreen}ALL SURVIVORS {default}have earned {green}{1} {default}points for {olive}No Incapicitates Or Deaths After Boomer Mob{default}!"
+    }
+
+    "YouMadeHimLedged_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "en"        "You have earned {green}{1} {default}points for causing player {olive}{2}{default} to grab a ledge!"
+    }
+
+    "YouMadeHimLedged_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for causing player {olive}{3}{default} to grab a ledge!"
+    }
+
+    "YouSavedFromJockey_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N},{3:N}"
+        "en"        "You have earned {green}{1} {default}points for saving {olive}{2} {default}from {green}{3}{default}!"
+    }
+
+    "YouSavedFromJockey_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N},{4:N}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for saving {olive}{3} {default}from {green}{4}{default}!"
+    }
+
+    "YouLeveledCharger_Mode1or2"
+    {
+        "#format"   "{1:i}"
+        "en"        "You have earned {green}{1} {default}points for {green}Leveling a Charge{default}!"
+    }
+
+    "YouLeveledCharger_Mode3"
+    {
+        "#format"   "{1:N},{2:i}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for {green}Leveling a Charge{default}!"
+    }
+
+    "ASurvivor"
+    {
+        "en"        "a survivor"
+    }
+
+    "YouSavedFromCharger_Mode1or2"
+    {
+        "#format"   "{1:i},{2:s},{3:s}"
+        "en"        "You have earned {green}{1} {default}points for saving {2} from {green}{3}{default}!"
+    }
+
+    "YouSavedFromCharger_Mode3"
+    {
+        "#format"   "{1:s},{2:i},{3:s},{4:s}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for saving {3} from {green}{4}{default}!"
+    }
+
+    "YouDeployed_Mode1or2"
+    {
+        "#format"   "{1:i},{2:s}"
+        "en"        "You have earned {green}{1} {default}points for deploying {olive}{2}{default}!"
+    }
+
+    "YouDeployed_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:s}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for deploying {olive}{3}{default}!"
+    }
+
+    "IncendiaryAmmo"
+    {
+        "en"        "Incendiary Ammo"
+    }
+
+    "ExplodingAmmo"
+    {
+        "en"        "Exploding Ammo"
+    }
+
+    "UNKNOWN"
+    {
+        "en"        "UNKNOWN"
+    }
+
+    "YouPouredGasCan_Mode1or2"
+    {
+        "#format"   "{1:i}"
+        "en"        "You have earned {green}{1} {default}points for successfully {olive}Pouring a Gascan{default}!"
+    }
+
+    "YouPouredGasCan_Mode3"
+    {
+        "#format"   "{1:N},{2:i}"
+        "en"        "{olive{1} {default}has earned {green}{2} {default}points for successfully {olive}Pouring a Gascan{default}!"
+    }
+
+    "YouLandedPounce_Mode1or2"
+    {
+        "#format"   "{1:i},{2:s},{3:N}"
+        "en"        "You have earned {green}{1} {default}points for landing a {olive}{2} {default}Pounce on {olive}{3}{default}!"
+    }
+
+    "YouLandedPounce_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:s},{4:N}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for landing a {olive}{3} {default}Pounce on {olive}{4}{default}!"
+    }
+
+    "DeathFromAbove"
+    {
+        "en"        "Death From Above"
+    }
+
+    "PainFromAbove"
+    {
+        "en"        "Pain From Above"
+    }
+
+    "YouRevived_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "en"        "You have earned {green}{1} {default}points for Reviving {olive}{2}{default}!"
+    }
+
+    "YouRevived_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for Reviving {olive}{3}{default}!"
+    }
+
+    "YouRescued_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "en"        "You have earned {green}{1} {default}points for Rescuing {olive}{2}{default}!"
+    }
+
+    "YouRescued_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for Rescuing {olive}{3}{default}!"
+    }
+
+    "YouLetInfectedInSafeRoom_Mode1or2"
+    {
+        "#format"   "{1:i}"
+        "en"        "You have {lightgreen}LOST {green}{1} {default}points for letting {lightgreen}Infected In The Safe Room!"
+    }
+
+    "YouLetInfectedInSafeRoom_Mode3"
+    {
+        "#format"   "{1:N},{2:i}"
+        "en"        "{olive}{1} {default}has {lightgreen}LOST {green}{2} {default}points for letting {lightgreen}Infected In The Safe Room!"
+    }
+
+    "LosePointsByAllSurvivorsDied"
+    {
+        "#format"   "{1:i}"
+        "en"        "{lightgreen}ALL SURVIVORS {default}have {lightgreen}LOST {green}{1} {default}points for {lightgreen}All Survivors Dying!"
+    }
+
+    "AllSurvivorsLosePointsByCarAlarm"
+    {
+        "#format"   "{1:i}"
+        "en"        "{lightgreen}ALL SURVIVORS {default}have {lightgreen}LOST {green}{1} {default}points for {lightgreen}Triggering the Car Alarm{default}!"
+    }
+
+    "YouCrownedWitch"
+    {
+        "#format"   "{1:N},{2:i}"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for {green}Crowning the Witch{default}!"
+    }
+}
