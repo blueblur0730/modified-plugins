@@ -3,7 +3,7 @@
 #endif
 #define _l4d_stats_globals_included
 
-#define PLUGIN_VERSION "1.5"
+#define PLUGIN_VERSION "2.4"
 
 // Set to false when stats seem to work properly
 #define DEBUG 0
@@ -61,9 +61,9 @@
 #define RANKVOTE_NO 0
 #define RANKVOTE_YES 1
 
-char TM_MENU_CURRENT[4] = " <<";
-char DB_PLAYERS_TOTALPOINTS[1024] = "points + points_survivors + points_infected + points_realism + points_survival + points_scavenge_survivors + points_scavenge_infected + points_realism_survivors + points_realism_infected + points_mutations";
-char DB_PLAYERS_TOTALPLAYTIME[1024] = "playtime + playtime_versus + playtime_realism + playtime_survival + playtime_scavenge + playtime_realismversus + playtime_mutations";
+char TM_MENU_CURRENT[16] = " <<";
+char DB_PLAYERS_TOTALPOINTS[512] = "points + points_survivors + points_infected + points_realism + points_survival + points_scavenge_survivors + points_scavenge_infected + points_realism_survivors + points_realism_infected + points_mutations";
+char DB_PLAYERS_TOTALPLAYTIME[256] = "playtime + playtime_versus + playtime_realism + playtime_survival + playtime_scavenge + playtime_realismversus + playtime_mutations";
 char g_sMessageOfTheDay[1024];
 
 bool g_bCommandsRegistered = false;

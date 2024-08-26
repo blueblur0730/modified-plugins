@@ -1,0 +1,1281 @@
+"Phrases"
+{
+    // utils.inc
+    "Tag"
+    {
+        "chi"       "{default}[{lightgreen}RANK{default}]"
+    }
+
+    // timers.inc
+    "ToOperate"
+    {
+        "chi"       "输入 {olive}RANKMENU {default}来使用{green}插件{default}!"
+    }
+
+    "ProtectingFriendlies_Mode1or2"
+    {
+        "#format"   "{1:i},{2:i}"
+        "chi"       "你因保护 {olive}{2}个队友{default} 而获得 {green}{1} {default}点积分!"
+    }
+
+    "ProtectingFriendlies_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "chi"       "{olive}{1} {default}因保护了 {olive}{3}个队友{default} 而获得了{green}{2} {default}点积分!"
+    }
+
+    "DamagedSurvivors_Amount_Mode1or2_Alone"
+    {
+        "#format"   "{1:i},{2:i}"
+        "chi"       "你因对生还者造成了 {green}{1} {default}伤害而获得了 {green}{1} {default}点积分!"
+    }
+
+    "DamagedSurvivors_Mode3_Alone"
+    {
+        "#format"   "{1:i}"
+        "chi"       "你因对生还者造成了伤害而获得了 {green}{1} {default}点积分!"
+    }
+
+    "DamagedSurvivors_Amount_Mode1or2_All"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "chi"       "{olive}{1} {default}因对生还者造成了 {green}{3} {default}点伤害而获得了 {green}{2} {default}点积分!"
+    }
+
+    "DamagedSurvivors_Amount_Mode3_All"
+    {
+        "#format"   "{1:N},{2:i}"
+        "chi"       "{olive}{1} {default}因对生还者造成了伤害而获得了 {green}{2} {default}点积分!"
+    }
+    "GainPointsByKillingInf_Mode1or2"
+    {
+        "#format"   "{1:i},{2:i}"
+        "chi"       "你因杀死 {olive}{2} {default}个感染者而获得 {green}{1} {default}点积分!"
+    }
+
+    "GainPointsByKillingInf_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "chi"       "{olive}{1} {default}因杀死 {olive}{3} {default}个感染者而获得了 {green}{2} {default}点积分!"
+    }
+
+    "AwardAfterPanicEvent"
+    {
+        "#format"   "{1:i}"
+        "chi"       "{lightgreen}所有生还者 {default}因在{olive}尸潮后没有被制服或死亡{default}而获得了 {green}{1} {default}点积分!"
+    }
+
+    "PerfectBlindNess_Mode1or2"
+    {
+        "#format"   "{1:i}"
+        "chi"       "你因{olive}呕吐模糊{default}所有生还者而获得了 {green}{1] {default}点积分!"
+    }
+
+    "BlindSurvivors_Mode1or2"
+    {
+        "#format"   "{1:i},{2:i}"
+        "chi"       "你因呕吐模糊 {olive}{2} {default}名生还者而获得了 {green}{1} {default}点积分!"
+    }
+
+    "PerfectBlindNess_Mode3"
+    {
+        "#format"   "{1:N},{2:i}"
+        "chi"       "{olive}{1} {default}因{olive}呕吐模糊{default}所有生还者而获得了 {green}{2} {default}点积分!"
+    }
+
+    "BlindSurvivors_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "chi"       "{olive}{1} {default}因呕吐模糊 {olive}{3} {default}名生还者而获得了 {green}{2} {default}点积分!"
+    }
+
+    "ScatteringRam_Mode1or2"
+    {
+        "#format"   "{1:i},{2:i}"
+        "chi"       "你因冲锋撞开 {lightgreen}{2} {default}名生还者而获得了 {green}{1} {default}点积分!"
+    }
+
+    "ScatteringRam_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "chi"       "{olive}{1} {default}因冲锋撞开 {lightgreen}{3} {default}名生还者而获得了 {green}{2} {default}点积分!"
+    }
+
+    "FriendlyFire_Mode1or2"
+    {
+        "#format"   "{1:i},{2:i}"
+        "chi"       "你因{lightgreen}施加友伤 {olive}({2} HP){default} 而{lightgreen}失去了 {green}{1} {default}点积分!"
+    }
+
+    "FriendlyFire_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "chi"       "{olive}{1} {default}因 {lightgreen}施加友伤 {olive}({3} HP){default} 而{lightgreen}失去了 {green}{2} {default}点积分!"
+    }
+
+    "TeamShuffleFailed"
+    {
+        "chi"       "因 {greeen}人数不足{default}, 以PPM洗牌队伍失败!"
+    }
+
+    "VoteToShuffle"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "chi"       "投票发起以PPM洗牌队伍 {lightgreen}{1} {default}, {green}{2} {default}(赞同) 对 {green}{3} {default}(反对)."
+    }
+
+    "PASSED"
+    {
+        "chi"       "通过"
+    }
+
+    "DID_NOT_PASS"
+    {
+        "chi"       "未通过"
+    }
+
+    "NotEnoughPlayers"
+    {
+        "chi"       "[L4D/L4D2] 自定义玩家数据统计 正{green}关闭中{default}, 玩家人数不足!"
+    }
+
+    // dbi.inc
+    "DidNotImprove"
+    {
+        "#format"   "{1:s}"
+        "chi"       "你为打破你的最好成绩 {green}{1} {default}来完成这张地图!"
+    }
+
+    "NewBestTime"
+    {
+        "#format"   "{1:s}"
+        "chi"       "你在这张地图的新最好成绩是 {green}{1} {default}!"
+    }
+
+    "TookTime"
+    {
+        "#format"   "{1:s}"
+        "chi"       "你花了 {green}{1} {default}来完成这张地图!"
+    }
+
+    "GAINED"
+    {
+        "chi"       "提升"
+    }
+
+    "DROPPED"
+    {
+        "chi"       "失去"
+    }
+
+    "Plural"
+    {
+        "chi"       ""
+    }
+
+    "RankChange"
+    {
+        "#format"   "{1:s},{2:i},{3:s},{4:i}"
+        "chi"       "你的排名 {green}{1} {default}了 {green}{2} 位{3}{default}! ({olive}排名: {4}{default})"
+    }
+
+    "JoinedWithRank"
+    {
+        "#format"   "{1:N}.{2:i},{3:i}"
+        "chi"       "玩家 {olive}{1} {default}加入了游戏! (排名: {lightgreen}{2} {default}/ 积分: {lightgreen}{3}{default})"
+    }
+
+    "JoinedWithoutRank"
+    {
+        "#format"   "{1:N}"
+        "chi"       "玩家 {olive}{1} {default}加入了游戏! (暂未有排名)"
+    }
+
+    "TeamShuffleError"
+    {
+        "chi"       "队伍洗牌因错误而失败."
+    }
+
+    "SwapToSurvivors"
+    {
+        "#format"   "{1:N}"
+        "chi"       "{olive}{1} {default}被替换至 {lightgreen}生还者{default}!"
+    }
+
+    "SwapToInfected"
+    {
+        "#format"   "{1:N}"
+        "chi"       "{olive}{1} {default}被替换至 {lightgreen}感染者{default}!"
+    }
+
+    "TeamShuffleSuccess"
+    {
+        "chi"       "以PPM洗牌队伍 {lightgreen}成功{default}."
+    }
+
+    "TeamShuffleAlready"
+    {
+        "chi"       "队伍已经以PPM洗牌过了."
+    }
+
+    // actions.inc
+    "BulldozingSurvivors_Mode1or2"
+    {
+        "#format"   "{1:i},{2:i}"
+        "chi"       "你作为Tank因对生还者造成 {2} 点伤害而获得了 {green}{1} {default}点积分!"
+    }
+
+    "BulldozingSurvivors_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "chi"       "{olive}{1} {default}作为Tank因对生还者造成 {3} 点伤害而获得了 {green}{2} {default}点积分!"
+    }
+
+    "GivingAdrenaline_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "chi"       "你因给予 {olive}{2} {default}肾上腺素而获得了 {green}{1} {default}点积分!"
+    }
+
+    "GivingAdrenaline_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "chi"       "{olive}{1} {default}因给予 {olive}{3} {default}肾上腺素而获得了 {green}{2} {default}点积分!"
+    }
+
+    "GivingPills_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "chi"       "你因给予 {olive}{2} {default}一瓶止痛药而获得了 {green}{1} {default}点积分!"
+    }
+
+    "GivingPills_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "chi"       "{olive}{1} {default}因给予 {olive}{3} {default}一瓶止痛药而获得了 {green}{2} {default}点积分!"
+    }
+
+    "FriendlyFireAt_Mode1or2"
+    {
+        "#format"   "{1:1},{2:N}"
+        "chi"       "你因对 {olive}{2} {default}造成了{lightgreen}友伤{default}而{lightgreen}失去了 {green}{1} {default}点积分!"
+    }
+
+    "FriendlyFireAt_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "chi"       "{olive}{1} {default}因对 {olive}{3} {default}造成了{lightgreen}友伤{default}而{lightgreen}失去了 {green}{2} {default}点积分!"
+    }
+
+    "SurvivorDied_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "chi"       "{olive}{1} {default}因杀死了 {olive}{3} {default}而获得了 {green}{2} {default}点积分!"
+    }
+
+    "SurvivorDied_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "chi"       "你因杀死了 {olive}{2} {default}而获得了 {green}{1} {default}点积分!"
+    }
+
+    "FriendlyIncap_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "chi"       "你因制服了 {olive}{2} {default}而{lightgreen}失去了 {green}{1} {default}点积分!"
+    }
+
+    "FriendlyIncap_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "chi"       "{olive}{1} {default}因制服了 {olive}{3} {default}而{lightgreen}失去了 {green}{2} {default}点积分!"
+    }
+
+    "ThrowingRockAt_Mode1or2"
+    {
+        "#format"   "{1:i},{2:s}"
+        "chi"       "你因抛出一块石头砸中了 {olive}{2} {default}而获得了 {green}{1} {default}点积分!"
+    }
+
+    "ThrowingRockAt_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:s}"
+        "chi"       "{olive}{1} {default}因抛出一块石头砸中了 {olive}{3} {default}而获得了 {green}{2} {default}点积分!"
+    }
+
+    "IncapSurvivors_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "chi"       "你因制服了 {olive}{2} {default}而获得了 {green}{1} {default}点积分!"
+    }
+
+    "IncapSurvivors_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "chi"       "{olive}{1} {default}因制服了 {olive}{3} {default}而获得了 {green}{2} {default}点积分!"
+    }
+
+    "SavingTeammate"
+    {
+        "#format"   "{1:i},{2:N},{3:s}"
+        "chi"       "你因将 {olive}{2} {default}从 {green}{3} {default}的手中救下而获得了 {green}{1} {default}点积分!"
+    }
+
+    "PercentageReduct"
+    {
+        "#format"   "{1:i},{2:i},{3:s},{4:s}"
+        "chi"       "{lightgreen}所有生还者 {default}在使用完{olive}第{2}{3}医疗包{4}{default}后, 只能获得 {green}百分之{1} {default}的积分!"
+    }
+
+    "st"
+    {
+        "chi"       "个"
+    }
+
+    "nd"
+    {
+        "chi"       "个"
+    }
+
+    "rd"
+    {
+        "chi"       "个"
+    }
+
+    "th"
+    {
+        "chi"       "个"
+    }
+
+    "orDefibrillator"
+    {
+        "chi"       "或起搏器"
+    }
+
+    "RankVote_OnlyGamemodes"
+    {
+        "chi"       "{green}排名投票{default}在{lightgreen}对抗{default}模式中已开启!"
+    }
+
+    "RankVote_OnlyGamemodes_WithRealismVersus"
+    {
+        "chi"       "{green}排名投票{default}在{lightgreen}对抗{default}, {lightgreen}写实对抗{default}以及{lightgreen}清道夫{default}模式中已开启!"
+    }
+
+    // no color tags are allowed on this one.
+    "Menu_ShuffleTeamsByPPM"
+    {
+        "chi"       "你想以玩家PPM为基础进行队伍洗牌吗?"
+    }
+
+    "RankVote_PluginDisabled"
+    {
+        "chi"       "插件关闭时不能发起投票!"
+    }
+
+    "RankVote_OnlyPerOnce"
+    {
+        "chi"       "你只能在每张地图中发起一次 {green}排名投票{default}!"
+    }
+
+    "RankVote_IniByPlayer"
+    {
+        "#format"   "{1:N}"
+        "chi"       "{olive}{1}{default}发起了 {green}排名投票{default}!"
+    }
+
+    "RankVote_IniByConsole"
+    {
+        "chi"       "服务器控制台发起了{green}排名投票 {default}!"
+    }
+
+    "AllInfectedGainPoints"
+    {
+        "#format"   "{1:i}"
+        "chi"       "{lightgreen}所有感染者 {default}因团灭所有生还者而获得了 {green}{1} {default}点积分!"
+    }
+
+    "AllSurvivorsLosePoints_AllDied"
+    {
+        "#format"   "{1:i}"
+        "chi"       "{lightgreen}所有生还者 {default}因 {lightgreen}团灭{default} 而{lightgreen}失去了 {green}{1} {default}点积分!"
+    }
+
+    "AllSurvivorsLosePoints_NotDisturbingWitch"
+    {
+        "#format"   "{1:i}"
+        "chi"       "{lightgreen}所有生还者 {default}因 {olive}不惊扰Witch{default} 而获得了 {green}{1} {default}点积分!"
+    }
+
+    "AllSurvivorsGainPoints_ReachedSafeHouse"
+    {
+        "#format"   "{1:i},{2:i}"
+        "chi"       "{lightgreen}所有生还者 {default}因 {olive}{2} {default}次死亡 而获得了{green}{1} {default}点积分!"
+    }
+
+    "AllInfectedLosePoints_ReachedSafeHouse"
+    {
+        "#format"   "{1:i}"
+        "chi"       "{lightgreen}所有感染者 {default}因让所有生还者到达了安全屋而 {lightgreen}失去了 {green}{1} {default}点积分!"
+    }
+
+    "RankVote_Disabled"
+    {
+        "chi"       "{green}排名投票 {default}正 {lightgreen}禁用中{default}."
+    }
+
+    // menus.inc
+    // on this section no color tags are allowed on 'Menu_' tagged phrases.
+    "Menu_TileClear"
+    {
+        "chi"       "清除:"
+    }
+
+    "Menu_OptionClearPlayers"
+    {
+        "chi"       "清除当前正在游玩的玩家的数据..."
+    }
+
+    "Menu_OptionClearTimedMaps"
+    {
+        "chi"       "清除地图时间..."
+    }
+
+    "Menu_TileClearTM"
+    {
+        "chi"       "清除地图时间:"
+    }
+
+    "Menu_OptionClearAll"
+    {
+        "chi"       "所有"
+    }
+
+    "Menu_OptionClearCoop"
+    {
+        "chi"       "战役"
+    }
+
+    "Menu_OptionClearSurvival"
+    {
+        "chi"       "生还者"
+    }
+
+    "Menu_OptionClearRealism"
+    {
+        "chi"       "写实"
+    }
+
+    "Menu_OptionClearMutations"
+    {
+        "chi"       "突变"
+    }
+
+    "Menu_AskClearAllMapTimings"
+    {
+        "chi"       "你真的想清除所有的地图时间吗?"
+    }
+
+    "Menu_AskClearAllCoopMapTimings"
+    {
+        "chi"       "你真的想清除所有的战役地图时间吗?"
+    }
+
+    "Menu_AskClearAllSurvivalMapTimings"
+    {
+        "chi"       "你真的想清除所有的生还者地图时间吗?"
+    }
+
+    "Menu_AskClearAllRealismMapTimings"
+    {
+        "chi"       "你真的想清除所有的写实地图时间吗?"
+    }
+
+    "Menu_AskClearAllMutationMapTimings"
+    {
+        "chi"       "你真的想清除所有的突变地图时间吗?"
+    }
+
+    "Menu_AskClearPlayers"
+    {
+        "chi"       "你真的想清除该玩家的所有数据吗?"
+    }
+
+    "Menu_AskClearAllMaps"
+    {
+        "chi"       "你真的想清除该地图的数据吗?"
+    }
+
+    "Menu_AskClearAll"
+    {
+        "chi"       "你真的想清除所有的数据吗?"
+    }
+
+    "Menu_AskClearTimedMaps"
+    {
+        "chi"       "你真的想清除所有的地图时间吗?"
+    }
+
+    "Menu_AskRemoveCustomMaps"
+    {
+
+        "chi"       "你真的想移除第三方地图吗?"
+    }
+
+    "Menu_AskCleanPlayers"
+    {
+        "chi"       "你真的想清除该玩家的游玩时间数据吗?"
+    }
+
+    "Menu_Yes"
+    {
+        "chi"       "是"
+    }
+
+    "Menu_No"
+    {
+        "chi"       "否"
+    }
+
+    "Menu_AboutPlugin"
+    {
+        "chi"       "关于 [L4D/L4D2] 数据统计插件:"
+    }
+
+    "Menu_Version"
+    {
+        "#format"   "{1:s}"
+        "chi"       "版本: {1}"
+    }
+
+    // hey you can add yourself here xd
+    "Menu_Author"
+    {
+        "chi"       "作者: Mikko Andersson (muukis), blueblur"
+    }
+
+    "Menu_Description"
+    {
+        "chi"       "描述: 记录玩家游玩数据在 SQL数据库中."
+    }
+
+    "Menu_Back"
+    {
+        "chi"       "返回"
+    }
+
+    "Menu_Close"
+    {
+        "chi"       "关闭"
+    }
+
+    "Menu_PluginSettings"
+    {
+        "chi"       "插件设置:"
+    }
+
+    "Menu_Unmute"
+    {
+        "chi"       "开启提示 (目前: 关闭)"
+    }
+
+    "Menu_Mute"
+    {
+        "chi"       "关闭提示 (目前: 开启)"
+    }
+
+    "AllPlayerStatsCleared"
+    {
+        "chi"       "所有玩家数据清除成功!"
+    }
+
+    "AllMapStatsCleared"
+    {
+        "chi"       "所有地图数据清除成功!"
+    }
+
+    "AllStatsCleared"
+    {
+        "chi"       "所有数据清除成功!"
+    }
+
+    "PlayerCleaningSuccessful"
+    {
+        "chi"       "玩家时间数据清除成功!"
+    }
+
+    "PlayerCleaningFalied"
+    {
+        "chi"       "玩家时间数据清除失败!"
+    }
+
+    "PlayerCleaningDisabled"
+    {
+        "chi"       "玩家时间数据清除被配置文件禁止!"
+    }
+
+    "AllCustomeMapsRemoved"
+    {
+        "chi"       "所有第三方地图清除!"
+    }
+
+    "CustomMapsRemovalFailed"
+    {
+        "chi"       "第三方地图清除失败!"
+    }
+
+    "AllMapTimingsCleared"
+    {
+        "chi"       "所有地图时间清除成功!"
+    }
+
+    "MapTimingsRemovalFailed"
+    {
+        "chi"       "地图时间清除失败!"
+    }
+
+    "AllCoopMapTimingsCleared"
+    {
+        "chi"       "战役地图时间清除成功!"
+    }
+
+    "CoopMapTimingsRemovalFailed"
+    {
+        "chi"       "战役地图时间清除失败!"
+    }
+
+    "AllSurvivalMapTimingsCleared"
+    {
+        "chi"       "生还者地图时间清除成功!"
+    }
+
+    "SurvivalMapTimingsRemovalFailed"
+    {
+        "chi"       "生还者地图时间清除失败!"
+    }
+
+    "AllRealismMapTimingsCleared"
+    {
+        "chi"       "写实地图时间清除成功!"
+    }
+
+    "RealismMapTimingsRemovalFailed"
+    {
+        "chi"       "写实地图时间清除失败!"
+    }
+
+    "AllMutationsMapTimingsCleared"
+    {
+        "chi"       "突变地图时间清除成功!"
+    }
+
+    "MutationsMapTimingsRemovalFailed"
+    {
+        "chi"       "突变地图时间清除失败!"
+    }
+
+    "PlayerVoted"
+    {
+        "#format"   "{1:N},{2:i},{3:i}"
+        "chi"       "{olive}{1} {default}已投票. {green}{2}/{3} {default}玩家已投票."
+    }
+
+    "Menu_ClearplayerstatsTitle"
+    {
+        "chi"       "清除玩家数据:"
+    }
+
+    "YourPlayerStatsCleared"
+    {
+        "chi"       "你的玩家数据被清除了!"
+    }
+
+    "PlayerStatsCleared"
+    {
+        "#format"   "{1:s}"
+        "chi"       "玩家 {olive}{1} {default}数据已清除!"
+    }
+
+    "ClearingPlayerStatsFailed"
+    {
+        "chi"       "清除玩家数据失败!"
+    }
+
+    "Menu_NextrankTitle"
+    {
+        "chi"       "下一排名:"
+    }
+
+    "Menu_PointsRequired"
+    {
+        "#format"   "{1:i}"
+        "chi"       "点数要求: {1}"
+    }
+
+    "Menu_CurrentRank"
+    {
+        "#format"   "{1:i}"
+        "chi"       "目前排名: {1}"
+    }
+
+    "Menu_YourAreFirst"
+    {
+        "chi"       "你是第一名"
+    }
+
+    "Menu_More"
+    {
+        "chi"       "更多..."
+    }
+
+    "Menu_PluginStyledTitle"
+    {
+        "chi"       "[L4D/L4D2] 数据统计:"
+    }
+
+    "Menu_ShowMyRank"
+    {
+        "chi"       "显示我的排名"
+    }
+
+    "Menu_ShowTop10"
+    {
+        "chi"       "显示前十"
+    }
+
+    "Menu_ShowTop10PPM"
+    {
+        "chi"       "显示前十PPM"
+    }
+
+    "Menu_ShowMyNextrank"
+    {
+        "chi"       "显示我的下一排名"
+    }
+
+    "Menu_ShowCurrentTimer"
+    {
+        "chi"       "显示目前计时器"
+    }
+
+    "Menu_ShowOthersRank"
+    {
+        "chi"       "显示其他人排名"
+    }
+
+    "Menu_ShowOthersPPM"
+    {
+        "chi"       "显示其他人PPM"
+    }
+
+    "Menu_VoteForShuffle"
+    {
+        "chi"       "发起PPM洗牌队伍投票"
+    }
+
+    "Menu_ShowAllMapTimings"
+    {
+        "chi"       "显示所有地图时间"
+    }
+
+    "Menu_ShowCurrentMapTimes"
+    {
+        "chi"       "显示目前地图时间"
+    }
+
+    "Menu_ModifyRankSettings"
+    {
+        "chi"       "配置排名设置"
+    }
+
+    "Menu_PlayerRanksTitle"
+    {
+        "chi"       "玩家排名:"
+    }
+
+    "Menu_PlayerRank"
+    {
+        "#format"   "{1:s},{2:i}"
+        "chi"       "{1} ({2} 点数)"
+    }
+
+    "Menu_TimedMapsTitle"
+    {
+        "chi"       "地图时间:"
+    }
+
+    "Menu_NoTimedMaps"
+    {
+        "chi"       "没有记录在案的地图时间!"
+    }
+
+    "Menu_Co-op"
+    {
+        "chi"       "战役"
+    }
+
+    "Menu_Survival"
+    {
+        "chi"       "生还者"
+    }
+
+    "Menu_Realism"
+    {
+        "chi"       "写实"
+    }
+
+    "Menu_Mutations"
+    {
+        "chi"       "突变"
+    }
+
+    "Menu_NoTimedMapsForGameMode"
+    {
+        "chi"       "没有在这一模式下记录在案的地图时间!"
+    }
+
+    "Menu_NoTimedMapsForRecords"
+    {
+        "chi"       "没有在这一地图下记录在案的地图时间!"
+    }
+
+    "Menu_PlayerPPMTitle"
+    {
+        "chi"       "玩家 PPM:"
+    }
+
+    "Menu_PlayerPPM"
+    {
+        "#format"   "{1:s},{2:.2f}"
+        "chi"       "{1} (PPM: {2})"
+    }
+
+    "Menu_Top10Title"
+    {
+        "chi"       "前十玩家:"
+    }
+
+    "Menu_Top10PPMTitle"
+    {
+        "chi"       "前十 PPM 玩家:"
+    }
+
+    "Menu_NextRankTitle"
+    {
+        "chi"       "下一排名:"
+    }
+
+    "Label_Coop"
+    {
+        "chi"        "战役"
+    }
+
+    "Label_Versus"
+    {
+        "chi"        "对抗"
+    }
+
+    "Label_Realism"
+    {
+        "chi"        "写实"
+    }
+
+    "Label_Survival"
+    {
+        "chi"        "生还者"
+    }
+
+    "Label_Scavenge"
+    {
+        "chi"        "清道夫"
+    }
+
+    "Label_Realism_Versus"
+    {
+        "chi"        "写实对抗"
+    }
+
+    "Label_Mutations"
+    {
+        "chi"        "突变"
+    }
+
+    "Label_Unknown"
+    {
+        "chi"        "未知"
+    }
+
+    "Menu_PlayerPoints"
+    {
+        "#format"   "{1:i},{2:s}"
+        "chi"       "{1} 点数: {2}"
+    }
+
+    "Menu_TitleRankOf"
+    {
+        "#format"   "{1:s}"
+        "chi"       "{1}的排名"
+    }
+
+    "Menu_Rank"
+    {
+        "#format"   "{1:i},{2:i}"
+        "chi"       "排名: {1} / {2}"
+    }
+
+    "Menu_GameModeRank"
+    {
+        "#format"   "{1:s},{2:i},{3:i}"
+        "chi"       "{1} 排名: {2} / {3}"
+    }
+
+    "Menu_PlayTime"
+    {
+        "#format"   "{1:.2f}"
+        "chi"       "游玩时间: {1} 小时"
+    }
+
+    "Menu_PlayTimeMinute"
+    {
+        "#format"   "{1:i}"
+        "chi"       "游玩时间: {1} 分钟"
+    }
+
+    "Menu_Points"
+    {
+        "#format"   "{1:i}"
+        "chi"       "点数: {1}"
+    }
+
+    "Menu_PPM"
+    {
+        "#format"   "{1:.2f}"
+        "chi"       "PPM: {1}"
+    }
+
+    "Menu_InfectedKilled"
+    {
+        "#format"   "{1:i}"
+        "chi"       "感染者击杀: {1}"
+    }
+
+    "Menu_SurvivorsKilled"
+    {
+        "#format"   "{1:i}"
+        "chi"       "生还者击杀: {1}"
+    }
+
+    "Menu_HeadShots"
+    {
+        "#format"   "{1:i}"
+        "chi"       "爆头: {1}"
+    }
+
+    "Menu_HeadShotRatio"
+    {
+        "#format"   "{1:.2f}"
+        "chi"       "爆头率: {1}%%"
+    }
+
+    "Menu_FullStats"
+    {
+        "#format"   "{1:s}"
+        "chi"       "完整统计信息请访问 {1}"
+    }
+
+    // commands.inc
+    "MapTimerNotStarted"
+    {
+        "chi"       "地图计时器未开启"
+    }
+
+    "CurrentMapTimer"
+    {
+        "#format"   "{1:s}"
+        "chi"       "当前地图计时: {green}{1}"
+    }
+
+    "ShuffledByAdmin"
+    {
+        "chi"       "管理员执行了队伍洗牌."
+    }
+
+    "YouMutedPlugin"
+    {
+        "#format"   "{1:s}"
+        "chi"       "你 {1} {default}了 {olive}插件提示{default}."
+    }
+
+    "Muted"
+    {
+        "chi"       "{green}关闭"
+    }
+
+    "Unmuted"
+    {
+        "chi"       "{lightgreen}开启"
+    }
+
+    "SpecNoteAllowed"
+    {
+        "chi"       "旁观者不能发起 {green}排名投票{default}."
+    }
+
+    // events.inc
+    "PlayerDeath_FF_Mode1or2"
+    {
+        "#format"   "{1:i},{2:s}"
+        "chi"       "你因杀死队友 {olive}{2}{default}而 {lightgreen}失去了 {green}{1} {default}点积分!"
+    }
+
+    "PlayerDeath_FF_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "chi"       "{olive}{1} {default}因杀死队友 {olive}{3}{default}而 {lightgreen}失去了 {green}{2} {default}点积分!"
+    }
+
+    "DefiniteArticle"
+    {
+        "chi"       "一个"
+    }
+
+    "PlayerDeath_KillInfected_Headshot_Mode2or3"
+    {
+        "#format"   "{1:N},{2:i},{3:s},{4:s}"
+        "chi"       "{olive}{1} {default}因{green}爆头{default}击杀了{3} {olive}{4} {default}而获得了 {green}{2} {default}点积分!"
+    }
+
+    "PlayerDeath_KillInfected_Headshot_Mode1"
+    {
+        "#format"   "{1:i},{2:s},{3:s}"
+        "chi"       "你因{green}爆头{default}击杀了{2} {olive}{3} {default}而获得了 {green}{1} {default}点积分"
+    }
+
+    "PlayerDeath_KillInfected_Mode3"
+    {
+        "#format"   "{1:s},{2:i},{3:s},{4:s}"
+        "chi"       "{olive}{1} {default}因击杀了{3} {olive}{4}{default}而获得了 {green}{2} {default}点积分!"
+    }
+
+    "PlayerDeath_KillInfected_Mode1or2"
+    {
+        "#format"   "{1:i},{2:s},{3:s}"
+        "chi"       "你因击杀了{2} {olive}{3}{default}而获得了 {green}{1} {default}点积分!"
+    }
+
+    "GainPointsByKillTank"
+    {
+        "#format"   "{1:i},{2:i}"
+        "chi"       "{lightgreen}所有生还者因以 {olive}{2}次死亡{default} 击杀了一只Tank而获得了 {green}{1} {default}点积分!"
+    }
+
+    "DefibPlayer_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "chi"       "你因使用起搏器复活 {olive}{2} {default}而获得了 {green}{1} {default}点积分!"
+    }
+
+    "DefibPlayer_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "chi"       "{olive}{1} {default}因使用起搏器复活 {olive}{3} {default}而获得了 {green}{2} {default}点积分!"
+    }
+
+    "HealPlayer_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "chi"       "你因治疗了 {olive}{2}{default} 而获得了 {green}{1} {default}点积分!"
+    }
+
+    "HealPlayer_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "chi"       "{olive}{1} {default}你因治疗了 {olive}{3}{default} 而获得了 {green}{2} {default}点积分!"
+    }
+
+    "AllSurvivorsWinCampaign"
+    {
+        "#format"   "{1:i},{2:i}"
+        "chi"       "{lightgreen}所有生还者{default}因有 {olive}{2}个生还者 {default}赢得了{green}战役终章{default}而获得了 {green}{1} {default}点积分!"
+    }
+
+    "AllInfectedLoseCampaign"
+    {
+        "#format"   "{1:i},{2:i}"
+        "chi"       "{lightgreen}所有感染者{default}因有 {olive}{2}个生还者 {default}赢得了{green}战役终章{default}而{lightgreen}失去了 {green}{1} {default}点积分!"
+    }
+
+    "AllSurvivorsSurvivedBoomerHorde"
+    {
+        "#format"   "{1:i}"
+        "chi"       "{lightgreen}所有生还者 {default}因在{olive}Boomer尸潮后没有倒地或死亡{default}而获得了 {green}{1} {default}点积分!"
+    }
+
+    "YouMadeHimLedged_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "chi"       "你因使玩家 {olive}{2} {default}挂边而获得了 {green}{1} {default}点积分!"
+    }
+
+    "YouMadeHimLedged_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "chi"       "{olive}{1} {default}因使玩家 {olive}{3} {default}挂边而获得了 {green}{2} {default}点积分!"
+    }
+
+    "YouSavedFromJockey_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N},{3:N}"
+        "chi"       "你因将 {olive}{2} {default}从 {green}{3} {default}救出而获得了 {green}{1} {default}积分!"
+    }
+
+    "YouSavedFromJockey_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N},{4:N}"
+        "chi"       "{olive}{1} {default}因将 {olive}{3} {default}从 {green}{4} {default}救出而获得了 {green}{2} {default}积分!"
+    }
+
+    "YouLeveledCharger_Mode1or2"
+    {
+        "#format"   "{1:i}"
+        "chi"       "你因{green}击倒冲锋{default}了一只Charger而获得了 {green}{1} {default}点积分!"
+    }
+
+    "YouLeveledCharger_Mode3"
+    {
+        "#format"   "{1:N},{2:i}"
+        "chi"       "{olive}{1} {default}因{green}击倒冲锋{default}了一只Charger而获得了 {green}{2} {default}点积分!"
+    }
+
+    "ASurvivor"
+    {
+        "chi"       "一个生还者"
+    }
+
+    "YouSavedFromCharger_Mode1or2"
+    {
+        "#format"   "{1:i},{2:s},{3:s}"
+        "chi"       "你因将 {2} 从 {green}{3} {default}手中就下而获得了{green}{1} {default}点积分!"
+    }
+
+    "YouSavedFromCharger_Mode3"
+    {
+        "#format"   "{1:s},{2:i},{3:s},{4:s}"
+        "chi"       "{olive}{1} {default}因将 {3} 从 {green}{4} {default}手中就下而获得了{green}{2} {default}点积分!"
+    }
+
+    "YouDeployed_Mode1or2"
+    {
+        "#format"   "{1:i},{2:s}"
+        "chi"       "你因部署 {olive}{2}{default} 而获得了{green}{1} {default}点积分!"
+    }
+
+    "YouDeployed_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:s}"
+        "chi"       "{olive}{1} {default}因部署 {olive}{3}{default} 而获得了{green}{2} {default}点积分!"
+    }
+
+    "IncendiaryAmmo"
+    {
+        "chi"       "燃烧弹"
+    }
+
+    "ExplodingAmmo"
+    {
+        "chi"       "高爆弹"
+    }
+
+    "UNKNOWN"
+    {
+        "chi"       "未知"
+    }
+
+    "YouPouredGasCan_Mode1or2"
+    {
+        "#format"   "{1:i}"
+        "chi"       "你因成功 {olive}灌一桶油{default} 而获得了{green} {1} {default}点积分!"
+    }
+
+    "YouPouredGasCan_Mode3"
+    {
+        "#format"   "{1:N},{2:i}"
+        "chi"       "{olive{1} {default}因成功 {olive}灌一桶油{default} 而获得了{green} {2} {default}点积分!"
+    }
+
+    "YouLandedPounce_Mode1or2"
+    {
+        "#format"   "{1:i},{2:s},{3:N}"
+        "chi"       "你因成功对 {olive}{3}{default} 进行了一次 {olive}{2} {default}的高扑而获得了{green}{1} {default}点积分!"
+    }
+
+    "YouLandedPounce_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:s},{4:N}"
+        "chi"       "{olive}{1} {default}因成功对 {olive}{4}{default} 进行了一次 {olive}{3} {default}高扑而获得了{green}{2} {default}点积分!"
+    }
+
+    "DeathFromAbove"
+    {
+        "chi"       "完美的"
+    }
+
+    "PainFromAbove"
+    {
+        "chi"       "高伤的"
+    }
+
+    "YouRevived_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "chi"       "你因救起 {olive}{2}{default} 而获得了{green}{1} {default}点积分!"
+    }
+
+    "YouRevived_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "chi"       "{olive}{1} {default}因救起 {olive}{3}{default} 而获得了{green}{2} {default}点积分!"
+    }
+
+    "YouRescued_Mode1or2"
+    {
+        "#format"   "{1:i},{2:N}"
+        "chi"       "你因营救 {olive}{2}{default} 而获得了{green}{1} {default}点积分!"
+    }
+
+    "YouRescued_Mode3"
+    {
+        "#format"   "{1:N},{2:i},{3:N}"
+        "chi"       "{olive}{1} {default}因营救 {olive}{3}{default} 而获得了{green}{2} {default}点积分!"
+    }
+
+    "YouLetInfectedInSafeRoom_Mode1or2"
+    {
+        "#format"   "{1:i}"
+        "chi"       "你因让 {lightgreen}感染者进入安全屋{default} 而{lightgreen}失去了{green} {1} {default}点积分!"
+    }
+
+    "YouLetInfectedInSafeRoom_Mode3"
+    {
+        "#format"   "{1:N},{2:i}"
+        "chi"       "{olive}{1} {default}因让 {lightgreen}感染者进入安全屋{default} 而{lightgreen}失去了{green} {2} {default}点积分!"
+    }
+
+    "LosePointsByAllSurvivorsDied"
+    {
+        "#format"   "{1:i}"
+        "chi"       "{lightgreen}所有幸存者 {default}因 {lightgreen}团灭{default} 而{lightgreen}失去了{green} {1} {default}点积分!"
+    }
+
+    "AllSurvivorsLosePointsByCarAlarm"
+    {
+        "#format"   "{1:i}"
+        "chi"       "{lightgreen}所有幸存者 {default}因 {lightgreen}触发警报车{default} 而{lightgreen}失去了{green} {1} {default}点积分!"
+    }
+
+    "YouCrownedWitch"
+    {
+        "#format"   "{1:N},{2:i}"
+        "chi"       "{olive}{1} {default}因{green}秒杀了Witch{default}而获得了 {green}{2} {default}点积分!"
+    }
+}

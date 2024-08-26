@@ -83,7 +83,6 @@ public void OnPluginStart()
 	// Gamemode
 	g_hCvar_Gamemode.GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
 	g_iCurrentGamemodeID = GetCurrentGamemodeID();
-	SetCurrentGamemodeName();
 
 	// RegConsoleCmd("l4d_stats_test", cmd_StatsTest);
 
@@ -139,7 +138,6 @@ public void OnMapStart()
 {
 	g_hCvar_Gamemode.GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
 	g_iCurrentGamemodeID = GetCurrentGamemodeID();
-	SetCurrentGamemodeName();
 	ResetVars();
 }
 

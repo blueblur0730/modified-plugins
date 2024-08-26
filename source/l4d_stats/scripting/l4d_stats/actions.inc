@@ -3,27 +3,6 @@
 #endif
 #define _l4d_stats_actions_included
 
-void SetCurrentGamemodeName()
-{
-	switch (g_iCurrentGamemodeID)
-	{
-		case GAMEMODE_COOP: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Coop");
-		case GAMEMODE_VERSUS: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Versus");
-		case GAMEMODE_REALISM: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Realism");
-		case GAMEMODE_SURVIVAL: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Survival");
-		case GAMEMODE_SCAVENGE: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Scavenge");
-		case GAMEMODE_REALISMVERSUS: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Realism Versus");
-		case GAMEMODE_OTHERMUTATIONS: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Mutations");
-		default:
-		{
-			Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "Unknown");
-		}
-	}
-
-	if (g_iCurrentGamemodeID == GAMEMODE_OTHERMUTATIONS) g_hCvar_Gamemode.GetString(g_sCurrentMutation, sizeof(g_sCurrentMutation));
-	else g_sCurrentMutation[0] = 0;
-}
-
 void DoInfectedFinalChecks(int Client, int ClientInfType = -1)
 {
 	if (Client == 0)

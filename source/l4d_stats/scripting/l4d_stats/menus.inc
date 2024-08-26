@@ -1652,6 +1652,27 @@ void DisplayRank(Handle owner, DBResultSet hndl, const char[] error, int client)
 
 	if (!InvalidGameMode())
 	{
+		switch (g_iCurrentGamemodeID)
+		{
+			case GAMEMODE_COOP: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "%T", "Label_Coop", client);
+			case GAMEMODE_VERSUS: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "%T", "Label_Versus", client);
+			case GAMEMODE_REALISM: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "%T", "Label_Realism", client);
+			case GAMEMODE_SURVIVAL: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "%T", "Label_Survival", client);
+			case GAMEMODE_SCAVENGE: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "%T", "Label_Scavenge", client);
+			case GAMEMODE_REALISMVERSUS: Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "%T", "Label_Realism_Versus", client);
+			case GAMEMODE_OTHERMUTATIONS:
+			{
+				Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "%T", "Label_Mutations", client);
+				g_hCvar_Gamemode.GetString(g_sCurrentMutation, sizeof(g_sCurrentMutation));
+			}
+
+			default:
+			{
+				Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "%T", "Label_Unknown", client);
+				g_sCurrentMutation[0] = 0
+			}
+		}
+
 		Format(Value, sizeof(Value), "%T", "Menu_GameModeRank", client, g_sCurrentGamemodeLabel , g_iClientGameModeRank[client], g_iGameModeRankTotal);
 		RankPanel.DrawText(Value);
 	}

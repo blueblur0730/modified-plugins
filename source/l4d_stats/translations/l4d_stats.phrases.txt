@@ -136,7 +136,7 @@
 
     "NotEnoughPlayers"
     {
-        "en"        "Left 4 Dead (2) Stats are {green}DISABLED{default}, not enough Human players!"
+        "en"        "[L4D/L4D2] Custom Player Statistics is {green}DISABLED{default}, not enough Human players!"
     }
 
     // dbi.inc
@@ -176,7 +176,7 @@
     "RankChange"
     {
         "#format"   "{1:s},{2:i},{3:s},{4:i}"
-        "en"        "You've {green}{1} {default}rank for {green}{2} position{3} {default}! {olive}(Rank: {4})"
+        "en"        "You've {green}{1} {default}rank for {green}{2} position{3} {default}! ({olive}Rank: {4}{default})"
     }
 
     "JoinedWithRank"
@@ -222,7 +222,7 @@
     "BulldozingSurvivors_Mode1or2"
     {
         "#format"   "{1:i},{2:i}"
-        "en"        "You have earned {green}{1} {default}points for Bulldozing the Survivors worth {1} points of damage!"
+        "en"        "You have earned {green}{1} {default}points for Bulldozing the Survivors worth {2} points of damage!"
     }
 
     "BulldozingSurvivors_Mode3"
@@ -318,7 +318,7 @@
     "SavingTeammate"
     {
         "#format"   "{1:i},{2:N},{3:s}"
-        "en"        "You have earned {green}%i {default}points for saving {olive}%s{default} from {green}%s{default}!"
+        "en"        "You have earned {green}{1} {default}points for saving {olive}{2}{default} from {green}{3}{default}!"
     }
 
     "PercentageReduct"
@@ -730,7 +730,7 @@
 
     "Menu_PluginStyledTitle"
     {
-        "en"        "[L4D] Statistic:"
+        "en"        "[L4D/L4D2] Statistic:"
     }
 
     "Menu_ShowMyRank"
@@ -863,6 +863,46 @@
     "Menu_NextRankTitle"
     {
         "en"        "Next Rank:"
+    }
+
+    "Label_Coop"
+    {
+        "en"        "Co-op"
+    }
+
+    "Label_Versus"
+    {
+        "en"        "Versus"
+    }
+
+    "Label_Realism"
+    {
+        "en"        "Realism"
+    }
+
+    "Label_Survival"
+    {
+        "en"        "Survival"
+    }
+
+    "Label_Scavenge"
+    {
+        "en"        "Scavenge"
+    }
+
+    "Label_Realism_Versus"
+    {
+        "en"        "Realism Versus"
+    }
+
+    "Label_Mutations"
+    {
+        "en"        "Mutations"
+    }
+
+    "Label_Unknown"
+    {
+        "en"        "Unknown"
     }
 
     "Menu_PlayerPoints"
@@ -1098,13 +1138,13 @@
     "YouLeveledCharger_Mode1or2"
     {
         "#format"   "{1:i}"
-        "en"        "You have earned {green}{1} {default}points for {green}Leveling a Charge{default}!"
+        "en"        "You have earned {green}{1} {default}points for {green}Leveling a Charger{default}!"
     }
 
     "YouLeveledCharger_Mode3"
     {
         "#format"   "{1:N},{2:i}"
-        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for {green}Leveling a Charge{default}!"
+        "en"        "{olive}{1} {default}has earned {green}{2} {default}points for {green}Leveling a Charger{default}!"
     }
 
     "ASurvivor"

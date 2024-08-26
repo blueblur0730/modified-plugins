@@ -314,6 +314,5 @@ void OnGamemodeChanged(ConVar convar, const char[] oldValue, const char[] newVal
 	{
 		g_hCvar_Gamemode.GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
 		g_iCurrentGamemodeID = GetCurrentGamemodeID();
-		SetCurrentGamemodeName();
 	}
 }
