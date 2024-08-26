@@ -172,7 +172,6 @@ void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 
 	int Mode = g_hCvar_AnnounceMode.IntValue;
 	int AttackerTeam = GetClientTeam(Attacker);
-	char AttackerName[MAX_LINE_WIDTH];
 	char AttackerID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Attacker, AttackerID, sizeof(AttackerID));
 	char VictimName[MAX_LINE_WIDTH];
@@ -274,10 +273,17 @@ void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 
 		SendSQLUpdate(query);
 
-		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Attacker, "You have \x03LOST \x04%i \x01points for \x03Team Killing \x05%s\x01!", Score, VictimName);
+		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Attacker])
+			CPrintToChat(Attacker, "%t %t", "Tag", "PlayerDeath_FF_Mode1or2", Score, Victim);
 		else if (Mode == 3)
-			StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for \x03Team Killing \x05%s\x01!", AttackerName, Score, VictimName);
+		{
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "PlayerDeath_FF_Mode3", Attacker, Score, Victim);
+			}
+		}
+			
 	}
 
 	// Attacker is a Survivor
@@ -355,21 +361,50 @@ void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 			{
 				if (Mode > 1)
 				{
-					GetClientName(Attacker, AttackerName, sizeof(AttackerName));
-					StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for killing%s \x05%s \x01with a \x04HEAD SHOT\x01!", AttackerName, Score, (VictimIsBot ? " a" : ""), VictimName);
+					for (int i = 1; i <= MaxClients; i++)
+					{
+						if (!g_bClientRankMute[i])
+						{
+							char definitearticle[8];
+							Format(definitearticle, sizeof(definitearticle), "%T", "DefiniteArticle", i);
+							CPrintToChat(i, "%t %t", "Tag", "PlayerDeath_KillInfected_Headshot_Mode2or3", Attacker, Score, (VictimIsBot ? definitearticle : ""), VictimName);
+						}
+					}
 				}
-				else
-					StatsPrintToChat(Attacker, "You have earned \x04%i \x01points for killing%s \x05%s \x01with a \x04HEAD SHOT\x01!", Score, (VictimIsBot ? " a" : ""), VictimName);
+				else 
+				{
+					if (!g_bClientRankMute[Attacker])
+					{
+						char definitearticle[8];
+						Format(definitearticle, sizeof(definitearticle), "%T", "DefiniteArticle", Attacker);
+						CPrintToChat(Attacker, "%t %t", "Tag", "PlayerDeath_KillInfected_Headshot_Mode1", Score, (VictimIsBot ? definitearticle : ""), VictimName);
+					}
+				}	
 			}
 			else
 			{
 				if (Mode > 2)
 				{
-					GetClientName(Attacker, AttackerName, sizeof(AttackerName));
-					StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for killing%s \x05%s\x01!", AttackerName, Score, (VictimIsBot ? " a" : ""), VictimName);
+					for (int i = 1; i <= MaxClients; i++)
+					{
+						if (!g_bClientRankMute[i])
+						{
+							char definitearticle[8];
+							Format(definitearticle, sizeof(definitearticle), "%T", "DefiniteArticle", i);
+							CPrintToChat(i, "%t %t", "Tag", "PlayerDeath_KillInfected_Mode3", Attacker, Score, (VictimIsBot ? definitearticle : ""), VictimName);
+						}
+					}
 				}
 				else
-					StatsPrintToChat(Attacker, "You have earned \x04%i \x01points for killing%s \x05%s\x01!", Score, (VictimIsBot ? " a" : ""), VictimName);
+				{
+					if (!g_bClientRankMute[Attacker])
+					{
+						char definitearticle[8];
+						Format(definitearticle, sizeof(definitearticle), "%T", "DefiniteArticle", Attacker);
+						CPrintToChat(Attacker, "%t %t", "Tag", "PlayerDeath_KillInfected_Mode1or2", Score, (VictimIsBot ? definitearticle : ""), VictimName);
+					}
+				}
+					
 			}
 		}
 
@@ -380,7 +415,7 @@ void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 
 	// Attacker is an Infected
 	else if (AttackerTeam == TEAM_INFECTED && VictimTeam == TEAM_SURVIVORS)
-		SurvivorDiedNamed(Attacker, Victim, VictimName, AttackerID, -1, Mode);
+		SurvivorDiedNamed(Attacker, Victim, AttackerID, -1, Mode);
 
 	if (VictimTeam == TEAM_SURVIVORS)
 	{
@@ -477,7 +512,13 @@ void Event_TankKilled(Event event, const char[] name, bool dontBroadcast)
 	}
 
 	if (Mode && Score > 0)
-		StatsPrintToChatTeam(TEAM_SURVIVORS, "\x03ALL SURVIVORS \x01have earned \x04%i \x01points for killing a Tank with \x05%i Deaths\x01!", Score, Deaths);
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS && !g_bClientRankMute[i])
+				CPrintToChat(i, "%t %t", "Tag", "GainPointsByKillTank", Score, Deaths);
+		}
+	}
 
 	UpdateMapStat("kills", 1);
 	UpdateMapStat("points", Score);
@@ -532,13 +573,9 @@ void Event_DefibPlayer(Event event, const char[] name, bool dontBroadcast)
 	if (Recipient == Giver)
 		return;
 
-	char RecipientName[MAX_LINE_WIDTH];
-	GetClientName(Recipient, RecipientName, sizeof(RecipientName));
 	char RecipientID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Recipient, RecipientID, sizeof(RecipientID));
 
-	char GiverName[MAX_LINE_WIDTH];
-	GetClientName(Giver, GiverName, sizeof(GiverName));
 	char GiverID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Giver, GiverID, sizeof(GiverID));
 
@@ -557,10 +594,17 @@ void Event_DefibPlayer(Event event, const char[] name, bool dontBroadcast)
 	if (Score > 0)
 	{
 		int Mode = g_hCvar_AnnounceMode.IntValue;
-		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Giver, "You have earned \x04%i \x01points for Reviving \x05%s\x01 using a Defibrillator!", Score, RecipientName);
+		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Giver])
+			CPrintToChat(Giver, "%t %t", "Tag", "DefibPlayer_Mode1or2", Score, Recipient);
 		else if (Mode == 3)
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for Reviving \x05%s\x01 using a Defibrillator!", GiverName, Score, RecipientName);
+		{
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "DefibPlayer_Mode3", Giver, Score, Recipient);
+			}
+		}
+
 	}
 }
 
@@ -592,13 +636,9 @@ void Event_HealPlayer(Event event, const char[] name, bool dontBroadcast)
 	if (Recipient == Giver)
 		return;
 
-	char RecipientName[MAX_LINE_WIDTH];
-	GetClientName(Recipient, RecipientName, sizeof(RecipientName));
 	char RecipientID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Recipient, RecipientID, sizeof(RecipientID));
 
-	char GiverName[MAX_LINE_WIDTH];
-	GetClientName(Giver, GiverName, sizeof(GiverName));
 	char GiverID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Giver, GiverID, sizeof(GiverID));
 
@@ -621,10 +661,16 @@ void Event_HealPlayer(Event event, const char[] name, bool dontBroadcast)
 	if (Score > 0)
 	{
 		int Mode = g_hCvar_AnnounceMode.IntValue;
-		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Giver, "You have earned \x04%i \x01points for healing \x05%s\x01!", Score, RecipientName);
+		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Giver])
+			CPrintToChat(Giver, "%t %t", "Tag", "HealPlayer_Mode1or2", Score, Recipient);
 		else if (Mode == 3)
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for healing \x05%s\x01!", GiverName, Score, RecipientName);
+		{
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "HealPlayer_Mode3", Giver, Score, Recipient);
+			}
+		}
 	}
 }
 
@@ -763,10 +809,20 @@ void Event_CampaignWin(Event event, const char[] name, bool dontBroadcast)
 
 	if (Mode && Score > 0)
 	{
-		StatsPrintToChatTeam(TEAM_SURVIVORS, "\x03ALL SURVIVORS \x01have earned \x04%i \x01points for winning the \x04Campaign Finale \x01with \x05%i survivors\x01!", Score, SurvivorCount);
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS && !g_bClientRankMute[i])
+				CPrintToChat(i, "%t %t", "Tag", "AllSurvivorsWinCampaign", Score, SurvivorCount);
+		}
 
 		if (NegativeScore)
-			StatsPrintToChatTeam(TEAM_INFECTED, "\x03ALL INFECTED \x01have \x03LOST \x04%i \x01points for loosing the \x04Campaign Finale \x01to \x05%i survivors\x01!", Score, SurvivorCount);
+		{
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_INFECTED && !g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "AllInfectedLoseCampaign", Score, SurvivorCount);
+			}
+		}
 	}
 }
 
@@ -886,7 +942,13 @@ void Event_PlayerBlindEnd(Event event, const char[] name, bool dontBroadcast)
 			}
 
 			if (Mode)
-				StatsPrintToChatTeam(TEAM_SURVIVORS, "\x03ALL SURVIVORS \x01have earned \x04%i \x01points for \x05No Incapicitates Or Deaths After Boomer Mob\x01!", Score);
+			{
+				for (int i = 1; i <= MaxClients; i++)
+				{
+					if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS && !g_bClientRankMute[i])	
+						CPrintToChat(i, "%t %t", "Tag", "AllSurvivorsSurvivedBoomerHorde", Score);
+				}
+			}
 		}
 	}
 
@@ -1013,9 +1075,6 @@ void Event_PlayerLedge(Event event, const char[] name, bool dontBroadcast)
 
 	if (Score > 0)
 	{
-		char VictimName[MAX_LINE_WIDTH];
-		GetClientName(Victim, VictimName, sizeof(VictimName));
-
 		int Mode = g_hCvar_AnnounceMode.IntValue;
 		char ClientID[MAX_LINE_WIDTH];
 		GetClientRankAuthString(Attacker, ClientID, sizeof(ClientID));
@@ -1033,13 +1092,15 @@ void Event_PlayerLedge(Event event, const char[] name, bool dontBroadcast)
 		SendSQLUpdate(query);
 		UpdateMapStat("points_infected", Score);
 
-		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Attacker, "You have earned \x04%i \x01points for causing player \x05%s\x01 to grab a ledge!", Score, VictimName);
+		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Attacker])
+			CPrintToChat(Attacker, "%t %t", "Tag", "YouMadeHimLedged_Mode1or2", Score, Victim);
 		else if (Mode == 3)
 		{
-			char AttackerName[MAX_LINE_WIDTH];
-			GetClientName(Attacker, AttackerName, sizeof(AttackerName));
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for causing player \x05%s\x01 to grab a ledge!", AttackerName, Score, VictimName);
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "YouMadeHimLedged_Mode3", Attacker, Score, Victim);
+			}
 		}
 	}
 }
@@ -1146,11 +1207,8 @@ void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 
 				char AttackerID[MAX_LINE_WIDTH];
 				GetClientRankAuthString(Attacker, AttackerID, sizeof(AttackerID));
-				char AttackerName[MAX_LINE_WIDTH];
-				GetClientName(Attacker, AttackerName, sizeof(AttackerName));
 
 				// Using datapack to deliver the needed info so that the attacker can't escape the penalty by disconnecting
-
 				DataPack dp = null;
 				int OldHumanDamage = 0;
 				int OldBotDamage = 0;
@@ -1177,7 +1235,6 @@ void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 				dp.WriteCell(OldBotDamage);
 				dp.WriteCell(Attacker);
 				dp.WriteString(AttackerID);
-				dp.WriteString(AttackerName);
 
 				// This may fail! What happens when a player skips and another joins with the same Client ID (is this even possible in such short time?)
 				g_hFriendlyFireTimer[Attacker][0] = CreateTimer(5.0, Timer_FriendlyFireDamageEnd, dp);
@@ -1218,12 +1275,12 @@ void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 //		Mode = GetConVarInt(g_hCvar_AnnounceMode);
 //
 //		if (Mode == 1 || Mode == 2)
-//			StatsPrintToChat(Attacker, "You have \x03LOST \x04%i \x01points for \x03Friendly Firing \x05%s\x01!", Score, VictimName);
+//			StatsPrintToChat(Attacker, "You have {lightgreen}LOST {green}%i {default}points for {lightgreen}Friendly Firing {olive}%s{default}!", Score, VictimName);
 //		else if (Mode == 3)
 //		{
 //			char AttackerName[MAX_LINE_WIDTH];
 //			GetClientName(Attacker, AttackerName, sizeof(AttackerName));
-//			StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for \x03Friendly Firing \x05%s\x01!", AttackerName, Score, VictimName);
+//			StatsPrintToChatAll("{olive}%s {default}has {lightgreen}LOST {green}%i {default}points for {lightgreen}Friendly Firing {olive}%s{default}!", AttackerName, Score, VictimName);
 //		}
 //
 //		return;
@@ -1285,7 +1342,7 @@ void Event_JockeyRelease(Event event, const char[] name, bool dontBroadcast)
 
 	if (Rescuer > 0 && !IsClientBot(Rescuer) && IsClientInGame(Rescuer))
 	{
-		char query[1024], JockeyName[MAX_LINE_WIDTH], VictimName[MAX_LINE_WIDTH], RescuerName[MAX_LINE_WIDTH], RescuerID[MAX_LINE_WIDTH], UpdatePoints[32];
+		char query[1024], RescuerID[MAX_LINE_WIDTH], UpdatePoints[32];
 		int Score = ModifyScoreDifficulty(g_hCvar_SaveFromInfectedAbilityScore[INF_ABILITY_RIDE].IntValue, 2, 3, TEAM_SURVIVORS);
 
 		GetClientRankAuthString(Rescuer, RescuerID, sizeof(RescuerID));
@@ -1312,18 +1369,18 @@ void Event_JockeyRelease(Event event, const char[] name, bool dontBroadcast)
 			AddScore(Rescuer, Score);
 		}
 
-		GetClientName(Jockey, JockeyName, sizeof(JockeyName));
-		GetClientName(Victim, VictimName, sizeof(VictimName));
-
 		int Mode = g_hCvar_AnnounceMode.IntValue++
 		if (Score > 0)
 		{
-			if (Mode == 1 || Mode == 2)
-				StatsPrintToChat(Rescuer, "You have earned \x04%i \x01points for saving \x05%s \x01from \x04%s\x01!", Score, VictimName, JockeyName);
+			if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Rescuer])
+				CPrintToChat(Rescuer, "%t %t", "Tag", "YouSavedFromJockey_Mode1or2", Score, Victim, Jockey);
 			else if (Mode == 3)
 			{
-				GetClientName(Rescuer, RescuerName, sizeof(RescuerName));
-				StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for saving \x05%s \x01from \x04%s\x01!", RescuerName, Score, VictimName, JockeyName);
+				for (int i = 1; i <= MaxClients; i++)
+				{
+					if (!g_bClientRankMute[i])
+						CPrintToChat(i, "%t %t", "Tag", "YouSavedFromJockey_Mode3", Rescuer, Score, Victim, Jockey);
+				}
 			}
 		}
 	}
@@ -1371,12 +1428,11 @@ void Event_ChargerKilled(Event event, const char[] name, bool dontBroadcast)
 		return;
 
 	int Charger = GetClientOfUserId(event.GetInt("userid"));
-	char query[1024], KillerName[MAX_LINE_WIDTH], KillerID[MAX_LINE_WIDTH], UpdatePoints[32];
+	char query[1024], KillerID[MAX_LINE_WIDTH], UpdatePoints[32];
 	int Score = 0;
 	bool IsMatador = event.GetBool("melee") && event.GetBool("charging");
 
 	GetClientRankAuthString(Killer, KillerID, sizeof(KillerID));
-
 	FormatInGameMode(UpdatePoints, sizeof(UpdatePoints));
 
 	if (g_iChargerCarryVictim[Charger]) Score += ModifyScoreDifficulty(g_hCvar_SaveFromInfectedAbilityScore[INF_ABILITY_CARRY].IntValue, 2, 3, TEAM_SURVIVORS);
@@ -1400,30 +1456,52 @@ void Event_ChargerKilled(Event event, const char[] name, bool dontBroadcast)
 	int Mode = g_hCvar_AnnounceMode.IntValue;
 	if (Mode)
 	{
-		GetClientName(Killer, KillerName, sizeof(KillerName));
 		if (IsMatador)
 		{
-			if (Mode == 1 || Mode == 2)
-				StatsPrintToChat(Killer, "You have earned \x04%i \x01points for \x04Leveling a Charge\x01!", Score);
+			if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Killer])
+				CPrintToChat(Killer, "%t %t", "Tag", "YouLeveledCharger_Mode1or2", Score);
 			else if (Mode == 3)
-				StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for \x04Leveling a Charge\x01!", KillerName, Score);
+			{
+				for (int i = 1; i <= MaxClients; i++)
+				{
+					if (!g_bClientRankMute[i])
+						CPrintToChat(i, "%t %t", "Tag", "YouLeveledCharger_Mode3", Killer, Score);
+				}
+			}
 		}
 		else
 		{
+			bool bIsBot = false;
 			char VictimName[MAX_LINE_WIDTH], ChargerName[MAX_LINE_WIDTH];
 			GetClientName(Charger, ChargerName, sizeof(ChargerName));
 			if (g_iChargerCarryVictim[Charger] > 0 && (IsClientBot(g_iChargerCarryVictim[Charger]) || (IsClientConnected(g_iChargerCarryVictim[Charger]) && IsClientInGame(g_iChargerCarryVictim[Charger]))))
 			{
 				GetClientName(g_iChargerCarryVictim[Charger], VictimName, sizeof(VictimName));
-				Format(VictimName, sizeof(VictimName), "\x05%s\x01", VictimName);
+				Format(VictimName, sizeof(VictimName), "{olive}%s{default}", VictimName);
+				bIsBot = false;
 			}
 			else
-				Format(VictimName, sizeof(VictimName), "a survivor");
+				bIsBot = true;
 
-			if (Mode == 1 || Mode == 2)
-				StatsPrintToChat(Killer, "You have earned \x04%i \x01points for saving %s from \x04%s\x01!", Score, VictimName, ChargerName);
+			if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Killer])
+			{
+				if (bIsBot)
+					Format(VictimName, sizeof(VictimName), "%T", "ASurvivor", Killer);
+
+				CPrintToChat(Killer, "%t %t", "Tag", "YouSavedFromCharger_Mode1or2", Score, VictimName, ChargerName);
+			}
 			else if (Mode == 3)
-				StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for saving %s from \x04%s\x01!", KillerName, Score, VictimName, ChargerName);
+			{
+
+				for (int i = 1; i <= MaxClients; i++)
+				{
+					if (bIsBot)
+						Format(VictimName, sizeof(VictimName), "%T", "ASurvivor", i);
+
+					if (!g_bClientRankMute[i])
+						CPrintToChat(i, "%t %t", "Tag", "YouSavedFromCharger_Mode3", Killer, Score, VictimName, ChargerName);
+				}
+			}
 		}
 	}
 }
@@ -1581,22 +1659,36 @@ void Event_UpgradePackAdded(Event event, const char[] name, bool dontBroadcast)
 		char ModelName[128];
 		GetEntPropString(EntityID, Prop_Data, "m_ModelName", ModelName, sizeof(ModelName));
 
-		if (StrContains(ModelName, "incendiary_ammo", false) >= 0)
-			strcopy(ModelName, sizeof(ModelName), "Incendiary Ammo");
-		else if (StrContains(ModelName, "exploding_ammo", false) >= 0)
-			strcopy(ModelName, sizeof(ModelName), "Exploding Ammo");
-		else
-			strcopy(ModelName, sizeof(ModelName), "UNKNOWN");
 
-		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Player, "You have earned \x04%i \x01points for deploying \x05%s\x01!", Score, ModelName);
+
+		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Player])
+		{
+			FormatModelName(ModelName, sizeof(ModelName), Player);
+			CPrintToChat(Player, "%t %t", "Tag", "YouDeployed_Mode1or2", Score, ModelName);
+		}
+			
 		else if (Mode == 3)
 		{
-			char PlayerName[MAX_LINE_WIDTH];
-			GetClientName(Player, PlayerName, sizeof(PlayerName));
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for deploying \x05%s\x01!", PlayerName, Score, ModelName);
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+				{
+					FormatModelName(ModelName, sizeof(ModelName), i);
+					CPrintToChat(i, "%t %t", "Tag", "YouDeployed_Mode3", Player, Score, ModelName);
+				}
+			}
 		}
 	}
+}
+
+void FormatModelName(char[] ModelName, int size, int client)
+{
+	if (StrContains(ModelName, "incendiary_ammo", false) >= 0)
+		Format(ModelName, size, "%T", "IncendiaryAmmo", client);
+	else if (StrContains(ModelName, "exploding_ammo", false) >= 0)
+		Format(ModelName, size, "%T","ExplodingAmmo", client);
+	else
+		Format(ModelName, size, "%T","UNKNOWN", client);
 }
 
 // L4D2 gascan pour completed event.
@@ -1629,19 +1721,20 @@ void Event_GascanPoured(Event event, const char[] name, bool dontBroadcast)
 	{
 		int Mode = g_hCvar_AnnounceMode.IntValue;
 
-		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Player, "You have earned \x04%i \x01points for successfully \x05Pouring a Gascan\x01!", Score);
+		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Player])
+			CPrintToChat(Player, "%t %t", "Tag", "YouPouredGasCan_Mode1or2", Score);
 		else if (Mode == 3)
 		{
-			char PlayerName[MAX_LINE_WIDTH];
-			GetClientName(Player, PlayerName, sizeof(PlayerName));
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for successfully \x05Pouring a Gascan\x01!", PlayerName, Score);
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "YouPouredGasCan_Mode3", Player, Score);
+			}
 		}
 	}
 }
 
 // Achievement earned.
-
 /*
 56 - Helping Hand
 57 - Field Medic
@@ -1822,16 +1915,15 @@ void Event_PlayerPounced(Event event, const char[] name, bool dontBroadcast)
 
 	int Mode = g_hCvar_AnnounceMode.IntValue;
 
-	char AttackerName[MAX_LINE_WIDTH];
-	GetClientName(Attacker, AttackerName, sizeof(AttackerName));
 	char AttackerID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Attacker, AttackerID, sizeof(AttackerID));
-	char VictimName[MAX_LINE_WIDTH];
-	GetClientName(Victim, VictimName, sizeof(VictimName));
 
 	int Score = 0;
 	char Label[32];
 	char query[1024];
+
+	bool bIsDeathFromAbove = false;
+	bool bIsPainFromAbove = false;
 
 	if (Dmg >= PerfectDmgLimit)
 	{
@@ -1844,7 +1936,8 @@ void Event_PlayerPounced(Event event, const char[] name, bool dontBroadcast)
 			Format(query, sizeof(query), "UPDATE %splayers SET points_scavenge_infected = points_scavenge_infected + %i, award_pounce_perfect = award_pounce_perfect + 1 WHERE steamid = '%s'", g_sDbPrefix, Score, AttackerID);
 		else
 			Format(query, sizeof(query), "UPDATE %splayers SET points_mutations = points_mutations + %i, award_pounce_perfect = award_pounce_perfect + 1 WHERE steamid = '%s'", g_sDbPrefix, Score, AttackerID);
-		Format(Label, sizeof(Label), "Death From Above");
+
+		bIsDeathFromAbove = true;	
 
 		if (g_bEnableSounds_Hunter_Perfect && g_hCvar_SoundsEnabled.BoolValue)
 			EmitSoundToAll(g_sStatsSound_Hunter_Perfect);
@@ -1860,16 +1953,39 @@ void Event_PlayerPounced(Event event, const char[] name, bool dontBroadcast)
 			Format(query, sizeof(query), "UPDATE %splayers SET points_scavenge_infected = points_scavenge_infected + %i, award_pounce_nice = award_pounce_nice + 1 WHERE steamid = '%s'", g_sDbPrefix, Score, AttackerID);
 		else
 			Format(query, sizeof(query), "UPDATE %splayers SET points_mutations = points_mutations + %i, award_pounce_nice = award_pounce_nice + 1 WHERE steamid = '%s'", g_sDbPrefix, Score, AttackerID);
-		Format(Label, sizeof(Label), "Pain From Above");
+
+		bIsPainFromAbove = true;
 	}
 
 	SendSQLUpdate(query);
 	UpdateMapStat("points_infected", Score);
 
-	if (Mode == 1 || Mode == 2)
-		StatsPrintToChat(Attacker, "You have earned \x04%i \x01points for landing a \x05%s \x01Pounce on \x05%s\x01!", Score, Label, VictimName);
+	if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Attacker])
+	{
+		if (bIsDeathFromAbove)
+			Format(Label, sizeof(Label), "%T", "DeathFromAbove", Attacker);
+
+		if (bIsPainFromAbove)
+			Format(Label, sizeof(Label), "%T", "PainFromAbove", Attacker);
+
+		CPrintToChat(Attacker, "%t %t", "Tag", "YouLandedPounce_Mode1or2", Score, Label, Victim);
+	}
 	else if (Mode == 3)
-		StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for landing a \x05%s \x01Pounce on \x05%s\x01!", AttackerName, Score, Label, VictimName);
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (!g_bClientRankMute[i])
+			{
+				if (bIsDeathFromAbove)
+					Format(Label, sizeof(Label), "%T", "DeathFromAbove", i);
+
+				if (bIsPainFromAbove)
+					Format(Label, sizeof(Label), "%T", "PainFromAbove", i);
+
+				CPrintToChat(i, "%t %t", "Tag", "YouLandedPounce_Mode3", Attacker, Score, Label, Victim);
+			}
+		}
+	}
 }
 
 // Revive friendly code.
@@ -1891,13 +2007,9 @@ void Event_RevivePlayer(Event event, const char[] name, bool dontBroadcast)
 	if (IsClientBot(Savior) || IsClientBot(Victim))
 		return;
 
-	char SaviorName[MAX_LINE_WIDTH];
-	GetClientName(Savior, SaviorName, sizeof(SaviorName));
 	char SaviorID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Savior, SaviorID, sizeof(SaviorID));
 
-	char VictimName[MAX_LINE_WIDTH];
-	GetClientName(Victim, VictimName, sizeof(VictimName));
 	char VictimID[MAX_LINE_WIDTH];
 	GetClientRankAuthString(Victim, VictimID, sizeof(VictimID));
 
@@ -1915,10 +2027,16 @@ void Event_RevivePlayer(Event event, const char[] name, bool dontBroadcast)
 
 	if (Score > 0)
 	{
-		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(Savior, "You have earned \x04%i \x01points for Reviving \x05%s\x01!", Score, VictimName);
+		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Savior])
+			CPrintToChat(Savior, "%t %t", "Tag", "YouRevived_Mode1or2", Score, Victim);
 		else if (Mode == 3)
-			StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for Reviving \x05%s\x01!", SaviorName, Score, VictimName);
+		{
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "YouRevived_Mode3", Savior, Score, Victim);
+			}
+		}
 	}
 }
 
@@ -1998,12 +2116,8 @@ void Event_Award_L4D1(Event event, const char[] name, bool dontBroadcast)
 
 	int SubjectID = event.GetInt("subjectentid");
 	int Mode = g_hCvar_AnnounceMode.IntValue;
-	char UserName[MAX_LINE_WIDTH];
-	GetClientName(User, UserName, sizeof(UserName));
 
 	int Recipient;
-	char RecipientName[MAX_LINE_WIDTH];
-
 	int Score = 0;
 	char AwardSQL[128];
 	int AwardID = event.GetInt("award");
@@ -2033,17 +2147,22 @@ void Event_Award_L4D1(Event event, const char[] name, bool dontBroadcast)
 			return;
 
 		Score = ModifyScoreDifficulty(g_hCvar_HelpScore[HELP_RESCUE].IntValue, 2, 3, TEAM_SURVIVORS);
-		GetClientName(Recipient, RecipientName, sizeof(RecipientName));
 		Format(AwardSQL, sizeof(AwardSQL), ", award_rescue = award_rescue + 1");
 		UpdateMapStat("points", Score);
 		AddScore(User, Score);
 
 		if (Score > 0)
 		{
-			if (Mode == 1 || Mode == 2)
-				StatsPrintToChat(User, "You have earned \x04%i \x01points for Rescuing \x05%s\x01!", Score, RecipientName);
+			if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[User])
+				CPrintToChat(User, "%t %t", "Tag", "YouRescued_Mode1or2", Score, Recipient);
 			else if (Mode == 3)
-				StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for Rescuing \x05%s\x01!", UserName, Score, RecipientName);
+			{
+				for (int i = 1; i <= MaxClients; i++)
+				{
+					if (!g_bClientRankMute[i])
+						CPrintToChat(i, "%t %t", "Tag", "YouRescued_Mode3", User, Score, Recipient);
+				}
+			}
 		}
 	}
 	else if (AwardID == 80) // Kill Tank with no deaths
@@ -2064,9 +2183,9 @@ void Event_Award_L4D1(Event event, const char[] name, bool dontBroadcast)
 //		Score = Score * -1;
 //
 //		if (Mode == 1 || Mode == 2)
-//			StatsPrintToChat(User, "You have \x03LOST \x04%i \x01points for \x03Team Killing!", Score);
+//			StatsPrintToChat(User, "You have {lightgreen}LOST {green}%i {default}points for {lightgreen}Team Killing!", Score);
 //		else if (Mode == 3)
-//			StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for \x03Team Killing!", UserName, Score);
+//			StatsPrintToChatAll("{olive}%s {default}has {lightgreen}LOST {green}%i {default}points for {lightgreen}Team Killing!", UserName, Score);
 //	}
 	else if (AwardID == 85) // Left friendly for dead
 	{
@@ -2083,10 +2202,16 @@ void Event_Award_L4D1(Event event, const char[] name, bool dontBroadcast)
 		else
 			Mode = 0;
 
-		if (Mode == 1 || Mode == 2)
-			StatsPrintToChat(User, "You have \x03LOST \x04%i \x01points for letting \x03Infected In The Safe Room!", Score);
+		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[User])
+			CPrintToChat(User, "%t %t", "Tag", "YouLetInfectedInSafeRoom_Mode1or2", Score);
 		else if (Mode == 3)
-			StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for letting \x03Infected In The Safe Room!", UserName, Score);
+		{
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "YouLetInfectedInSafeRoom_Mode3", User, Score);
+			}
+		}
 
 		Score = Score * -1;
 	}
@@ -2100,8 +2225,8 @@ void Event_Award_L4D1(Event event, const char[] name, bool dontBroadcast)
 		Score = ModifyScoreDifficultyNR(g_hCvar_ActionScore[ACT_RESTART].IntValue, 2, 3, TEAM_SURVIVORS);
 		Score = 400 - Score;
 
-		if (Mode)
-			StatsPrintToChat(User, "\x03ALL SURVIVORS \x01have \x03LOST \x04%i \x01points for \x03All Survivors Dying!", Score);
+		if (Mode && !g_bClientRankMute[User])
+			CPrintToChat(User, "%t %t", "Tag", "LosePointsByAllSurvivorsDied", Score);
 
 		Score = Score * -1;
 	}
@@ -2165,12 +2290,8 @@ void Event_Award_L4D2(Event event, const char[] name, bool dontBroadcast)
 
 	int SubjectID = event.GetInt("subjectentid");
 	int Mode = g_hCvar_AnnounceMode.IntValue;
-	char UserName[MAX_LINE_WIDTH];
-	GetClientName(User, UserName, sizeof(UserName));
 
 	int Recipient;
-	char RecipientName[MAX_LINE_WIDTH];
-
 	int Score = 0;
 	char AwardSQL[128];
 	int AwardID = event.GetInt("award");
@@ -2238,15 +2359,22 @@ void Event_Award_L4D2(Event event, const char[] name, bool dontBroadcast)
 			return;
 
 		Score = ModifyScoreDifficulty(g_hCvar_HelpScore[HELP_RESCUE].IntValue, 2, 3, TEAM_SURVIVORS);
-		GetClientName(Recipient, RecipientName, sizeof(RecipientName));
 		Format(AwardSQL, sizeof(AwardSQL), ", award_rescue = award_rescue + 1");
 		UpdateMapStat("points", Score);
 		AddScore(User, Score);
 
 		if (Score > 0)
 		{
-			if (Mode == 1 || Mode == 2) StatsPrintToChat(User, "You have earned \x04%i \x01points for Rescuing \x05%s\x01!", Score, RecipientName);
-			else if (Mode == 3) StatsPrintToChatAll("\x05%s \x01has earned \x04%i \x01points for Rescuing \x05%s\x01!", UserName, Score, RecipientName);
+			if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[User])
+				CPrintToChat(User, "%t %t", "Tag", "YouRescued_Mode1or2", Score, Recipient);
+			else if (Mode == 3)
+			{
+				for (int i = 1; i <= MaxClients; i++)
+				{
+					if (!g_bClientRankMute[i])
+						CPrintToChat(i, "%t %t", "Tag", "YouRescued_Mode3", User, Score, Recipient);
+				}
+			}
 		}
 	}
 	else if (AwardID == 81) // Kill Tank with no deaths
@@ -2267,9 +2395,9 @@ void Event_Award_L4D2(Event event, const char[] name, bool dontBroadcast)
 //		Score = Score * -1;
 //
 //		if (Mode == 1 || Mode == 2)
-//			StatsPrintToChat(User, "You have \x03LOST \x04%i \x01points for \x03Team Killing!", Score);
+//			StatsPrintToChat(User, "You have {lightgreen}LOST {green}%i {default}points for {lightgreen}Team Killing!", Score);
 //		else if (Mode == 3)
-//			StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for \x03Team Killing!", UserName, Score);
+//			StatsPrintToChatAll("{olive}%s {default}has {lightgreen}LOST {green}%i {default}points for {lightgreen}Team Killing!", UserName, Score);
 //	}
 	else if (AwardID == 86) // Left friendly for dead
 	{
@@ -2286,8 +2414,16 @@ void Event_Award_L4D2(Event event, const char[] name, bool dontBroadcast)
 		else
 			Mode = 0;
 
-		if (Mode == 1 || Mode == 2) StatsPrintToChat(User, "You have \x03LOST \x04%i \x01points for letting \x03Infected In The Safe Room!", Score);
-		else if (Mode == 3) StatsPrintToChatAll("\x05%s \x01has \x03LOST \x04%i \x01points for letting \x03Infected In The Safe Room!", UserName, Score);
+		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[User])
+			CPrintToChat(User, "%t %t", "Tag", "YouLetInfectedInSafeRoom_Mode1or2", Score);
+		else if (Mode == 3)
+		{
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (!g_bClientRankMute[i])
+					CPrintToChat(i, "%t %t", "Tag", "YouLetInfectedInSafeRoom_Mode3", User, Score);
+			}
+		}
 
 		Score = Score * -1;
 	}
@@ -2301,8 +2437,8 @@ void Event_Award_L4D2(Event event, const char[] name, bool dontBroadcast)
 		Score = ModifyScoreDifficultyNR(g_hCvar_ActionScore[ACT_RESTART].IntValue, 2, 3, TEAM_SURVIVORS);
 		Score = 400 - Score;
 
-		if (Mode)
-			StatsPrintToChat(User, "\x03ALL SURVIVORS \x01have \x03LOST \x04%i \x01points for \x03All Survivors Dying!", Score);
+		if (Mode && !g_bClientRankMute[User])
+			CPrintToChat(User, "%t %t", "Tag", "LosePointsByAllSurvivorsDied", Score);
 
 		Score = Score * -1;
 	}
@@ -2382,14 +2518,14 @@ void Event_CarAlarm(Event event, const char[] name, bool dontBroadcast)
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS)
+		if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS)
 		{
 			GetClientRankAuthString(i, iID, sizeof(iID));
 			Format(query, sizeof(query), "UPDATE %splayers SET %s = %s - %i WHERE steamid = '%s'", g_sDbPrefix, UpdatePoints, UpdatePoints, Score, iID);
 			SendSQLUpdate(query);
 
 			if (Mode)
-				StatsPrintToChat(i, "\x03ALL SURVIVORS \x01have \x03LOST \x04%i \x01points for \x03Triggering the Car Alarm\x01!", Score);
+				CPrintToChat(i, "%t %t", "Tag", "AllSurvivorsLosePointsByCarAlarm", Score);
 		}
 	}
 }
@@ -2440,9 +2576,11 @@ void Event_WitchCrowned(Event event, const char[] name, bool dontBroadcast)
 
 		if (Score > 0 && g_hCvar_AnnounceMode.IntValue)
 		{
-			char Name[MAX_LINE_WIDTH];
-			GetClientName(Killer, Name, sizeof(Name));
-			StatsPrintToChatTeam(TEAM_SURVIVORS, "\x05%s \x01has earned \x04%i \x01points for \x04Crowning the Witch\x01!", Name, Score);
+			for (int i = 1; i <= MaxClients; i++)
+			{
+				if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS)
+					CPrintToChat(i, "%t %t", "Tag", "YouWereCrownedByWitch", Killer, Score);
+			}
 		}
 	}
 }

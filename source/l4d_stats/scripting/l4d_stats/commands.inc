@@ -49,7 +49,7 @@ Chat/command handling and panels for Rank and Top10
 //	PrintToConsole(0, "Added 10 seconds to maps table current map.");
 //	float ReductionFactor = GetMedkitPointReductionFactor();
 //
-//	StatsPrintToChat(client, "\x03ALL SURVIVORS \x01now earns only \x04%i percent \x01of their normal points after using their \x05%i%s Medkit\x01!", RoundToNearest(ReductionFactor * 100), g_iMedkitsUsedCounter, (g_iMedkitsUsedCounter == 1 ? "st" : (g_iMedkitsUsedCounter == 2 ? "nd" : (g_iMedkitsUsedCounter == 3 ? "rd" : "th"))), GetClientTeam(client));
+//	StatsPrintToChat(client, "{lightgreen}ALL SURVIVORS {default}now earns only {green}%i percent {default}of their normal points after using their {olive}%i%s Medkit{default}!", RoundToNearest(ReductionFactor * 100), g_iMedkitsUsedCounter, (g_iMedkitsUsedCounter == 1 ? "st" : (g_iMedkitsUsedCounter == 2 ? "nd" : (g_iMedkitsUsedCounter == 3 ? "rd" : "th"))), GetClientTeam(client));
 //}
 
 Action HandleCommands(int client, const char[] Text)
@@ -186,16 +186,13 @@ Action Cmd_Say(int client, int args)
 // Show current Timed Maps timer.
 Action Cmd_ShowTimedMapsTimer(int client, int args)
 {
-	if (client != 0 && !IsClientConnected(client) && !IsClientInGame(client))
-		return Plugin_Handled;
-
-	if (client != 0 && IsClientBot(client))
+	if (client == 0 || !IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	if (g_fMapTimingStartTime <= 0.0)
 	{
 		if (client == 0) PrintToConsole(0, "[RANK] Map timer has not started");
-		else StatsPrintToChatPreFormatted(client, "Map timer has not started");
+		else CPrintToChat(client, "%t %t", "Tag","MapTimerNotStarted");
 
 		return Plugin_Handled;
 	}
@@ -206,7 +203,7 @@ Action Cmd_ShowTimedMapsTimer(int client, int args)
 	SetTimeLabel(CurrentMapTimer, TimeLabel, sizeof(TimeLabel));
 
 	if (client == 0) PrintToConsole(0, "[RANK] Current map timer: %s", TimeLabel);
-	else StatsPrintToChat(client, "Current map timer: \x04%s", TimeLabel);
+	else CPrintToChat(client, "%t %t", "Tag","CurrentMapTimer", TimeLabel);
 
 	return Plugin_Handled;
 }
@@ -214,10 +211,7 @@ Action Cmd_ShowTimedMapsTimer(int client, int args)
 // Begin generating the NEXTRANK display panel.
 Action Cmd_ShowNextRank(int client, int args)
 {
-	if (!IsClientConnected(client) && !IsClientInGame(client))
-		return Plugin_Handled;
-
-	if (IsClientBot(client))
+	if (client == 0 || !IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	char SteamID[MAX_LINE_WIDTH];
@@ -260,7 +254,7 @@ Action Cmd_ShuffleTeams(int client, int args)
 	if (g_hRankVoteTimer != null)
 	{
 		delete g_hRankVoteTimer;
-		StatsPrintToChatAllPreFormatted("Team shuffle executed by administrator.");
+		CPrintToChatAll("%t %t", "Tag","ShuffledByAdmin");
 	}
 
 	PrintToConsole(client, "[RANK] Executing team shuffle...");
@@ -314,10 +308,7 @@ Action Cmd_ClearRank(int client, int args)
 // Toggle client rank mute.
 Action Cmd_ToggleClientRankMute(int client, int args)
 {
-	if (client == 0)
-		return Plugin_Handled;
-
-	if (!IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
+	if (client == 0 || !IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	char SteamID[MAX_LINE_WIDTH];
@@ -344,10 +335,7 @@ Action Cmd_ShowMotd(int client, int args)
 // Set client rank mute.
 Action Cmd_ClientRankMute(int client, int args)
 {
-	if (client == 0)
-		return Plugin_Handled;
-
-	if (!IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
+	if (client == 0 || !IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	if (args != 1)
@@ -381,7 +369,10 @@ Action Cmd_ClientRankMute(int client, int args)
 
 void AnnounceClientRankMute(int client)
 {
-	StatsPrintToChat2(client, true, "You %s \x01the \x05Plugin\x01.", (g_bClientRankMute[client] ? "\x04MUTED" : "\x03UNMUTED"));
+	char muted[32], unmuted[32];
+	Format(muted, sizeof(muted), "%T", "Muted", client);
+	Format(unmuted, sizeof(unmuted), "%T", "Unmuted", client);
+	CPrintToChat(client, "%t %t", "Tag", "YouMutedPlugin", (g_bClientRankMute[client] ? muted : unmuted));
 }
 
 // Start RANKVOTE.
@@ -393,7 +384,7 @@ Action Cmd_RankVote(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (!IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
+	if (client == 0 || !IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	int	ClientFlags = GetUserFlagBits(client);
@@ -403,7 +394,7 @@ Action Cmd_RankVote(int client, int args)
 
 	if (!IsAdmin && ClientTeam != TEAM_SURVIVORS && ClientTeam != TEAM_INFECTED)
 	{
-		StatsPrintToChatPreFormatted2(client, true, "The spectators cannot initiate the \x04Rank Vote\x01.");
+		CPrintToChat(client, "%t %t", "Tag", "SpecNoteAllowed");
 		return Plugin_Handled;
 	}
 
@@ -415,7 +406,7 @@ Action Cmd_RankVote(int client, int args)
 // Generate the TIMEDMAPS display menu.
 Action Cmd_TimedMaps(int client, int args)
 {
-	if (client == 0 || !IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
+	if (client == 0 || !IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	char query[256];
@@ -428,7 +419,7 @@ Action Cmd_TimedMaps(int client, int args)
 // Generate the MAPTIME display menu.
 Action Cmd_MapTimes(int client, int args)
 {
-	if (client == 0 || !IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
+	if (client == 0 || !IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	char Info[MAX_LINE_WIDTH], CurrentMapName[MAX_LINE_WIDTH];
@@ -444,10 +435,10 @@ Action Cmd_MapTimes(int client, int args)
 // Generate the SHOWMAPTIME display menu.
 Action Cmd_ShowMapTimes(int client, int args)
 {
-	if (client == 0 || !IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
+	if (client == 0 || !IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
-	StatsPrintToChatPreFormatted2(client, true, "\x05NOT IMPLEMENTED YET");
+	CPrintToChat(client, "{olive}NOT IMPLEMENTED YET");
 
 	return Plugin_Handled;
 }
@@ -455,7 +446,7 @@ Action Cmd_ShowMapTimes(int client, int args)
 // Generate the SHOWPPM display menu.
 Action Cmd_ShowPPMs(int client, int args)
 {
-	if (!IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
+	if (client == 0 || !IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	char query[1024];
@@ -469,7 +460,7 @@ Action Cmd_ShowPPMs(int client, int args)
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientBot(i) || !IsClientConnected(i) || !IsClientInGame(i))
+		if (IsClientBot(i) || !IsClientInGame(i))
 			continue;
 
 		if (counter++ > 0)
@@ -498,7 +489,7 @@ Action Cmd_ShowPPMs(int client, int args)
 // Generate the SHOWRANK display menu.
 Action Cmd_ShowRanks(int client, int args)
 {
-	if (!IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
+	if (client == 0 || !IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	char query[1024];
@@ -512,7 +503,7 @@ Action Cmd_ShowRanks(int client, int args)
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientBot(i) || !IsClientConnected(i) || !IsClientInGame(i))
+		if (IsClientBot(i) || !IsClientInGame(i))
 			continue;
 
 		if (counter++ > 0)
@@ -541,7 +532,7 @@ Action Cmd_ShowRanks(int client, int args)
 // Generate the TOPPPM display panel.
 Action Cmd_ShowTop10PPM(int client, int args)
 {
-	if (!IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
+	if (client == 0 || !IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	char query[1024];
@@ -557,7 +548,7 @@ Action Cmd_ShowTop10PPM(int client, int args)
 // Generate the TOP10 display panel.
 Action Cmd_ShowTop10(int client, int args)
 {
-	if (!IsClientConnected(client) && !IsClientInGame(client) && IsClientBot(client))
+	if (client == 0 || !IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	char query[512];
@@ -579,10 +570,7 @@ Action Cmd_ShowRank(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (!IsClientConnected(client) && !IsClientInGame(client))
-		return Plugin_Handled;
-
-	if (IsClientBot(client))
+	if (!IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	char SteamID[MAX_LINE_WIDTH];
@@ -603,10 +591,7 @@ Action Cmd_ShowRankMenu(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if (!IsClientConnected(client) && !IsClientInGame(client))
-		return Plugin_Handled;
-
-	if (IsClientBot(client))
+	if (!IsClientInGame(client) || IsClientBot(client))
 		return Plugin_Handled;
 
 	DisplayRankMenu(client);

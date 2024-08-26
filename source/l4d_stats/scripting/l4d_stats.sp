@@ -2,9 +2,9 @@
 #pragma newdecls required
 
 #include <sourcemod>
-//#include <clientprefs>	// to do
+//#include <clientprefs>	// do we need this?
 #include <sdktools>
-//#include <colors>			// to do
+#include <colors>
 #undef REQUIRE_PLUGIN
 #include <adminmenu>
 
@@ -22,6 +22,7 @@ public Plugin myinfo =
 };
 
 // Modules here
+#include "l4d_stats/utils.inc"
 #include "l4d_stats/setup.inc"
 #include "l4d_stats/commands.inc"
 #include "l4d_stats/menus.inc"
@@ -29,7 +30,6 @@ public Plugin myinfo =
 #include "l4d_stats/dbi.inc"
 #include "l4d_stats/actions.inc"
 #include "l4d_stats/timers.inc"
-#include "l4d_stats/utils.inc"
 
 // here to define the include functions.
 #include "l4d_stats/natives.inc"
@@ -61,7 +61,7 @@ public void OnPluginStart()
 	g_bCommandsRegistered = false;
 
 	// load translation here
-	// LoadTranslation();
+	LoadTranslation(TRANSLATION_FILE);
 
 	// setup all convars here
 	SetupConVars();
@@ -83,7 +83,6 @@ public void OnPluginStart()
 	// Gamemode
 	g_hCvar_Gamemode.GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
 	g_iCurrentGamemodeID = GetCurrentGamemodeID();
-	SetCurrentGamemodeName();
 
 	// RegConsoleCmd("l4d_stats_test", cmd_StatsTest);
 
@@ -139,7 +138,6 @@ public void OnMapStart()
 {
 	g_hCvar_Gamemode.GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
 	g_iCurrentGamemodeID = GetCurrentGamemodeID();
-	SetCurrentGamemodeName();
 	ResetVars();
 }
 

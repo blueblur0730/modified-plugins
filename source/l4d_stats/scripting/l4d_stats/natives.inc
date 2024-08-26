@@ -495,10 +495,10 @@ any Native_GetPlayerPPM(Handle plugin, int numParams)
 		s_bIsNotFound = false;
 		LogError("[L4D Stats]: Query succeeded but no player found.");
 		delete s_hArray;
-		return 0;
+		return 0.0;
 	}
 
-	int iPPM = 0;
+	float iPPM = 0.0;
 	iPPM = s_hArray.Get(0);
 	delete s_hArray;
 	return iPPM;
@@ -655,12 +655,12 @@ void NativeQuery_GetPlayerTimerBySteamID(Handle owner, DBResultSet hndl, const c
 
 void NativeQuery_GetPlayerPPMByRank(Handle owner, DBResultSet hndl, const char[] error, int data)
 {
-	FetchIntData(hndl, data);
+	FetchFloatData(hndl, data);
 }
 
 void NativeQuery_GetPlayerPPMBySteamID(Handle owner, DBResultSet hndl, const char[] error, any data)
 {
-	FetchIntDataEx(hndl);
+	FetchFloatDataEx(hndl);
 }
 
 void NativeQuery_GetPlayerRankBySteamID(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
@@ -744,4 +744,37 @@ void FetchIntDataEx(DBResultSet hndl)
 
 	if (hndl.FetchRow())
 		s_hArray.Push(hndl.FetchInt(0));
+}
+
+void FetchFloatData(DBResultSet hndl, int data)
+{
+	if (!hndl.RowCount) s_bIsNotFound = true;
+	else s_bIsNotFound = false;
+
+	if (!s_hArray)
+		return;
+
+	int count = 0;
+	while (hndl.FetchRow())
+	{
+		count++;
+		
+		if (data == count)
+		{
+			s_hArray.Push(hndl.FetchFloat(0));
+			break;
+		}
+	}
+}
+
+void FetchFloatDataEx(DBResultSet hndl)
+{
+	if (!hndl.RowCount) s_bIsNotFound = true;
+	else s_bIsNotFound = false;
+
+	if (!s_hArray)
+		return;
+
+	if (hndl.FetchRow())
+		s_hArray.Push(hndl.FetchFloat(0));
 }

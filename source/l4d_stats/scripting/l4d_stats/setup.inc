@@ -48,7 +48,6 @@ void SetupConVars()
 	g_hCvar_AnnouncePlayerJoined								 = CreateConVar("l4d_stats_announceplayerjoined", "1", "Chat announcment for player joined.", _, true, 0.0, true, 1.0);
 	g_hCvar_AnnounceMotd										 = CreateConVar("l4d_stats_announcemotd", "1", "Chat announcment for the message of the day.", _, true, 0.0, true, 1.0);
 	g_hCvar_AnnounceMode										 = CreateConVar("l4d_stats_announcemode", "1", "Chat announcment mode. 0 = Off, 1 = Player Only, 2 = Player Only w/ Public Headshots, 3 = All Public", _, true, 0.0, true, 3.0);
-	g_hCvar_AnnounceToTeam										 = CreateConVar("l4d_stats_announceteam", "2", "Chat announcment team messages to the team only mode. 0 = Print messages to all teams, 1 = Print messages to own team only, 2 = Print messages to own team and spectators only", _, true, 0.0, true, 2.0);
 	// g_hCvar_AnnounceSpecial = CreateConVar("l4d_stats_announcespecial", "1", "Chat announcment mode for special events. 0 = Off, 1 = Player Only, 2 = Print messages to all teams, 3 = Print messages to own team only, 4 = Print messages to own team and spectators only", _, true, 0.0, true, 4.0);
 	g_hCvar_MedkitMode											 = CreateConVar("l4d_stats_medkitmode", "0", "Medkit point award mode. 0 = Based on amount healed, 1 = Static amount", _, true, 0.0, true, 1.0);
 	g_hCvar_SiteURL												 = CreateConVar("l4d_stats_siteurl", "", "Community site URL, for rank panel display", _);
@@ -315,6 +314,5 @@ void OnGamemodeChanged(ConVar convar, const char[] oldValue, const char[] newVal
 	{
 		g_hCvar_Gamemode.GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
 		g_iCurrentGamemodeID = GetCurrentGamemodeID();
-		SetCurrentGamemodeName();
 	}
 }
