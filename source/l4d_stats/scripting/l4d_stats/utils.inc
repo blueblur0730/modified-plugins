@@ -371,7 +371,7 @@ bool CheckHumans()
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
+		if (IsClientInGame(i) && !IsClientBot(i))
 			Humans++;
 	}
 

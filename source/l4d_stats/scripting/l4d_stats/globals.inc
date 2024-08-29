@@ -3,7 +3,7 @@
 #endif
 #define _l4d_stats_globals_included
 
-#define PLUGIN_VERSION "2.4"
+#define PLUGIN_VERSION "2.5"
 
 // Set to false when stats seem to work properly
 #define DEBUG 0
@@ -384,7 +384,7 @@ int g_iAnnounceCounter[MAXPLAYERS + 1];
 int g_iPostAdminCheckRetryCounter[MAXPLAYERS + 1];
 
 int g_iProtectedFriendlyCounter[MAXPLAYERS + 1];
-Handle g_hTimerProtectedFriendly[MAXPLAYERS + 1];
+Handle g_hTimerProtectedFriendly[MAXPLAYERS + 1] = { null, ... };
 
 // Announce rank
 Handle g_hTimerRankChangeCheck[MAXPLAYERS + 1] = { null, ... };

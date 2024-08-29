@@ -1618,14 +1618,11 @@ void ResetInfVars()
 
 		delete g_hTimerBoomerPerfectCheck[i];
 		delete g_hTimerInfectedDamageCheck[i];
-
 		delete g_hTimerProtectedFriendly[i];
 		g_iProtectedFriendlyCounter[i] = 0;
 
 		if (g_hChargerImpactCounterTimer[i] != null)
 			delete g_hChargerImpactCounterTimer[i];
-
-		delete g_hChargerImpactCounterTimer[i];
 	}
 }
 
@@ -1661,8 +1658,6 @@ void ResetVars()
 		if (g_hTimerRankChangeCheck[i] != null)
 			delete g_hTimerRankChangeCheck[i];
 
-		delete g_hTimerRankChangeCheck[i];
-
 		for (j = 0; j < MAXPLAYERS + 1; j++)
 		{
 			g_bFriendlyFireCooldown[i][j] = false;
@@ -1672,8 +1667,7 @@ void ResetVars()
 		if (g_hMeleeKillTimer[i] != null)
 			delete g_hMeleeKillTimer[i];
 
-		delete g_hMeleeKillTimer[i];
-		g_iMeleeKillCounter[i]			 = 0;
+		g_iMeleeKillCounter[i] = 0;
 
 		g_iPostAdminCheckRetryCounter[i] = 0;
 	}
@@ -1691,8 +1685,6 @@ void StartRankChangeCheck(int Client)
 {
 	if (g_hTimerRankChangeCheck[Client] != null)
 		delete g_hTimerRankChangeCheck[Client];
-
-	delete g_hTimerRankChangeCheck[Client];
 
 	if (Client == 0 || IsClientBot(Client))
 		return;
@@ -1840,6 +1832,20 @@ void DoShowPlayerJoined(int client)
 
 	char clientId[MAX_LINE_WIDTH];
 	GetClientRankAuthString(client, clientId, sizeof(clientId));
-
 	QueryClientPointsSteamID(client, clientId, GetClientPointsPlayerJoined);
+}
+
+void DeleteStringMaps()
+{
+	if (g_hMapTimingSurvivors)
+		delete g_hMapTimingSurvivors;
+
+	if (g_hMapTimingInfected)
+		delete g_hMapTimingInfected;
+
+	if (g_hFriendlyFireDamageTrie)
+		delete g_hFriendlyFireDamageTrie;
+
+	if (g_hPlayerRankVoteTrie)
+		delete g_hPlayerRankVoteTrie;
 }

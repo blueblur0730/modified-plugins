@@ -247,17 +247,23 @@ void PrechaeResources()
 
 void CreateNatives()
 {
-	CreateNative("L4DStats.TotalPlayer.get", Native_GetTotalPlayer);
-	CreateNative("L4DStats.Connected", Native_IsConnected);
-	CreateNative("L4DStats.CheckDBValidity", Native_CheckDBValidity)
-	CreateNative("L4DStats.CheckMap", Native_CheckMap);
-	CreateNative("L4DStats.CheckPlayer", Native_CheckPlayer);
-	CreateNative("L4DStats.GetSteamID", Native_GetPlayerSteamID);
-	CreateNative("L4DStats.GetName", Native_GetPlayerName);
-	CreateNative("L4DStats.GetPoints", Native_GetPlayerPoints);
-	CreateNative("L4DStats.GetTime", Native_GetPlayerTime);
-	CreateNative("L4DStats.GetPPM", Native_GetPlayerPPM);
-	CreateNative("L4DStats.GetRank", Native_GetPlayerRank);
+	CreateNative("L4DStats_IsConnected", Native_IsConnected);
+	CreateNative("L4DStats_CheckValidity", Native_CheckDBValidity);
+
+	CreateNative("L4DStats_Player.L4DStasts_Player", Native_Prepare);
+	CreateNative("L4DStats_Player.deleteThis", Native_deleteThis);
+	CreateNative("L4DStats_Player.Rewrite", Native_Rewrite);
+	CreateNative("L4DStats_Player.TotalPlayer.get", Native_GetTotalPlayer);
+	CreateNative("L4DStats_Player.CheckPlayer", Native_CheckPlayer);
+	CreateNative("L4DStats_Player.GetSteamID", Native_GetPlayerSteamID);
+	CreateNative("L4DStats_Player.GetName", Native_GetPlayerName);
+	CreateNative("L4DStats_Player.GetPoints", Native_GetPlayerPoints);
+	CreateNative("L4DStats_Player.GetTime", Native_GetPlayerTime);
+	CreateNative("L4DStats_Player.GetPPM", Native_GetPlayerPPM);
+	CreateNative("L4DStats_Player.GetRank", Native_GetPlayerRank);
+	CreateNative("L4DStats_Player.UpdatePoints", Native_UpdatePoints);
+
+	CreateNative("L4DStats_Map.CheckMap", Native_CheckMap);
 }
 
 void OnLanCvarChanged(ConVar convar, const char[] oldValue, const char[] newValue)

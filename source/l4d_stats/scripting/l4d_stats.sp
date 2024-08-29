@@ -163,7 +163,7 @@ public void OnPluginEnd()
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
+		if (IsClientInGame(i) && !IsClientBot(i))
 		{
 			switch (GetClientTeam(i))
 			{
@@ -183,6 +183,10 @@ public void OnPluginEnd()
 	//	CloseHandle(ClearPlayerMenu);
 	//	ClearPlayerMenu = INVALID_HANDLE;
 	// }
+
+	ResetVars();
+	delete g_hTM_RankAdminMenu;
+	DeleteStringMaps();
 }
 
 // Update the player's interstitial stats, since they may have

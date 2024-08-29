@@ -68,7 +68,7 @@ Action Timer_AnnounceConnect(Handle timer, int client)
 
 Action Timer_ProtectedFriendly(Handle timer, int client)
 {
-	g_hTimerProtectedFriendly[client]	  = null;
+	delete g_hTimerProtectedFriendly[client];
 	int ProtectedFriendlies	= g_iProtectedFriendlyCounter[client];
 	g_iProtectedFriendlyCounter[client] = 0;
 

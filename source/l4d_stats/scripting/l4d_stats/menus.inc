@@ -1148,7 +1148,7 @@ void DisplayRankMenu(int client)
 		EmitSoundToClient(client, g_sStatsSound_Rankmenu_Show);
 }
 
-void CreateRanksMenu(Handle owner, DBResultSet hndl, const char[] error, int client)
+void CreateRanksMenu(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client || !hndl)
 	{
@@ -1186,7 +1186,7 @@ void CreateRanksMenu(Handle owner, DBResultSet hndl, const char[] error, int cli
 	menu.Display(client, 30);
 }
 
-void CreateTimedMapsMenu(Handle owner, DBResultSet hndl, const char[] error, int client)
+void CreateTimedMapsMenu(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client || !hndl)
 	{
@@ -1255,7 +1255,7 @@ void CreateTimedMapsMenu(Handle owner, DBResultSet hndl, const char[] error, int
 	menu.Display(client, 30);
 }
 
-void CreateTimedMapsMenu2(Handle owner, DBResultSet hndl, const char[] error, int client)
+void CreateTimedMapsMenu2(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client || !hndl)
 	{
@@ -1313,7 +1313,7 @@ void CreateTimedMapsMenu2(Handle owner, DBResultSet hndl, const char[] error, in
 	menu.Display(client, 30);
 }
 
-void DisplayTimedMapsMenu3_2(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
+void DisplayTimedMapsMenu3_2(Database owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -1343,7 +1343,7 @@ void DisplayTimedMapsMenu3_2(Handle owner, DBResultSet hndl, const char[] error,
 	SQL_TQuery(db, CreateTimedMapsMenu3, query, client);
 }
 
-void CreateTimedMapsMenu3(Handle owner, DBResultSet hndl, const char[] error, int client)
+void CreateTimedMapsMenu3(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client || !hndl)
 	{
@@ -1401,7 +1401,7 @@ void CreateTimedMapsMenu3(Handle owner, DBResultSet hndl, const char[] error, in
 	menu.Display(client, 30);
 }
 
-void CreateTimedMapsMenu4(Handle owner, DBResultSet hndl, const char[] error, int client)
+void CreateTimedMapsMenu4(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client || !hndl)
 	{
@@ -1437,7 +1437,7 @@ void CreateTimedMapsMenu4(Handle owner, DBResultSet hndl, const char[] error, in
 	menu.Display(client, 30);
 }
 
-void CreatePPMMenu(Handle owner, DBResultSet hndl, const char[] error, int client)
+void CreatePPMMenu(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client || !hndl)
 	{
@@ -1476,7 +1476,7 @@ void CreatePPMMenu(Handle owner, DBResultSet hndl, const char[] error, int clien
 }
 
 // Send the TOP10 panel to the client's display.
-void DisplayTop10(Handle owner, DBResultSet hndl, const char[] error, int client)
+void DisplayTop10(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client || !hndl)
 	{
@@ -1509,7 +1509,7 @@ void DisplayTop10(Handle owner, DBResultSet hndl, const char[] error, int client
 }
 
 // Send the TOP10PPM panel to the client's display.
-void DisplayTop10PPM(Handle owner, DBResultSet hndl, const char[] error, int client)
+void DisplayTop10PPM(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client || !hndl)
 	{
@@ -1545,7 +1545,7 @@ void DisplayTop10PPM(Handle owner, DBResultSet hndl, const char[] error, int cli
 }
 
 // Send the NEXTRANK panel to the client's display.
-void DisplayNextRankFull(Handle owner, DBResultSet hndl, const char[] error, int client)
+void DisplayNextRankFull(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
@@ -1601,7 +1601,7 @@ void DisplayNextRankFull(Handle owner, DBResultSet hndl, const char[] error, int
 }
 
 // Send the RANK panel to the client's display.
-void DisplayRank(Handle owner, DBResultSet hndl, const char[] error, int client)
+void DisplayRank(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
