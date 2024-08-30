@@ -320,6 +320,7 @@ public void __pl_l4d_stats_SetNTVOptional()
 {
 	MarkNativeAsOptional("L4DStats_IsConnected");
 	MarkNativeAsOptional("L4DStats_CheckValidity");
+	MarkNativeAsOptional("L4DStats_IsMuted");
 
 	MarkNativeAsOptional("L4DStats_Player.L4DStasts_Player");
 	MarkNativeAsOptional("L4DStats_Player.deleteThis");
@@ -332,15 +333,15 @@ public void __pl_l4d_stats_SetNTVOptional()
 	MarkNativeAsOptional("L4DStats_Player.GetTime");
 	MarkNativeAsOptional("L4DStats_Player.GetPPM");
 	MarkNativeAsOptional("L4DStats_Player.GetRank");
-    MarkNativeAsOptional("L4DStats_Player.UpdatePoints");
+	MarkNativeAsOptional("L4DStats_Player.UpdatePoints");
 
-    MarkNativeAsOptional("L4DStats_Map.L4DStats_Map");
-    MarkNativeAsOptional("L4DStats_Map.deleteThis");
-    MarkNativeAsOptional("L4DStats_Map.Rewrite");
-    MarkNativeAsOptional("L4DStats_Map.HasPlayedMap");
-    MarkNativeAsOptional("L4DStats_Map.GetBestTime");
-    MarkNativeAsOptional("L4DStats_Map.GetPlayCount");
-    MarkNativeAsOptional("L4DStats_Map.GetPlayersCount");
-    MarkNativeAsOptional("L4DStats_Map.GetBestTimeDate");
+	MarkNativeAsOptional("L4DStats_Map.L4DStats_Map");
+	MarkNativeAsOptional("L4DStats_Map.deleteThis");
+	MarkNativeAsOptional("L4DStats_Map.Rewrite");
+	MarkNativeAsOptional("L4DStats_Map.HasPlayedMap");
+	MarkNativeAsOptional("L4DStats_Map.GetBestTime");
+	MarkNativeAsOptional("L4DStats_Map.GetPlayCount");
+	MarkNativeAsOptional("L4DStats_Map.GetPlayersCount");
+	MarkNativeAsOptional("L4DStats_Map.GetBestTimeDate");
 }
 #endif
