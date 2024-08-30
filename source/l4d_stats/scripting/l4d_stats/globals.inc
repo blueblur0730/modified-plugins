@@ -3,7 +3,7 @@
 #endif
 #define _l4d_stats_globals_included
 
-#define PLUGIN_VERSION "2.5"
+#define PLUGIN_VERSION "2.6.0"
 
 // Set to false when stats seem to work properly
 #define DEBUG 0
@@ -108,7 +108,6 @@ char g_sCurrentMutation[MAX_LINE_WIDTH];
 // Disable check Cvar handles
 ConVar 
     g_hCvar_Difficulty,
-    g_hCvar_Gamemode,
     g_hCvar_Cheats,
     g_hCvar_SurvivorLimit,
     g_hCvar_InfectedLimit;

@@ -21,7 +21,7 @@ public Plugin myinfo =
 	url = "https://github.com/blueblur0730/modified-plugins"
 };
 
-// Modules here
+// main modules here
 #include "l4d_stats/utils.inc"
 #include "l4d_stats/setup.inc"
 #include "l4d_stats/commands.inc"
@@ -31,8 +31,10 @@ public Plugin myinfo =
 #include "l4d_stats/actions.inc"
 #include "l4d_stats/timers.inc"
 
-// here to define the include functions.
-#include "l4d_stats/natives.inc"
+// here to define the native functions.
+#include "l4d_stats/natives_other.inc"
+#include "l4d_stats/natives_players.inc"
+#include "l4d_stats/natives_timedmaps.inc"
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -81,7 +83,7 @@ public void OnPluginStart()
 	g_hUpdateTimer = CreateTimer(g_hCvar_UpdateRate.FloatValue, Timer_ShowTimerScore, _, TIMER_REPEAT);
 
 	// Gamemode
-	g_hCvar_Gamemode.GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
+	FindConVar("mp_gamemode").GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
 	g_iCurrentGamemodeID = GetCurrentGamemodeID();
 
 	// RegConsoleCmd("l4d_stats_test", cmd_StatsTest);
@@ -136,8 +138,12 @@ public void OnLibraryRemoved(const char[] name)
 // Reset all boolean variables when a map changes.
 public void OnMapStart()
 {
-	g_hCvar_Gamemode.GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
+	FindConVar("mp_gamemode").GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
 	g_iCurrentGamemodeID = GetCurrentGamemodeID();
+	
+	if (g_iCurrentGamemodeID == GAMEMODE_OTHERMUTATIONS)
+		FindConVar("mp_gamemode").GetString(g_sCurrentMutation, sizeof(g_sCurrentMutation));
+
 	ResetVars();
 }
 
@@ -167,10 +173,8 @@ public void OnPluginEnd()
 		{
 			switch (GetClientTeam(i))
 			{
-				case TEAM_SURVIVORS:
-					InterstitialPlayerUpdate(i);
-				case TEAM_INFECTED:
-					DoInfectedFinalChecks(i);
+				case TEAM_SURVIVORS: InterstitialPlayerUpdate(i);
+				case TEAM_INFECTED: DoInfectedFinalChecks(i);
 			}
 		}
 	}
@@ -238,9 +242,7 @@ public void OnClientDisconnect(int client)
 
 stock void LoadTranslation(const char[] translation)
 {
-	char
-		sPath[PLATFORM_MAX_PATH],
-		sName[64];
+	char sPath[PLATFORM_MAX_PATH], sName[64];
 
 	Format(sName, sizeof(sName), "translations/%s.txt", translation);
 	BuildPath(Path_SM, sPath, sizeof(sPath), sName);

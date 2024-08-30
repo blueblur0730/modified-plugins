@@ -1030,7 +1030,7 @@ void StartMapTiming()
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
+		if (IsClientInGame(i) && !IsClientBot(i))
 		{
 			ClientTeam = GetClientTeam(i);
 			if (ClientTeam == TEAM_SURVIVORS)
@@ -1068,7 +1068,7 @@ void StopMapTiming()
 
 	for (i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
+		if (IsClientInGame(i) && !IsClientBot(i))
 		{
 			ClientTeam = GetClientTeam(i);
 			GetClientRankAuthString(i, ClientID, sizeof(ClientID));
@@ -1098,7 +1098,7 @@ void StopMapTiming()
 
 	for (i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
+		if (IsClientInGame(i) && !IsClientBot(i))
 		{
 			ClientTeam = GetClientTeam(i);
 
@@ -1196,7 +1196,7 @@ void InitializeRankVote(int client)
 
 	for (i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
+		if (IsClientInGame(i) && !IsClientBot(i))
 		{
 			team = GetClientTeam(i);
 
@@ -1268,7 +1268,7 @@ void CheckSurvivorsAllDown()
 	// If we ever get this far it means the current gamemode is NOT Survival
 	for (i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && !IsFakeClient(i) && IsClientInGame(i))
+		if (!IsFakeClient(i) && IsClientInGame(i))
 		{
 			if (GetClientTeam(i) == TEAM_SURVIVORS)
 				InterstitialPlayerUpdate(i);
@@ -1488,7 +1488,7 @@ public CheckSurvivorsWin()
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS)
+			if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS)
 			{
 				GetClientRankAuthString(i, iID, sizeof(iID));
 				Format(query, sizeof(query), "UPDATE %splayers SET %s = %s + %i WHERE steamid = '%s'", g_sDbPrefix, UpdatePoints, UpdatePoints, Score, iID);

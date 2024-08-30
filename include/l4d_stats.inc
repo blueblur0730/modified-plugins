@@ -32,6 +32,16 @@ native bool L4DStats_IsConnected();
 */
 native bool L4DStats_CheckValidity();
 
+/**
+ * Check if the player have muted the plugin.
+ * 
+ * @param steamid The steamid of the player to check.
+ * @param maxlen The maximum length of the steamid buffer.
+ * 
+ * @return true if the player have muted the plugin, false otherwise.
+*/
+native bool L4DStats_IsMuted(const char[] steamid, int maxlen);
+
 
 methodmap L4DStats_Player
 {
@@ -45,6 +55,8 @@ methodmap L4DStats_Player
      * @param maxlen The maximum length of the steamid buffer.
      * 
      * @note After used the constructor, the DataPack handle should be deleted using the deleteThis() function.
+     * 
+     * @error Throw error if constructor is already created and not deleted.
     */
     public native L4DStats_Player(int rank = -1, int client = -1, const char[] steamid = "", int maxlen = 0);
 
@@ -52,6 +64,8 @@ methodmap L4DStats_Player
      * Deletes the DataPack handle created by the constructor.
      * 
      * @noreturn
+     * 
+     * @error Throw error if Constructor Datapack handle is already null.
     */
     public native void deleteThis();
 
@@ -64,6 +78,8 @@ methodmap L4DStats_Player
      * @param maxlen The maximum length of the steamid buffer.
      * 
      * @noreturn
+     * 
+     * @error Throw error if constructor is not called before.
     */
     public native void Rewrite(int rank = -1, int client = -1, const char[] steamid = "", int maxlen = 0);
 
@@ -90,7 +106,7 @@ methodmap L4DStats_Player
     public native bool CheckPlayer(L4DStats_PlayerDataType data);
 
     /**
-     * Get the steamid of a player in the 'players' table by rank number.
+     * Choosing a method, Get the steamid of a player in the 'players' table.
      * 
      * @param data The type of data to target by.
      * @param SteamID The buffer to store the steamid of the player.
@@ -103,7 +119,7 @@ methodmap L4DStats_Player
     public native void GetSteamID(L4DStats_PlayerDataType data, const char[] SteamID, int maxlen);
 
     /**
-     * Choosing a method, given the proper parameters, retrives the name of a player in the 'players' table.
+     * Choosing a method, retrives the name of a player in the 'players' table.
      * 
      * @param data The type of data to target by.
      * @param Name The buffer to store the name of the player.
@@ -116,7 +132,7 @@ methodmap L4DStats_Player
     public native void GetName(L4DStats_PlayerDataType data, const char[] Name, int maxlen);
 
     /**
-     * Choosing a method, given the proper parameters, retrives the total points of a player in the 'players' table.
+     * Choosing a method, retrives the total points of a player in the 'players' table.
      * 
      * @param data The type of data to target by.
      * 
@@ -127,7 +143,7 @@ methodmap L4DStats_Player
     public native int GetPoints(L4DStats_PlayerDataType data);
 
     /**
-     * Choosing a method, given the proper parameters, retrives the total playtime of a player in the 'players' table.
+     * Choosing a method, retrives the total playtime of a player in the 'players' table.
      * 
      * @param data The type of data to target by.
      * 
@@ -138,7 +154,7 @@ methodmap L4DStats_Player
     public native int GetTime(L4DStats_PlayerDataType data);
 
     /**
-     * Choosing a method, given the proper parameters, retrives the PPM (points per minute) of a player in the 'players' table.
+     * Choosing a method, retrives the PPM (points per minute) of a player in the 'players' table.
      * 
      * @param data The type of data to target by.
      * 
@@ -149,7 +165,7 @@ methodmap L4DStats_Player
     public native float GetPPM(L4DStats_PlayerDataType data);
 
     /**
-     * Choosing a method, given the proper parameters, retrives the rank number (descending order) of a player in the 'players' table.
+     * Choosing a method, retrives the rank number (descending order) of a player in the 'players' table.
      * 
      * @param data The type of data to target by.
      * 
@@ -173,16 +189,119 @@ methodmap L4DStats_Player
     public native void UpdatePoints(L4DStats_PlayerDataType data, CaculatorType type, int points);
 }
 
+enum GameModeID
+{
+    COOP = 0,
+    VERSUS = 1,
+    TEAMVERSUS = 2,
+    REALISM = 3,
+    SURVIVAL = 4,
+    SCAVENGE = 5,
+    TEAMSCAVENGE = 6,
+    REALISMVERSUS = 7,
+    TEAMREALISMVERSUS = 8,
+    OTHERMUTATIONS = 9,
+};
+
+enum DifficultyID
+{
+    EASY = 0,
+    NORMAL = 1,
+    HARD = 2,
+    IMPOSSIBLE = 3,
+}
+
 methodmap L4DStats_Map
 {
     /**
-     * Check if a map in specific gamemode exists in the 'maps' table.
+     * The constructor of the L4DStats_Map class.
+     * Creates a DataPack handle to store the given parameters for the functions below to access the 'timedmaps' table.
      * 
-     * @return true if the map exists, false otherwise.
+     * @param steamid The steamid of the player to query for.
+     * @param maxlen1 The maximum length of the steamid buffer.
+     * @param mapname The name of the map to query for.
+     * @param maxlen2 The maximum length of the mapname buffer.
+     * @param gamemode The gamemode you want to query for.
+     * @param difficulty The difficulty you want to query for.
+     * 
+     * @note After used the constructor, the DataPack handle should be deleted using the deleteThis() function.
+     * 
+     * @error Throw error if constructor is already created and not deleted.
+    */
+    public native L4DStats_Map(const char[] steamid, int maxlen1, const char[] mapname, int maxlen2, GameModeID gamemode, DifficultyID difficulty);
+
+    /**
+     * Deletes the DataPack handle created by the constructor.
+     * 
+     * @noreturn
+     * 
+     * @error Throw error if Constructor Datapack handle is already null.
+    */
+    public native void deleteThis();
+
+    /**
+     * Rewrites the DataPack handle with the given parameters.
+     * 
+     * @param steamid The steamid of the player to query for.
+     * @param maxlen1 The maximum length of the steamid buffer.
+     * @param mapname The name of the map to query for.
+     * @param maxlen2 The maximum length of the mapname buffer.
+     * @param gamemode The gamemode you want to query for.
+     * @param difficulty The difficulty you want to query for.
+     * 
+     * @noreturn
+     * 
+     * @error Throw error if constructor is not called before.
+    */
+    public native void Rewrite(const char[] steamid, int maxlen1, const char[] mapname, int maxlen2, GameModeID gamemode, DifficultyID difficulty);
+
+    /**
+     * Check if a player has played the map.
+     * 
+     * @return true if the player has played the map, false otherwise.
      * 
      * @error Throw error when database handle is null (plugin did not connnected to the database) or query failed.
     */
-    public native bool CheckMap(const char[] mapname, int maxlen1, const char[] gamemode, int maxleng2);
+    public native bool HasPlayedMap();
+
+    /**
+     * Get the best accomplishment time of the map of a player. (under the conditions of the gamemode and difficulty)
+     * 
+     * @return The best accomplishment time of the map. (in seconds)
+     * 
+     * @error Throw error when database handle is null (plugin did not connnected to the database) or query failed.
+    */
+    public native float GetBestTime();
+
+    /**
+     * Get the play count of the map of a player. (under the conditions of the gamemode and difficulty)
+     * 
+     * @return The play count of the map.
+     * 
+     * @error Throw error when database handle is null (plugin did not connnected to the database) or query failed.
+    */
+    public native int GetPlayCount();
+
+    /**
+     * Get the total players count at the moment when a player's best time shows up. (under the conditions of the gamemode and difficulty)
+     * 
+     * @return The total players count.
+     * 
+     * @error Throw error when database handle is null (plugin did not connnected to the database) or query failed.
+    */
+    public native int GetPlayersCount();
+
+    /**
+     * Get the date string when a player's best time shows up. (under the conditions of the gamemode and difficulty)
+     * 
+     * @param date The buffer to store the date string.
+     * @param maxlen The maximum length of the date buffer.
+     * 
+     * @noreturn
+     * 
+     * @error Throw error when database handle is null (plugin did not connnected to the database) or query failed.
+    */
+    public native void GetBestTimeDate(const char[] date, int maxlen);
 }
 
 public SharedPlugin __pl_l4d_stats = 
@@ -215,6 +334,13 @@ public void __pl_l4d_stats_SetNTVOptional()
 	MarkNativeAsOptional("L4DStats_Player.GetRank");
     MarkNativeAsOptional("L4DStats_Player.UpdatePoints");
 
-    MarkNativeAsOptional("L4DStats_Map.CheckMap");
+    MarkNativeAsOptional("L4DStats_Map.L4DStats_Map");
+    MarkNativeAsOptional("L4DStats_Map.deleteThis");
+    MarkNativeAsOptional("L4DStats_Map.Rewrite");
+    MarkNativeAsOptional("L4DStats_Map.HasPlayedMap");
+    MarkNativeAsOptional("L4DStats_Map.GetBestTime");
+    MarkNativeAsOptional("L4DStats_Map.GetPlayCount");
+    MarkNativeAsOptional("L4DStats_Map.GetPlayersCount");
+    MarkNativeAsOptional("L4DStats_Map.GetBestTimeDate");
 }
 #endif

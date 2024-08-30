@@ -19,7 +19,7 @@ bool IsTeamGamemode()
 int GetCurrentGamemodeID()
 {
 	char CurrentMode[16];
-	g_hCvar_Gamemode.GetString(CurrentMode, sizeof(CurrentMode));
+	FindConVar("mp_gamemode").GetString(CurrentMode, sizeof(CurrentMode));
 
 	return GetGamemodeID(CurrentMode);
 }
@@ -611,5 +611,21 @@ void FormatInGameMode(char[] sString, int maxlenth, bool bIsPanicEvent = false)
 			}
 		}
 	}
+}
 
+bool ValidatDataBase()
+{
+	if (!db)
+		return false;
+
+	return true;
+}
+
+void IniArrayList(ArrayList hArray)
+{
+	if (!hArray)
+		hArray = new ArrayList();
+
+	if (hArray.Length != 0)
+		hArray.Clear();
 }

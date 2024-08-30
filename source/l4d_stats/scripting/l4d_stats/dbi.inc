@@ -603,7 +603,7 @@ void UpdatePlayerCallback(Database owner, Handle hndl, const char[] error, int c
 	if (!db)
 		return;
 
-	if (!StrEqual("", error))
+	if (strlen(error) != 0)
 	{
 		if (client > 0)
 		{

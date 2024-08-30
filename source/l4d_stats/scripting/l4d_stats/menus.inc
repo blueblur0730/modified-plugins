@@ -1663,7 +1663,7 @@ void DisplayRank(Database owner, DBResultSet hndl, const char[] error, int clien
 			case GAMEMODE_OTHERMUTATIONS:
 			{
 				Format(g_sCurrentGamemodeLabel, sizeof(g_sCurrentGamemodeLabel), "%T", "Label_Mutations", client);
-				g_hCvar_Gamemode.GetString(g_sCurrentMutation, sizeof(g_sCurrentMutation));
+				FindConVar("mp_gamemode").GetString(g_sCurrentMutation, sizeof(g_sCurrentMutation));
 			}
 
 			default:

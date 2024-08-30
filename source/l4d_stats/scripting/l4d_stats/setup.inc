@@ -10,7 +10,6 @@ void SetupConVars()
 
 	// Disable setting Cvars
 	g_hCvar_Difficulty = FindConVar("z_difficulty");
-	g_hCvar_Gamemode   = FindConVar("mp_gamemode");
 	g_hCvar_Cheats	   = FindConVar("sv_cheats");
 	g_hCvar_Lan		   = FindConVar("sv_lan");
 
@@ -169,7 +168,7 @@ void SetupConVars()
 	g_hCvar_Lan.AddChangeHook(OnLanCvarChanged);
 	g_hCvar_UpdateRate.AddChangeHook(OnTimerCvarChanged);
 	g_hCvar_DbTagPrefix.AddChangeHook(OnDbPrefixCvarChanged);
-	g_hCvar_Gamemode.AddChangeHook(OnGamemodeChanged);
+	FindConVar("mp_gamemode").AddChangeHook(OnGamemodeChanged);
 	g_hCvar_Difficulty.AddChangeHook(OnDifficultyChanged);
 }
 
@@ -249,10 +248,11 @@ void CreateNatives()
 {
 	CreateNative("L4DStats_IsConnected", Native_IsConnected);
 	CreateNative("L4DStats_CheckValidity", Native_CheckDBValidity);
+	CreateNative("L4DStats_IsMuted", Native_IsMuted);
 
-	CreateNative("L4DStats_Player.L4DStasts_Player", Native_Prepare);
-	CreateNative("L4DStats_Player.deleteThis", Native_deleteThis);
-	CreateNative("L4DStats_Player.Rewrite", Native_Rewrite);
+	CreateNative("L4DStats_Player.L4DStasts_Player", Native_L4DStasts_Player);
+	CreateNative("L4DStats_Player.deleteThis", Native_L4DStasts_Player_deleteThis);
+	CreateNative("L4DStats_Player.Rewrite", Native_L4DStasts_Player_Rewrite);
 	CreateNative("L4DStats_Player.TotalPlayer.get", Native_GetTotalPlayer);
 	CreateNative("L4DStats_Player.CheckPlayer", Native_CheckPlayer);
 	CreateNative("L4DStats_Player.GetSteamID", Native_GetPlayerSteamID);
@@ -263,7 +263,14 @@ void CreateNatives()
 	CreateNative("L4DStats_Player.GetRank", Native_GetPlayerRank);
 	CreateNative("L4DStats_Player.UpdatePoints", Native_UpdatePoints);
 
-	CreateNative("L4DStats_Map.CheckMap", Native_CheckMap);
+	CreateNative("L4DStats_Map.L4DStasts_Map", Native_L4DStasts_Map);
+	CreateNative("L4DStats_Map.deleteThis", Native_L4DStasts_Map_deleteThis);
+	CreateNative("L4DStats_Map.Rewrite", Native_L4DStasts_Map_Rewrite);
+	CreateNative("L4DStats_Map.HasPlayedMap", Native_HasPlayedMap);
+	CreateNative("L4DStats_Map.GetBestTime", Native_GetBestTime);
+	CreateNative("L4DStats_Map.GetPlayCount", Native_GetPlayCount);
+	CreateNative("L4DStats_Map.GetPlayersCount", Native_GetPlayersCount);
+	CreateNative("L4DStats_Map.GetBestTimeDate", Native_GetBestTimeDate);
 }
 
 void OnLanCvarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
@@ -316,9 +323,9 @@ void OnDifficultyChanged(ConVar convar, const char[] oldValue, const char[] newV
 // Update the g_sCurrentGamemode when the Cvar is changed.
 void OnGamemodeChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-	if (convar == g_hCvar_Gamemode)
+	if (convar == FindConVar("mp_gamemode"))
 	{
-		g_hCvar_Gamemode.GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
+		FindConVar("mp_gamemode").GetString(g_sCurrentGamemode, sizeof(g_sCurrentGamemode));
 		g_iCurrentGamemodeID = GetCurrentGamemodeID();
 	}
 }
