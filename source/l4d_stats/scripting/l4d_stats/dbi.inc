@@ -247,7 +247,7 @@ void QueryClientStatsDP(DataPack dp)
 	QueryClientGameModePointsDP(dp, QueryClientStatsDP_1);
 }
 
-void QueryClientStatsDP_1(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
+void QueryClientStatsDP_1(Database owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -260,7 +260,7 @@ void QueryClientStatsDP_1(Handle owner, DBResultSet hndl, const char[] error, Da
 	QueryClientPointsDP(dp, QueryClientStatsDP_2);
 }
 
-void QueryClientStatsDP_2(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
+void QueryClientStatsDP_2(Database owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -273,7 +273,7 @@ void QueryClientStatsDP_2(Handle owner, DBResultSet hndl, const char[] error, Da
 	QueryClientGameModeRankDP(dp, QueryClientStatsDP_3);
 }
 
-void QueryClientStatsDP_3(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
+void QueryClientStatsDP_3(Database owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -286,7 +286,7 @@ void QueryClientStatsDP_3(Handle owner, DBResultSet hndl, const char[] error, Da
 	QueryClientRankDP(dp, QueryClientStatsDP_4);
 }
 
-void QueryClientStatsDP_4(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
+void QueryClientStatsDP_4(Database owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -299,7 +299,7 @@ void QueryClientStatsDP_4(Handle owner, DBResultSet hndl, const char[] error, Da
 	QueryRank_1(dp, QueryClientStatsDP_5);
 }
 
-void QueryClientStatsDP_5(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
+void QueryClientStatsDP_5(Database owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -312,7 +312,7 @@ void QueryClientStatsDP_5(Handle owner, DBResultSet hndl, const char[] error, Da
 	QueryRank_2(dp, QueryClientStatsDP_6);
 }
 
-void QueryClientStatsDP_6(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
+void QueryClientStatsDP_6(Database owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -385,7 +385,7 @@ void QueryClientStatsDP_NextRankFull(int Client, const char[] SteamID)
 }
 
 // Insert a map into the database if they do not already exist.
-void InsertMapDB(Handle owner, DBResultSet hndl, const char[] error, any data)
+void InsertMapDB(Database owner, DBResultSet hndl, const char[] error, any data)
 {
 	if (!db)
 		return;
@@ -413,7 +413,7 @@ void ReadClientRankMuteSteamID(int Client, const char[] SteamID)
 }
 
 // Insert a player into the database if they do not already exist.
-void InsertPlayerDB(Handle owner, DBResultSet hndl, const char[] error, int client)
+void InsertPlayerDB(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!db || IsClientBot(client))
 		return;
@@ -474,7 +474,7 @@ void ReadClientRankMute(int Client)
 }
 
 // Insert a player into the settings database if they do not already exist.
-void GetClientRankMute(Handle owner, DBResultSet hndl, const char[] error, int client)
+void GetClientRankMute(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!db || IsClientBot(client))
 		return;
@@ -530,12 +530,12 @@ void SendSQLUpdate(const char[] query, SQLTCallback callback = INVALID_FUNCTION)
 }
 
 // Report error on sql query;
-void SQLErrorCheckCallback(Handle owner, Handle hndl, const char[] error, int queryid)
+void SQLErrorCheckCallback(Database owner, Handle hndl, const char[] error, int queryid)
 {
 	if (!db)
 		return;
 
-	if (!StrEqual("", error))
+	if (strlen(error) != 0)
 	{
 #if DEBUG
 		LogError("SQL Error: %s (Query: \"%s\")", error, g_sQueryBuffer[queryid]);
@@ -598,12 +598,12 @@ void UpdatePlayerFull(int Client, const char[] SteamID, const char[] Name)
 }
 
 // Report error on sql query;
-void UpdatePlayerCallback(Handle owner, Handle hndl, const char[] error, int client)
+void UpdatePlayerCallback(Database owner, Handle hndl, const char[] error, int client)
 {
 	if (!db)
 		return;
 
-	if (!StrEqual("", error))
+	if (strlen(error) != 0)
 	{
 		if (client > 0)
 		{
@@ -681,7 +681,7 @@ void ReadDbMotd()
 	SQL_TQuery(db, ReadDbMotdCallback, query);
 }
 
-void ReadDbMotdCallback(Handle owner, DBResultSet hndl, const char[] error, int data)
+void ReadDbMotdCallback(Database owner, DBResultSet hndl, const char[] error, int data)
 {
 	if (!hndl)
 	{
@@ -747,7 +747,7 @@ bool UpdateServerSettings(Client, const char[] Key, const char[] Value, const ch
 	return retval;
 }
 
-void UpdateMapTimingStat(Handle owner, DBResultSet hndl, const char[] error, DataPack dp)
+void UpdateMapTimingStat(Database owner, DBResultSet hndl, const char[] error, DataPack dp)
 {
 	if (!hndl)
 	{
@@ -839,12 +839,12 @@ void GetClientFromTop10(int client, int rank)
 void GetClientFromTop10PPM(int client, int rank)
 {
 	char query[1024];
-	Format(query, sizeof(query), "SELECT (%s) AS totalpoints, steamid, (%s) AS totalplaytime FROM %splayers WHERE (%s) >= %i ORDER BY (totalpoints / totalplaytime) DESC, totalplaytime DESC LIMIT %i,1", DB_PLAYERS_TOTALPOINTS, DB_PLAYERS_TOTALPLAYTIME, g_sDbPrefix, DB_PLAYERS_TOTALPLAYTIME, GetConVarInt(g_hCvar_Top10PPMMin), rank);
+	Format(query, sizeof(query), "SELECT (%s) AS totalpoints, steamid, (%s) AS totalplaytime FROM %splayers WHERE (%s) >= %i ORDER BY (totalpoints / totalplaytime) DESC, totalplaytime DESC LIMIT %i,1", DB_PLAYERS_TOTALPOINTS, DB_PLAYERS_TOTALPLAYTIME, g_sDbPrefix, DB_PLAYERS_TOTALPLAYTIME, g_hCvar_Top10PPMMin.IntValue, rank);
 	SQL_TQuery(db, GetClientTop10, query, client);
 }
 
 // Send the Top 10 player's info to the client.
-void GetClientTop10(Handle owner, DBResultSet hndl, const char[] error, int client)
+void GetClientTop10(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client || !hndl)
 	{
@@ -861,19 +861,19 @@ void GetClientTop10(Handle owner, DBResultSet hndl, const char[] error, int clie
 }
 
 // Generate client's point total.
-void GetClientPointsPlayerJoined(Handle owner, DBResultSet hndl, const char[] error, int client)
+void GetClientPointsPlayerJoined(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	GetClientPointsWorker(owner, hndl, error, client, GetClientRankPlayerJoined);
 }
 
 // Generate client's point total.
-void GetClientPointsRankChange(Handle owner, DBResultSet hndl, const char[] error, int client)
+void GetClientPointsRankChange(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	GetClientPointsWorker(owner, hndl, error, client, GetClientRankRankChange);
 }
 
 // Generate client's point total.
-void GetClientPointsWorker(Handle owner, DBResultSet hndl, const char[] error, int client, SQLTCallback callback = INVALID_FUNCTION)
+void GetClientPointsWorker(Database owner, DBResultSet hndl, const char[] error, int client, SQLTCallback callback = INVALID_FUNCTION)
 {
 	if (!client)
 		return;
@@ -895,7 +895,7 @@ void GetClientPointsWorker(Handle owner, DBResultSet hndl, const char[] error, i
 }
 
 // Generate client's point total.
-void GetClientPoints(Handle owner, DBResultSet hndl, const char[] error, int client)
+void GetClientPoints(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
@@ -935,7 +935,7 @@ void GetClientGameModePoints(DBResultSet hndl, const char[] error, int client)
 }
 
 // Generate client's next rank.
-void DisplayClientNextRank(Handle owner, DBResultSet hndl, const char[] error, int client)
+void DisplayClientNextRank(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
@@ -951,7 +951,7 @@ void DisplayClientNextRank(Handle owner, DBResultSet hndl, const char[] error, i
 }
 
 // Generate client's next rank.
-void GetClientNextRank(Handle owner, DBResultSet hndl, const char[] error, int client)
+void GetClientNextRank(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
@@ -969,7 +969,7 @@ void GetClientNextRank(Handle owner, DBResultSet hndl, const char[] error, int c
 }
 
 // Generate client's rank.
-void GetClientRankRankChange(Handle owner, DBResultSet hndl, const char[] error, int client)
+void GetClientRankRankChange(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
@@ -1017,7 +1017,7 @@ void GetClientRankRankChange(Handle owner, DBResultSet hndl, const char[] error,
 }
 
 // Generate client's rank.
-void GetClientRankPlayerJoined(Handle owner, DBResultSet hndl, const char[] error, int client)
+void GetClientRankPlayerJoined(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
@@ -1049,7 +1049,7 @@ void GetClientRankPlayerJoined(Handle owner, DBResultSet hndl, const char[] erro
 }
 
 // Generate client's rank.
-void GetClientRank(Handle owner, DBResultSet hndl, const char[] error, int client)
+void GetClientRank(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!client)
 		return;
@@ -1081,7 +1081,7 @@ void GetClientGameModeRank(DBResultSet hndl, const char[] error, int client)
 }
 
 // Generate total rank amount.
-void GetRankTotal(Handle owner, DBResultSet hndl, const char[] error, int data)
+void GetRankTotal(Database owner, DBResultSet hndl, const char[] error, int data)
 {
 	if (!hndl)
 	{
@@ -1094,7 +1094,7 @@ void GetRankTotal(Handle owner, DBResultSet hndl, const char[] error, int data)
 }
 
 // Generate total gamemode rank amount.
-void GetGameModeRankTotal(Handle owner, DBResultSet hndl, const char[] error, int data)
+void GetGameModeRankTotal(Database owner, DBResultSet hndl, const char[] error, int data)
 {
 	if (!hndl)
 	{
@@ -1106,7 +1106,7 @@ void GetGameModeRankTotal(Handle owner, DBResultSet hndl, const char[] error, in
 		g_iGameModeRankTotal = hndl.FetchInt(0);
 }
 
-void ClearStatsMapsHandler(Handle owner, DBResultSet hndl, const char[] error, int client)
+void ClearStatsMapsHandler(Database owner, DBResultSet hndl, const char[] error, int client)
 {
 	if (!hndl)
 	{
@@ -1151,7 +1151,7 @@ void ClearStatsMapsHandler(Handle owner, DBResultSet hndl, const char[] error, i
 	}
 }
 
-void ExecuteTeamShuffle(Handle owner, DBResultSet hndl, const char[] error, int data)
+void ExecuteTeamShuffle(Database owner, DBResultSet hndl, const char[] error, int data)
 {
 	if (!hndl)
 	{

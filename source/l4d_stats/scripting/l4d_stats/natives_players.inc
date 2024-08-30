@@ -1,10 +1,11 @@
-#if defined _l4d_stats_natives_included
+#if defined _l4d_stats_natives_players_included
 	#endinput
 #endif
-#define _l4d_stats_natives_included
+#define _l4d_stats_natives_players_included
 
 static bool s_bIsNotFound = false;
 static ArrayList s_hArray = null;
+static bool s_bIscreated = false;
 
 enum L4DStats_PlayerDataType
 {
@@ -21,38 +22,11 @@ enum CaculatorType
     Divide = 4
 };
 
-
-bool ValidatDataBase()
+any Native_L4DStasts_Player(Handle plugin, int numParams)
 {
-	if (!db)
-		return false;
+	if (s_bIscreated)
+		ThrowNativeError(SP_ERROR_ABORTED, "[L4D Stats]: Constructor DataPack Handle is already created.");
 
-	return true;
-}
-
-void IniArrayList()
-{
-	if (!s_hArray)
-		s_hArray = new ArrayList();
-
-	if (s_hArray.Length != 0)
-		s_hArray.Clear();
-}
-
-// Check connection to database.
-any Native_IsConnected(Handle plugin, int numParams)
-{
-	return (db != null) ? true : false;
-}
-
-// Check the validity of DB table(s)
-any Native_CheckDBValidity(Handle plugin, int numParams)
-{
-	return CheckDatabaseValidity(g_sDbPrefix);
-}
-
-any Native_Prepare(Handle plugin, int numParams)
-{
 	DataPack dp = new DataPack();
 	dp.Reset();
 	dp.WriteCell(GetNativeCell(1));
@@ -65,20 +39,25 @@ any Native_Prepare(Handle plugin, int numParams)
 	GetNativeString(3, SteamID, maxlength1);
 	dp.WriteString(SteamID);
 
+	s_bIscreated = true;
 	return dp;
 }
 
-any Native_deleteThis(Handle plugin, int numParams)
+any Native_L4DStasts_Player_deleteThis(Handle plugin, int numParams)
 {
 	DataPack dp = GetNativeCell(1);
 
 	if (dp)
+	{
+		s_bIscreated = false;
 		delete dp;
+	}
+	else ThrowNativeError(SP_ERROR_ABORTED, "[L4D Stats]: Constructor DataPack Handle is already null.")
 
 	return 0;
 }
 
-any Native_Rewrite(Handle plugin, int numParams)
+any Native_L4DStasts_Player_Rewrite(Handle plugin, int numParams)
 {
 	DataPack dp = GetNativeCell(1);
 
@@ -95,7 +74,7 @@ any Native_Rewrite(Handle plugin, int numParams)
 		GetNativeString(4, SteamID, maxlength1);
 		dp.WriteString(SteamID);
 	}
-	else ThrowNativeError(SP_ERROR_ABORTED, "[L4D Stats]: Database Handle is null.");
+	else ThrowNativeError(SP_ERROR_ABORTED, "[L4D Stats]: Constructor Datapack Handle is null.");
 	return 0;
 }
 
@@ -104,7 +83,7 @@ any Native_GetTotalPlayer(Handle plugin, int numParams)
 	if (!ValidatDataBase())
 		ThrowNativeError(SP_ERROR_ABORTED, "[L4D Stats]: Database Handle is null.");
 
-	IniArrayList();
+	IniArrayList(s_hArray);
 
 	char query[128];
 	Format(query, sizeof(query), "SELECT COUNT(*) FROM %splayers", g_sDbPrefix);
@@ -222,7 +201,7 @@ any Native_GetPlayerSteamID(Handle plugin, int numParams)
 	int rank = dp.ReadCell();
 	int client = dp.ReadCell();
 
-	IniArrayList();
+	IniArrayList(s_hArray);
 
 	int maxlength;
 	GetNativeStringLength(4, maxlength);
@@ -291,7 +270,7 @@ any Native_GetPlayerName(Handle plugin, int numParams)
 	char SteamID[MAX_AUTHID_LENGTH];
 	dp.ReadString(SteamID, sizeof(SteamID));
 
-	IniArrayList();
+	IniArrayList(s_hArray);
 
 	int maxlength;
 	GetNativeStringLength(4, maxlength);
@@ -373,7 +352,7 @@ any Native_GetPlayerPoints(Handle plugin, int numParams)
 	char SteamID[MAX_AUTHID_LENGTH];
 	dp.ReadString(SteamID, sizeof(SteamID));
 
-	IniArrayList();
+	IniArrayList(s_hArray);
 
 	switch (method)
 	{
@@ -453,7 +432,7 @@ any Native_GetPlayerTime(Handle plugin, int numParams)
 	char SteamID[MAX_AUTHID_LENGTH];
 	dp.ReadString(SteamID, sizeof(SteamID));
 
-	IniArrayList();
+	IniArrayList(s_hArray);
 
 	switch (method)
 	{
@@ -533,7 +512,7 @@ any Native_GetPlayerPPM(Handle plugin, int numParams)
 	char SteamID[MAX_AUTHID_LENGTH];
 	dp.ReadString(SteamID, sizeof(SteamID));
 
-	IniArrayList();
+	IniArrayList(s_hArray);
 
 	switch (method)
 	{
@@ -614,7 +593,7 @@ any Native_GetPlayerRank(Handle plugin, int numParams)
 	if (rank > 0)
 		rank = 0;
 
-	IniArrayList();
+	IniArrayList(s_hArray);
 
 	switch (method)
 	{
@@ -748,44 +727,6 @@ any Native_UpdatePoints(Handle plugin, int numParams)
 	return 0;
 }
 
-// Check if a map is already in the DB.
-any Native_CheckMap(Handle plugin, int numParams)
-{
-	if (!ValidatDataBase())
-		ThrowNativeError(SP_ERROR_ABORTED, "[L4D Stats]: Database Handle is null.");
-
-	int maxlength;
-	GetNativeStringLength(1, maxlength);
-	maxlength += 1;
-	char[] ParamNameMap = new char[maxlength];
-	GetNativeString(1, ParamNameMap, maxlength);
-
-	int maxlength1;
-	GetNativeStringLength(2, maxlength1);
-	maxlength1 += 1;
-	char[] ParamNameGameMode = new char[maxlength1];
-	GetNativeString(2, ParamNameGameMode, maxlength1);
-
-	char query[512];
-	Format(query, sizeof(query), "SELECT name FROM %smaps WHERE LOWER(name) = LOWER('%s') AND gamemode = %i AND mutation = '%s'", g_sDbPrefix, ParamNameMap, ParamNameGameMode, g_sCurrentMutation);
-	SQL_TQuery(db, NativeQuery_CheckMap, query);
-
-	char error[128];
-	if (SQL_GetError(db, error, sizeof(error)))
-	{
-		delete s_hArray;
-		ThrowNativeError(SP_ERROR_NOT_FOUND, "[L4D Stats]: An error occured on last query. Error: %s", error);
-	}
-
-	if (s_bIsNotFound)
-	{
-		s_bIsNotFound = false;
-		return false;
-	}
-
-	return true;
-}
-
 void NativeQuery_GetTotalPlayer(Database owner, DBResultSet hndl, const char[] error, any data)
 {
 	if (!hndl.RowCount)
@@ -795,16 +736,6 @@ void NativeQuery_GetTotalPlayer(Database owner, DBResultSet hndl, const char[] e
 	}
 	else
 		s_hArray.Push(hndl.RowCount);
-}
-
-
-void NativeQuery_CheckMap(Database owner, DBResultSet hndl, const char[] error, any data)
-{
-	if (!hndl.RowCount)
-	{
-		s_bIsNotFound = true;
-		return;
-	} 
 }
 
 void NativeQuery_CheckPlayerByRank(Database owner, DBResultSet hndl, const char[] error, int data)
