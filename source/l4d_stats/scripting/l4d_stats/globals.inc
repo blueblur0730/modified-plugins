@@ -245,14 +245,14 @@ ConVar
 
 enum
 {
-    ACT_FF = 1,
-    ACT_FFINCAP = 2,
-    ACT_FFKILL = 3,
-    ACT_LET_INF_IN_SAFE_ROOM = 4,
-    ACT_RESTART = 5,
-    ACT_TRIGGERCARALERM = 6,
+    ACT_FF = 0,
+    ACT_FFINCAP = 1,
+    ACT_FFKILL = 2,
+    ACT_LET_INF_IN_SAFE_ROOM = 3,
+    ACT_RESTART = 4,
+    ACT_TRIGGERCARALERM = 5,
     
-    ACT_SIZE = 7
+    ACT_SIZE = 6
 };
 ConVar g_hCvar_ActionScore[ACT_SIZE];
 ConVar g_hCvar_BotScoreMultiplier;
