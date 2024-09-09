@@ -1,0 +1,18 @@
+"Phrases"
+{
+    "BlockedByMoving"
+    {
+        "chi"            "[{orange}!{default}] 你不能对着一个正在 {olive}移动{default} 的队友打包!"
+    }
+
+    "BlockedByHealth"
+    {
+        "#format"       "{1:d}"
+        "chi"            "[{orange}!{default}] 你不能对着一个生命值大于 {olive}{1}{default} 的队友打包!"
+    }
+
+    "BlockedByOnALadder"
+    {
+        "chi"            "[{orange}!{default}] 你不能对着一个正在 {olive}梯子上{default} 的队友打包!"
+    }
+}

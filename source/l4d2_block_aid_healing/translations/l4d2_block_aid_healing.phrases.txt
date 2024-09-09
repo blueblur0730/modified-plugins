@@ -1,0 +1,18 @@
+"Phrases"
+{
+    "BlockedByMoving"
+    {
+        "en"            "[{orange}!{default}] You cannot heal a teammate while he is {olive}moving{default}!"
+    }
+
+    "BlockedByHealth"
+    {
+        "#format"       "{1:d}"
+        "en"            "[{orange}!{default}] You cannot heal a teammate while his health is greater than {olive}{1}{default}!"
+    }
+
+    "BlockedByOnALadder"
+    {
+        "en"            "[{orange}!{default}] You cannot heal a teammate while he is {olive}on a ladder{default}!"
+    }
+}
