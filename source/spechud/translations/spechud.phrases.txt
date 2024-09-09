@@ -1,0 +1,381 @@
+"Phrases"
+{
+	"on"
+	{
+		"en"		"{blue}on{default}"
+	}
+	
+	"off"
+	{
+		"en"		"{red}off{default}"
+	}
+	
+	"Notify_SpechudState"
+	{
+		"#format"	"{1:t}"
+		"en"		"<{olive}HUD{default}> Spectator HUD is now {1}"
+	}
+	
+	"Notify_TankhudState"
+	{
+		"#format"	"{1:t}"
+		"en"		"<{olive}HUD{default}> Tank HUD is now {1}"
+	}
+	
+	"Notify_SpechudUsage"
+	{
+		"en"		"<{olive}HUD{default}> Type {green}!spechud{default} into chat to toggle the {blue}Spectator HUD"
+	}
+	
+	"Notify_TankhudUsage"
+	{
+		"en"		"<{olive}HUD{default}> Type {green}!tankhud{default} into chat to toggle the {red}Tank HUD"
+	}
+
+	// no color tags are allowed in the following phrases tagged with "Panel_"
+	"Panel_ServerHeader"
+	{
+					// 1: server name, 2: player count, 3: max players, 4: tickrate
+		"#format"	"{1:s},{2:i},{3:i},{4:i}"
+		"en"		"Server: {1} [Slots {2}/{3} | {4}T]"
+	}
+
+	"Panel_SurvivorScav"
+	{
+					// 1: current match score, 2: round limit
+		"#format"	"{1:d},{2:d}"
+		"en"		"->1. Survivors [{1} of {2}]"
+	}
+
+	"Panel_SurvivorVersus"
+	{
+					// 1: [survivor compaign score] OR [survivor compaign score + distance score]
+		"#format"	"{1:d}"
+		"en"		"->1. Survivors [{1}]"
+	}
+
+	"Panel_DeadSurvivor"
+	{
+					// 1: survivor name
+		"#format"	"{1:s}"
+		"en"		"{1}: Dead"
+	}
+
+	"Panel_SurvivorHanging"
+	{
+					// 1: survivor name, 2: health when hanging
+		"#format"	"{1:s},{2:i}"
+		"en"		"{1}: <{2}HP@Hanging>"
+	}
+
+	"Panel_SurvivorIncap"
+	{
+					// 1: survivor name, 2: health when incapacitated, 3: incap times, 4: weapon name while incaped, 5: clip amount of the weapon
+		"#format"	"{1:s},{2:i},{3:t},{4:s},{5:i}"
+		"en"		"{1}: <{2}HP@{3}> [{4} {5}]"
+	}
+
+	"Panel_SurvivorStatus"
+	{
+					// 1: survivor name, 2: health + team health, 3: bleeding tag(#) if bleeding, 4: weapon info
+		"#format"	"{1:s},{2:i},{3:s},{4:s}"
+		"en"		"{1}: {2}HP{3} [{4}]"
+	}
+
+	"Panel_SurvivorStatus_Incaped"
+	{
+					// 1: survivor name, 2: health + team health, 3: incap count, 4: weapon info
+		"#format"	"{1:s},{2:i},{3:t},{4:s}"
+		"en"		"{1}: {2}HP (#{3}) [{4}]"
+	}
+
+	"Panel_AccumulatedTime"
+	{
+					// 1: minutes, 2: seconds
+		"#format"	"{1:02d},{2:02.0f}"
+		"en"		"> Accumulated Time [{1}:{2}]"
+	}
+
+	"Panel_OpponentDuration"
+	{
+					// 1: minutes, 2: seconds
+		"#format"	"{1:02d},{2:05.2f}"
+		"en"		"> Opponent Duration [{1}:{2}]"
+	}
+
+	// note: '%%' is printed as character '%'.
+	"Panel_HybridSM_DetailedBonusInfo"
+	{
+					// 1: health bonus, 2: distance bonus, 3: pill bonus, 4: pill bonus left percentage
+		"#format"	"{1:.0f},{2:.0f},{3:i},{4:.0f}"
+		"en"		"> HB: {1}%% | DB: {2}%% | Pills: {3} / {4}%%"
+	}
+
+	"Panel_HybridSM_TotalBonusInfo"
+	{
+					// 1: total bonus, 2: total bonus percentage
+		"#format"	"{1:i},{2:.1f}"
+		"en"		"> Bonus: {1} <{2}%%>"
+	}
+
+	"Panel_Distance"
+	{
+					// 1: distance bonus
+		"#format"	"{1:i}"
+		"en"		"> Distance: {1}"
+	}
+
+	"Panel_SM_HealthBonusInfo"
+	{
+					// 1: health bonus
+		"#format"	"{1:i}"
+		"en"		"> Health Bonus: {1}"
+	}
+
+	"Panel_NextSM_DetailedBonusInfo"
+	{
+					// 1: perm bonus, 2: temp bonus, 3: pill bonus
+		"#format"	"{1:i},{2:i},{3:i}"
+		"en"		"> Perm: {1} | Temp: {2} | Pills: {3}"
+	}
+
+	"Panel_NextSM_TotalBonusInfo"
+	{
+					// 1: total bonus, 2: total bonus percentage
+		"#format"	"{1:i},{2:.1f}"
+		"en"		"> Bonus: {1} <{2}%%>"
+	}
+
+	"Panel_InfectedScav"
+	{
+					// 1: current match score, 2: round limit
+		"#format"	"{1:d},{2:d}"
+		"en"		"->2. Infected [{1} of {2}]"
+	}
+
+	"Panel_InfectedVersus"
+	{
+					// 1: infected compaign score
+		"#format"	"{1:d}"
+		"en"		"->2. Infected [{1}]"
+	}
+
+	"Panel_NoSI"
+	{
+		"en"		"There is no SI at this moment."
+	}
+
+	"Panel_InfectedDead"
+	{
+					// 1: infected name
+		"#format"	"{1:s}"
+		"en"		"{1}: Dead"
+	}
+
+	"Panel_Spawning"
+	{
+		"en"		"Spawning..."
+	}
+
+	"Panel_InfectedRespawning"
+	{
+					// 1: infected name, 2: spawn time left or 'Spawning...'
+		"#format"	"{1:s},{2:s}"
+		"en"		"{2}: Dead ({1})"
+	}
+
+	"Panel_InfectedGhostHP"
+	{
+					// 1: infected name, 2: SI class name, 3: health when ghosted
+		"#format"	"{1:s},{2:s},{3:i}"
+		"en"		"{1}: {2} (Ghost@{3}HP)"
+	}
+
+	"Panel_InfectedGhost"
+	{
+					// 1: infected name, 2: SI class name
+		"#format"	"{1:s},{2:s}"
+		"en"		"{1}: {2} (Ghost)"
+	}
+
+	"Panel_InfectedPlaying_OnFire"
+	{
+					// 1: infected name, 2: SI class name, 3: health, 4: ability timer
+		"#format"	"{1:s},{2:s},{3:i},{4:s}"
+		"en"		"{1}: {2} ({3}HP) [On Fire]{4}"
+	}
+
+	"Panel_InfectedPlaying"
+	{
+					// 1: infected name, 2: SI class name, 3: health, 4: ability timer
+		"#format"	"{1:s},{2:s},{3:i},{4:s}"
+		"en"		"{1}: {2} ({3}HP){4}"
+	}
+
+	"Panel_TankHUD"
+	{
+					// 1: value of 'l4d_ready_cfg_name'
+		"#format"	"{1:s}"
+		"en"		"{1} :: Tank HUD"
+	}
+
+	"Panel_Tank"
+	{
+		"en"		"->3. Tank"
+	}
+
+	"native"
+	{
+		"en"		"native"
+	}
+
+	"Panel_TankController"
+	{
+					// 1: tank name, 2: pass count
+		"#format"	"{1:s},{2:t}"
+		"en"		"Control : {1} ({2})"
+	}
+
+	"Panel_TankControllerAI"
+	{
+					// 1: pass count
+		"#format"	"{1:s}"
+		"en"		"Control : AI ({1})"
+	}
+
+	"Panel_TankIsDead"
+	{
+		"en"		"Health  : Dead"
+	}
+
+	"Panel_TankHealth"
+	{
+					// 1: health, 2: health percentage
+		"#format"	"{1:i},{2:i}"
+		"en"		"Health  : {1} / {2}%%"
+	}
+
+	"Panel_TankFrustration"
+	{
+					// 1: frustration left
+		"#format"	"{1:d}"
+		"en"		"Frustr.  : {1}%%"
+	}
+
+	"Panel_TankFrustrationAI"
+	{
+		"en"		"Frustr.  : AI"
+	}
+
+	"Panel_TankNetwork"
+	{
+					// 1: latency, 2: lerp
+		"#format"	"{1:i},{2:.1f}"
+		"en"		"Network: {1}ms / {2}"
+	}
+
+	"Panel_TankNetworkAI"
+	{
+		"en"		"Network: AI"
+	}
+
+	"Panel_TankIsOnFire"
+	{
+					// 1: burn time left
+		"#format"	"{1:i}"
+		"en"		"On Fire : {1}s"
+	}
+
+	"Panel_GameInfo"
+	{
+					// 1: value of 'l4d_ready_cfg_name', 2: [round number](scavenge) OR [halves of round](versus)
+		"#format"	"{1:s},{2:i}"
+		"en"		"->3. {1} (R#{2})"
+	}
+
+	"Panel_GameInfoBestOf"
+	{
+					// 1: round limit
+		"#format"	"{1:i}"
+		"en"		"Best of {1}"
+	}
+
+	"Panel_TankFlow"
+	{
+					// 1: tank flow
+		"#format"	"{1:s}"
+		"en"		"Tank: {1}"
+	}
+
+	"Panel_TankSpanwedBy"
+	{
+					// 1: static OR event
+		"#format"	"{1:s}"
+		"en"		"Tank: {1}"
+	}
+
+	"Panel_WitchFlow_Divided"
+	{
+					// 1: previous info, 2: [witch flow] OR [use static and event]
+		"#format"	"{1:s},{2:t}"
+		"en"		"{1} | Witch: {2}"
+	}
+
+	"Panel_WitchFlow"
+	{
+					// 1: [witch flow] OR [use static and event]
+		"#format"	"{1:t}"
+		"en"		"Witch: {1}"
+	}
+
+	"Panel_Progress_Divided"
+	{
+					// 1: previous info, 2: current progress
+		"#format"	"{1:s},{2:i}"
+		"en"		"{1} | Cur: {2}%%"
+	}
+
+	"Panel_Progress"
+	{
+					// 1: current progress
+		"#format"	"{1:i}"
+		"en"		"Cur: {1}%%"
+	}
+
+	"Panel_TankClient"
+	{
+					// 1: tank client
+		"#format"	"{1:N}"
+		"en"		"Tank -> {1}"
+	}
+
+	"1st"
+	{
+		"en"		"1st"
+	}
+
+	"2nd"
+	{
+		"en"		"2nd"
+	}
+
+	"3rd"
+	{
+		"en"		"3rd"
+	}
+
+	"4th"
+	{
+		"en"		"4th"
+	}
+
+	"Static"
+	{
+		"en"		"Static"
+	}
+
+	"Event"
+	{
+		"en"		"Event"
+	}
+}
