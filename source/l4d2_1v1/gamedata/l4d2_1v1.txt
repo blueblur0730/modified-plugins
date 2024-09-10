@@ -1,0 +1,46 @@
+"Games"
+{
+	"left4dead2"
+	{
+		"Functions"
+		{
+			"CTerrorPlayer::IsDominatedBySpecialInfected"
+			{
+				"signature"	"CTerrorPlayer::IsDominatedBySpecialInfected"
+				"callconv"	"thiscall"
+				"return"	"bool"
+				"this"		"entity"
+			}
+		}
+
+		"Signatures"
+		{
+			// windows sig:
+			// find CTerrorPlayer::StartUseAction through left4dhooks with given signature
+			// in the first statement 'if ( !a3 || (unsigned __int8)sub_102CB1A0() )'
+			// the call is CTerrorPlayer::IsDominatedBySpecialInfected.
+			// you can also find this function on the below description.
+			"CTerrorPlayer::IsDominatedBySpecialInfected"
+			{
+				"library"	"server"
+				"linux"		"@_ZNK13CTerrorPlayer28IsDominatedBySpecialInfectedEv"
+				"windows"	"\x8B\x15\x2A\x2A\x2A\x2A\x56\x8B\xF1\x8B\x86\x5C\x3E\x00\x00"
+						/* 8B 15 ? ? ? ? 56 8B F1 8B 86 5C 3E 00 00 */
+			}
+
+			// get special infected THAT IS dominating me (seems not work normally, but kept itin here)
+			// windows sig:
+			// search for string "gas_can_forced_drop" to find CGasCan::DropCarriedProp
+			// this event will pass the victim client id, which is our desired CTerrorPlayer* pointer
+			// in current case (2.2.4.1) this should be 'v6'
+			// (compare with linux) find the second call that passes 'v6', this function is CTerrorPlayer::GetSpecialInfectedDominatingMe
+			"CTerrorPlayer::GetSpecialInfectedDominatingMe"
+			{
+				"library"	"server"
+				"linux"		"@_ZN13CTerrorPlayer30GetSpecialInfectedDominatingMeEv"
+				"windows"	"\x8B\x15\x2A\x2A\x2A\x2A\x56\x8B\xF1\x8B\x8E\x5C\x3E\x00\x00"
+						/* 8B 15 ? ? ? ? 56 8B F1 8B 8E 5C 3E 00 00 */
+			}
+		}
+	}
+}

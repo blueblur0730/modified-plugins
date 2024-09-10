@@ -1,0 +1,28 @@
+"Phrases"
+{
+    "DamageReport"
+    {
+        "#format"   "{1:s},{2:s},{3:d},{4:.1f}"
+        "en"        "[{olive}DmgReport{default}] {red}{1}{default} ({green}{2}{default}) has {olive}{3}{default}HP left, did {olive}{4}{default} dmg to you!"
+    }
+
+    "Taunt_HP1"
+    {
+        "en"          "Don't be angry, next time aim the head..."
+    }
+
+    "Taunt_HPLow"
+    {
+        "en"          "You looks sad..."
+    }
+
+    "Taunt_HPMid"
+    {
+        "en"          "Close!"
+    }
+
+    "Taunt_HPHigh"
+    {
+        "en"          "Not bad."
+    }
+}

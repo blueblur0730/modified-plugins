@@ -1,0 +1,28 @@
+"Phrases"
+{
+    "DamageReport"
+    {
+        "#format"   	"{1:s},{2:s},{3:d},{4:.1f}"
+        "chi"        	"[{olive}伤害报告{default}] {red}{1}{default} ({green}{2}{default}) 还剩 {olive}{3}{default} 点HP, 对你造成了 {olive}{4}{default} 点伤害!"
+    }
+
+    "Taunt_HP1"
+    {
+        "chi"          	"恼羞成怒，下次对准头部..."
+    }
+
+    "Taunt_HPLow"
+    {
+        "chi"          	"你看起来很沮丧..."
+    }
+
+    "Taunt_HPMid"
+    {
+        "chi"          	"接近了!"
+    }
+
+    "Taunt_HPHigh"
+    {
+        "chi"          	"还不错."
+    }
+}
