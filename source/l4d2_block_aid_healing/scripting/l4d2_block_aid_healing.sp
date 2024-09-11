@@ -65,9 +65,9 @@ public void OnPluginStart()
 													3 = all disabled.",
 												  	_, true, 3.0, true, 0.0, OnConVarChanged);
 
-	g_hCvar_VelMax			   = CreateConVarHook("aid_healing_horizontal_vel_max", "10.0", "Max horizontal velocity magnitude for target who had reached to have aid-healing blocked (when walking).", _, _, _, _, _, OnConVarChanged);
-	g_hCvar_HealthThreshold	   = CreateConVarHook("aid_healing_health_threshold", "40", "Max health percentage threshold for target who had reached to have aid-healing blocked (when decided by health).", _, _, _, _, _, OnConVarChanged);
-	g_hCvar_ShouldPrintMessage = CreateConVarHook("aid_healing_should_print_message", "1", "Print a message to the console when a client is blocked by aid-healing.", _, true, 0.0, true, 1.0, OnConVarChanged);
+	g_hCvar_VelMax			   = CreateConVarHook("aid_healing_vel_max", "10.0", "Max velocity magnitude for target who had reached to have aid-healing blocked (when walking).", _, _, _, _, _, OnConVarChanged);
+	g_hCvar_HealthThreshold	   = CreateConVarHook("aid_healing_health_threshold", "40", "Max health threshold for target who had reached to have aid-healing blocked (when decided by health).", _, _, _, _, _, OnConVarChanged);
+	g_hCvar_ShouldPrintMessage = CreateConVarHook("aid_healing_should_print_message", "1", "Print a message to the chat when a client trys aid-healing.", _, true, 0.0, true, 1.0, OnConVarChanged);
 
 	GetValues();
 	LoadTranslation("l4d2_block_aid_healing.phrases");
