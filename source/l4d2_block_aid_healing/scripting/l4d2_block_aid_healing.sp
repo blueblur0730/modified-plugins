@@ -5,7 +5,7 @@
 #include <left4dhooks>
 #include <colors>
 
-#define PLUGIN_VERSION	   "1.3.2"
+#define PLUGIN_VERSION	   "1.3.3"
 
 #define BLOCKTYPE_WALKING  (1 << 0)
 #define BLOCKTYPE_ONLADDER (1 << 1)
@@ -93,7 +93,7 @@ public Action L4D2_BackpackItem_StartAction(int client, int entity, any type)
 
 	// we only care about the player who is being targeted by.
 	int target = L4D_FindUseEntity(client, true);
-	if (target <= 0 || target > MaxClients || !IsClientInGame(client))
+	if (target <= 0 || target > MaxClients || !IsClientInGame(target))
 		return Plugin_Continue;
 
 #if DEBUG
