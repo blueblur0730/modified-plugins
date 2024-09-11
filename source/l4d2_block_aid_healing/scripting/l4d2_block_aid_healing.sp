@@ -57,7 +57,7 @@ public void OnPluginStart()
 												  	_, true, 7.0, true, 0.0, OnConVarChanged);
 
 	g_hCvar_AllowedClientType  = CreateConVarHook(	"aid_healing_allowed_client_type",
-												  	"0",
+												  	"3",
 												  	"Type of client NOT allowed to use aid-healing under the rules we set.\
 													0 = no one,\
 													1 = bots,\
