@@ -1,0 +1,10 @@
+"MatchModes"
+{
+	"ExampleConfig"
+	{
+		"example_type"
+		{
+			"name"	"Example Name"
+		}
+	}
+}

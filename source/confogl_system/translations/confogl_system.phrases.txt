@@ -1,0 +1,217 @@
+"Phrases"
+{
+    "Tag"
+    {
+        "en"        "[{olive}Confogl{default}]" // this could be your server logo or tag
+    }
+
+    // MatchVote.sp
+    "Disabled"
+    {
+        "en"        "Plugin is {red}Disabled{default}"
+    }
+
+    "NoConsole"
+    {
+        "en"        "This command can't be used from console."
+    }
+
+    "Title_Match"
+    {
+        "en"        "Select game config:"
+    }
+
+    "Title_Config"
+    {
+        "#format"   "{1:s}"
+        "en"        "Select type {1}:"
+    }
+
+    "ConfigNotFound"
+    {
+        "en"        "No configs for such mode were found."
+    }
+
+    "NoSpec"
+    {
+        "en"        "Voting cannot be initiated by spectators."
+    }
+
+    "MatchLoaded"
+    {
+        "en"        "Game Config already loaded!"
+    }
+
+    "NotEnoughPlayers"
+    {
+        "#format"   "{1:d},{2:d}"
+        "en"        "Vote cannot be started. {red}Not enough players{default} ({red}{1}{default}/{green}{2}{default})."
+    }
+
+    "Title_LoadConfig"
+    {
+        "#format"   "{1:s}"
+        "en"        "Load confogl '{1}' config?"
+    }
+
+    "VoteInProgress"
+    {
+        "#format"   "{1:d}"
+        "en"        "{red}Vote in progress{default}, please wait {green}{1}{default} seconds."
+    }
+
+    "VotePass_Loading"
+    {
+        "en"        "Game Config loading..."
+    }
+
+    "MatchNotLoaded"
+    {
+        "en"        "{red}No Game Config{default} loaded."
+    }
+
+    "PlayersConnecting"
+    {
+        "en"        "Vote cannot be started. Players are connecting."
+    }
+
+    "Title_OffConfogl"
+    {
+        "en"        "Turn off Confogl?"
+    }
+
+    "VotePass_Unloading"
+    {
+        "en"        "Confogl unloading..."
+    }
+
+    "Title_ChangeConfogl"
+    {
+        "#format"   "{1:s}"
+        "en"        "Change confogl config to '{1}'?"
+    }
+
+    "VotePass_Changed"
+    {
+        "en"        "Game Config Changed..."
+    }
+
+    // ClientSettings.sp
+    "KickedForIllegalValue"
+    {
+        "#format"   "{1:L},{2:s},{3:f}"
+        "en"        "{olive}{1}{default} was kicked for having an illegal value for '{green}{2}{default}' {blue}({default}{3}{blue})"
+    }
+
+    "TotalList"
+    {
+        "#format"   "{1:d}"
+        "en"        "Tracked Client CVars (Total {1})"
+    }
+
+    "ClientCvar"
+    {
+        "en"        "Client CVar:"
+    }
+
+    "Min"
+    {
+        "en"        "Min:"
+    }
+
+    "Max"
+    {
+        "en"        "Max:"
+    }
+
+    "ActionKick"
+    {
+        "en"        "Action: Kick"
+    }
+
+    "ActionLog"
+    {
+        "en"        "Action: Log"
+    }
+
+    // CvarSettings.sp
+    "NotStarted"
+    {
+        "en"        "CVar tracking has not been started!! THIS SHOULD NOT OCCUR DURING A GAME!"
+    }
+
+    "EnforcedCvars"
+    {
+        "#format"   "{1:d}"
+        "en"        "Enforced Server CVars (Total {1})"
+    }
+
+    "CvarInfo"
+    {
+        "#format"   "{1:s},{2:s},{3:s}"
+        "en"        "Server CVar: %s, Desired Value: %s, Current Value: %s"
+    }
+
+    "ToSeeMore"
+    {
+        "#format"   "{1:d}"
+        "en"        "To see more CVars, use confogl_cvarsettings {1}"
+    }
+
+    "TrackedChange"
+    {
+        "#format"   "{1:s},{2:s},{3:s}"
+        "en"        "Tracked Server CVar '{green}{1}{default}' changed from '{blue}{2}{default}' to '{blue}{3}{default}' !!!"
+    }
+
+    // ReqMatch.sp
+    "MatchModeLoaded"
+    {
+        "en"        "{default}Game Config loaded!"
+    }
+
+    "ChangeMapTo"
+    {
+        "#format"   "{1:s}"
+        "en"        "{default}Changing map to {green}{1}{default}!"
+    }
+
+    "RestartingMap"
+    {
+        "en"        "{default}Restarting map!"
+    }
+
+    "MatchModeUnloaded"
+    {
+        "en"        "{default}Game Config unloaded!"
+    }
+
+    "LoadingConfig"
+    {
+        "#format"   "{1:s}"
+        "en"        "{default}Loading '{olive}{1}{default}'."
+    }
+
+    "UsingDefault"
+    {
+        "#format"   "{1:s}"
+        "en"        "{default}Config '{olive}{1}{default}' not found, using default config!"
+    }
+
+    "SpecifyConfig"
+    {
+        "en"        "{default}Please specify a {olive}config{default} to load."
+    }
+
+    "RE_ConfigNotFound"
+    {
+        "#format"   "{1:s}"
+        "en"        "{default}Config '{olive}{1}{default}' not found!"
+    }
+
+    "MapNotFound"
+    {
+        "#format"   "{1:s}"
+        "en"        "{default}Map '{olive}{1}{default}' not found!"
+    }
+}
