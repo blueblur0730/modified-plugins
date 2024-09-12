@@ -5,7 +5,7 @@
     - When moving faster than a threshold speed set by cvar.
     - When on a ladder.
     - When their health is greater than a limit set by cvar.
- - Alliedmodders Link [url=https://forums.alliedmods.net/showthread.php?p=2828031]here[/url].
+ - [Alliedmodders Link](https://forums.alliedmods.net/showthread.php?p=2828031).
 
 ### Requirements
  - Left4Dhooks
