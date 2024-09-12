@@ -9,7 +9,7 @@
 #include <colors>
 #include <dhooks>
 
-#define PLUGIN_VERSION		 "2.0"
+#define PLUGIN_VERSION		 "2.1"
 
 #define GAMEDATA_FILE		 "l4d2_practice_with_dominators"
 #define TRANSLATION_FILE	 "l4d2_practice_with_dominators.phrases"
@@ -20,6 +20,7 @@
 #define TAUNT_HIGH_THRESHOLD 0.4
 #define TAUNT_MID_THRESHOLD	 0.2
 #define TAUNT_LOW_THRESHOLD	 0.04
+#define DEPLOY_ANIM_TIME	 0.9667	// 29 frame / 30 fps, basically applied to all guns.
 
 enum SIType
 {
@@ -59,13 +60,10 @@ ConVar
 	g_hCvar_ShouldQuickSwitchWeapon,
 	g_hCvar_ShouldBlockNormalAttack;
 
-ConVar		g_hCvar_SpecialInfectedHP[SIType_Size] = { null, ... };
+bool g_bIsHooked[MAXPLAYERS + 1]		= { false, ... };
+bool g_bIsDominated[MAXPLAYERS + 1]		= { false, ... };
+bool g_bLateHook						= false;
 
-bool		g_bIsHooked[MAXPLAYERS + 1]			   = { false, ... };
-bool		g_bIsDominated[MAXPLAYERS + 1]		   = { false, ... };
-bool		g_bLateHook							   = false;
-
-const float g_fDeployTime						   = 0.9667;	// 29 frame / 30 fps, basically applied to all guns.
 public Plugin myinfo =
 {
 	name = "[L4D2] Practice With Dominators",
@@ -99,13 +97,6 @@ public void OnPluginStart()
 {
 	IniGameData();
 	CreateConVar("l4d2_practice_with_dominators_version", PLUGIN_VERSION, "The version of Practice With Dominators plugin", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-
-	char buffer[32];
-	for (int i = 0; i < view_as<int>(SIType_Size); i++)
-	{
-		Format(buffer, sizeof(buffer), "z_%s_health", SINames[i]);
-		g_hCvar_SpecialInfectedHP[i] = FindConVar(buffer);
-	}
 
 	g_hCvar_DmgDone					= CreateConVar("pwd_ability_dmg_done", "24.0", "Damage done from dominator SIs' ability.");
 	g_hCvar_ShouldDoDamage			= CreateConVar("pwd_should_do_damage", "1", "Whether dominator SIs should do ability damage or not.", _, true, 0.0, true, 1.0);
@@ -245,9 +236,9 @@ Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &fDamage
 }
 
 /**
- * --------------------------------------
- * DHook Callback and Animation Hook
- * --------------------------------------
+ * ------------------
+ * DHook Callback
+ * ------------------
  */
 
 // dominators are: hunter, jockey, charger, smoker.
@@ -326,7 +317,7 @@ void ProcessDomination(int iAttacker, int iVictim)
 	CleanGetUp(iVictim, iWeapon);
 
 	if (g_hCvar_ShouldTaunt.BoolValue)
-		DoTaunt(iRemainingHealth, iAttacker, zClass);
+		DoTaunt(iRemainingHealth, iVictim, zClass);
 }
 
 void CleanGetUp(int client, int weapon)
@@ -337,11 +328,16 @@ void CleanGetUp(int client, int weapon)
 	GetWeaponName(IdentifyWeapon(weapon), sName, sizeof(sName));
 	PrintToServer("### CleanGetUp called when dominated, client: %d, weapon: %d, weapon name: %s", client, weapon, sName);
 #endif
+
 	if (!g_hCvar_ShouldQuickSwitchWeapon.BoolValue)
 		return;
 
+	/**
+	 * This section is refered to l4d2_smg_reload_tweak by Visor.
+	*/
 	float oldNextAttack = GetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack");
-	float newNextAttack = oldNextAttack - g_fDeployTime + 0.1;
+	float newNextAttack = oldNextAttack - DEPLOY_ANIM_TIME + 0.1;
+	float playBackRate	= DEPLOY_ANIM_TIME / 0.1;
 
 #if DEBUG
 	PrintToServer("### oldNextAttack: %.1f, newNextAttack: %.1f", oldNextAttack, newNextAttack);
@@ -353,6 +349,7 @@ void CleanGetUp(int client, int weapon)
 #endif
 		SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", newNextAttack);
 		SetEntPropFloat(client, Prop_Send, "m_flNextAttack", newNextAttack);
+		SetEntPropFloat(weapon, Prop_Send, "m_flPlaybackRate", playBackRate);	// we cant cancel it. but we can accelerate it.
 	}
 
 	g_bIsDominated[client] = false;
@@ -361,6 +358,15 @@ void CleanGetUp(int client, int weapon)
 		It turns out that may be deploy animation is predicted on client-side.
 		But we can still shoot while the deploy animation is still playing.
 		so just be it.
+	*/
+
+	/**
+	 * Should we reset the playback rate? it looks like this rate will exist for a while if you dont do anything,
+	 * but it does not actually affect the gameplay. (except for the animation looks really really 'fast')
+	 * Just left this question here to see if there is any need in the future.
+	 * 
+	 * playBackRate	= DEPLOY_ANIM_TIME * 0.1
+	 * SetEntPropFloat(weapon, Prop_Send, "m_flPlaybackRate", playBackRate);
 	*/
 }
 
@@ -389,8 +395,18 @@ bool IsClientAndInGame(int client)
 
 int GetSpecialInfectedHP(int zClass)
 {
-	if (g_hCvar_SpecialInfectedHP[zClass])
-		return g_hCvar_SpecialInfectedHP[zClass].IntValue;
+	char buffer[32];
+	for (int i = 0; i < view_as<int>(SIType_Size); i++)
+	{
+		if (i != zClass)
+			continue;
+
+		Format(buffer, sizeof(buffer), "z_%s_health", SINames[i]);
+#if DEBUG
+		PrintToServer("### GetSpecialInfectedHP called for %s, health: %d", SINames[i], FindConVar(buffer).IntValue);
+#endif
+		return FindConVar(buffer).IntValue;
+	}
 
 	return 0;
 }
