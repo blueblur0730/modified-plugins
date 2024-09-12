@@ -11,14 +11,26 @@
 #define SAFETY_BUFFER_TIME 1.0
 #define L4D2Team_Survivor  2
 #define L4D2Team_Infected  3
-#define PL_VERSION "4.0"
+
+// SDK function
+#define GAMEDATA_FILE "scavenge_quick_end"
+#define TRANSLATION_FILE "scavenge_quick_end.phrases"
+#define SDKCALL_FUNCTION "CDirectorScavengeMode::EndScavengeRound"
+#define ADDRESS_THEDIRECTOR "CDirector"
+#define OFFSET_SCAVENGEMODEPTR "ScavengeModePtr"
+
+#define PL_VERSION "4.1"
 
 float g_flDefaultLossTime;
 bool g_bLateLoad, g_bInScavengeRound, g_bIsRoundActivated;
 int	g_iLateLoadRound;
+
 ArrayList g_hArrSurDur, g_hArrInfDur;
 ConVar g_hcvarQuickEndSwitch;
 ScavStocksWrapper g_Wrapper;
+
+Handle g_hSDKCall_EndScavengeRound = null;
+Address TheDirector = Address_Null;
 
 enum EndType
 {
@@ -26,7 +38,8 @@ enum EndType
 	QE_AchievedTargetSetDeadLine,
 	QE_WhoSurvivedLonger,
 	QE_None
-} EndType g_eEndType;
+} 
+EndType g_eEndType;
 
 public Plugin myinfo =
 {
@@ -45,6 +58,8 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
 
 public void OnPluginStart()
 {
+	IniGameData();
+
 	CreateConVar("scavenge_quick_end_version", PL_VERSION, "Plugin version", FCVAR_NOTIFY | FCVAR_DONTRECORD | FCVAR_SPONLY);
 	g_hcvarQuickEndSwitch = CreateConVar("l4d2_enable_scavenge_quick_end", "1", "Only enable quick end or not, Printing time is not included by this cvar", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
@@ -69,7 +84,7 @@ public void OnPluginStart()
 			g_iLateLoadRound = g_Wrapper.m_nRoundNumber;
 	}
 
-	LoadTranslation("scavenge_quick_end.phrases");
+	LoadTranslation(TRANSLATION_FILE);
 }
 
 public void OnPluginEnd()
@@ -319,12 +334,35 @@ void EndRoundEarlyOnTime()
 		}
 	}
 
-	// ensure that data message is always after ending reason message.
-	int oldFlags = GetCommandFlags("scenario_end");
-	SetCommandFlags("scenario_end", oldFlags & ~(FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY));
-	ServerCommand("scenario_end");
-	ServerExecute();
-	SetCommandFlags("scenario_end", oldFlags);
+	SDKCall(g_hSDKCall_EndScavengeRound, TheDirector);
+}
+
+void IniGameData()
+{
+	GameData gd = new GameData(GAMEDATA_FILE);
+	if (!gd)
+		SetFailState("Failed to load gamedata \""...GAMEDATA_FILE..."\".");
+		
+	StartPrepSDKCall(SDKCall_Raw);
+	if (!PrepSDKCall_SetFromConf(gd, SDKConf_Signature, SDKCALL_FUNCTION))
+		SetFailState("Failed to set SDK call signature for \""...SDKCALL_FUNCTION..."\".");
+
+	g_hSDKCall_EndScavengeRound = EndPrepSDKCall();
+	if (!g_hSDKCall_EndScavengeRound)
+		SetFailState("Failed to prepare SDK call for \""...SDKCALL_FUNCTION..."\".");
+
+	TheDirector = gd.GetAddress(ADDRESS_THEDIRECTOR);
+	if (TheDirector == Address_Null)
+		SetFailState("Failed to get address of \""...ADDRESS_THEDIRECTOR..."\".");
+
+	int iOff_ScavengeModePtr = -1;
+	iOff_ScavengeModePtr = gd.GetOffset(OFFSET_SCAVENGEMODEPTR);
+	if (iOff_ScavengeModePtr == -1)
+		SetFailState("Failed to get offset of \""...OFFSET_SCAVENGEMODEPTR..."\".");
+
+	TheDirector += view_as<Address>(iOff_ScavengeModePtr);
+
+	delete gd;
 }
 
 /**
