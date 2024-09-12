@@ -5,7 +5,7 @@
 #include <left4dhooks>
 #include <colors>
 
-#define PLUGIN_VERSION	   "1.3.3"
+#define PLUGIN_VERSION	   "1.3.4"
 
 #define BLOCKTYPE_WALKING  (1 << 0)
 #define BLOCKTYPE_ONLADDER (1 << 1)
@@ -91,6 +91,17 @@ public Action L4D2_BackpackItem_StartAction(int client, int entity, any type)
 	PrintToServer("[DEBUG] L4D2_BackpackItem_StartAction called: client %d, entity %d, type %d", client, entity, type);
 #endif
 
+	char sClassname[64];
+	GetEntityClassname(entity, sClassname, sizeof(sClassname));
+
+#if DEBUG
+	PrintToServer("[DEBUG] L4D2_BackpackItem_StartAction entity classname: %s", sClassname);
+#endif
+
+	// our focus point is first-aid kit!
+	if (type != L4D2WeaponId_FirstAidKit || strcmp(sClassname, "weapon_first_aid_kit") != 0)
+		return Plugin_Continue;
+
 	// we only care about the player who is being targeted by.
 	int target = L4D_FindUseEntity(client, true);
 	if (target <= 0 || target > MaxClients || !IsClientInGame(target))
@@ -100,82 +111,74 @@ public Action L4D2_BackpackItem_StartAction(int client, int entity, any type)
 	PrintToServer("[DEBUG] L4D2_BackpackItem_StartAction target: %N", target);
 #endif
 
-	char sClassname[64];
-	GetEntityClassname(entity, sClassname, sizeof(sClassname));
-
-#if DEBUG
-	PrintToServer("[DEBUG] L4D2_BackpackItem_StartAction entity classname: %s", sClassname);
-#endif
-
-	float vel[3]; float fMagnitude;
-	GetEntPropVector(target, Prop_Data, "m_vecAbsVelocity", vel);	// velocity vector of the target.
-	fMagnitude = GetVectorLength(vel);								// we are retriving the magnitude of the velocity vector.
-
-	// our focus point is first-aid kit!
-	if (type == L4D2WeaponId_FirstAidKit && strcmp(sClassname, "weapon_first_aid_kit") == 0)
+	if (g_iBlockedType & BLOCKTYPE_WALKING)
 	{
-		if (g_iBlockedType & BLOCKTYPE_WALKING)
+		if (GetEntityMoveType(target) == MOVETYPE_WALK && (GetEntityFlags(target) & FL_ONGROUND))
 		{
 			// MOVETYPE_WALK is always applied even if you don't move just standing on the ground.
 			// so we need to check if the target is actually moving.
 			// simply checking if the velocity is greater than 0.0 is quite strict, add it up a llitle bit bigger.
-			if (GetEntityMoveType(target) == MOVETYPE_WALK && (GetEntityFlags(target) & FL_ONGROUND) && (fMagnitude > g_flVelMax))
+			float vel[3]; float fMagnitude;
+			GetEntPropVector(target, Prop_Data, "m_vecAbsVelocity", vel);	// velocity vector of the target.
+			fMagnitude = GetVectorLength(vel);								// we are retriving the magnitude of the velocity vector.
+
+			if (fMagnitude <= g_flVelMax)
+				return Plugin_Continue;
+
+			if (g_iAllowedClientType == 3 || (g_iAllowedClientType == 1 && IsFakeClient(client)) || (g_iAllowedClientType == 2 && !IsFakeClient(client)))
 			{
 #if DEBUG
 				PrintToServer("[DEBUG] L4D2_BackpackItem_StartAction blocked by moving.");
 #endif
-				if (g_iAllowedClientType == 3 || (g_iAllowedClientType == 1 && IsFakeClient(client)) || (g_iAllowedClientType == 2 && !IsFakeClient(client)))
-				{
-					if (g_bShouldPrintMessage)
-						CPrintToChat(client, "%t", "BlockedByMoving");
+				if (g_bShouldPrintMessage)
+					CPrintToChat(client, "%t", "BlockedByMoving");
 
-					return Plugin_Handled;
-				}
-				else if (!g_iAllowedClientType)
-					return Plugin_Continue;
+				return Plugin_Handled;
 			}
+			else if (!g_iAllowedClientType)
+				return Plugin_Continue;
 		}
+	}
 
-		if (g_iBlockedType & BLOCKTYPE_ONLADDER)
+	if (g_iBlockedType & BLOCKTYPE_ONLADDER)
+	{
+		// as long as you are sticking on the ladder, this statement is true.
+		if (GetEntityMoveType(target) == MOVETYPE_LADDER)
 		{
-			// as long as you are sticking on the ladder, this statement is true.
-			if (GetEntityMoveType(target) == MOVETYPE_LADDER)
-			{
 #if DEBUG
-				PrintToServer("[DEBUG] L4D2_BackpackItem_StartAction blocked by on a ladder.");
+			PrintToServer("[DEBUG] L4D2_BackpackItem_StartAction blocked by on a ladder.");
 #endif
-				if (g_iAllowedClientType == 3 || (g_iAllowedClientType == 1 && IsFakeClient(client)) || (g_iAllowedClientType == 2 && !IsFakeClient(client)))
-				{
-					if (g_bShouldPrintMessage)
-						CPrintToChat(client, "%t", "BlockedByOnALadder");
+			if (g_iAllowedClientType == 3 || (g_iAllowedClientType == 1 && IsFakeClient(client)) || (g_iAllowedClientType == 2 && !IsFakeClient(client)))
+			{
+				if (g_bShouldPrintMessage)
+					CPrintToChat(client, "%t", "BlockedByOnALadder");
 
-					return Plugin_Handled;
-				}
-				else if (!g_iAllowedClientType)
-					return Plugin_Continue;
+				return Plugin_Handled;
 			}
+			else if (!g_iAllowedClientType)
+				return Plugin_Continue;
 		}
+	}
 
-		// health is always the last condition to check since this status is always constantly existed.
-		if (g_iBlockedType & BLOCKTYPE_BYHEALTH)
+	// health is always the last condition to check since this status is always constantly existed.
+	if (g_iBlockedType & BLOCKTYPE_BYHEALTH)
+	{
+		int iTempHealth = GetSurvivorTemporaryHealth(target);
+		int iHealth		= GetClientHealth(target) + iTempHealth;
+		if (iHealth > g_iHealthThreshold)
 		{
-			int iTempHealth = GetSurvivorTemporaryHealth(target);
-			int iHealth		= GetClientHealth(target) + iTempHealth;
-			if (iHealth > g_iHealthThreshold)
-			{
 #if DEBUG
-				PrintToServer("[DEBUG] L4D2_BackpackItem_StartAction blocked by health, health + temphealth: %d.", iHealth);
+			PrintToServer("[DEBUG] L4D2_BackpackItem_StartAction blocked by health, health + temphealth: %d.", iHealth);
 #endif
-				if (g_iAllowedClientType == 3 || (g_iAllowedClientType == 1 && IsFakeClient(client)) || (g_iAllowedClientType == 2 && !IsFakeClient(client)))
-				{
-					if (g_bShouldPrintMessage)
-						CPrintToChat(client, "%t", "BlockedByHealth", g_iHealthThreshold);
+			if (g_iAllowedClientType == 3 || (g_iAllowedClientType == 1 && IsFakeClient(client)) || (g_iAllowedClientType == 2 && !IsFakeClient(client)))
+			{
+				if (g_bShouldPrintMessage)
+					CPrintToChat(client, "%t", "BlockedByHealth", g_iHealthThreshold);
 
-					return Plugin_Handled;
-				}
-				else if (!g_iAllowedClientType)
-					return Plugin_Continue;
+				return Plugin_Handled;
 			}
+			else if (!g_iAllowedClientType)
+				return Plugin_Continue;
 		}
 	}
 
