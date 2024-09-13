@@ -2,9 +2,10 @@
 #pragma newdecls required
 
 #define DEBUG_ALL				   0
-#define PLUGIN_VERSION			   "1.2"	// 2.4.5 rework
+#define PLUGIN_VERSION			   "1.3"	// 2.4.5 rework
 
 #define VOTE_API_BUILTINVOTE 1		// will work in the future. for now dont turn it off.
+#define GAME_LEFT4DEAD2		 1
 
 #include <sourcemod>
 #include <sdktools>
@@ -28,6 +29,7 @@
 #include "confogl_system/includes/debug.sp"
 #include "confogl_system/includes/configs.sp"
 #include "confogl_system/includes/customtags.sp"
+#include "confogl_system/includes/predictable_unloader.sp"	// Predictable Unloader by Sir
 
 // Modules here
 #include "confogl_system/MatchVote.sp"
@@ -37,12 +39,14 @@
 #include "confogl_system/BotKick.sp"
 #include "confogl_system/ClientSettings.sp"
 
+// Competitive Rework Team:
 // Confogl Team, A1m` (for confogl itself)
-// vintik, Sir, StarterX4 (for match_vote.sp)
+// vintik, Sir (for match_vote.sp)
+// other contributors: Sir, Forgetest, sheo, StarterX4
 public Plugin myinfo =
 {
 	name = "[L4D2/ANY?] Confogl System",
-	author = "Confogl Team, A1m`, vintik, Sir, StarterX4, blueblur",
+	author = "Competitive Rework Team, blueblur",
 	description = "Confogl System that is only used for server management.",
 	version	= PLUGIN_VERSION,
 	url	= "https://github.com/blueblur0730/modified-plugins"
@@ -64,6 +68,7 @@ public void OnPluginStart()
 	Debug_OnModuleStart();		// debug
 	Configs_OnModuleStart();	// configs
 	CT_OnModuleStart();			// customtags
+	PU_OnPluginStart();		// Predictable Unloader
 
 	// Modules
 	MV_OnModuleStart();	   // MatchVote

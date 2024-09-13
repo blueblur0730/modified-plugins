@@ -15,12 +15,12 @@ static bool
 	RM_bIsMatchModeLoaded = false,
 	RM_bIsAMatchActive	  = false,
 	RM_bIsPluginsLoaded	  = false,
-	RM_bIsMapRestarted	  = false,
-	RM_bIsChmatchRequest = false;
+	RM_bIsMapRestarted	  = false;
 
-static Handle
+static GlobalForward
 	RM_hFwdMatchLoad   = null,
-	RM_hFwdMatchUnload = null;
+	RM_hFwdMatchUnload = null,
+	RM_HFwdChMatch	   = null;
 
 static ConVar
 	RM_hSbAllBotGame	   = null,
@@ -37,11 +37,10 @@ void RM_APL()
 {
 	RM_hFwdMatchLoad   = CreateGlobalForward("LGO_OnMatchModeLoaded", ET_Ignore);
 	RM_hFwdMatchUnload = CreateGlobalForward("LGO_OnMatchModeUnloaded", ET_Ignore);
+	RM_HFwdChMatch     = CreateGlobalForward("LGO_OnChMatch", ET_Ignore);
 
 	CreateNative("LGO_IsMatchModeLoaded", native_IsMatchModeLoaded);
 }
-
-
 
 void RM_OnModuleStart()
 {
@@ -180,8 +179,6 @@ static void RM_Match_Load()
 	if (RM_bDebugEnabled || IsDebugEnabled())
 		LogMessage("[%s] Match mode loaded!", RM_MODULE_NAME);
 
-	RM_bIsChmatchRequest = false;
-
 	Call_StartForward(RM_hFwdMatchLoad);
 	Call_Finish();
 }
@@ -218,16 +215,7 @@ static void RM_Match_Unload(bool bForced = false)
 
 	RM_hConfigFile_Off.GetString(sBuffer, sizeof(sBuffer));
 
-	if (!RM_bIsChmatchRequest)
-		ExecuteCfg(sBuffer);
-	else
-	{
-		// if we are using chmatch, don't let predictable_unloader unload confogl itself.
-		// all plugins will be unload and load when the new config excuted.
-		ServerCommand("sm plugins load_unlock");
-		ServerCommand("sm plugins unload optional/predictable_unloader.smx");
-		ExecuteCfg(sBuffer);
-	}
+	ExecuteCfg(sBuffer);
 
 	if (RM_bDebugEnabled || IsDebugEnabled())
 		LogMessage("[%s] Match mode unloaded!", RM_MODULE_NAME);
@@ -392,10 +380,12 @@ static Action RM_CMD_ChangeMatch(int client, int args)
 	if (!RM_bIsMatchModeLoaded)
 		return Plugin_Handled;
 
+	Call_StartForward(RM_HFwdChMatch);
+	Call_Finish();
+
 	if (RM_bDebugEnabled || IsDebugEnabled())
 		LogMessage("[%s] Match mode forced to unload! [Change in this case!]", RM_MODULE_NAME);
 
-	RM_bIsChmatchRequest = true;
 	RM_Match_Unload(true);
 
 	// give time to fully finish unloading.
