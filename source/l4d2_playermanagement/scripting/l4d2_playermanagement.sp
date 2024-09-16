@@ -10,11 +10,11 @@
 #define GAMEDATA_FILE "l4d2_playermanagement"
 #define TRANSLATION_FILE_COMMON "common.phrases"
 #define TRANSLATION_FILE "l4d2_playermanagement.phrases"
-#define OFFSET_NAME "CTerrorPlayer->g_iOff_m_queuedPummelAttacker"
+#define OFFSET_NAME "CTerrorPlayer->m_queuedPummelAttacker"
 #define SDKCALL_FUNCTION "CTerrorPlayer::GoAwayFromKeyboard"
 #define BOT_NAME "k9Q6CK42"
 
-#define PLUGIN_VERSION "1.0" // 7
+#define PLUGIN_VERSION "1.0.1" // 7
 
 // This is a modified version from Competitive Rework Team.
 public Plugin myinfo =
@@ -179,9 +179,9 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 
 Action FixBots_Cmd(int client, int args)
 {
-	if (client != 0) CPrintToChatAll("[SM] %N is attempting to fix bot counts", client);
-	else CPrintToChatAll("[SM] Console is attempting to fix bot counts");
-
+	char name[MAX_NAME_LENGTH];
+	GetClientName(client, name, sizeof(name));
+	CPrintToChatAll("%t", "TryingFixBot", client != 0 ? name : "Console");
 	FixBotCount(true);
 
 	return Plugin_Handled;
@@ -198,7 +198,7 @@ Action Spectate_Cmd(int client, int args)
 		// is player dominated or incapped?
 		if (((L4D2_GetInfectedAttacker(client) != -1 && !L4D_IsPlayerIncapacitated(client)) || GetPummelQueueAttacker(client) != -1) && !g_hCvar_ShouldSpecWhileCapped.BoolValue)
 		{
-			CPrintToChat(client, "%t", "NoCappedSpec");	// No spectating while capped!
+			CPrintToChat(client, "%t", "NoCappedSpec");
 			return Plugin_Handled;
 		}
 		else
@@ -235,7 +235,7 @@ Action Spectate_Cmd(int client, int args)
 	}
 	
 	if (g_hCvar_Supress.BoolValue && team != L4D2Team_Spectator && !g_hSpecTimer[client])
-		CPrintToChatAllEx(client, "%t", "PlayerSpectated", client);	// {teamcolor}%N{default} has become a spectator!
+		CPrintToChatAllEx(client, "%t", "PlayerSpectated", client);
 	
 	if (!g_hSpecTimer[client]) g_hSpecTimer[client] = CreateTimer(7.0, SecureSpec_Timer, client);
 	return Plugin_Handled;
@@ -279,7 +279,7 @@ Action SwapTeams_Cmd(int client, int args)
 {
 	if (!L4D_HasPlayerControlledZombies())
 	{
-		CReplyToCommand(client, "%t", "OnlyPVP");	// [SM] Only pvp mode is allowed.
+		CReplyToCommand(client, "%t", "OnlyPVP");
 		return Plugin_Handled;
 	}
 
@@ -296,7 +296,7 @@ Action SwapTeams_Cmd(int client, int args)
 
 	if (L4D2_IsTankInPlay() && bHasTank)
 	{
-		CReplyToCommand(client, "%t", "TankInPlay");	// [SM] Plyer tank is in play, cannot swap teams.
+		CReplyToCommand(client, "%t", "TankInPlay");
 		return Plugin_Handled;
 	}
 
@@ -314,13 +314,13 @@ Action Swap_Cmd(int client, int args)
 {
 	if (!L4D_HasPlayerControlledZombies())
 	{
-		CReplyToCommand(client, "%t", "OnlyPVP");	// [SM] Only pvp mode is allowed.
+		CReplyToCommand(client, "%t", "OnlyPVP");
 		return Plugin_Handled;
 	}
 
 	if (args < 1)
 	{
-		CReplyToCommand(client, "%t", "SwapUsage");	// [SM] Usage: sm_swap <player1> <player2> ... <playerN>
+		CReplyToCommand(client, "%t", "SwapUsage");
 		return Plugin_Handled;
 	}
 
@@ -348,7 +348,7 @@ Action Swap_Cmd(int client, int args)
 
 			if (IsTank(target))
 			{
-				CReplyToCommand(client, "%t", "NoTankSwap");	// [SM] Tanks cannot be swapped.
+				CReplyToCommand(client, "%t", "NoTankSwap");
 				return Plugin_Handled;
 			}
 
@@ -372,8 +372,8 @@ Action SwapTo_Cmd(int client, int args)
 
 	if (args < 2)
 	{
-		CReplyToCommand(client, "%t", "SwapToUsage", L4D2Team_Spectator, L4D2Team_Survivor, L4D2Team_Infected);	// [SM] Usage: sm_swapto <teamnum> <player1> <player2> ... <playerN>\n%d = Spectators, %d = Survivors, %d = Infected
-		CReplyToCommand(client, "%t", "SwapToForceUsage", L4D2Team_Spectator, L4D2Team_Survivor, L4D2Team_Infected);	// [SM] Usage: sm_swapto force <teamnum> <player1> <player2> ... <playerN>\n%d = Spectators, %d = Survivors, %d = Infected
+		CReplyToCommand(client, "%t", "SwapToUsage", L4D2Team_Spectator, L4D2Team_Survivor, L4D2Team_Infected);
+		CReplyToCommand(client, "%t", "SwapToForceUsage", L4D2Team_Spectator, L4D2Team_Survivor, L4D2Team_Infected);
 		return Plugin_Handled;
 	}
 
@@ -390,7 +390,7 @@ Action SwapTo_Cmd(int client, int args)
 	L4D2Team team = view_as<L4D2Team>(StringToInt(argbuf));
 	if (team < L4D2Team_Spectator || team > L4D2Team_Infected)
 	{
-		CReplyToCommand(client, "%t", "ValidTeams", L4D2Team_Spectator, L4D2Team_Survivor, L4D2Team_Infected);	// [SM] Valid teams: %d = Spectators, %d = Survivors, %d = Infected
+		CReplyToCommand(client, "%t", "ValidTeams", L4D2Team_Spectator, L4D2Team_Survivor, L4D2Team_Infected);
 		return Plugin_Handled;
 	}
 
@@ -418,7 +418,7 @@ Action SwapTo_Cmd(int client, int args)
 
 			if (IsTank(target))
 			{
-				CReplyToCommand(client, "%t", "NoTankSwap");	// [SM] Tanks cannot be swapped.
+				CReplyToCommand(client, "%t", "NoTankSwap");
 				return Plugin_Handled;
 			}
 
@@ -459,7 +459,7 @@ void ApplySwaps(int sender, bool force)
 			if (!ChangeClientTeamEx(client, g_L4D2Team_pendingSwaps[client], force))
 			{
 				if (sender > 0)
-					CPrintToChat(sender, "%t", "CouldNotSwitch", client);	// %N could not be switched because the target team was full or has no bot to take over.
+					CPrintToChat(sender, "%t", "CouldNotSwitch", client);
 			}
 			g_L4D2Team_pendingSwaps[client] = L4D2Team_None;
 
@@ -475,19 +475,19 @@ Action Takeover_Cmd(int client, int args)
 {
 	if (GetClientTeamEx(client) == L4D2Team_Survivor)
 	{
-		CReplyToCommand(client, "%t", "AlreadySurvivor");	// [SM] You are already a survivor.
+		CReplyToCommand(client, "%t", "AlreadySurvivor");
 		return Plugin_Handled;
 	}
 
-	if (GetClientTeamEx(client) == L4D2Team_Infected)
+	if (GetClientTeamEx(client) == L4D2Team_Infected && L4D_HasPlayerControlledZombies())
 	{
-		CReplyToCommand(client, "%t", "AlreadyInfected");	// [SM] You should use 'm' directly.
+		CReplyToCommand(client, "%t", "AlreadyInfected");
 		return Plugin_Handled;
 	}
 
 	if (IsPlayerIdle(client))
 	{
-		CReplyToCommand(client, "%t", "PlayerIdle");	// [SM] Player is idle.
+		CReplyToCommand(client, "%t", "PlayerIdle");
 		return Plugin_Handled;
 	}
 
@@ -514,7 +514,7 @@ Action Suicide_Cmd(int client, int args)
 	// is player dominated or incapped?
 	if (((L4D2_GetInfectedAttacker(client) != -1 && !L4D_IsPlayerIncapacitated(client)) || GetPummelQueueAttacker(client) != -1) && !g_hCvar_ShouldSuicideWhileCapped.BoolValue)
 	{
-		CPrintToChat(client, "%t", "NoCappedSuicide");	// No suicide while capped!
+		CPrintToChat(client, "%t", "NoCappedSuicide");
 		return Plugin_Handled;
 	}
 	
@@ -526,7 +526,7 @@ Action Suicide_Cmd(int client, int args)
 				ForcePlayerSuicide(client);
 
 			if (g_hCvar_Supress.BoolValue)
-				CPrintToChatAllEx(client, "%t", "PlayerSuicide", client);	// {teamcolor}%N{default} has committed suicide!
+				CPrintToChatAllEx(client, "%t", "PlayerSuicide", client);
 		}
 	}
 	
