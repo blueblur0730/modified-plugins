@@ -1,0 +1,89 @@
+"Phrases"
+{
+    "TryingFixBot"
+    {
+        "#format"   "{1:s}"
+        "en"        "[{orange}!{default}] {1} is attempting to fix bot counts."
+    }
+
+    "NoCappedSpec"
+    {
+        "en"        "[{orange}!{default}] No spectating while capped!"
+    }
+
+    "PlayerSpectated"
+    {
+        "#format"   "{1:N}"
+        "en"        "[{orange}!{default}] {teamcolor}{1}{default} has become a spectator!"
+    }
+
+    "OnlyPVP"
+    {
+        "en"        "[{orange}!{default}] Only PVP mode is allowed."
+    }
+
+    "TankInPlay"
+    {
+        "en"        "[{orange}!{default}] Plyer tank is in play, cannot swap teams."
+    }
+
+    "SwapUsage"
+    {
+        "en"        "[{orange}!{default}] Usage: sm_swap <player1> <player2> ... <playerN>"
+    }
+
+    "NoTankSwap"
+    {
+        "en"        "[{orange}!{default}] Tanks cannot be swapped."
+    }
+
+    "SwapToUsage"
+    {
+        "#format"   "{1:d},{2:d},{3:d}"
+        "en"        "[{orange}!{default}] Usage: sm_swapto <teamnum> <player1> <player2> ... <playerN>\n{1} = Spectators, {2} = Survivors, {3} = Infected"
+    }
+
+    "SwapToForceUsage"
+    {
+        "#format"   "{1:d},{2:d},{3:d}"
+        "en"        "[{orange}!{default}] Usage: sm_swapto force <teamnum> <player1> <player2> ... <playerN>\n{1} = Spectators, {2} = Survivors, {3} = Infected"
+    }
+
+    "ValidTeams"
+    {
+        "#format"   "{1:d},{2:d},{3:d}"
+        "en"        "[{orange}!{default}] Valid teams: %d = Spectators, %d = Survivors, %d = Infected"
+    }
+
+    "CouldNotSwitch"
+    {
+        "#format"   "{1:N}"
+        "en"        "[{orange}!{default}] {1} could not be switched because the target team was full or has no bot to take over."
+    }
+
+    "AlreadySurvivor"
+    {
+        "en"        "[{orange}!{default}] You are already a survivor."
+    }
+
+    "AlreadyInfected"
+    {
+        "en"        "[{orange}!{default}] You should use 'm' directly."
+    }
+
+    "PlayerIdle"
+    {
+        "en"        "[{orange}!{default}] You are already idle."
+    }
+
+    "NoCappedSuicide"
+    {
+        "en"        "[{orange}!{default}] No suicide while capped!"
+    }
+
+    "PlayerSuicide"
+    {
+        "#format"   "{1:N}"
+        "en"        "[{orange}!{default}] {teamcolor}{1}{default} has committed suicide!"
+    }
+}

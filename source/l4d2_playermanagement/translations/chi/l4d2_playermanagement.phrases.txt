@@ -1,0 +1,89 @@
+"Phrases"
+{
+    "TryingFixBot"
+    {
+        "#format"       "{1:s}"
+        "chi"           "[{orange}!{default}] {1} 正在试图修复Bot数量."
+    }
+
+    "NoCappedSpec"
+    {
+        "chi"           "[{orange}!{default}] 被制服或倒地时不能旁观!"
+    }
+
+    "PlayerSpectated"
+    {
+        "#format"       "{1:N}"
+        "chi"           "[{orange}!{default}] {teamcolor}{1}{default} 变成了一名旁观者!"
+    }
+
+    "OnlyPVP"
+    {
+        "chi"           "[{orange}!{default}] 只有PVP模式下才能使用此指令."
+    }
+
+    "TankInPlay"
+    {
+        "chi"           "[{orange}!{default}] 场上有玩家Tank正在扮演, 不能进行手动切换团队."
+    }
+
+    "SwapUsage"
+    {
+        "chi"           "[{orange}!{default}] 用法: sm_swap <玩家1> <玩家2> ... <玩家N>"
+    }
+
+    "NoTankSwap"
+    {
+        "chi"           "[{orange}!{default}] Tank不能被切换团队."
+    }
+
+    "SwapToUsage"
+    {
+        "#format"       "{1:d},{2:d},{3:d}"
+        "chi"           "[{orange}!{default}] 用法: sm_swapto <团队数字> <玩家1> <玩家2> ... <玩家N>\n{1} = 旁观者, {2} = 生还者, {3} = 感染者"
+    }
+
+    "SwapToForceUsage"
+    {
+        "#format"       "{1:d},{2:d},{3:d}"
+        "chi"           "[{orange}!{default}] 用法: sm_swapto force <团队数字> <玩家1> <玩家2> ... <玩家N>\n{1} = 旁观者, {2} = 生还者, {3} = 感染者"
+    }
+
+    "ValidTeams"
+    {
+        "#format"       "{1:d},{2:d},{3:d}"
+        "chi"           "[{orange}!{default}] 合法团队数字: %d = 旁观者, %d = 生还者, %d = 感染者"
+    }
+
+    "CouldNotSwitch"
+    {
+        "#format"       "{1:N}"
+        "chi"           "[{orange}!{default}] {1} 不能被切换团队, 因为目标团队已经满员或没有Bot可供接管."
+    }
+
+    "AlreadySurvivor"
+    {
+        "chi"           "[{orange}!{default}] 你已经是生还者了."
+    }
+
+    "AlreadyInfected"
+    {
+        "chi"           "[{orange}!{default}] 你应该直接使用 'm'."
+    }
+
+    "PlayerIdle"
+    {
+        "chi"           "[{orange}!{default}] 你已经闲置了."
+    }
+
+    "NoCappedSuicide"
+    {
+        "chi"           "[{orange}!{default}] 被制服或倒地时不能自杀!"
+    }
+
+    "PlayerSuicide"
+    {
+        "#format"       "{1:N}"
+        "chi"           "[{orange}!{default}] {teamcolor}{1}{default} 自杀了!"
+    }
+}
