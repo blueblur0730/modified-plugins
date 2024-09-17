@@ -148,30 +148,3 @@ public void OnLibraryRemoved(const char[] name)
 	if (strcmp(name, "l4d2_changelevel") == 0)
 		g_bIsChangeLevelAvailable = false;
 }
-
-public Action L4D_OnFirstSurvivorLeftSafeArea(int client)
-{
-	if (IsPluginEnabled())
-		CreateTimer(0.1, OFSLA_ForceMobSpawnTimer);
-
-	return Plugin_Continue;
-}
-
-static Action OFSLA_ForceMobSpawnTimer(Handle hTimer)
-{
-	// Workaround to make tank horde blocking always work
-	// Makes the first horde always start 100s after survivors leave saferoom
-	static ConVar hCvarMobSpawnTimeMin = null;
-	static ConVar hCvarMobSpawnTimeMax = null;
-
-	if (hCvarMobSpawnTimeMin == null)
-	{
-		hCvarMobSpawnTimeMin = FindConVar("z_mob_spawn_min_interval_normal");
-		hCvarMobSpawnTimeMax = FindConVar("z_mob_spawn_max_interval_normal");
-	}
-
-	float fRand = GetRandomFloat(hCvarMobSpawnTimeMin.FloatValue, hCvarMobSpawnTimeMax.FloatValue);
-	L4D2_CTimerStart(L4D2CT_MobSpawnTimer, fRand);
-
-	return Plugin_Stop;
-}
