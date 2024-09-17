@@ -2,7 +2,7 @@
 #pragma newdecls required
 
 #define DEBUG_ALL				   0
-#define PLUGIN_VERSION			   "1.3.4"	// 2.4.5 rework
+#define PLUGIN_VERSION			   "1.3.5"	// 2.4.5 rework
 
 #define VOTE_API_BUILTINVOTE 1		// will work in the future. for now dont turn it off.
 #define GAME_LEFT4DEAD2		 1
@@ -20,7 +20,7 @@
 #endif
 
 #undef REQUIRE_PLUGIN
-#include <confogl_system>
+#include <confogl>
 #include <l4d2_changelevel>
 
 // Includes here
