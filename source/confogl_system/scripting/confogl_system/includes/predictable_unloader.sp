@@ -88,11 +88,11 @@ static Action UnloadPlugins(int args)
 
 	char stockpluginname[64];
 	Handle currentPlugin = null;
-	PluginIterator pluginIterator = new PluginIterator();
+	Handle pluginIterator = GetPluginIterator();
 
-	while (pluginIterator.Next())
+	while (MorePlugins(pluginIterator))
 	{
-		currentPlugin = pluginIterator.Plugin;
+		currentPlugin = ReadPlugin(pluginIterator);
 		if (!currentPlugin)
 			continue;
 
