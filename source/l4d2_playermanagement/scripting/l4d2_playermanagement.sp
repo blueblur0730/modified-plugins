@@ -244,8 +244,9 @@ Action Spectate_Cmd(int client, int args)
 // prevent message being spammed.
 Action SecureSpec_Timer(Handle timer, any client)
 {
-	delete g_hSpecTimer[client];
-	return Plugin_Stop;
+	KillTimer(g_hSpecTimer[client]);
+	g_hSpecTimer[client] = INVALID_HANDLE;
+	return Plugin_Handled;
 }
 
 Action RespecDelay_Timer(Handle timer, any client)
