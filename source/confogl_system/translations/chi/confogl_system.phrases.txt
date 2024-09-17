@@ -2,216 +2,216 @@
 {
     "Tag"
     {
-        "en"        "[{olive}Confogl{default}]"	// 你可以填自己的服务器logo或者tag
+        "chi"        "[{olive}Confogl{default}]"	// 你可以填自己的服务器logo或者tag
     }
 
     // MatchVote.sp
     "Disabled"
     {
-        "en"        "插件已 {red}禁用{default}"
+        "chi"        "插件已 {red}禁用{default}"
     }
 
     "NoConsole"
     {
-        "en"        "你不能从控制台使用此指令."
+        "chi"        "你不能从控制台使用此指令."
     }
 
     "Title_Match"
     {
-        "en"        "选择配置:"
+        "chi"        "选择配置:"
     }
 
     "Title_Config"
     {
         "#format"   "{1:s}"
-        "en"        "选择类型 {1}:"
+        "chi"        "选择类型 {1}:"
     }
 
     "ConfigNotFound"
     {
-        "en"        "没有找到相应的配置."
+        "chi"        "没有找到相应的配置."
     }
 
     "NoSpec"
     {
-        "en"        "旁观者不允许发起投票."
+        "chi"        "旁观者不允许发起投票."
     }
 
     "MatchLoaded"
     {
-        "en"        "配置已经加载!"
+        "chi"        "配置已经加载!"
     }
 
     "NotEnoughPlayers"
     {
         "#format"   "{1:d},{2:d}"
-        "en"        "不能发起投票. {red}人数不足{default} ({red}{1}{default}/{green}{2}{default})."
+        "chi"        "不能发起投票. {red}人数不足{default} ({red}{1}{default}/{green}{2}{default})."
     }
 
     "Title_LoadConfig"
     {
         "#format"   "{1:s}"
-        "en"        "加载 Confogl 配置 '{1}' ?"
+        "chi"        "加载 Confogl 配置 '{1}' ?"
     }
 
     "VoteInProgress"
     {
         "#format"   "{1:d}"
-        "en"        "{red}投票正进行中{default}, 请等待 {green}{1}{default} 秒."
+        "chi"        "{red}投票正进行中{default}, 请等待 {green}{1}{default} 秒."
     }
 
     "VotePass_Loading"
     {
-        "en"        "配置加载中..."
+        "chi"        "配置加载中..."
     }
 
     "MatchNotLoaded"
     {
-        "en"        "{red}没有配置{default} 加载."
+        "chi"        "{red}没有配置{default} 加载."
     }
 
     "PlayersConnecting"
     {
-        "en"        "不能发起投票. 玩家正在连接."
+        "chi"        "不能发起投票. 玩家正在连接."
     }
 
     "Title_OffConfogl"
     {
-        "en"        "卸载 Confogl 配置?"
+        "chi"        "卸载 Confogl 配置?"
     }
 
     "VotePass_Unloading"
     {
-        "en"        "Confogl 配置卸载中..."
+        "chi"        "Confogl 配置卸载中..."
     }
 
     "Title_ChangeConfogl"
     {
         "#format"   "{1:s}"
-        "en"        "更改 Confogl 配置为 '{1}'?"
+        "chi"        "更改 Confogl 配置为 '{1}'?"
     }
 
     "VotePass_Changed"
     {
-        "en"        "配置更改中..."
+        "chi"        "配置更改中..."
     }
 
     // ClientSettings.sp
     "KickedForIllegalValue"
     {
         "#format"   "{1:L},{2:s},{3:f}"
-        "en"        "{olive}{1}{default} 因参数 '{green}{2}{default}' {blue}({default}{3}{blue}) 不合法而被踢出游戏."
+        "chi"        "{olive}{1}{default} 因参数 '{green}{2}{default}' {blue}({default}{3}{blue}) 不合法而被踢出游戏."
     }
 
     "TotalList"
     {
         "#format"   "{1:d}"
-        "en"        "已监测客户端Cvars (共 {1})"
+        "chi"        "已监测客户端Cvars (共 {1})"
     }
 
     "ClientCvar"
     {
-        "en"        "客户端Cvars:"
+        "chi"        "客户端Cvars:"
     }
 
     "Min"
     {
-        "en"        "最小:"
+        "chi"        "最小:"
     }
 
     "Max"
     {
-        "en"        "最大:"
+        "chi"        "最大:"
     }
 
     "ActionKick"
     {
-        "en"        "行为: 踢出"
+        "chi"        "行为: 踢出"
     }
 
     "ActionLog"
     {
-        "en"        "行为: 记录"
+        "chi"        "行为: 记录"
     }
 
     // CvarSettings.sp
     "NotStarted"
     {
-        "en"        "Cvar监测尚未开启! 这不应该发生在已开始的游戏中!!!"
+        "chi"        "Cvar监测尚未开启! 这不应该发生在已开始的游戏中!!!"
     }
 
     "EnforcedCvars"
     {
         "#format"   "{1:d}"
-        "en"        "强制服务端Cvars (共 {1})"
+        "chi"        "强制服务端Cvars (共 {1})"
     }
 
     "CvarInfo"
     {
         "#format"   "{1:s},{2:s},{3:s}"
-        "en"        "服务端 Cvar: %s, 期望值: %s, 当前值: %s"
+        "chi"        "服务端 Cvar: %s, 期望值: %s, 当前值: %s"
     }
 
     "ToSeeMore"
     {
         "#format"   "{1:d}"
-        "en"        "欲查询更多Cvars, 使用 confogl_cvarsettings {1}"
+        "chi"        "欲查询更多Cvars, 使用 confogl_cvarsettings {1}"
     }
 
     "TrackedChange"
     {
         "#format"   "{1:s},{2:s},{3:s}"
-        "en"        "监测到服务端Cvar '{green}{1}{default}' 由 '{blue}{2}{default}' 更改为 '{blue}{3}{default}' !!!"
+        "chi"        "监测到服务端Cvar '{green}{1}{default}' 由 '{blue}{2}{default}' 更改为 '{blue}{3}{default}' !!!"
     }
 
     // ReqMatch.sp
     "MatchModeLoaded"
     {
-        "en"        "{default}配置已加载!"
+        "chi"        "{default}配置已加载!"
     }
 
     "ChangeMapTo"
     {
         "#format"   "{1:s}"
-        "en"        "{default}切换地图为 {green}{1}{default}!"
+        "chi"        "{default}切换地图为 {green}{1}{default}!"
     }
 
     "RestartingMap"
     {
-        "en"        "{default}重启地图中!"
+        "chi"        "{default}重启地图中!"
     }
 
     "MatchModeUnloaded"
     {
-        "en"        "{default}配置已卸载!"
+        "chi"        "{default}配置已卸载!"
     }
 
     "LoadingConfig"
     {
         "#format"   "{1:s}"
-        "en"        "{default}正在加载 '{olive}{1}{default}'."
+        "chi"        "{default}正在加载 '{olive}{1}{default}'."
     }
 
     "UsingDefault"
     {
         "#format"   "{1:s}"
-        "en"        "{default}配置 '{olive}{1}{default}' 寻求未果, 使用默认配置!"
+        "chi"        "{default}配置 '{olive}{1}{default}' 寻求未果, 使用默认配置!"
     }
 
     "SpecifyConfig"
     {
-        "en"        "{default}请选择一个 {olive}配置{default} 来加载."
+        "chi"        "{default}请选择一个 {olive}配置{default} 来加载."
     }
 
     "RE_ConfigNotFound"
     {
         "#format"   "{1:s}"
-        "en"        "{default}配置 '{olive}{1}{default}' 未找到!"
+        "chi"        "{default}配置 '{olive}{1}{default}' 未找到!"
     }
 
     "MapNotFound"
     {
         "#format"   "{1:s}"
-        "en"        "{default}地图 '{olive}{1}{default}' 未找到!"
+        "chi"        "{default}地图 '{olive}{1}{default}' 未找到!"
     }
 }

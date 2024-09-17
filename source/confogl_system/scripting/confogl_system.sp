@@ -63,6 +63,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
+	// translation file should be the first thing to do. 
+	// other wise plugin cant translate the phrases and goes rong.
+	LoadTranslation(TRANSLATION_FILE);
+
 	// Plugin functions
 	Fns_OnModuleStart();		// functions
 	Debug_OnModuleStart();		// debug
@@ -80,7 +84,6 @@ public void OnPluginStart()
 
 	// Other
 	AddCustomServerTag("confogl");
-	LoadTranslations(TRANSLATION_FILE);
 }
 
 public void OnPluginEnd()
