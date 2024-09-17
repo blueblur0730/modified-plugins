@@ -42,7 +42,7 @@
 // Competitive Rework Team:
 // Confogl Team, A1m` (for confogl itself)
 // vintik, Sir (for match_vote.sp)
-// other contributors: Sir, Forgetest, sheo, StarterX4
+// other contributors: Sir, Forgetest, sheo, StarterX4 and so on...
 public Plugin myinfo =
 {
 	name = "[L4D2/ANY?] Confogl System",
@@ -57,7 +57,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	Configs_APL();	  // configs
 	RM_APL();	 	  // ReqMatch
 
-	RegPluginLibrary("confogl_system");
+	RegPluginLibrary("confogl");
 	return APLRes_Success;
 }
 
