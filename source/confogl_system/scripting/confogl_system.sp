@@ -2,7 +2,7 @@
 #pragma newdecls required
 
 #define DEBUG_ALL				   0
-#define PLUGIN_VERSION			   "1.3.2"	// 2.4.5 rework
+#define PLUGIN_VERSION			   "1.3.4"	// 2.4.5 rework
 
 #define VOTE_API_BUILTINVOTE 1		// will work in the future. for now dont turn it off.
 #define GAME_LEFT4DEAD2		 1
@@ -67,20 +67,24 @@ public void OnPluginStart()
 	// other wise plugin cant translate the phrases and goes rong.
 	LoadTranslation(TRANSLATION_FILE);
 
+	// here we retrieve the plugin path for predictable unloader to use.
+	char sPluginName[PLATFORM_MAX_PATH];
+	GetPluginFilename(INVALID_HANDLE, sPluginName, sizeof(sPluginName));
+
 	// Plugin functions
-	Fns_OnModuleStart();		// functions
-	Debug_OnModuleStart();		// debug
-	Configs_OnModuleStart();	// configs
-	CT_OnModuleStart();			// customtags
-	PU_OnPluginStart();		// Predictable Unloader
+	Fns_OnModuleStart();				// functions
+	Debug_OnModuleStart();				// debug
+	Configs_OnModuleStart();			// configs
+	CT_OnModuleStart();					// customtags
+	PU_OnPluginStart(sPluginName);		// Predictable Unloader
 
 	// Modules
-	MV_OnModuleStart();	   // MatchVote
-	RM_OnModuleStart();	   // ReqMatch
+	MV_OnModuleStart();	   	// MatchVote
+	RM_OnModuleStart();	   	// ReqMatch
 	CLS_OnModuleStart();	// ClientSettings
 	CVS_OnModuleStart();	// CvarSettings
-	PS_OnModuleStart();	   // PasswordSystem
-	BK_OnModuleStart();	   // BotKick
+	PS_OnModuleStart();	   	// PasswordSystem
+	BK_OnModuleStart();	   	// BotKick
 
 	// Other
 	AddCustomServerTag("confogl");
@@ -88,9 +92,10 @@ public void OnPluginStart()
 
 public void OnPluginEnd()
 {
-	MV_OnPluginEnd();	 // MatchVote
-	CVS_OnModuleEnd();	  // CvarSettings
-	PS_OnModuleEnd();	 // PasswordSystem
+	MV_OnPluginEnd();	 	// MatchVote
+	CVS_OnModuleEnd();	  	// CvarSettings
+	PS_OnModuleEnd();	 	// PasswordSystem
+	PU_OnPluginEnd();	 	// Predictable Unloader
 
 	// Other
 	RemoveCustomServerTag("confogl");
@@ -108,7 +113,7 @@ public void OnMapEnd()
 
 public void OnConfigsExecuted()
 {
-	MV_OnConfigsExecuted();	// MatchVote
+	MV_OnConfigsExecuted();		// MatchVote
 	CVS_OnConfigsExecuted();	// CvarSettings
 }
 
