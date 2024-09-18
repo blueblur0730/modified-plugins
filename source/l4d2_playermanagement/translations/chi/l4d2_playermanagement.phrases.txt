@@ -6,6 +6,11 @@
         "chi"           "[{orange}!{default}] {1} 正在试图修复Bot数量."
     }
 
+    "NotAllowed"
+    {
+        "chi"           "[{orange}!{default}] 玩家不允许使用此指令."
+    }
+
     "NoCappedSpec"
     {
         "chi"           "[{orange}!{default}] 被制服或倒地时不能旁观!"
@@ -15,6 +20,27 @@
     {
         "#format"       "{1:N}"
         "chi"           "[{orange}!{default}] {teamcolor}{1}{default} 变成了一名旁观者!"
+    }
+
+    "NotSurvivor"
+    {
+        "chi"           "[{orange}!{default}] 你不是一名生还者."
+    }
+
+    "NotAllowedInPVPModes"
+    {
+        "chi"           "[{orange}!{default}] 玩家不允许在PVP模式使用此指令."
+    }
+
+    "NoCappedIdle"
+    {
+        "chi"           "[{orange}!{default}] 被控时不允许闲置!"
+    }
+
+    "GoAwayFromKeyboard"
+    {
+        "#format"       "{1:N}"
+        "chi"           "[{orange}!{default}] {teamcolor}{1}{default} 闲置了!"
     }
 
     "OnlyPVP"

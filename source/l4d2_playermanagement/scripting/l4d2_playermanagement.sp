@@ -14,7 +14,7 @@
 #define SDKCALL_FUNCTION "CTerrorPlayer::GoAwayFromKeyboard"
 #define BOT_NAME "k9Q6CK42"
 
-#define PLUGIN_VERSION "1.0.1" // 7
+#define PLUGIN_VERSION "1.1" // 7
 
 // This is a modified version from Competitive Rework Team.
 public Plugin myinfo =
@@ -56,7 +56,7 @@ ConVar
 	g_hCvar_Allowed,
 	g_hCvar_Supress,
 	g_hCvar_ShouldFixBotCount,
-	g_hCvar_ShouldSpecBeOnTakeover,
+	g_hCvar_ShouldIdleWhileCapped,
 	g_hCvar_ShouldSpecWhileCapped,
 	g_hCvar_ShouldSuicideWhileCapped;
 
@@ -95,25 +95,35 @@ public void OnPluginStart()
 
 	CreateConVar("playermanagement_version", PLUGIN_VERSION, "Version of the player management plugin", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY | FCVAR_DONTRECORD);
 
+	// swap functions, only affected on PVP modes.
 	RegAdminCmd("sm_swap", Swap_Cmd, ADMFLAG_KICK, "Swap all listed players to opposite teams");
 	RegAdminCmd("sm_swapto", SwapTo_Cmd, ADMFLAG_KICK, "Swap all listed players to <teamnum>. 1 = spectator, 2 = survivor, 3 = infected.");
 	RegAdminCmd("sm_swapteams", SwapTeams_Cmd, ADMFLAG_KICK, "Swap the players between both teams");
 	RegAdminCmd("sm_fixbots", FixBots_Cmd, ADMFLAG_BAN, "Spawns survivor bots to match survivor_limit");
 
+	// move to spectator team
 	RegConsoleCmd("sm_spectate", Spectate_Cmd, "Moves you to the spectator team");
 	RegConsoleCmd("sm_spec", Spectate_Cmd, "Moves you to the spectator team");
 	RegConsoleCmd("sm_s", Spectate_Cmd, "Moves you to the spectator team");
 
+	// idle
+	RegConsoleCmd("sm_idle", Idle_Cmd, "Puts you in idle mode.");
+	RegConsoleCmd("sm_i", Idle_Cmd, "Puts you in idle mode.");
+	RegConsoleCmd("sm_away", Idle_Cmd, "Puts you in idle mode.");
+	RegConsoleCmd("sm_afk", Idle_Cmd, "Puts you in idle mode.");
+
+	// takeover a bot
 	RegConsoleCmd("sm_takeover", Takeover_Cmd, "Takeover a survivor bot.");
 	RegConsoleCmd("sm_t", Takeover_Cmd, "Takeover a survivor bot.");
 
+	// suicide
 	RegConsoleCmd("sm_zs", Suicide_Cmd, "Kill your self.");
 	RegConsoleCmd("sm_suicide", Suicide_Cmd, "Kill your self.");
 
 	g_hCvar_Allowed = CreateConVar("playermanagement_allowed", "1", "Allow players to use !spectate/!spec/!s");
-	g_hCvar_Supress = CreateConVar("playermanagement_supress_spectate", "1", "Should print message when player spectate or suicide?");
+	g_hCvar_Supress = CreateConVar("playermanagement_supress_spectate", "1", "Should print message when player spectate or suicide or idle?");
 	g_hCvar_ShouldFixBotCount = CreateConVar("playermanagement_fixbot", "1", "Should we fix bot counts when survivor_limit changes?");
-	g_hCvar_ShouldSpecBeOnTakeover = CreateConVar("playermanagement_spec_on_takeover", "1", "Should survivor spectate as go_away_from_keybord or fully spectators? 1 = go_away_from_keybord, 0 = spectators");
+	g_hCvar_ShouldIdleWhileCapped = CreateConVar("playermanagement_idle_while_capped", "0", "Should player idle while capped?");
 	g_hCvar_ShouldSpecWhileCapped = CreateConVar("playermanagement_spec_while_capped", "0", "Should player spectate while capped?");
 	g_hCvar_ShouldSuicideWhileCapped = CreateConVar("playermanagement_suicide_while_capped", "0", "Should player suicide while capped?");
 
@@ -190,7 +200,10 @@ Action FixBots_Cmd(int client, int args)
 Action Spectate_Cmd(int client, int args)
 {
 	if (!g_hCvar_Allowed.BoolValue)
+	{
+		CReplyToCommand(client, "%t", "NotAllowed");
 		return Plugin_Handled;
+	}
 
 	L4D2Team team = GetClientTeamEx(client);
 	if (team == L4D2Team_Survivor)
@@ -202,18 +215,7 @@ Action Spectate_Cmd(int client, int args)
 			return Plugin_Handled;
 		}
 		else
-		{
-			if (g_hCvar_ShouldSpecBeOnTakeover.BoolValue)
-			{
-				if (L4D_HasPlayerControlledZombies())
-					ChangeClientTeamEx(client, L4D2Team_Spectator, true);
-				else 
-					SDKCall(g_hSDKCall_GoAwayFromKeyboard, client);
-			}
-			else
-				ChangeClientTeamEx(client, L4D2Team_Spectator, true);
-		}
-			
+			ChangeClientTeamEx(client, L4D2Team_Spectator, true);
 	}
 	else if (team == L4D2Team_Infected)
 	{
@@ -238,6 +240,44 @@ Action Spectate_Cmd(int client, int args)
 		CPrintToChatAllEx(client, "%t", "PlayerSpectated", client);
 	
 	if (!g_hSpecTimer[client]) g_hSpecTimer[client] = CreateTimer(7.0, SecureSpec_Timer, client);
+	return Plugin_Handled;
+}
+
+Action Idle_Cmd(int client, int args)
+{
+	if (!g_hCvar_Allowed.BoolValue)
+	{
+		CReplyToCommand(client, "%t", "NotAllowed");
+		return Plugin_Handled;
+	}
+
+	L4D2Team team = GetClientTeamEx(client);
+	if (team != L4D2Team_Survivor)
+	{
+		CReplyToCommand(client, "%t", "NotSurvivor");
+		return Plugin_Handled;
+	}
+
+	if (L4D_HasPlayerControlledZombies())
+	{
+		CReplyToCommand(client, "%t", "NotAllowedInPVPModes");
+		return Plugin_Handled;
+	}
+
+	// is player dominated or incapped?
+	if (((L4D2_GetInfectedAttacker(client) != -1 && !L4D_IsPlayerIncapacitated(client)) || GetPummelQueueAttacker(client) != -1) && !g_hCvar_ShouldIdleWhileCapped.BoolValue)
+	{
+		CPrintToChat(client, "%t", "NoCappedIdle");
+		return Plugin_Handled;
+	}
+
+	SDKCall(g_hSDKCall_GoAwayFromKeyboard, client);
+
+	if (g_hCvar_Supress.BoolValue && team != L4D2Team_Spectator && !g_hSpecTimer[client])
+		CPrintToChatAllEx(client, "%t", "GoAwayFromKeyboard", client);
+
+	if (!g_hSpecTimer[client]) g_hSpecTimer[client] = CreateTimer(7.0, SecureSpec_Timer, client);
+
 	return Plugin_Handled;
 }
 

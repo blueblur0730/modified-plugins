@@ -6,6 +6,11 @@
         "en"        "[{orange}!{default}] {1} is attempting to fix bot counts."
     }
 
+    "NotAllowed"
+    {
+        "en"        "[{orange}!{default}] Players are not allowed to use this command."
+    }
+
     "NoCappedSpec"
     {
         "en"        "[{orange}!{default}] No spectating while capped!"
@@ -17,6 +22,27 @@
         "en"        "[{orange}!{default}] {teamcolor}{1}{default} has become a spectator!"
     }
 
+    "NotSurvivor"
+    {
+        "en"        "[{orange}!{default}] You are not a survivor."
+    }
+
+    "NotAllowedInPVPModes"
+    {
+        "en"        "[{orange}!{default}] Players are not allowed to use this command in PVP modes."
+    }
+
+    "NoCappedIdle"
+    {
+        "en"        "[{orange}!{default}] No idling while capped!"
+    }
+
+    "GoAwayFromKeyboard"
+    {
+        "#format"   "{1:N}"
+        "en"        "[{orange}!{default}] {teamcolor}{1}{default} has been idled!"
+    }
+    
     "OnlyPVP"
     {
         "en"        "[{orange}!{default}] Only PVP mode is allowed."
