@@ -4,17 +4,17 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
+#include <dhooks>
 #include <left4dhooks>
 #include <l4d2util>
 #include <colors>
-#include <dhooks>
 
-#define PLUGIN_VERSION		 "2.1"
+#define PLUGIN_VERSION		 "2.2"
 
 #define GAMEDATA_FILE		 "l4d2_practice_with_dominators"
 #define TRANSLATION_FILE	 "l4d2_practice_with_dominators.phrases"
 #define DETOUR_FUNCTION		 "CTerrorPlayer::IsDominatedBySpecialInfected"
-//#define SDKCALL_FUNCTION	 "CTerrorPlayer::GetSpecialInfectedDominatingMe"	// for unknow reason this function keeps returning 0. abandon.
+#define SDKCALL_FUNCTION	 "CTerrorPlayer::GetSpecialInfectedDominatingMe"
 #define DEBUG				 0
 
 #define TAUNT_HIGH_THRESHOLD 0.4
@@ -48,7 +48,7 @@ static const char SINames[SIType_Size][] = {
 	"tank",
 };
 
-// Handle g_hSDKCall_GetSIDominatingMe = null;
+Handle g_hSDKCall_GetSIDominatingMe = null;
 
 ConVar
 	g_hCvar_DmgDone,
@@ -148,7 +148,7 @@ void Event_PlayerTeam(Event event, const char[] name, bool dontBroadcast)
 		return;
 	}
 
-	// SDKHook will unhook themselves when hooked client is disconnected, we don't need to do anything here.
+	// SDKHook will unhook themselves when hooked client disconnected, we don't need to do anything here.
 	if ((!IsClientAndInGame(client) || bDisconnected) && g_bIsHooked[client])
 	{
 		g_bIsHooked[client] = false;
@@ -253,29 +253,14 @@ MRESReturn DTR_CTerrorPlayer_OnIsDominatedBySpecialInfected(int pPlayer, DHookRe
 #if DEBUG
 		PrintToServer("### Player %N is dominated.", pPlayer);
 #endif
-		/*
-				int iAttacker = SDKCall(g_hSDKCall_GetSIDominatingMe, pPlayer);
-		#if DEBUG
-				PrintToServer("### Dominator: %N.", iAttacker);
-		#endif
-		*/
-		// attempt to use SDKCall to find dominator failed, go through all players instead.
-		for (int i = 0; i < MaxClients; i++)
-		{
-			if (IsClientAndInGame(i) && GetClientTeam(i) == L4D2Team_Infected)
-			{
-				// one dominator at a time.
-				if (pPlayer == GetVictim(i))
-				{
+		
+		int iAttacker = SDKCall(g_hSDKCall_GetSIDominatingMe, pPlayer);
 #if DEBUG
-					PrintToServer("### Dominator: %N.", i);
+		PrintToServer("### Dominator: %d.", iAttacker);
 #endif
-					g_bIsDominated[pPlayer] = true;
-					// the domination is done.
-					ProcessDomination(i, pPlayer);
-				}
-			}
-		}
+
+		// the domination is done.
+		ProcessDomination(iAttacker, pPlayer);
 	}
 
 	return MRES_Ignored;
@@ -283,7 +268,7 @@ MRESReturn DTR_CTerrorPlayer_OnIsDominatedBySpecialInfected(int pPlayer, DHookRe
 
 /**
  * --------------
- * Actions
+ * Processes
  * --------------
  */
 
@@ -411,35 +396,6 @@ int GetSpecialInfectedHP(int zClass)
 	return 0;
 }
 
-int GetVictim(int iAttacker)
-{
-	SIType class = view_as<SIType>(GetInfectedClass(iAttacker));
-
-	switch (class)
-	{
-		case SIType_Smoker: return L4D_GetVictimSmoker(iAttacker);
-		case SIType_Hunter: return L4D_GetVictimHunter(iAttacker);
-		case SIType_Jockey: return L4D_GetVictimJockey(iAttacker);
-		case SIType_Charger:
-		{
-			if (g_hCvar_ShouldChargerDieOnCarry.BoolValue)
-			{
-				int victim = L4D_GetVictimCarry(iAttacker);
-
-				// if not carrying, get the pummeled victim.
-				if (!victim)
-					return L4D_GetVictimCharger(iAttacker);
-
-				return victim;
-			}
-
-			return L4D_GetVictimCharger(iAttacker);
-		}
-	}
-
-	return 0;
-}
-
 int GetPlayerWeapon(int client)
 {
 	int m_hActiveWeapon = -1;
@@ -466,15 +422,16 @@ void IniGameData()
 
 	if (!hDetour.Enable(Hook_Post, DTR_CTerrorPlayer_OnIsDominatedBySpecialInfected))
 		SetFailState("Failed to enable detour for \"" ... DETOUR_FUNCTION... "\" ");
-	/*
-		StartPrepSDKCall(SDKCall_Player);
-		if (!PrepSDKCall_SetFromConf(gd, SDKConf_Signature, SDKCALL_FUNCTION))
-			SetFailState("Failed to load function from gamedata for \"" ... SDKCALL_FUNCTION... "\" ");
 
-		g_hSDKCall_GetSIDominatingMe = EndPrepSDKCall();
-		if (!g_hSDKCall_GetSIDominatingMe)
-			SetFailState("Failed to create SDK call for \"" ... SDKCALL_FUNCTION... "\" ");
-	*/
+	StartPrepSDKCall(SDKCall_Player);
+	if (!PrepSDKCall_SetFromConf(gd, SDKConf_Signature, SDKCALL_FUNCTION))
+		SetFailState("Failed to load function from gamedata for \"" ... SDKCALL_FUNCTION... "\" ");
+
+	PrepSDKCall_SetReturnInfo(SDKType_CBasePlayer, SDKPass_Pointer);
+	g_hSDKCall_GetSIDominatingMe = EndPrepSDKCall();
+	if (!g_hSDKCall_GetSIDominatingMe)
+		SetFailState("Failed to create SDK call for \"" ... SDKCALL_FUNCTION... "\" ");
+
 	delete hDetour;
 	delete gd;
 }

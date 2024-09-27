@@ -28,7 +28,6 @@
 						/* 8B 15 ? ? ? ? 56 8B F1 8B 86 5C 3E 00 00 */
 			}
 
-			// get special infected THAT IS dominating me (seems not work normally, but kept itin here)
 			// windows sig:
 			// search for string "gas_can_forced_drop" to find CGasCan::DropCarriedProp
 			// this event will pass the victim client id, which is our desired CTerrorPlayer* pointer
