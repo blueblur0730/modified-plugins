@@ -53,7 +53,7 @@ l4d2_stucked_tank_teleport_distance
 
 ### API
 
-```
+```sourcepawn
 Called when a bot tank tried to suicide for stucked or lost its target for too long.
 
 @note This is a hook using MidHook to hook the middle of the function call: TankAttack::Update.
