@@ -4,7 +4,6 @@
 #include <sourcemod>
 #include <midhook>
 #include <left4dhooks>
-#include <left4dhooks_silver>
 #include <colors>
 
 #define DEBUG			   0
@@ -14,12 +13,10 @@
 #define TRANSLATION_FILE   "l4d2_stucked_tank_teleport.phrases"
 #define NAV_MESH_HEIGHT	   20.0
 
-// credits to 夜羽真白.
-#define PLUGIN_SCRIPTLOGIC "plugin_scripting_logic_entity"
-#define COMMANDABOT_ATTACK "CommandABot({cmd = 0, bot = GetPlayerFromUserID(%i), target = GetPlayerFromUserID(%i)})"
-#define COMMANDABOT_RESET  "CommandABot({cmd = 3, bot = GetPlayerFromUserID(%i)})"
+#define PLUGIN_VERSION	   "1.2"
 
-#define PLUGIN_VERSION	   "1.1"
+int g_iTankCount = 0;
+bool g_bHasTeleported[MAXPLAYERS + 1] = { false, ... };
 
 MidHook		  g_hMidHook = null;
 Handle		  g_hSDKCall_GetBaseEntity = null;
@@ -36,7 +33,7 @@ ConVar
 public Plugin myinfo =
 {
 	name = "[L4D2] Stucked Tank Teleport",
-	author	= "blueblur, 东, 夜羽真白",
+	author	= "blueblur, 东",
 	description = "MidHook to prevent stucked tank from death and teleport them.",
 	version	= PLUGIN_VERSION,
 	url	= "https://github.com/blueblur0730/modified-plugins"
@@ -48,7 +45,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	if (engine != Engine_Left4Dead2)
 	{
-		strcopy(error, err_max, "This plugin only runs in \"Left 4 Dead 2\" game");
+		strcopy(error, err_max, "This plugin only supports Left 4 Dead 2.");
 		return APLRes_SilentFailure;
 	}
 
@@ -73,6 +70,7 @@ public void OnPluginStart()
 
 	HookEvent("tank_spawn", Event_TankSpawn, EventHookMode_Post);
 	HookEvent("tank_killed", Event_TankDeath, EventHookMode_Post);
+	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
 
 #if DEBUG
 	RegAdminCmd("sm_checkhook", Cmd_CheckHook, ADMFLAG_ROOT, "Check if the hook is enabled or not.");
@@ -111,6 +109,9 @@ void Event_TankSpawn(Event hEvent, const char[] name, bool dontBroadcast)
 	if (!IsTank(client))
 		return;
 
+	g_iTankCount++;
+	g_bHasTeleported[client] = false;	// just in case, initialize it.
+
 	ToggleHook(true);
 }
 
@@ -125,15 +126,31 @@ void Event_TankDeath(Event hEvent, const char[] name, bool dontBroadcast)
 	if (!IsTank(client))
 		return;
 
+	g_iTankCount--;
+	g_bHasTeleported[client] = false;	// those died are removed.
+
 	ToggleHook(false);
+}
+
+// reset count. if tank crashes survivors it will be no tank on the new round.
+void Event_RoundStart(Event hEvent, const char[] name, bool dontBroadcast)
+{
+	g_iTankCount = 0;
+
+	for (int i = 1; i <= MaxClients; i++)
+		g_bHasTeleported[i] = false;
 }
 
 void ToggleHook(bool bShouldHook)
 {
+	// multiple tank exsists or already existed one, do not enable/disable the hook again.
+	if (g_iTankCount >= 1)
+		return;
+
 	if (bShouldHook)
 	{
 		if (!g_hMidHook.Enable())
-			SetFailState("Failed to enable midhook.");
+			LogError("Failed to enable midhook. Tank Count: %d", g_iTankCount);
 #if DEBUG
 		PrintToServer("### MidHook: Enabled.");
 #endif
@@ -141,7 +158,7 @@ void ToggleHook(bool bShouldHook)
 	else
 	{
 		if (!g_hMidHook.Disable())
-			SetFailState("Failed to disable midhook.");
+			LogError("Failed to disable midhook. Tank Count: %d", g_iTankCount);
 #if DEBUG
 		PrintToServer("### MidHook: Disabled.");
 #endif
@@ -163,7 +180,7 @@ void ToggleHook(bool bShouldHook)
 /**
  	// TankAttack::Update(Tank *,float)      this            = dword ptr  8		// TankAttack *
 	// TankAttack::Update(Tank *,float)      arg_4           = dword ptr  0Ch	// Tank *  		// wont work for sdkcall, reason unknow.
-	// TankAttack::Update(Tank *,float)      arg_8           = dword ptr  10h	// CMultiPlayerAnimState ** (a4)
+	// TankAttack::Update(Tank *,float)      arg_8           = dword ptr  10h	// CMultiPlayerAnimState ** (a4) // this turns out is a CBaseEntity pointer in the view of L4D1 binaries.
 	
 	CTakeDamageInfo::CTakeDamageInfo(
 	(CTakeDamageInfo *)&v117,
@@ -183,22 +200,6 @@ void OnTankSuicide(MidHookRegisters regs)
 #if DEBUG
 	PrintToServer("### MidHook: OnTankSuicide called.");
 #endif
-
-	float flDamage = regs.GetFloat(DHookRegister_XMM0);
-
-#if DEBUG
-	// works. the damage should be equal to tank's health. e.g. 4000.0 for normal.
-	PrintToServer("### MidHook: TakeDamage: %f", flDamage);
-#endif
-
-	if (g_hCvar_ShouldTeleport.BoolValue)
-	{
-		flDamage = g_hCvar_SuicideDamage.FloatValue;
-
-		// reduce the damage.
-		regs.SetFloat(DHookRegister_XMM0, flDamage);
-	}
-
 	Address pAdr = regs.Load(DHookRegister_EBP, 0x10, NumberType_Int32);
 
 	// And I really get exhusted with this. too dumb.
@@ -207,9 +208,34 @@ void OnTankSuicide(MidHookRegisters regs)
 	// https://forums.alliedmods.net/showthread.php?t=278009
 	int tank = SDKCall(g_hSDKCall_GetBaseEntity, pAdr);
 
-	Call_StartForward(g_hFWD_OnTankSuicide);
-	Call_PushCell(tank);
-	Call_Finish();
+	float flDamage = regs.GetFloat(DHookRegister_XMM0);
+
+#if DEBUG
+	// works. the damage should be equal to tank's health. e.g. 4000.0 for normal.
+	PrintToServer("### MidHook: TakeDamage: %f", flDamage);
+#endif
+
+	// what awaits for those not choose to teleport is only death.
+	// v1.2 edit: seems that tank still gets 'suiciding' multiple times after teleportation. so there is still a need to check here.
+	if (g_hCvar_ShouldTeleport.BoolValue)
+	{
+		// only do reduction once. in case the damage getting overlapping.
+		if (!g_bHasTeleported[tank])
+		{
+			flDamage = g_hCvar_SuicideDamage.FloatValue;
+
+			// reduce the damage.
+			regs.SetFloat(DHookRegister_XMM0, flDamage);
+		}
+	}
+
+	// only call once.
+	if (!g_bHasTeleported[tank])
+	{
+		Call_StartForward(g_hFWD_OnTankSuicide);
+		Call_PushCell(tank);
+		Call_Finish();
+	}
 
 #if DEBUG
 	PrintToServer("### MidHook: Tank: %d", tank);
@@ -221,7 +247,10 @@ void OnTankSuicide(MidHookRegisters regs)
 
 Action Timer_TeleportTank(Handle timer, int client)
 {
-	TeleportTank(client);
+	// only teleport once.
+	if (!g_bHasTeleported[client])
+		TeleportTank(client);
+
 	return Plugin_Handled;
 }
 
@@ -310,13 +339,16 @@ void TeleportTank(int client)
 					// finally this is a desired position to teleport. let's do it.
 					TeleportEntity(client, fSpawnPos, NULL_VECTOR, NULL_VECTOR);
 
+					// this this tank been teleported.
+					g_bHasTeleported[client] = true;
+
 					// after teleport, set a new target for the tank.
 					int newtarget = GetClosetMobileSurvivor(client);
 					if (IsValidSurvivor(newtarget))
 					{
 						// reset the bot tank's action, find the new target to attack.
-						Logic_RunScript(COMMANDABOT_RESET, GetClientUserId(client));
-						Logic_RunScript(COMMANDABOT_ATTACK, GetClientUserId(client), GetClientUserId(newtarget));
+						L4D2_CommandABot(client, newtarget, BOT_CMD_RESET);
+						L4D2_CommandABot(client, newtarget, BOT_CMD_ATTACK);
 					}
 				}
 			}
@@ -470,6 +502,7 @@ bool EnvBlockType(int entity)
 }
 
 // find the closet, valid, alive, non-incapacitated, non-pinned survivor.
+// credits to: 夜羽真白
 stock int GetClosetMobileSurvivor(int client, int exclude_client = -1)
 {
 	if (client > 0 && client <= MaxClients && IsClientInGame(client))
@@ -505,38 +538,6 @@ stock int GetClosetMobileSurvivor(int client, int exclude_client = -1)
 	}
 
 	return 0;
-}
-
-stock void Logic_RunScript(const char[] code, any...)
-{
-	int scriptent = FindEntityByTargetname(-1, PLUGIN_SCRIPTLOGIC);
-	
-	if (!scriptent || !IsValidEntity(scriptent))
-	{
-		scriptent = CreateEntityByName("logic_script");
-		DispatchKeyValue(scriptent, "targetname", PLUGIN_SCRIPTLOGIC);
-		DispatchSpawn(scriptent);
-	}
-
-	char buffer[512] = { '\0' };
-	VFormat(buffer, sizeof(buffer), code, 2);
-	SetVariantString(buffer);
-	AcceptEntityInput(scriptent, "RunScriptCode");
-}
-
-stock int FindEntityByTargetname(int index, const char[] name)
-{
-	for (int entity = index; entity < GetMaxEntities(); entity++)
-	{
-		if (IsValidEntity(entity))
-		{
-			char entname[128] = { '\0' };
-			GetEntPropString(entity, Prop_Data, "m_iName", entname, sizeof(entname));
-			if (strcmp(name, entname) == 0)
-				return entity;
-		}
-	}
-	return -1;
 }
 
 bool IsValidSurvivor(int client)

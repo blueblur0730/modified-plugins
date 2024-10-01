@@ -6,7 +6,7 @@
 - Credits to:
   - Scag, for MidHook extension.
   - 东, for his algorithms of choosing a spawn point to teleport a tank.
-  - 夜羽真白, for various methods used to teleport tank.
+  - 夜羽真白, for various methods used in teleportation.
 
 ### Requirements
 
@@ -14,6 +14,7 @@
   - [Alliedmodders](https://forums.alliedmods.net/showthread.php?t=343973).
 - DHook.
 - Left 4 DHooks Direct.
+- colors.inc
 
 ### Note
 
@@ -76,6 +77,12 @@ forward void MidHook_OnTankSuicide(int tank);
 - 10/1/24 v1.1
   - Added more convars.
   - Fixed translation error.
+
+- 10/2/24 v1.2
+  - Fixed a bug that tank keeps 'suiciding' and teleporting after first teleportation.
+  - Now should support the sence where multiple tank exists.
+  - Now logs error message when failed to enable/disable the hook, just for the general gameplay.
+  - Use 'L4D2_CommandABot' to replace 'Logic_RunScript'.
 
 ### Some Thoughts
 

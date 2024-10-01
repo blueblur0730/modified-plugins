@@ -8,9 +8,9 @@
  * 
  * @note This is a hook using MidHook to hook the middle of the function call: TankAttack::Update.
  * @note Called when passing the aruguments to CTakeDamageInfo::CTakeDamageInfo,
- * @note Specifically, when the damage value has been moved into register xmm0 and this plugin has set the damage to 0.0.
+ * @note Specifically, when the damage value has been moved into register xmm0 and this plugin has set the damage to some value.
  * 
- * @param tank      client index of the tank.s
+ * @param tank      client index of the tank.
  * 
  * @noreturn  
 */
