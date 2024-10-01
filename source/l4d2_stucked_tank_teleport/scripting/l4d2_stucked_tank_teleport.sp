@@ -6,14 +6,15 @@
 #include <left4dhooks>
 #include <colors>
 
-#define DEBUG			   0
-#define GAMEDATA_FILE	   "l4d2_stucked_tank_teleport"
-#define ADDRESS_NAME	   "TankAttack::Update__OnSuicide"
-#define SDKCALL_FUNCTION   "CBaseEntity::GetBaseEntity"
-#define TRANSLATION_FILE   "l4d2_stucked_tank_teleport.phrases"
-#define NAV_MESH_HEIGHT	   20.0
+#define DEBUG			   		0
+#define GAMEDATA_FILE	   		"l4d2_stucked_tank_teleport"
+#define ADDRESS_NAME	   		"TankAttack::Update__OnSuicide"
+#define SDKCALL_FUNCTION   		"CBaseEntity::GetBaseEntity"
+#define TRANSLATION_FILE   		"l4d2_stucked_tank_teleport.phrases"
+#define TELEPORT_NOTICE_SOUND 	"ui/pickup_secret01.wav"
+#define NAV_MESH_HEIGHT	   		20.0
 
-#define PLUGIN_VERSION	   "1.2"
+#define PLUGIN_VERSION	   		"1.3"
 
 int g_iTankCount = 0;
 bool g_bHasTeleported[MAXPLAYERS + 1] = { false, ... };
@@ -29,6 +30,11 @@ ConVar
 	g_hCvar_PathSearchCount,
 	g_hCvar_ShouldCheckVisibility,
 	g_hCvar_TeleportDistance;
+
+ConVar
+	g_hCvar_NoticeSound,
+	g_hCvar_HighlightTank,
+	g_hCvar_HighLightTime;
 
 public Plugin myinfo =
 {
@@ -61,12 +67,18 @@ public void OnPluginStart()
 
 	CreateConVar("l4d2_stucked_tank_teleport_version", PLUGIN_VERSION, "Version of the plugin.", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY | FCVAR_DONTRECORD);
 
+	// core
 	g_hCvar_TeleportTimer = CreateConVar("l4d2_stucked_tank_teleport_timer", "3.0", "Teleport the tank after stoping the suicide in this seconds.", _, true, 0.1);
 	g_hCvar_ShouldTeleport = CreateConVar("l4d2_stucked_tank_teleport_should_teleport", "1", "Should teleport the tank or not. Set 0 will allow the tank to suicide.", _, true, 0.0, true, 1.0);
 	g_hCvar_SuicideDamage = CreateConVar("l4d2_stucked_tank_teleport_suicide_damage", "0.0", "How many damage the tank should be panished after stucked for too long.", _, true, 0.0);
 	g_hCvar_PathSearchCount = CreateConVar("l4d2_stucked_tank_teleport_path_search_count", "20", "How many times to search for a spawn point to teleport the tank.", _, true, 1.0);
 	g_hCvar_ShouldCheckVisibility = CreateConVar("l4d2_stucked_tank_teleport_should_check_visibility", "0", "Should check the visibility from tank to survivors of the spawn point or not.", _, true, 0.0, true, 1.0);
 	g_hCvar_TeleportDistance = CreateConVar("l4d2_stucked_tank_teleport_distance", "1000.0", "Distance from the choosen survivor to make a spawn point the tank. Recommended: 500.0 < x < 2000.0", _, true, 1.0);
+
+	// misc
+	g_hCvar_NoticeSound = CreateConVar("l4d2_stucked_tank_teleport_notice_sound", "1", "Play notice sound when the tank is teleported.", _, true, 0.0, true, 1.0);
+	g_hCvar_HighlightTank = CreateConVar("l4d2_stucked_tank_teleport_highlight_tank", "1", "Highlight the tank when it is teleported.", _, true, 0.0, true, 1.0);
+	g_hCvar_HighLightTime = CreateConVar("l4d2_stucked_tank_teleport_highlight_time", "3.0", "Time to highlight the tank when it is teleported.", _, true, 0.1);
 
 	HookEvent("tank_spawn", Event_TankSpawn, EventHookMode_Post);
 	HookEvent("tank_killed", Event_TankDeath, EventHookMode_Post);
@@ -92,6 +104,11 @@ public void OnPluginEnd()
 
 	if (g_hMidHook)
 		delete g_hMidHook;
+}
+
+public void OnMapStart()
+{
+	PrecacheSound(TELEPORT_NOTICE_SOUND);
 }
 
 //--------
@@ -339,6 +356,13 @@ void TeleportTank(int client)
 					// finally this is a desired position to teleport. let's do it.
 					TeleportEntity(client, fSpawnPos, NULL_VECTOR, NULL_VECTOR);
 
+					// HEY THERE IS A GIFT FOR YOU!
+					if (g_hCvar_NoticeSound.BoolValue)
+						EmitSoundToAll(TELEPORT_NOTICE_SOUND);
+
+					if (g_hCvar_HighlightTank.BoolValue)
+						SetGlow(client);
+
 					// this this tank been teleported.
 					g_bHasTeleported[client] = true;
 
@@ -359,6 +383,18 @@ void TeleportTank(int client)
 			CPrintToChatAll("%t", "FailedToTeleport");
 		}
 	}
+}
+
+void SetGlow(int entity)
+{
+	L4D2_SetEntityGlow(entity, L4D2Glow_Constant, 0, 0, { 255, 255, 255 }, false);
+	CreateTimer(g_hCvar_HighLightTime.FloatValue, Timer_RemoveGlow, entity);
+}
+
+Action Timer_RemoveGlow(Handle timer, int entity)
+{
+	L4D2_RemoveEntityGlow(entity);
+	return Plugin_Handled;
 }
 
 //-----------------------------

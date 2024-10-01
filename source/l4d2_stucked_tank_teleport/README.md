@@ -50,6 +50,18 @@ l4d2_stucked_tank_teleport_should_check_visibility
 // default: 1000.0
 // min: 1.0
 l4d2_stucked_tank_teleport_distance
+
+// Play notice sound when the tank is teleported.
+// deafault: 1
+l4d2_stucked_tank_teleport_notice_sound
+
+// Highlight the tank when it is teleported.
+// default: 1
+l4d2_stucked_tank_teleport_highlight_tank
+
+// Time to highlight the tank when it is teleported
+// default: 3.0
+l4d2_stucked_tank_teleport_highlight_time
 ```
 
 ### API
@@ -83,6 +95,11 @@ forward void MidHook_OnTankSuicide(int tank);
   - Now should support the sence where multiple tank exists.
   - Now logs error message when failed to enable/disable the hook, just for the general gameplay.
   - Use 'L4D2_CommandABot' to replace 'Logic_RunScript'.
+
+- 10/2/24 v1.3
+  - Added 3 convars. Options for below.
+  - Added a notice sound when the tank is teleported.
+  - Added a highlight effect when the tank is teleported.
 
 ### Some Thoughts
 
