@@ -12,7 +12,6 @@
 #define ADDRESS_NAME	   "TankAttack::Update__OnSuicide"
 #define SDKCALL_FUNCTION   "CBaseEntity::GetBaseEntity"
 #define TRANSLATION_FILE   "l4d2_stucked_tank_teleport.phrases"
-#define TELEPORT_DISTANCE  1000.0
 #define NAV_MESH_HEIGHT	   20.0
 
 // credits to 夜羽真白.
@@ -20,7 +19,7 @@
 #define COMMANDABOT_ATTACK "CommandABot({cmd = 0, bot = GetPlayerFromUserID(%i), target = GetPlayerFromUserID(%i)})"
 #define COMMANDABOT_RESET  "CommandABot({cmd = 3, bot = GetPlayerFromUserID(%i)})"
 
-#define PLUGIN_VERSION	   "1.0"
+#define PLUGIN_VERSION	   "1.1"
 
 MidHook		  g_hMidHook = null;
 Handle		  g_hSDKCall_GetBaseEntity = null;
@@ -28,8 +27,11 @@ GlobalForward g_hFWD_OnTankSuicide;
 
 ConVar
 	g_hCvar_TeleportTimer,
+	g_hCvar_ShouldTeleport,
 	g_hCvar_SuicideDamage,
-	g_hCvar_PathSearchCount;
+	g_hCvar_PathSearchCount,
+	g_hCvar_ShouldCheckVisibility,
+	g_hCvar_TeleportDistance;
 
 public Plugin myinfo =
 {
@@ -62,9 +64,12 @@ public void OnPluginStart()
 
 	CreateConVar("l4d2_stucked_tank_teleport_version", PLUGIN_VERSION, "Version of the plugin.", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY | FCVAR_DONTRECORD);
 
-	g_hCvar_TeleportTimer = CreateConVar("l4d2_stucked_tank_teleport_timer", "3.0", "Sencods to teleport the tank after stucked.", _, true, 0.1);
-	g_hCvar_SuicideDamage = CreateConVar("l4d2_stucked_tank_teleport_suicide_damage", "0.0", "Damage to tank when stucked.", _, true, 0.0);
-	g_hCvar_PathSearchCount = CreateConVar("l4d2_stucked_tank_teleport_path_search_count", "20", "Max path search count for teleportation.", _, true, 1.0);
+	g_hCvar_TeleportTimer = CreateConVar("l4d2_stucked_tank_teleport_timer", "3.0", "Teleport the tank after stoping the suicide in this seconds.", _, true, 0.1);
+	g_hCvar_ShouldTeleport = CreateConVar("l4d2_stucked_tank_teleport_should_teleport", "1", "Should teleport the tank or not. Set 0 will allow the tank to suicide.", _, true, 0.0, true, 1.0);
+	g_hCvar_SuicideDamage = CreateConVar("l4d2_stucked_tank_teleport_suicide_damage", "0.0", "How many damage the tank should be panished after stucked for too long.", _, true, 0.0);
+	g_hCvar_PathSearchCount = CreateConVar("l4d2_stucked_tank_teleport_path_search_count", "20", "How many times to search for a spawn point to teleport the tank.", _, true, 1.0);
+	g_hCvar_ShouldCheckVisibility = CreateConVar("l4d2_stucked_tank_teleport_should_check_visibility", "0", "Should check the visibility from tank to survivors of the spawn point or not.", _, true, 0.0, true, 1.0);
+	g_hCvar_TeleportDistance = CreateConVar("l4d2_stucked_tank_teleport_distance", "1000.0", "Distance from the choosen survivor to make a spawn point the tank. Recommended: 500.0 < x < 2000.0", _, true, 1.0);
 
 	HookEvent("tank_spawn", Event_TankSpawn, EventHookMode_Post);
 	HookEvent("tank_killed", Event_TankDeath, EventHookMode_Post);
@@ -180,15 +185,19 @@ void OnTankSuicide(MidHookRegisters regs)
 #endif
 
 	float flDamage = regs.GetFloat(DHookRegister_XMM0);
-	flDamage = g_hCvar_SuicideDamage.FloatValue;
 
 #if DEBUG
 	// works. the damage should be equal to tank's health. e.g. 4000.0 for normal.
 	PrintToServer("### MidHook: TakeDamage: %f", flDamage);
 #endif
 
-	// reduce the damage.
-	regs.SetFloat(DHookRegister_XMM0, flDamage);
+	if (g_hCvar_ShouldTeleport.BoolValue)
+	{
+		flDamage = g_hCvar_SuicideDamage.FloatValue;
+
+		// reduce the damage.
+		regs.SetFloat(DHookRegister_XMM0, flDamage);
+	}
 
 	Address pAdr = regs.Load(DHookRegister_EBP, 0x10, NumberType_Int32);
 
@@ -206,7 +215,7 @@ void OnTankSuicide(MidHookRegisters regs)
 	PrintToServer("### MidHook: Tank: %d", tank);
 #endif
 
-	CPrintToChatAllEx(tank, "%t", "TeleportTank", g_hCvar_TeleportTimer.FloatValue);
+	CPrintToChatAll("%t", "TeleportTank", g_hCvar_TeleportTimer.FloatValue);
 	CreateTimer(g_hCvar_TeleportTimer.FloatValue, Timer_TeleportTank, tank);
 }
 
@@ -236,13 +245,15 @@ void TeleportTank(int client)
 		// make a coordinate based on a random survivor's position.
 		GetClientEyePosition(iTargetSurvivor, fSurvivorPos);
 
-		fMins[0]	  = fSurvivorPos[0] - TELEPORT_DISTANCE;
-		fMaxs[0]	  = fSurvivorPos[0] + TELEPORT_DISTANCE;
+		float fTeleportDistance = g_hCvar_TeleportDistance.FloatValue;
 
-		fMins[1]	  = fSurvivorPos[1] - TELEPORT_DISTANCE;
-		fMaxs[1]	  = fSurvivorPos[1] + TELEPORT_DISTANCE;
+		fMins[0]	  = fSurvivorPos[0] - fTeleportDistance;
+		fMaxs[0]	  = fSurvivorPos[0] + fTeleportDistance;
 
-		fMaxs[2]	  = fSurvivorPos[2] + TELEPORT_DISTANCE;
+		fMins[1]	  = fSurvivorPos[1] - fTeleportDistance;
+		fMaxs[1]	  = fSurvivorPos[1] + fTeleportDistance;
+
+		fMaxs[2]	  = fSurvivorPos[2] + fTeleportDistance;
 		fDirection[0] = 90.0;
 		fDirection[1] = fDirection[2] = 0.0;
 
@@ -294,7 +305,7 @@ void TeleportTank(int client)
 				Address nav2 = L4D_GetNearestNavArea(fSurvivorPos, 120.0, false, false, false, 3);
 
 				// make sure that these two NavAreas is connected for tank to approach.
-				if (L4D2_NavAreaBuildPath(nav1, nav2, TELEPORT_DISTANCE * 1.73, L4D_TEAM_INFECTED, false) && GetVectorDistance(fSurvivorPos, fSpawnPos) >= 400.0 && nav1 != nav2)
+				if (L4D2_NavAreaBuildPath(nav1, nav2, fTeleportDistance * 1.73, L4D_TEAM_INFECTED, false) && GetVectorDistance(fSurvivorPos, fSpawnPos) >= 400.0 && nav1 != nav2)
 				{
 					// finally this is a desired position to teleport. let's do it.
 					TeleportEntity(client, fSpawnPos, NULL_VECTOR, NULL_VECTOR);
@@ -313,7 +324,7 @@ void TeleportTank(int client)
 		else
 		{
 			ForcePlayerSuicide(client);
-			CPrintToChatAllEx(client, "%t", "FailedToTeleport");
+			CPrintToChatAll("%t", "FailedToTeleport");
 		}
 	}
 }
@@ -338,12 +349,75 @@ bool CheckDistance(float spawnpos[3])
 		{
 			// considering resource consumption, we will not use trace ray to check visibility.
 			GetClientEyePosition(i, pos);
-			if ( /*PosIsVisibleTo(i, spawnpos) || */GetVectorDistance(spawnpos, pos) < 400.0)
-				return true;
+			if (GetVectorDistance(spawnpos, pos) < 400.0)
+			{
+				if (g_hCvar_ShouldCheckVisibility.BoolValue)
+				{
+					if (PosIsVisibleTo(i, spawnpos))
+						return true;
+				}
+				else
+				{
+					return true;
+				}
+			}	
 		}
 	}
 
 	return false;
+}
+
+// check if the position is visible to the client. note: this is optional.
+stock bool PosIsVisibleTo(int client, const float targetposition[3])
+{
+	bool   			isVisible = false;
+	static float 	position[3], vAngles[3], vLookAt[3], spawnPos[3];
+	GetClientEyePosition(client, position);
+	MakeVectorFromPoints(targetposition, position, vLookAt);
+	GetVectorAngles(vLookAt, vAngles);
+	Handle trace = TR_TraceRayFilterEx(targetposition, vAngles, MASK_VISIBLE, RayType_Infinite, TraceFilter, client);
+
+	if (TR_DidHit(trace))
+	{
+		static float vStart[3];
+		TR_GetEndPosition(vStart, trace);
+		if ((GetVectorDistance(targetposition, vStart, false) + 75.0) >= GetVectorDistance(position, targetposition))
+		{
+			isVisible = true;
+		}
+		else
+		{
+			spawnPos = targetposition;
+			spawnPos[2] += 20.0;
+			MakeVectorFromPoints(spawnPos, position, vLookAt);
+			GetVectorAngles(vLookAt, vAngles);
+			Handle trace2 = TR_TraceRayFilterEx(spawnPos, vAngles, MASK_VISIBLE, RayType_Infinite, TraceFilter, client);
+			if (TR_DidHit(trace2))
+			{
+				TR_GetEndPosition(vStart, trace2);
+				if ((GetVectorDistance(spawnPos, vStart, false) + 75.0) >= GetVectorDistance(position, spawnPos))
+					isVisible = true;
+			}
+			else
+			{
+				isVisible = true;
+			}
+
+			delete trace2;
+		}
+	}
+	else
+	{
+		isVisible = true;
+	}
+
+	delete trace;
+	return isVisible;
+}
+
+bool TraceFilter(int entity, int contentsMask, any data)
+{
+	return (entity == data || (entity >= 1 && entity <= MaxClients)) ? false : true;
 }
 
 // check if the position is on valid mesh.

@@ -3,11 +3,11 @@
     "TeleportTank"
     {
         "#format"   "{1:.1f}"
-        "en"        "[{green}!{default}] {red}Tank{default} is stucked, Teleporting in {olive}{1}{default} seconds..."
+        "en"        "[{olive}!{default}] {red}Tank{default} is stucked, Teleporting in {olive}{1}{default} seconds..."
     }
 
     "FailedToTeleport"
     {
-        "en"        "[{green}!{default}] Failed to teleport the {red}Tank{default}, {red}Tank{default} is committing suicide!"
+        "en"        "[{olive}!{default}] Failed to teleport the {red}Tank{default}, {red}Tank{default} is committing suicide!"
     }
 }
