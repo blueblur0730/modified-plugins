@@ -21,7 +21,7 @@
 
 ### Convars
 
-``
+```
 // Teleport the tank after stoping the suicide in this seconds.
 // default: 3.0
 // min: 0.1
@@ -49,11 +49,11 @@ l4d2_stucked_tank_teleport_should_check_visibility
 // default: 1000.0
 // min: 1.0
 l4d2_stucked_tank_teleport_distance
-``
+```
 
 ### API
 
-``
+```
 Called when a bot tank tried to suicide for stucked or lost its target for too long.
 
 @note This is a hook using MidHook to hook the middle of the function call: TankAttack::Update.
@@ -65,7 +65,7 @@ Called when a bot tank tried to suicide for stucked or lost its target for too l
 @noreturn
 
 forward void MidHook_OnTankSuicide(int tank);
-``
+```
 
 ### ChangeLog
 
