@@ -1,0 +1,13 @@
+"Phrases"
+{
+    "TeleportTank"
+    {
+        "#format"   	"{1:.1f}"
+        "chi"        	"[{green}!{default}] {red}Tank{default} 卡住了, 将在 {olive}{1}{default} 秒后传送..."
+    }
+
+    "FailedToTeleport"
+    {
+        "chi"           "[{green}!{default}] 尝试传送 {red}Tank{default} 失败, {red}Tank{default} 正在自杀!"
+    }
+}
