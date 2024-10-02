@@ -14,10 +14,11 @@
 #define TELEPORT_NOTICE_SOUND 	"ui/pickup_secret01.wav"
 #define NAV_MESH_HEIGHT	   		20.0
 
-#define PLUGIN_VERSION	   		"1.3"
+#define PLUGIN_VERSION	   		"1.3.1"
 
 int g_iTankCount = 0;
 bool g_bHasTeleported[MAXPLAYERS + 1] = { false, ... };
+int g_iOS = -1;
 
 MidHook		  g_hMidHook = null;
 Handle		  g_hSDKCall_GetBaseEntity = null;
@@ -194,43 +195,33 @@ void ToggleHook(bool bShouldHook)
  * This extension resolves the both. It is a effective way to handle the little things in a giant.
  */
 
-/**
- 	// TankAttack::Update(Tank *,float)      this            = dword ptr  8		// TankAttack *
-	// TankAttack::Update(Tank *,float)      arg_4           = dword ptr  0Ch	// Tank *  		// wont work for sdkcall, reason unknow.
-	// TankAttack::Update(Tank *,float)      arg_8           = dword ptr  10h	// CMultiPlayerAnimState ** (a4) // this turns out is a CBaseEntity pointer in the view of L4D1 binaries.
-	
-	CTakeDamageInfo::CTakeDamageInfo(
-	(CTakeDamageInfo *)&v117,
-	(CBaseEntity *)a4,
-	(CBaseEntity *)a4,
-	(float)(int)a4[64],
-	2,
-	0);
-
-	CTakeDamageInfo( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType = 0 );
-
-	As you can see this damage is coming from tank itself.
-*/
+// for more information see the bottum of this file.
 
 void OnTankSuicide(MidHookRegisters regs)
 {
 #if DEBUG
 	PrintToServer("### MidHook: OnTankSuicide called.");
 #endif
-	Address pAdr = regs.Load(DHookRegister_EBP, 0x10, NumberType_Int32);
+
+	// retrieve the CBaseEntity pointer from the stack.
+	Address pAdr;
+
+	if (g_iOS)
+	{
+		// linux
+		pAdr = regs.Load(DHookRegister_EBP, 0x10, NumberType_Int32);
+	}
+	else
+	{
+		// windows
+		pAdr = regs.Load(DHookRegister_EBP, 0xC, NumberType_Int32);
+	}
 
 	// And I really get exhusted with this. too dumb.
 	// The purpose we call CBaseEntity::GetBaseEntity is to let sourcemod set the return type as CBaseEntity to get the actual client index.
 	// which is to convey the address to client index.
 	// https://forums.alliedmods.net/showthread.php?t=278009
 	int tank = SDKCall(g_hSDKCall_GetBaseEntity, pAdr);
-
-	float flDamage = regs.GetFloat(DHookRegister_XMM0);
-
-#if DEBUG
-	// works. the damage should be equal to tank's health. e.g. 4000.0 for normal.
-	PrintToServer("### MidHook: TakeDamage: %f", flDamage);
-#endif
 
 	// what awaits for those not choose to teleport is only death.
 	// v1.2 edit: seems that tank still gets 'suiciding' multiple times after teleportation. so there is still a need to check here.
@@ -239,7 +230,7 @@ void OnTankSuicide(MidHookRegisters regs)
 		// only do reduction once. in case the damage getting overlapping.
 		if (!g_bHasTeleported[tank])
 		{
-			flDamage = g_hCvar_SuicideDamage.FloatValue;
+			float flDamage = g_hCvar_SuicideDamage.FloatValue;
 
 			// reduce the damage.
 			regs.SetFloat(DHookRegister_XMM0, flDamage);
@@ -363,10 +354,10 @@ void TeleportTank(int client)
 					if (g_hCvar_HighlightTank.BoolValue)
 						SetGlow(client);
 
-					// this this tank been teleported.
+					// this tank has been teleported.
 					g_bHasTeleported[client] = true;
 
-					// after teleport, set a new target for the tank.
+					// after teleportation, set a new target for the tank.
 					int newtarget = GetClosetMobileSurvivor(client);
 					if (IsValidSurvivor(newtarget))
 					{
@@ -634,5 +625,58 @@ void InitGameData()
 
 	if (!g_hSDKCall_GetBaseEntity) SetFailState("Failed to create SDK call for \""...SDKCALL_FUNCTION... "\".");
 
+	g_iOS = gd.GetOffset("OS");
+	if (g_iOS == -1) SetFailState("Failed to find offset for operating system.");
+
 	delete gd;
 }
+
+/**
+    // This is where ebp stores the arugments of TankAttack::Update(Tank *,float) function.
+ 	// TankAttack::Update(Tank *,float)      this            = dword ptr  8		// TankAttack *
+	// TankAttack::Update(Tank *,float)      arg_4           = dword ptr  0Ch	// Tank *  		// wont work for sdkcall, reason unknow.
+	// TankAttack::Update(Tank *,float)      arg_8           = dword ptr  10h	// CMultiPlayerAnimState ** (a4) // this turns out is a CBaseEntity pointer in the view of L4D1 binaries.
+	
+	CTakeDamageInfo::CTakeDamageInfo(
+	(CTakeDamageInfo *)&v117,
+	(CBaseEntity *)a4,
+	(CBaseEntity *)a4,
+	(float)(int)a4[64],
+	2,
+	0);
+
+	// prototype.
+	CTakeDamageInfo( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType = 0 );
+
+	As you can see this damage is coming from tank itself.
+
+	// hook details
+
+	// linux:
+    TankAttack::Update(Tank *,float)+249  C7 44 24 14 00 00                 mov     dword ptr [esp+14h], 0 ; int
+    TankAttack::Update(Tank *,float)+249  00 00
+    TankAttack::Update(Tank *,float)+251  C7 44 24 10 02 00                 mov     dword ptr [esp+10h], 2 ; int
+    TankAttack::Update(Tank *,float)+251  00 00
+    TankAttack::Update(Tank *,float)+259  F3 0F 2A 83 00 01                 cvtsi2ss xmm0, dword ptr [ebx+100h]
+    TankAttack::Update(Tank *,float)+259  00 00
+                                        --- we are hooking here ---
+    TankAttack::Update(Tank *,float)+261  89 5C 24 08                       mov     [esp+8], ebx    ; CBaseEntity *
+    TankAttack::Update(Tank *,float)+265  89 5C 24 04                       mov     [esp+4], ebx    ; CBaseEntity *
+    TankAttack::Update(Tank *,float)+269  89 34 24                          mov     [esp], esi      ; this
+    TankAttack::Update(Tank *,float)+26C  F3 0F 11 44 24 0C                 movss   dword ptr [esp+0Ch], xmm0 ; float
+    TankAttack::Update(Tank *,float)+272  E8 C9 57 9E FF                    call    _ZN15CTakeDamageInfoC2EP11CBaseEntityS1_fii ; CTakeDamageInfo::CTakeDamageInfo(CBaseEntity *,CBaseEntity *,float,int,int)
+
+	// windows:
+    sub_10473160+387  6A 00                             push    0               ; int
+    sub_10473160+389  6A 02                             push    2               ; int
+    sub_10473160+38B  51                                push    ecx
+    sub_10473160+38C  0F 57 C0                          xorps   xmm0, xmm0
+    sub_10473160+38F  F3 0F 2A 87 EC 00                 cvtsi2ss xmm0, dword ptr [edi+0ECh]
+    sub_10473160+38F  00 00
+                                       --- we are hooking here ---
+    sub_10473160+397  F3 0F 11 04 24                    movss   [esp+0B4h+var_B8+4], xmm0 ; float
+    sub_10473160+39C  57                                push    edi             ; int
+    sub_10473160+39D  57                                push    edi             ; int
+    sub_10473160+39E  8D 8D 64 FF FF FF                 lea     ecx, [ebp+var_9C]
+    sub_10473160+3A4  E8 27 5B D7 FF                    call    sub_101E9030
+*/

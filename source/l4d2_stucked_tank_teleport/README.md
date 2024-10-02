@@ -101,6 +101,9 @@ forward void MidHook_OnTankSuicide(int tank);
   - Added a notice sound when the tank is teleported.
   - Added a highlight effect when the tank is teleported.
 
+- 10/3/24 v1.3.1
+  - Fixed windows patching.
+
 ### Some Thoughts
 
 ``

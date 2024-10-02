@@ -1,48 +1,29 @@
 "Games"
 {
+    "#default"
+    {
+        "Offsets"
+        {
+            "OS"
+            {
+                "linux"     "1"
+                "windows"   "0"
+            }
+        }
+    }
+    
     "left4dead2"
     {
         "Addresses"
         {
             "TankAttack::Update__OnSuicide"
             {
-
-                /*
-                *    TankAttack::Update(Tank *,float)+249  C7 44 24 14 00 00                 mov     dword ptr [esp+14h], 0 ; int
-                *    TankAttack::Update(Tank *,float)+249  00 00
-                *    TankAttack::Update(Tank *,float)+251  C7 44 24 10 02 00                 mov     dword ptr [esp+10h], 2 ; int
-                *    TankAttack::Update(Tank *,float)+251  00 00
-                *    TankAttack::Update(Tank *,float)+259  F3 0F 2A 83 00 01                 cvtsi2ss xmm0, dword ptr [ebx+100h]
-                *    TankAttack::Update(Tank *,float)+259  00 00
-                *                                        --- we are hooking here ---
-                *    TankAttack::Update(Tank *,float)+261  89 5C 24 08                       mov     [esp+8], ebx    ; CBaseEntity *
-                *    TankAttack::Update(Tank *,float)+265  89 5C 24 04                       mov     [esp+4], ebx    ; CBaseEntity *
-                *    TankAttack::Update(Tank *,float)+269  89 34 24                          mov     [esp], esi      ; this
-                *    TankAttack::Update(Tank *,float)+26C  F3 0F 11 44 24 0C                 movss   dword ptr [esp+0Ch], xmm0 ; float
-                *    TankAttack::Update(Tank *,float)+272  E8 C9 57 9E FF                    call    _ZN15CTakeDamageInfoC2EP11CBaseEntityS1_fii ; CTakeDamageInfo::CTakeDamageInfo(CBaseEntity *,CBaseEntity *,float,int,int)
-                */
-
                 "linux"
                 {
                     "signature" "TankAttack::Update"
                     "offset"    "0x261"
                 }
 
-                /*
-                *    sub_10473160+387  6A 00                             push    0               ; int
-                *    sub_10473160+389  6A 02                             push    2               ; int
-                *    sub_10473160+38B  51                                push    ecx
-                *    sub_10473160+38C  0F 57 C0                          xorps   xmm0, xmm0
-                *    sub_10473160+38F  F3 0F 2A 87 EC 00                 cvtsi2ss xmm0, dword ptr [edi+0ECh]
-                *    sub_10473160+38F  00 00
-                *                                       --- we are hooking here ---
-                *    sub_10473160+397  F3 0F 11 04 24                    movss   [esp+0B4h+var_B8+4], xmm0 ; float
-                *    sub_10473160+39C  57                                push    edi             ; int
-                *    sub_10473160+39D  57                                push    edi             ; int
-                *    sub_10473160+39E  8D 8D 64 FF FF FF                 lea     ecx, [ebp+var_9C]
-                *    sub_10473160+3A4  E8 27 5B D7 FF                    call    sub_101E9030
-                */
-                
                 "windows"
                 {
                     "signature" "TankAttack::Update"
