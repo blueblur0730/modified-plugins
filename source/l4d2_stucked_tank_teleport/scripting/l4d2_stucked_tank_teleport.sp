@@ -14,14 +14,20 @@
 #define TELEPORT_NOTICE_SOUND 	"ui/pickup_secret01.wav"
 #define NAV_MESH_HEIGHT	   		20.0
 
-#define PLUGIN_VERSION	   		"1.3"
+#define PLUGIN_VERSION	   		"1.4"
 
 int g_iTankCount = 0;
 bool g_bHasTeleported[MAXPLAYERS + 1] = { false, ... };
+bool g_bGame = true;
+int g_iOS = -1;
 
 MidHook		  g_hMidHook = null;
-Handle		  g_hSDKCall_GetBaseEntity = null;
+
 GlobalForward g_hFWD_OnTankSuicide;
+
+Handle 
+	g_hSDKCall_GetBaseEntity = null,
+	g_hSDKCall_NavAreaBuildPath = null;
 
 ConVar
 	g_hCvar_TeleportTimer,
@@ -49,10 +55,17 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
 	EngineVersion engine = GetEngineVersion();
 
-	if (engine != Engine_Left4Dead2)
+	if (engine != Engine_Left4Dead2 || engine != Engine_Left4Dead)
 	{
-		strcopy(error, err_max, "This plugin only supports Left 4 Dead 2.");
+		strcopy(error, err_max, "This plugin only supports Left 4 Dead (2).");
 		return APLRes_SilentFailure;
+	}
+
+	switch (engine)
+	{
+		case Engine_Left4Dead2: g_bGame = true;
+		case Engine_Left4Dead: 	g_bGame = false;
+		default: g_bGame = true;
 	}
 
 	g_hFWD_OnTankSuicide = new GlobalForward("MidHook_OnTankSuicide", ET_Event, Param_Cell);
@@ -194,43 +207,45 @@ void ToggleHook(bool bShouldHook)
  * This extension resolves the both. It is a effective way to handle the little things in a giant.
  */
 
-/**
- 	// TankAttack::Update(Tank *,float)      this            = dword ptr  8		// TankAttack *
-	// TankAttack::Update(Tank *,float)      arg_4           = dword ptr  0Ch	// Tank *  		// wont work for sdkcall, reason unknow.
-	// TankAttack::Update(Tank *,float)      arg_8           = dword ptr  10h	// CMultiPlayerAnimState ** (a4) // this turns out is a CBaseEntity pointer in the view of L4D1 binaries.
-	
-	CTakeDamageInfo::CTakeDamageInfo(
-	(CTakeDamageInfo *)&v117,
-	(CBaseEntity *)a4,
-	(CBaseEntity *)a4,
-	(float)(int)a4[64],
-	2,
-	0);
-
-	CTakeDamageInfo( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType = 0 );
-
-	As you can see this damage is coming from tank itself.
-*/
+// for more information see the bottum of this file.
 
 void OnTankSuicide(MidHookRegisters regs)
 {
 #if DEBUG
 	PrintToServer("### MidHook: OnTankSuicide called.");
 #endif
-	Address pAdr = regs.Load(DHookRegister_EBP, 0x10, NumberType_Int32);
+
+	// retrieve the CBaseEntity pointer from the stack.
+	Address pAdr;
+
+	if (g_iOS)
+	{
+		// both two games' linux side are the same.
+		pAdr = regs.Load(DHookRegister_EBP, 0x10, NumberType_Int32);
+	}
+
+	if (!g_bGame)
+	{
+		if (!g_iOS)
+		{
+			// L4D1 windows.
+			pAdr = regs.Load(DHookRegister_EBP, 0x8, NumberType_Int32);
+		}
+	}
+	else
+	{
+		if (!g_iOS)
+		{
+			// L4D2 windows
+			pAdr = regs.Load(DHookRegister_EBP, 0xC, NumberType_Int32);
+		}
+	}
 
 	// And I really get exhusted with this. too dumb.
 	// The purpose we call CBaseEntity::GetBaseEntity is to let sourcemod set the return type as CBaseEntity to get the actual client index.
 	// which is to convey the address to client index.
 	// https://forums.alliedmods.net/showthread.php?t=278009
 	int tank = SDKCall(g_hSDKCall_GetBaseEntity, pAdr);
-
-	float flDamage = regs.GetFloat(DHookRegister_XMM0);
-
-#if DEBUG
-	// works. the damage should be equal to tank's health. e.g. 4000.0 for normal.
-	PrintToServer("### MidHook: TakeDamage: %f", flDamage);
-#endif
 
 	// what awaits for those not choose to teleport is only death.
 	// v1.2 edit: seems that tank still gets 'suiciding' multiple times after teleportation. so there is still a need to check here.
@@ -239,10 +254,19 @@ void OnTankSuicide(MidHookRegisters regs)
 		// only do reduction once. in case the damage getting overlapping.
 		if (!g_bHasTeleported[tank])
 		{
-			flDamage = g_hCvar_SuicideDamage.FloatValue;
+			float flDamage = g_hCvar_SuicideDamage.FloatValue;
 
 			// reduce the damage.
-			regs.SetFloat(DHookRegister_XMM0, flDamage);
+			if (!g_bGame)
+			{
+				// L4D1
+				regs.StoreFloat(DHookRegister_ESP, flDamage, 0xC);
+			}
+			else
+			{
+				// L4D2
+				regs.SetFloat(DHookRegister_XMM0, flDamage);
+			}
 		}
 	}
 
@@ -351,7 +375,10 @@ void TeleportTank(int client)
 				Address nav2 = L4D_GetNearestNavArea(fSurvivorPos, 120.0, false, false, false, 3);
 
 				// make sure that these two NavAreas is connected for tank to approach.
-				if (L4D2_NavAreaBuildPath(nav1, nav2, fTeleportDistance * 1.73, L4D_TEAM_INFECTED, false) && GetVectorDistance(fSurvivorPos, fSpawnPos) >= 400.0 && nav1 != nav2)
+				if (g_bGame ? 
+					L4D2_NavAreaBuildPath(nav1, nav2, fTeleportDistance * 1.73, L4D_TEAM_INFECTED, false) :
+					SDKCall(g_hSDKCall_NavAreaBuildPath, nav1, nav2, 0, 0, 0, fTeleportDistance * 1.73, L4D_TEAM_INFECTED, false) &&
+				 	GetVectorDistance(fSurvivorPos, fSpawnPos) >= 400.0 && nav1 != nav2)
 				{
 					// finally this is a desired position to teleport. let's do it.
 					TeleportEntity(client, fSpawnPos, NULL_VECTOR, NULL_VECTOR);
@@ -363,10 +390,10 @@ void TeleportTank(int client)
 					if (g_hCvar_HighlightTank.BoolValue)
 						SetGlow(client);
 
-					// this this tank been teleported.
+					// this tank been teleported.
 					g_bHasTeleported[client] = true;
 
-					// after teleport, set a new target for the tank.
+					// after teleportation, set a new target for the tank.
 					int newtarget = GetClosetMobileSurvivor(client);
 					if (IsValidSurvivor(newtarget))
 					{
@@ -491,7 +518,7 @@ bool TraceFilter(int entity, int contentsMask, any data)
 // check if the position is on valid mesh.
 bool IsOnValidMesh(float fReferencePos[3])
 {
-	Address pNavArea = L4D2Direct_GetTerrorNavArea(fReferencePos);
+	Address pNavArea = L4D_GetNearestNavArea(fReferencePos, _, _, _, _, 3);
 	return (pNavArea != Address_Null && !(L4D_GetNavArea_SpawnAttributes(pNavArea) & NAV_SPAWN_CHECKPOINT)) ? true : false;
 }
 
@@ -627,12 +654,88 @@ void InitGameData()
 	// the purpose is to convey pointer address to client index.
 	// CBaseEntity::GetBaseEntity(CBaseEntity *this)
 	StartPrepSDKCall(SDKCall_Raw);
-	if (!PrepSDKCall_SetFromConf(gd, SDKConf_Virtual, SDKCALL_FUNCTION)) SetFailState("Failed to set SDK call signature \""...SDKCALL_FUNCTION... "\".");
+	if (!PrepSDKCall_SetFromConf(gd, SDKConf_Virtual, SDKCALL_FUNCTION)) 
+		SetFailState("Failed to set SDK call signature \""...SDKCALL_FUNCTION... "\".");
 
 	PrepSDKCall_SetReturnInfo(SDKType_CBaseEntity, SDKPass_Pointer);
 	g_hSDKCall_GetBaseEntity = EndPrepSDKCall();
 
 	if (!g_hSDKCall_GetBaseEntity) SetFailState("Failed to create SDK call for \""...SDKCALL_FUNCTION... "\".");
 
+	g_iOS = gd.GetOffset("OS");
+	if (g_iOS == -1) SetFailState("Failed to find offset for operating system.");
+
+	// we need our own L4D2_NavAreaBuildPath on L4D1
+	if (!g_bGame)
+	{
+		StartPrepSDKCall(SDKCall_Static);
+		if (!PrepSDKCall_SetFromConf(gd, SDKConf_Signature, "NavAreaBuildPath<ShortestPathCost>"))
+			SetFailState("Failed to set SDK call signature for 'NavAreaBuildPath<ShortestPathCost>'.");
+		
+		PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+		PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+		PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
+		PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+		PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+		PrepSDKCall_AddParameter(SDKType_Float, SDKPass_Plain);
+		PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+		PrepSDKCall_AddParameter(SDKType_Bool, SDKPass_Plain);
+
+		PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
+		g_hSDKCall_NavAreaBuildPath = EndPrepSDKCall();
+
+		if (!g_hSDKCall_NavAreaBuildPath) SetFailState("Failed to create SDK call for 'NavAreaBuildPath<ShortestPathCost>'.");
+	}
+
 	delete gd;
 }
+
+/**
+    // This is where ebp stores the arugments of TankAttack::Update(Tank *,float) function.
+ 	// TankAttack::Update(Tank *,float)      this            = dword ptr  8		// TankAttack *
+	// TankAttack::Update(Tank *,float)      arg_4           = dword ptr  0Ch	// Tank *  		// wont work for sdkcall, reason unknow.
+	// TankAttack::Update(Tank *,float)      arg_8           = dword ptr  10h	// CMultiPlayerAnimState ** (a4) // this turns out is a CBaseEntity pointer in the view of L4D1 binaries.
+	
+	CTakeDamageInfo::CTakeDamageInfo(
+	(CTakeDamageInfo *)&v117,
+	(CBaseEntity *)a4,
+	(CBaseEntity *)a4,
+	(float)(int)a4[64],
+	2,
+	0);
+
+	// prototype.
+	CTakeDamageInfo( CBaseEntity *pInflictor, CBaseEntity *pAttacker, float flDamage, int bitsDamageType, int iKillType = 0 );
+
+	As you can see this damage is coming from tank itself.
+
+	// hook details
+
+	// linux:
+    TankAttack::Update(Tank *,float)+249  C7 44 24 14 00 00                 mov     dword ptr [esp+14h], 0 ; int
+    TankAttack::Update(Tank *,float)+249  00 00
+    TankAttack::Update(Tank *,float)+251  C7 44 24 10 02 00                 mov     dword ptr [esp+10h], 2 ; int
+    TankAttack::Update(Tank *,float)+251  00 00
+    TankAttack::Update(Tank *,float)+259  F3 0F 2A 83 00 01                 cvtsi2ss xmm0, dword ptr [ebx+100h]
+    TankAttack::Update(Tank *,float)+259  00 00
+                                        --- we are hooking here ---
+    TankAttack::Update(Tank *,float)+261  89 5C 24 08                       mov     [esp+8], ebx    ; CBaseEntity *
+    TankAttack::Update(Tank *,float)+265  89 5C 24 04                       mov     [esp+4], ebx    ; CBaseEntity *
+    TankAttack::Update(Tank *,float)+269  89 34 24                          mov     [esp], esi      ; this
+    TankAttack::Update(Tank *,float)+26C  F3 0F 11 44 24 0C                 movss   dword ptr [esp+0Ch], xmm0 ; float
+    TankAttack::Update(Tank *,float)+272  E8 C9 57 9E FF                    call    _ZN15CTakeDamageInfoC2EP11CBaseEntityS1_fii ; CTakeDamageInfo::CTakeDamageInfo(CBaseEntity *,CBaseEntity *,float,int,int)
+
+	// windows:
+    sub_10473160+387  6A 00                             push    0               ; int
+    sub_10473160+389  6A 02                             push    2               ; int
+    sub_10473160+38B  51                                push    ecx
+    sub_10473160+38C  0F 57 C0                          xorps   xmm0, xmm0
+    sub_10473160+38F  F3 0F 2A 87 EC 00                 cvtsi2ss xmm0, dword ptr [edi+0ECh]
+    sub_10473160+38F  00 00
+                                       --- we are hooking here ---
+    sub_10473160+397  F3 0F 11 04 24                    movss   [esp+0B4h+var_B8+4], xmm0 ; float
+    sub_10473160+39C  57                                push    edi             ; int
+    sub_10473160+39D  57                                push    edi             ; int
+    sub_10473160+39E  8D 8D 64 FF FF FF                 lea     ecx, [ebp+var_9C]
+    sub_10473160+3A4  E8 27 5B D7 FF                    call    sub_101E9030
+*/
