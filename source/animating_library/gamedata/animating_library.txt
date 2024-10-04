@@ -1,0 +1,70 @@
+"Games"
+{
+	"#default"
+	{
+		"Offsets"
+		{
+			"OS"
+			{
+				"linux"			"1"
+				"windows"		"0"
+			}
+		}
+	}
+
+    "left4dead2"
+    {
+        "Addresses"
+        {
+            "CBaseAnimating::FindBodyGroupByName"
+            {
+                "linux"
+                {
+                    "signature" "CBaseAnimating::FindBodyGroupByName"
+                }
+
+                "windows"
+                {
+                    "signature" "Infected::SetDamagedBodyGroupVariant"
+                    "offset"    "0x1D"  // sub_10403930+1C   E8 (here)[EF] F1 C2 FF    call    sub_10032B40 (CBaseAnimating::FindBodyGroupByName)
+                }
+            }
+        }
+
+        "Offsets"
+        {
+            "CBaseAnimating::GetBaseAnimating"
+            {
+                "linux"     "60"
+                "windows"   "59"
+            }
+        }
+
+        "Signatures"
+        {
+            // search for string "D%d_%c%d_%s"
+            "Infected::SetDamagedBodyGroupVariant"
+            {
+                "library"   "server"
+                "windows"   "\x55\x8B\xEC\x83\xEC\x3C\xA1\x2A\x2A\x2A\x2A\x33\xC5\x89\x45\xFC\x8B\x45\x08\x53\x56"
+                /* 55 8B EC 83 EC 3C A1 ? ? ? ? 33 C5 89 45 FC 8B 45 08 53 56 */
+            }
+
+            "CBaseAnimating::FindBodyGroupByName"
+            {
+                "library"   "server"
+                "linux"     "@_ZN14CBaseAnimating19FindBodygroupByNameEPKc"
+            }
+
+            // windows sig:
+            // find Infected::SetDamagedBodyGroupVariant follow the description above.
+            // down the buttom of the function, the call below the RandomInt() is CBaseAnimating::SetBodyGroup.
+            "CBaseAnimating::SetBodyGroup"
+            {
+                "library"   "server"
+                "linux"     "@_ZN14CBaseAnimating12SetBodygroupEii"
+                "wwindows"  "\x55\x8B\xEC\x56\x57\x8B\x7D\x08\x8B\xF1\x85\xFF\x0F\x88\x2A\x2A\x2A\x2A\x83\xBE\xD0\x13\x00\x00\x00"
+            }
+        }
+    }
+}
