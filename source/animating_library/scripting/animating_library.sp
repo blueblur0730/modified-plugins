@@ -53,6 +53,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 		return APLRes_SilentFailure;
 	}
 
+	RegPluginLibrary("animating_library");
 	CreateNatives();
 
 	return APLRes_Success;
@@ -98,8 +99,8 @@ public void OnPluginStart()
 void CreateNatives()
 {
 	CreateNative("CBaseAnimating.CBaseAnimating", Native_CBaseAnimating);
-	CreateNative("CBaseAnimating.FindBodygroupByName", Native_FindBodygroupByName);
-	CreateNative("CBaseAnimating.SetBodygroup", Native_SetBodyGroup);
+	CreateNative("CBaseAnimating.FindBodyGroupByName", Native_FindBodyGroupByName);
+	CreateNative("CBaseAnimating.SetBodyGroup", Native_SetBodyGroup);
 }
 
 any Native_CBaseAnimating(Handle plugin, int numParams)
@@ -110,7 +111,7 @@ any Native_CBaseAnimating(Handle plugin, int numParams)
 	return pWrapper.Pointer;
 }
 
-int Native_FindBodygroupByName(Handle plugin, int numParams)
+int Native_FindBodyGroupByName(Handle plugin, int numParams)
 {
 	if (!ValidateAddress(pWrapper))
 		ThrowNativeError(SP_ERROR_PARAM, "Invalid CBaseAnimating object.");
