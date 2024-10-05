@@ -43,9 +43,20 @@ methodmap GameDataWrapper < GameData
         return offset;
     }
 
+    public void GetKeyValue(const char[] key, char[] buffer, int maxlen) {
+        bool b = this.Super.GetKeyValue(key, buffer, maxlen);
+        if (!b) SetFailState("[GameData] Missing key \"%s\" in gamedata file.", key);
+    }
+
     public Address GetAddress(const char[] key) {
         Address ptr = this.Super.GetAddress(key);
         if (ptr == Address_Null) SetFailState("[GameData] Missing address of section \"%s\".", key);
+        return ptr;
+    }
+
+    public Address GetMemSig(const char[] key) {
+        Address ptr = this.Super.GetMemSig(key);
+        if (ptr == Address_Null) SetFailState("[GameData] Missing signature memory of section \"%s\".", key);
         return ptr;
     }
 
