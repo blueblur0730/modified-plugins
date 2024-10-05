@@ -19,12 +19,16 @@ methodmap CBaseAnimating
 		return view_as<CBaseAnimating>(view_as<Address>(SDKCall(g_hSDKCall_GetBaseAnimating, entity)));
 	}
 
+	property Address Pointer {
+	    public get() { return view_as<Address>(this); }
+	}
+
 	public int FindBodygroupByName(const char[] name) {
 		return SDKCall(g_hSDKCall_FindBodygroupByName, view_as<Address>(this), name);
 	}
 
 	public void SetBodygroup(int iGroup, int iValue) {
-		SDKCall(g_hSDKCall_SetBodygroup, this, iGroup, iValue);
+		SDKCall(g_hSDKCall_SetBodygroup, view_as<Address>(this), iGroup, iValue);
 	}
 }
 
@@ -37,7 +41,6 @@ public Plugin myinfo =
 	description = "Just a library for CBaseAnimating.",
 	version		= PLUGIN_VERSION,
 	url			= "https://github.com/blueblur0730/modified-plugins"
-
 }
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -57,6 +60,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
+	CreateConVar("animating_library_version", PLUGIN_VERSION, "Animating Library version.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
+	
 	GameDataWrapper	gd = new GameDataWrapper(GAMEDATA_FILE);
 
 	// weird sourcemod shit
@@ -78,14 +83,14 @@ public void OnPluginStart()
 		{ SDKType_PlainOldData, SDKPass_Plain}
 	};
 
-	g_hSDKCall_GetBaseAnimating	   = gd.CreateSDKCallOrFail(SDKCall_Entity, SDKConf_Virtual, "CBaseAnimating::GetBaseAnimating", _, _, true, ret);
+	g_hSDKCall_GetBaseAnimating	   		= gd.CreateSDKCallOrFail(SDKCall_Entity, SDKConf_Virtual, "CBaseAnimating::GetBaseAnimating", _, _, true, ret);
 
 	if (gd.OS == OS_Windows)
-		g_hSDKCall_FindBodygroupByName = gd.CreateSDKCallOrFailEx(SDKCall_Raw, "CBaseAnimating::FindBodygroupByName", params, sizeof(params), true, ret2);
+		g_hSDKCall_FindBodygroupByName 	= gd.CreateSDKCallOrFailEx(SDKCall_Raw, "CBaseAnimating::FindBodygroupByName", params, sizeof(params), true, ret2);
 	else
-		g_hSDKCall_FindBodygroupByName = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::FindBodygroupByName", params, sizeof(params), true, ret2);
+		g_hSDKCall_FindBodygroupByName 	= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::FindBodygroupByName", params, sizeof(params), true, ret2);
 		
-	g_hSDKCall_SetBodygroup		   = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::SetBodygroup", params2, sizeof(params2));
+	g_hSDKCall_SetBodygroup		   		= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::SetBodygroup", params2, sizeof(params2));
 
 	delete gd;
 }
@@ -102,11 +107,14 @@ any Native_CBaseAnimating(Handle plugin, int numParams)
 	int entity = GetNativeCell(1);
 	pWrapper = CBaseAnimating(entity);
 
-	return view_as<Address>(pWrapper);
+	return pWrapper.Pointer;
 }
 
 int Native_FindBodygroupByName(Handle plugin, int numParams)
 {
+	if (!ValidateAddress(pWrapper))
+		ThrowNativeError(SP_ERROR_PARAM, "Invalid CBaseAnimating object.");
+
 	int maxlength;
 	GetNativeStringLength(2, maxlength);
 	maxlength += 1;
@@ -118,10 +126,21 @@ int Native_FindBodygroupByName(Handle plugin, int numParams)
 
 int Native_SetBodyGroup(Handle plugin, int numParams)
 {
+	if (!ValidateAddress(pWrapper))
+		ThrowNativeError(SP_ERROR_PARAM, "Invalid CBaseAnimating object.");
+
 	int iGroup = GetNativeCell(2);
 	int iValue = GetNativeCell(3);
+
+	if (iValue != 0 && iValue != 1)
+		ThrowNativeError(SP_ERROR_PARAM, "Invalid value for iValue.");
 
 	pWrapper.SetBodygroup(iGroup, iValue);
 
 	return 0;
+}
+
+bool ValidateAddress(CBaseAnimating wrapper)
+{
+	return wrapper.Pointer != Address_Null ? true : false;
 }
