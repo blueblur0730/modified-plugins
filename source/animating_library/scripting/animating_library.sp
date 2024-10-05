@@ -67,31 +67,19 @@ public void OnPluginStart()
 
 	// weird sourcemod shit
 	// https://forums.alliedmods.net/showthread.php?t=344325
-	SDKCallParamsWrapper ret = {
-		SDKType_PlainOldData, SDKPass_Plain
-	};
+	SDKCallParamsWrapper ret = { SDKType_PlainOldData, SDKPass_Plain };
+	g_hSDKCall_GetBaseAnimating	  = gd.CreateSDKCallOrFail(SDKCall_Entity, SDKConf_Virtual, "CBaseAnimating::GetBaseAnimating", _, _, true, ret);
 
-	SDKCallParamsWrapper params[] = {
-		{SDKType_String, SDKPass_Pointer}
-	};
-
-	SDKCallParamsWrapper ret2 = {
-		SDKType_PlainOldData, SDKPass_Plain
-	};
-
-	SDKCallParamsWrapper params2[] = {
-		{ SDKType_PlainOldData,	SDKPass_Plain},
-		{ SDKType_PlainOldData, SDKPass_Plain}
-	};
-
-	g_hSDKCall_GetBaseAnimating	   		= gd.CreateSDKCallOrFail(SDKCall_Entity, SDKConf_Virtual, "CBaseAnimating::GetBaseAnimating", _, _, true, ret);
-
+	SDKCallParamsWrapper params[] = {{ SDKType_String, SDKPass_Pointer }};
+	SDKCallParamsWrapper ret2 = { SDKType_PlainOldData, SDKPass_Plain };
 	if (gd.OS == OS_Windows)
 		g_hSDKCall_FindBodygroupByName 	= gd.CreateSDKCallOrFailEx(SDKCall_Raw, "CBaseAnimating::FindBodyGroupByName", params, sizeof(params), true, ret2);
 	else
 		g_hSDKCall_FindBodygroupByName 	= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::FindBodyGroupByName", params, sizeof(params), true, ret2);
-		
-	g_hSDKCall_SetBodygroup		   		= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::SetBodyGroup", params2, sizeof(params2));
+
+	SDKCallParamsWrapper params2[] = {{ SDKType_PlainOldData, SDKPass_Plain },{ SDKType_PlainOldData, SDKPass_Plain }};
+	SDKCallParamsWrapper ret3 = { SDKType_PlainOldData, SDKPass_Plain };
+	g_hSDKCall_SetBodygroup	= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::SetBodyGroup", params2, sizeof(params2), true, ret3);
 
 	delete gd;
 }

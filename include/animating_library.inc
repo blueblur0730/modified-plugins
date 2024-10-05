@@ -26,22 +26,22 @@ methodmap CBaseAnimating
     public native CBaseAnimating(int entity);
 
     /**
-     * Returns the group number of a speciifc group name.
+     * Returns the body group number of a speciifc class name.
      * 
-     * @param name      The name of the bodygroup.
+     * @param name      The name of the bodygroup class.
      * 
-     * @return          The number of the specified group name. 
+     * @return          The number of the specified group class name. 
      *                  -1 on failure.
     */
     public native int FindBodyGroupByName(const char[] name);
 
     /**
-     * Sets the value of a specific body group.
+     * Sets the given body group to the given value.
      * 
      * @note            From the SDK: "// SetBodygroup is not supported on pending dynamic models. Wait for it to load!"
-     * @note            iValue is actually a boolean arugument. only 0(invisible) or 1(visible) is allowed.
+     * @note            iValue is actually a boolean arugument. only 0 or 1 is allowed.
      * 
-     * @param iGroup    The group number to set. Starting from 0.
+     * @param iGroup    The body group number to set. Starting from 0.
      * @param iValue    The value to set the group to.
      * 
      * @noreturn
