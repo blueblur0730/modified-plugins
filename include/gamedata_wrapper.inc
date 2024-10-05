@@ -143,20 +143,29 @@ methodmap GameDataWrapper < GameData
         return hSetup;
     }
 
-    public DynamicHook CreateDynamicHookOrFail(
-            const char[] name
-            //HookType type,
-            //int entity = -1,
-            //Address pAdr = Address_Null,
-            //DHookCallback preHook = INVALID_FUNCTION,
-            //DHookCallback postHook = INVALID_FUNCTION,
-            //DHookRemovalCB removalHook = INVALID_FUNCTION
-    )
+    public DynamicHook CreateDynamicHookOrFail(const char[] name)
+    {
         DynamicHook hSetup = DynamicHook.FromConf(this, name);
 
         if (!hSetup)
             SetFailState("[DHooks] Missing dynamic hook setup section \"%s\".", name);
-/*
+        return hSetup;
+    }
+
+    public DynamicHook CreateDynamicHookOrFailEx(
+            const char[] name
+            HookType type,
+            int entity = -1,
+            Address pAdr = Address_Null,
+            DHookCallback preHook = INVALID_FUNCTION,
+            DHookCallback postHook = INVALID_FUNCTION,
+            DHookRemovalCB removalHook = INVALID_FUNCTION)
+    {
+        DynamicHook hSetup = DynamicHook.FromConf(this, name);
+
+        if (!hSetup)
+            SetFailState("[DHooks] Missing dynamic hook setup section \"%s\".", name);
+
         switch (type)
         {
             case HookType_Entity:
@@ -199,8 +208,9 @@ methodmap GameDataWrapper < GameData
                     SetFailState("Failed to post-dhook section \"%s\".", name);
             }
         }
-*/
+
         return hSetup;
+    }
 #endif
 
 #if defined __sourcescramble_ext_included
@@ -214,7 +224,7 @@ methodmap GameDataWrapper < GameData
 #endif
 
 #if defined _midhook_included
-    public MidHook CreateMidHookOrFail(const char[] name, MidHookCB callback, bool enable=true) {
+    public MidHook CreateMidHookOrFail(const char[] name, MidHookCB callback, bool enable = true) {
         Address pAdr = this.GetAddress(name);
         MidHook hHook = new MidHook(pAdr, callback, enable);
         if (!hHook) SetFailState("[MidHooks] Failed to create Midhook for section \"%s\".", name);
