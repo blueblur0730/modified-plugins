@@ -90,7 +90,7 @@ public void OnPluginStart()
 	else
 		g_hSDKCall_FindBodygroupByName 	= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::FindBodyGroupByName", params, sizeof(params), true, ret2);
 		
-	g_hSDKCall_SetBodygroup		   		= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::SetBodygroup", params2, sizeof(params2));
+	g_hSDKCall_SetBodygroup		   		= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::SetBodyGroup", params2, sizeof(params2));
 
 	delete gd;
 }
