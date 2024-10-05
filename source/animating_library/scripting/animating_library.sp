@@ -61,7 +61,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
 	CreateConVar("animating_library_version", PLUGIN_VERSION, "Animating Library version.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
-	
+
 	GameDataWrapper	gd = new GameDataWrapper(GAMEDATA_FILE);
 
 	// weird sourcemod shit
@@ -86,9 +86,9 @@ public void OnPluginStart()
 	g_hSDKCall_GetBaseAnimating	   		= gd.CreateSDKCallOrFail(SDKCall_Entity, SDKConf_Virtual, "CBaseAnimating::GetBaseAnimating", _, _, true, ret);
 
 	if (gd.OS == OS_Windows)
-		g_hSDKCall_FindBodygroupByName 	= gd.CreateSDKCallOrFailEx(SDKCall_Raw, "CBaseAnimating::FindBodygroupByName", params, sizeof(params), true, ret2);
+		g_hSDKCall_FindBodygroupByName 	= gd.CreateSDKCallOrFailEx(SDKCall_Raw, "CBaseAnimating::FindBodyGroupByName", params, sizeof(params), true, ret2);
 	else
-		g_hSDKCall_FindBodygroupByName 	= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::FindBodygroupByName", params, sizeof(params), true, ret2);
+		g_hSDKCall_FindBodygroupByName 	= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::FindBodyGroupByName", params, sizeof(params), true, ret2);
 		
 	g_hSDKCall_SetBodygroup		   		= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseAnimating::SetBodygroup", params2, sizeof(params2));
 
