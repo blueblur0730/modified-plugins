@@ -121,6 +121,9 @@ int TankDamage(int Client, int Damage)
 				{
 					for (int i = 1; i <= MaxClients; i++)
 					{
+						if (!IsClientInGame(i) || IsFakeClient(i))
+							continue;
+							
 						if (!g_bClientRankMute[i])
 							CPrintToChat(i, "%t %t", "Tag", "BulldozingSurvivors_Mode3", Client, Score, TankDamageTotal);
 					}
@@ -202,6 +205,9 @@ void GiveAdrenaline(int Giver, int Recipient, int g_iAdrenalineIndexID = -1)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "GivingAdrenaline_Mode3", Giver, Score, Recipient);
 			}
@@ -256,6 +262,9 @@ void GivePills(int Giver, int Recipient, int PillsIndex = -1)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "GivingPills_Mode3", Giver, Score, Recipient);
 			}
@@ -299,6 +308,9 @@ void UpdateFriendlyFire(int Attacker, int Victim)
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			if (!IsClientInGame(i) || IsFakeClient(i))
+				continue;
+
 			if (!g_bClientRankMute[i])
 				CPrintToChat(i, "%t %t", "Tag", "FriendlyFireAt_Mode3", Attacker, Score, Victim);
 		}
@@ -511,6 +523,9 @@ void SurvivorDiedNamed(int Attacker, int Victim, const char[] AttackerID, int At
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "SurvivorDied_Mode3", Attacker, Score, Victim);
 			}
@@ -667,6 +682,9 @@ void PlayerIncap(int Attacker, int Victim)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "FriendlyIncap_Mode3", Attacker, Score, Victim);
 			}
@@ -784,6 +802,9 @@ void SurvivorHurt(int Attacker, int Victim, int Damage, int AttackerInfType = -1
 			{
 				for (int i = 1; i <= MaxClients; i++)
 				{
+					if (!IsClientInGame(i) || IsFakeClient(i))
+						continue;
+
 					if (!g_bClientRankMute[i])
 						CPrintToChat(i, "%t %t", "Tag", "ThrowingRockAt_Mode3", Attacker, RockHit, VictimName);
 				}
@@ -899,6 +920,9 @@ void SurvivorIncappedByInfected(int Attacker, int Victim, int Mode = -1)
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			if (!IsClientInGame(i) || IsFakeClient(i))
+				continue;
+
 			if (!g_bClientRankMute[i])
 				CPrintToChat(i, "%t %t", "Tag", "IncapSurvivors_Mode3", Attacker, Score, Victim);
 		}

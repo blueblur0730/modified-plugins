@@ -1034,6 +1034,9 @@ void GetClientRankPlayerJoined(Database owner, DBResultSet hndl, const char[] er
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			if (!IsClientInGame(i) || IsFakeClient(i))
+				continue;
+
 			if (!g_bClientRankMute[i])
 				CPrintToChat(i, "%t %t", "Tag", "JoinedWithRank", client, g_iClientRank[client], g_iClientPoints[client]);
 		}
@@ -1042,6 +1045,9 @@ void GetClientRankPlayerJoined(Database owner, DBResultSet hndl, const char[] er
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			if (!IsClientInGame(i) || IsFakeClient(i))
+				continue;
+
 			if (!g_bClientRankMute[i])
 				CPrintToChat(i, "%t %t", "Tag", "JoinedWithoutRank", client);
 		}

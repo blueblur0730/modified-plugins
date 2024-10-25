@@ -3,8 +3,6 @@
 #endif
 #define _l4d_stats_globals_included
 
-#define PLUGIN_VERSION "2.6.0"
-
 // Set to false when stats seem to work properly
 #define DEBUG 0
 

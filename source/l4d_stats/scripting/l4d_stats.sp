@@ -8,6 +8,8 @@
 #undef REQUIRE_PLUGIN
 #include <adminmenu>
 
+#define PLUGIN_VERSION "2.6.1"
+
 // here to define the global variables.
 #include "l4d_stats/globals.inc"
 
