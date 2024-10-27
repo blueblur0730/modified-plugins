@@ -20,12 +20,6 @@
                 "linux"     "280"
                 "windows"   "279"
             }
-
-            "CBaseCombatCharacter::Reload"
-            {
-                "linux"     "282"
-                "windows"   "281"
-            }
         }
     }
 }

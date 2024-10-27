@@ -2,21 +2,19 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#include <sdktools>
 #include <sdkhooks>
 #include <dhooks>
 
 #define GAMEDATA_FILE  "l4d2_block_idle_reload"
-#define SDKCALL_FUNCTION "CBaseCombatCharacter::Reload"
 #define DHOOK_FUNCTION "CBaseCombatWeapon::FinishReload"
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 #define DEBUG 0
 
 bool g_bInReload[MAXPLAYERS + 1] = { false, ...};
 bool g_bIsIdleReloading[MAXPLAYERS + 1] = { false, ...};
+bool g_bLateLoad = false;
 
-Handle g_hSDKCall_Reload = null;
 DynamicHook g_hDHook = null;
 
 public Plugin myinfo =
@@ -38,6 +36,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 		return APLRes_SilentFailure;
 	}
 
+	g_bLateLoad = late;
 	return APLRes_Success;
 }
 
@@ -49,6 +48,9 @@ public void OnPluginStart()
 
 	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
 	HookEvent("player_bot_replace", Event_PlayerBotReplace, EventHookMode_Post);
+
+	if (g_bLateLoad)
+		HookPlayers();
 }
 
 public void OnMapStart()
@@ -58,6 +60,9 @@ public void OnMapStart()
 
 void OnGameplayStart(const char[] output, int caller, int activator, float delay)
 {
+#if DEBUG
+		PrintToServer("### OnGameplayStart");
+#endif
 	HookPlayers();
 }
 
@@ -112,7 +117,7 @@ void OnWeaponEquipPost(int client, int weapon)
 #endif
 
 	SDKHook(weapon, SDKHook_ReloadPost, OnReloadPost);
-	g_hDHook.HookEntity(Hook_Post, weapon, OnFinishReload);
+	g_hDHook.HookEntity(Hook_Pre, weapon, OnFinishReload);
 }
 
 void OnReloadPost(int weapon, bool bSuccessful)
@@ -158,9 +163,6 @@ MRESReturn OnFinishReload(int pThis)
 
 	// stop CBaseCombatWeapon::FinishReload to be done.
 	// we will make client re-reload again when taking over the bot.
-
-	// FIXME: Why supercede (in prehook state, this is now a posthook.) not functioning? this is a pre hook.
-	// ammo and clip should be remained as before reload. but in fact they are normally set.
 	if (g_bInReload[client] && g_bIsIdleReloading[client])
 	{
 #if DEBUG
@@ -168,8 +170,7 @@ MRESReturn OnFinishReload(int pThis)
 #endif
 		g_bInReload[client] = false;
 		g_bIsIdleReloading[client] = false;
-		SDKCall(g_hSDKCall_Reload, pThis);	// do reload. at this term you cant do anything.
-		return MRES_Handled;
+		return MRES_Supercede;
 	}
 
 	// if this is just a normal reload, let it pass.
@@ -227,15 +228,6 @@ void InitGameData()
 
 	g_hDHook = DynamicHook.FromConf(gd, DHOOK_FUNCTION);
 	if (!g_hDHook) SetFailState("Failed to prepare dynamic hook \""... DHOOK_FUNCTION ..."\".");
-
-	StartPrepSDKCall(SDKCall_Entity);
-	if (!PrepSDKCall_SetFromConf(gd, SDKConf_Virtual, SDKCALL_FUNCTION)) 
-		SetFailState("Failed to set SDK call signature \""...SDKCALL_FUNCTION... "\".");
-
-	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
-	g_hSDKCall_Reload = EndPrepSDKCall();
-
-	if (!g_hSDKCall_Reload) SetFailState("Failed to prepare SDK call \""... SDKCALL_FUNCTION ..."\".");
 
 	delete gd;
 }
