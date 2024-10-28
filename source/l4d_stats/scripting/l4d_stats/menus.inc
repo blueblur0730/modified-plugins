@@ -1170,8 +1170,18 @@ void CreateRanksMenu(Database owner, DBResultSet hndl, const char[] error, int c
 
 	while (hndl.FetchRow())
 	{
-		hndl.FetchString(0, SteamID, sizeof(SteamID));
-		hndl.FetchString(1, Name, sizeof(Name));
+		if (!hndl.IsFieldNull(0))
+			hndl.FetchString(0, SteamID, sizeof(SteamID));
+		else
+			LogError("CreateRanksMenu failed! Reason: No data in current row result. Field number: %d", 0);
+		
+		if (!hndl.IsFieldNull(1))
+			hndl.FetchString(1, Name, sizeof(Name));
+		else
+		{
+			LogError("CreateRanksMenu failed! Reason: No data in current row result. Field number: %d", 1);
+			continue;
+		}
 
 		ReplaceString(Name, sizeof(Name), "&lt;", "<");
 		ReplaceString(Name, sizeof(Name), "&gt;", ">");
@@ -1179,7 +1189,14 @@ void CreateRanksMenu(Database owner, DBResultSet hndl, const char[] error, int c
 		ReplaceString(Name, sizeof(Name), "&#61;", "=");
 		ReplaceString(Name, sizeof(Name), "&#42;", "*");
 
-		Format(DisplayName, sizeof(DisplayName), "%T", "Menu_PlayerRank", client, Name, hndl.FetchInt(2));
+		if (!hndl.IsFieldNull(2))
+			Format(DisplayName, sizeof(DisplayName), "%T", "Menu_PlayerRank", client, Name, hndl.FetchInt(2));
+		else
+		{
+			LogError("CreateRanksMenu failed! Reason: No data in current row result. Field number: %d", 2);
+			continue;
+		}
+		
 		menu.AddItem(SteamID, DisplayName);
 	}
 
@@ -1228,7 +1245,14 @@ void CreateTimedMapsMenu(Database owner, DBResultSet hndl, const char[] error, i
 
 	while (hndl.FetchRow())
 	{
-		Gamemode = hndl.FetchInt(0);
+		if (!hndl.IsFieldNull(0))
+			Gamemode = hndl.FetchInt(0);
+		else
+		{
+			LogError("CreateTimedMapsMenu failed! Reason: No data in current row result. Field number: %d", 0);
+			continue;
+		}
+
 		IntToString(Gamemode, GamemodeInfo, sizeof(GamemodeInfo));
 
 		switch (Gamemode)
@@ -1299,7 +1323,14 @@ void CreateTimedMapsMenu2(Database owner, DBResultSet hndl, const char[] error, 
 
 	while (hndl.FetchRow())
 	{
-		Gamemode = hndl.FetchInt(0);
+		if (!hndl.IsFieldNull(0))
+			Gamemode = hndl.FetchInt(0);
+		else
+		{
+			LogError("CreateTimedMapsMenu2 failed! Reason: No data in current row result. Field number: %d", 0);
+			continue;
+		}
+
 		hndl.FetchString(1, Map, sizeof(Map));
 
 		Format(Info, sizeof(Info), "%i\\%s", Gamemode, Map);
@@ -1334,9 +1365,15 @@ void DisplayTimedMapsMenu3_2(Database owner, DBResultSet hndl, const char[] erro
 	delete dp;
 
 	if (hndl.FetchRow())
-		g_fClientMapTime[client] = hndl.FetchFloat(0);
-	else
-		g_fClientMapTime[client] = 0.0;
+	{
+		if (!hndl.IsFieldNull(0))
+			g_fClientMapTime[client] = hndl.FetchFloat(0);
+		else
+		{
+			LogError("DisplayTimedMapsMenu3_2 failed! Reason: No data in current row result. Field number: %d", 0);
+			g_fClientMapTime[client] = 0.0;
+		}
+	}
 
 	char query[256];
 	Format(query, sizeof(query), "SELECT DISTINCT tm.gamemode, tm.map, tm.time FROM %stimedmaps AS tm INNER JOIN %splayers AS p ON tm.steamid = p.steamid WHERE tm.gamemode = %i AND tm.map = '%s' ORDER BY tm.time %s", g_sDbPrefix, g_sDbPrefix, Gamemode, Map, (Gamemode == GAMEMODE_SURVIVAL ? "DESC" : "ASC"));
@@ -1386,11 +1423,26 @@ void CreateTimedMapsMenu3(Database owner, DBResultSet hndl, const char[] error, 
 
 	while (hndl.FetchRow())
 	{
-		hndl.FetchString(1, Map, sizeof(Map));
-		MapTime = hndl.FetchFloat(2);
+		if (!hndl.IsFieldNull(1))
+			hndl.FetchString(1, Map, sizeof(Map));
+		else
+			LogError("CreateTimedMapsMenu3 failed! Reason: No data in current row result. Field number: %d", 1);
 
-		SetTimeLabel(MapTime, Value, sizeof(Value));
-		Format(Info, sizeof(Info), "%i\\%s\\%f", hndl.FetchInt(0), Map, MapTime);
+		if (!hndl.IsFieldNull(2))
+			MapTime = hndl.FetchFloat(2);
+		else
+			LogError("CreateTimedMapsMenu3 failed! Reason: No data in current row result. Field number: %d", 2);
+
+		if (!hndl.IsFieldNull(0))
+		{
+			SetTimeLabel(MapTime, Value, sizeof(Value));
+			Format(Info, sizeof(Info), "%i\\%s\\%f", hndl.FetchInt(0), Map, MapTime);
+		}
+		else
+		{
+			LogError("CreateTimedMapsMenu3 failed! Reason: No data in current row result. Field number: %d", 0);
+			continue;
+		}
 
 		if (g_fClientMapTime[client] > 0.0 && g_fClientMapTime[client] == MapTime)
 			StrCat(Value, sizeof(Value), TM_MENU_CURRENT);
@@ -1422,8 +1474,21 @@ void CreateTimedMapsMenu4(Database owner, DBResultSet hndl, const char[] error, 
 
 	while (hndl.FetchRow())
 	{
-		hndl.FetchString(0, SteamID, sizeof(SteamID));
-		hndl.FetchString(1, Name, sizeof(Name));
+		if (!hndl.IsFieldNull(0))
+			hndl.FetchString(0, SteamID, sizeof(SteamID));
+		else
+		{
+			LogError("CreateTimedMapsMenu4 failed! Reason: No data in current row result. Field number: %d", 0);
+			continue;
+		}
+
+		if (!hndl.IsFieldNull(1))
+			hndl.FetchString(1, Name, sizeof(Name));
+		else
+		{
+			LogError("CreateTimedMapsMenu4 failed! Reason: No data in current row result. Field number: %d", 1);
+			continue;
+		}
 
 		ReplaceString(Name, sizeof(Name), "&lt;", "<");
 		ReplaceString(Name, sizeof(Name), "&gt;", ">");
@@ -1459,8 +1524,21 @@ void CreatePPMMenu(Database owner, DBResultSet hndl, const char[] error, int cli
 
 	while (hndl.FetchRow())
 	{
-		hndl.FetchString(0, SteamID, sizeof(SteamID));
-		hndl.FetchString(1, Name, sizeof(Name));
+		if (!hndl.IsFieldNull(0))
+			hndl.FetchString(0, SteamID, sizeof(SteamID));
+		else
+		{
+			LogError("CreatePPMMenu failed! Reason: No data in current row result. Field number: %d", 0);
+			continue;
+		}
+
+		if (!hndl.IsFieldNull(1))
+			hndl.FetchString(1, Name, sizeof(Name));
+		else
+		{
+			LogError("CreatePPMMenu failed! Reason: No data in current row result. Field number: %d", 1);
+			continue;
+		}
 
 		ReplaceString(Name, sizeof(Name), "&lt;", "<");
 		ReplaceString(Name, sizeof(Name), "&gt;", ">");
@@ -1493,7 +1571,13 @@ void DisplayTop10(Database owner, DBResultSet hndl, const char[] error, int clie
 
 	while (hndl.FetchRow())
 	{
-		hndl.FetchString(0, Name, sizeof(Name));
+		if (!hndl.IsFieldNull(0))
+			hndl.FetchString(0, Name, sizeof(Name));
+		else
+		{
+			LogError("DisplayTop10 failed! Reason: No data in current row result. Field number: %d", 0);
+			continue;
+		}
 
 		ReplaceString(Name, sizeof(Name), "&lt;", "<");
 		ReplaceString(Name, sizeof(Name), "&gt;", ">");
@@ -1527,7 +1611,13 @@ void DisplayTop10PPM(Database owner, DBResultSet hndl, const char[] error, int c
 
 	while (hndl.FetchRow())
 	{
-		hndl.FetchString(0, Name, sizeof(Name));
+		if (!hndl.IsFieldNull(0))
+			hndl.FetchString(0, Name, sizeof(Name));
+		else
+		{
+			LogError("DisplayTop10PPM failed! Reason: No data in current row result. Field number: %d", 0);
+			continue;
+		}
 
 		ReplaceString(Name, sizeof(Name), "&lt;", "<");
 		ReplaceString(Name, sizeof(Name), "&gt;", ">");
@@ -1585,8 +1675,21 @@ void DisplayNextRankFull(Database owner, DBResultSet hndl, const char[] error, i
 
 	while (hndl.FetchRow())
 	{
-		hndl.FetchString(0, Name, sizeof(Name));
-		Points = hndl.FetchInt(1);
+		if (!hndl.IsFieldNull(0))
+			hndl.FetchString(0, Name, sizeof(Name));
+		else
+		{
+			LogError("DisplayNextRankFull failed! Reason: No data in current row result. Field number: %d", 0);
+			continue;
+		}
+
+		if (!hndl.IsFieldNull(1))
+			Points = hndl.FetchInt(1);
+		else
+		{
+			LogError("DisplayNextRankFull failed! Reason: No data in current row result. Field number: %d", 1);
+			Points = -1;
+		}
 
 		Format(Value, sizeof(Value), "%T", "Menu_PlayerPoints", Points, Name);
 		NextRankPanel.DrawText(Value);
@@ -1618,13 +1721,57 @@ void DisplayRank(Database owner, DBResultSet hndl, const char[] error, int clien
 
 	if (hndl.FetchRow())
 	{
-		hndl.FetchString(0, Name, sizeof(Name));
-		Playtime = hndl.FetchInt(1);
-		Points = hndl.FetchInt(2);
-		InfectedKilled = hndl.FetchInt(3);
-		SurvivorsKilled = hndl.FetchInt(4);
-		Headshots = hndl.FetchInt(5);
-		PPM = float(Points) / float(Playtime);
+		if (!hndl.IsFieldNull(0))
+			hndl.FetchString(0, Name, sizeof(Name));
+		else
+		{
+			GetClientName(client, Name, sizeof(Name));
+			LogError("DisplayRank failed! Reason: No data in current row result. Field number: %d", 0);
+		}
+
+		if (!hndl.IsFieldNull(1))
+			Playtime = hndl.FetchInt(1);
+		else
+		{
+			Playtime = 0;
+			LogError("DisplayRank failed! Reason: No data in current row result. Field number: %d", 1);
+		}
+
+		if (!hndl.IsFieldNull(2))
+			Points = hndl.FetchInt(2);
+		else
+		{
+			Points = 0;
+			LogError("DisplayRank failed! Reason: No data in current row result. Field number: %d", 2);
+		}
+
+		if (!hndl.IsFieldNull(3))
+			InfectedKilled = hndl.FetchInt(3);
+		else
+		{
+			LogError("DisplayRank failed! Reason: No data in current row result. Field number: %d", 3);
+			InfectedKilled = 0;
+		}
+		if (!hndl.IsFieldNull(4))
+			SurvivorsKilled = hndl.FetchInt(4);
+		else
+		{
+			LogError("DisplayRank failed! Reason: No data in current row result. Field number: %d", 4);
+			SurvivorsKilled = 0;
+		}
+
+		if (!hndl.IsFieldNull(5))
+			Headshots = hndl.FetchInt(5);
+		else
+		{
+			LogError("DisplayRank failed! Reason: No data in current row result. Field number: %d", 5);
+			Headshots = 0;
+		}
+
+		if (Playtime != 0)
+			PPM = float(Points) / float(Playtime);
+		else
+			PPM = 0.0;
 	}
 	else
 	{
