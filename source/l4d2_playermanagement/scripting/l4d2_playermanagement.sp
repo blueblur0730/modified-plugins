@@ -14,7 +14,7 @@
 #define SDKCALL_FUNCTION "CTerrorPlayer::GoAwayFromKeyboard"
 #define BOT_NAME "k9Q6CK42"
 
-#define PLUGIN_VERSION "1.1" // 7
+#define PLUGIN_VERSION "1.1.1" // 7
 
 // This is a modified version from Competitive Rework Team.
 public Plugin myinfo =
@@ -525,13 +525,13 @@ Action Takeover_Cmd(int client, int args)
 		CReplyToCommand(client, "%t", "AlreadyInfected");
 		return Plugin_Handled;
 	}
-
+/*
 	if (IsPlayerIdle(client))
 	{
 		CReplyToCommand(client, "%t", "PlayerIdle");
 		return Plugin_Handled;
 	}
-
+*/
 	int bot = FindSurvivorBot();
 	if (bot > 0)
 	{
@@ -694,7 +694,7 @@ int FindSurvivorBot()
 {
 	for (int client = 1; client <= MaxClients; client++)
 	{
-		if(IsClientInGame(client) && IsFakeClient(client) && GetClientTeamEx(client) == L4D2Team_Survivor)
+		if(IsClientInGame(client) && IsFakeClient(client) && GetClientTeamEx(client) == L4D2Team_Survivor && IsPlayerAlive(client))
 			return client;
 	}
 	return -1;
@@ -716,7 +716,7 @@ bool IsTank(int client)
 int GetZombieClass(int client) {return GetEntProp(client, Prop_Send, "m_zombieClass");}
 
 // from l4d2_afk_commands by fdxx.
-bool IsPlayerIdle(int player)
+stock bool IsPlayerIdle(int player)
 {
 	int offset;
 	char sNetClass[12];
