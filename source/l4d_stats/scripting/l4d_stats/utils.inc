@@ -251,23 +251,23 @@ bool IsGamemode(const char[] Gamemode)
 
 int GetGamemodeID(const char[] Gamemode)
 {
-	if (StrEqual(Gamemode, "coop", false)) return GAMEMODE_COOP;
-	else if (StrEqual(Gamemode, "survival", false)) return GAMEMODE_SURVIVAL;
-	else if (StrEqual(Gamemode, "versus", false)) return GAMEMODE_VERSUS;
-	else if (StrEqual(Gamemode, "teamversus", false) && g_hCvar_GameMode[GAMEMODE_TEAMVERSUS].BoolValue) return GAMEMODE_VERSUS;
-	else if (StrEqual(Gamemode, "scavenge", false)) return GAMEMODE_SCAVENGE;
-	else if (StrEqual(Gamemode, "teamscavenge", false) && g_hCvar_GameMode[GAMEMODE_TEAMSCAVENGE].BoolValue) return GAMEMODE_SCAVENGE;
-	else if (StrEqual(Gamemode, "realism", false)) return GAMEMODE_REALISM;
-	else if (StrEqual(Gamemode, "mutation12", false)) return GAMEMODE_REALISMVERSUS;
-	else if (StrEqual(Gamemode, "teamrealismversus", false) && g_hCvar_GameMode[GAMEMODE_TEAMREALISMVERSUS].BoolValue) return GAMEMODE_REALISMVERSUS;
-	else if (StrContains(Gamemode, "mutation", false) == 0 || StrContains(Gamemode, "community", false) == 0) return GAMEMODE_OTHERMUTATIONS;
+	if (StrEqual(Gamemode, "coop", false)) return CVAR_GAMEMODE_COOP;
+	else if (StrEqual(Gamemode, "survival", false)) return CVAR_GAMEMODE_SURVIVAL;
+	else if (StrEqual(Gamemode, "versus", false)) return CVAR_GAMEMODE_VERSUS;
+	else if (StrEqual(Gamemode, "teamversus", false) && g_hCvar_GameMode[CVAR_GAMEMODE_TEAMVERSUS].BoolValue) return CVAR_GAMEMODE_VERSUS;
+	else if (StrEqual(Gamemode, "scavenge", false)) return CVAR_GAMEMODE_SCAVENGE;
+	else if (StrEqual(Gamemode, "teamscavenge", false) && g_hCvar_GameMode[CVAR_GAMEMODE_TEAMSCAVENGE].BoolValue) return CVAR_GAMEMODE_SCAVENGE;
+	else if (StrEqual(Gamemode, "realism", false)) return CVAR_GAMEMODE_REALISM;
+	else if (StrEqual(Gamemode, "mutation12", false)) return CVAR_GAMEMODE_REALISMVERSUS;
+	else if (StrEqual(Gamemode, "teamrealismversus", false) && g_hCvar_GameMode[CVAR_GAMEMODE_TEAMREALISMVERSUS].BoolValue) return CVAR_GAMEMODE_REALISMVERSUS;
+	else if (StrContains(Gamemode, "mutation", false) == 0 || StrContains(Gamemode, "community", false) == 0) return CVAR_GAMEMODE_OTHERMUTATIONS;
 
 	return -1;
 }
 
 bool IsGamemodeVersus()
 {
-	return (IsGamemode("versus") || (IsGamemode("teamversus") && g_hCvar_GameMode[GAMEMODE_TEAMVERSUS].BoolValue));
+	return (IsGamemode("versus") || (IsGamemode("teamversus") && g_hCvar_GameMode[CVAR_GAMEMODE_TEAMVERSUS].BoolValue));
 }
 /*
 IsGamemodeRealism()
@@ -297,7 +297,7 @@ int GetSurvivorKillScore()
 
 bool IsSingleTeamGamemode()
 {
-	if (g_iCurrentGamemodeID == GAMEMODE_SCAVENGE || g_iCurrentGamemodeID == GAMEMODE_VERSUS || g_iCurrentGamemodeID == GAMEMODE_REALISMVERSUS)
+	if (g_iCurrentGamemodeID == CVAR_GAMEMODE_SCAVENGE || g_iCurrentGamemodeID == CVAR_GAMEMODE_VERSUS || g_iCurrentGamemodeID == CVAR_GAMEMODE_REALISMVERSUS)
 		return false;
 
 	return true;
