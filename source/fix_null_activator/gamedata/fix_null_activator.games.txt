@@ -1,0 +1,187 @@
+"Games"
+{
+	"#default"
+	{
+		"#supported"
+		{
+			"game"		"cstrike"
+			"game"		"dod"
+			"game"		"hl2mp"
+			"engine"	"sdk2013"
+		}
+
+		"Keys"
+		{
+			"MaxEntityCount"	"10"
+
+			"HookEntity1"	"game_ui"
+			"HookEntity2"	"filter_activator_class"
+			"HookEntity3"	"filter_activator_mass_greater"
+			"HookEntity4"	"filter_activator_name"
+			"HookEntity5"	"filter_activator_team"
+			"HookEntity6"	"filter_base"
+			"HookEntity7"	"filter_damage_type"
+			"HookEntity8"	"filter_enemy"
+			"HookEntity9"	"filter_origin"
+			"HookEntity10"	"filter_multi"
+		}
+
+		"Functions"
+		{
+			// bool CBaseEntity::AcceptInput( const char *szInputName, CBaseEntity *pActivator, CBaseEntity *pCaller, variant_t Value, int outputID )
+			"CBaseEntity::AcceptInput"
+			{
+				"offset"	"CBaseEntity::AcceptInput"
+				"callconv"	"thiscall"
+				"return"	"bool"
+				"this"		"entity"
+				"arguments"
+				{
+					"szInputName"
+					{
+						"type"		"charptr"
+					}
+
+					"pActivator"
+					{
+						"type"		"cbaseentity"
+					}
+
+					"pCaller"
+					{
+						"type"		"cbaseentity"
+					}
+
+					// varaint_t is a union of 12 (float[3]) + 2 int params, 12 + 2 * 4 = 20.
+					"variant_t"
+					{
+						"type"		"object"
+						"size"		"20"
+					}
+
+					"outputID"
+					{
+						"type"		"int"
+					}
+				}
+			}
+		}
+		
+		"Offsets"
+		{
+			"CBaseEntity::AcceptInput"
+			{
+				"windows"	"36"
+				"linux"		"37"
+			}
+		}
+	}
+	
+
+	"tf"
+	{
+
+		"Offsets"
+		{
+			"CBaseEntity::AcceptInput"
+			{
+				"windows"	"38"
+				"linux"		"39"
+			}
+		}
+	}
+
+	"csgo"
+	{
+		"Keys"
+		{
+			"MaxEntityCount"	"12"
+
+			"HookEntity1"	"game_ui"
+			"HookEntity2"	"filter_activator_class"
+			"HookEntity3"	"filter_activator_context"
+			"HookEntity4"	"filter_activator_mass_greater"
+			"HookEntity5"	"filter_activator_model"
+			"HookEntity6"	"filter_activator_name"
+			"HookEntity7"	"filter_activator_team"
+			"HookEntity8"	"filter_base"
+			"HookEntity9"	"filter_damage_type"
+			"HookEntity10"	"filter_enemy"
+			"HookEntity11"	"filter_origin"
+			"HookEntity12"	"filter_multi"
+		}
+
+		"Offsets"
+		{
+			"CBaseEntity::AcceptInput"
+			{
+				"windows"	"40"
+				"linux"		"41"
+			}
+		}
+	}
+	
+	"left4dead2"
+	{
+		"Keys"
+		{
+			"MaxEntityCount"	"15"
+
+			"HookEntity1"	"game_ui"
+			"HookEntity2"	"filter_activator_class"
+			"HookEntity3"	"filter_activator_context"
+			"HookEntity4"	"filter_activator_infected_class"
+			"HookEntity5"	"filter_activator_mass_greater"
+			"HookEntity6"	"filter_activator_model"
+			"HookEntity7"	"filter_activator_name"
+			"HookEntity8"	"filter_activator_team"
+			"HookEntity9"	"filter_base"
+			"HookEntity10"	"filter_damage_type"
+			"HookEntity11"	"filter_enemy"
+			"HookEntity12"	"filter_health"
+			"HookEntity13"	"filter_melee_damage"
+			"HookEntity14"	"filter_origin"
+			"HookEntity15"	"filter_multi"
+		}
+
+		"Offsets"
+		{
+			"CBaseEntity::AcceptInput"
+			{
+				"windows"	"44"
+				"linux"		"45"
+			}
+		}
+	}
+
+	"left4dead"
+	{
+		"Keys"
+		{
+			"MaxEntityCount"	"13"
+
+			"HookEntity1"	"game_ui"
+			"HookEntity2"	"filter_activator_class"
+			"HookEntity3"	"filter_activator_context"
+			"HookEntity4"	"filter_activator_infected_class"
+			"HookEntity5"	"filter_activator_mass_greater"
+			"HookEntity6"	"filter_activator_model"
+			"HookEntity7"	"filter_activator_name"
+			"HookEntity8"	"filter_activator_team"
+			"HookEntity9"	"filter_base"
+			"HookEntity10"	"filter_damage_type"
+			"HookEntity11"	"filter_enemy"
+			"HookEntity12"	"filter_origin"
+			"HookEntity13"	"filter_multi"
+		}
+
+		"Offsets"
+		{
+			"CBaseEntity::AcceptInput"
+			{
+				"windows"	"37"
+				"linux"		"38"
+			}
+		}
+	}
+}
