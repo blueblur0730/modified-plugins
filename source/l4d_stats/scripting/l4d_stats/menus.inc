@@ -1823,26 +1823,18 @@ void DisplayRank(Database owner, DBResultSet hndl, const char[] error, int clien
 		Format(Value, sizeof(Value), "%T", "Menu_GameModeRank", client, g_sCurrentGamemodeLabel , g_iClientGameModeRank[client], g_iGameModeRankTotal);
 		RankPanel.DrawText(Value);
 	}
-/*
+
 	if (Playtime > 60)
 	{
-		Format(Value, sizeof(Value), "%T", "Menu_Playtime", client, (float(Playtime) / 60.0));
+		Format(Value, sizeof(Value), "%T", "Menu_PlayTime", client, (float(Playtime) / 60.0));
 		RankPanel.DrawText(Value);
 	}
 	else
 	{
-#if DEBUG
-		if (!TranslationPhraseExists("Menu_PlaytimeMinute"))
-			PrintToServer("Menu_PlaytimeMinute not found in translations cache.");
-
-		if (!IsTranslatedForLanguage("Menu_PlaytimeMinute", 0))
-			PrintToServer("Menu_PlaytimeMinute not translated for language 0.");
-#else
-		Format(Value, sizeof(Value), "%T", "Menu_PlaytimeMinute", client, Playtime);
+		Format(Value, sizeof(Value), "%T", "Menu_PlayTimeMinute", client, Playtime);
 		RankPanel.DrawText(Value);
-#endif
 	}
-*/
+
 	Format(Value, sizeof(Value), "%T", "Menu_Points", client, Points);
 	RankPanel.DrawText(Value);
 
