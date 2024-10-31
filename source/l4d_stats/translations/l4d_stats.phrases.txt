@@ -181,7 +181,7 @@
 
     "JoinedWithRank"
     {
-        "#format"   "{1:N}.{2:i},{3:i}"
+        "#format"   "{1:N},{2:i},{3:i}"
         "en"        "Player {olive}{1} {default}joined the game! (Rank: {lightgreen}{2} {default}/ Points: {lightgreen}{3}{default})"
     }
 
