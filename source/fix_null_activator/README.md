@@ -14,6 +14,33 @@
   - l4d2
   - csgo
 
+### How to use
+
+- Open gamedata file "fix_null_activator.games.txt"
+- Find "Key" section, add the potential server-crashed entity that is related to pass null activator pointer to CBaseEntity::AcceptInput to the list, following the format:
+
+```
+	"Keys"
+	{
+        // here to define how many entity we want to hook. should be equal to the number of "HookEntityx" below.
+		"MaxEntityCount"	"10"
+
+        // fill in the first blank with "HookEntityx", x means the number, has to be sequential.
+		"HookEntity1"	"game_ui"   // the second blank is the entity name.
+        "HookEntity2"	"filter_*"
+        "HookEntityx"	"..."
+
+        // here to define how many input command we want to check in the plugin. should be equal to the number of "Commandx" below.
+		"MaxCommandCount"	"2"
+
+        // fill in the first blank with "Commandx", x means the number, has to be sequential.
+		"Command1"	"Deactivate"	    // entity 'game_ui' inputs "Deactivate".
+		"Command2"	"TestActivator"		// entity 'filter_*' inputs "TestActivator".
+	}
+```
+
+- Every change applys on next map start.
+
 ### How dose this become a bug?
 
 - When calling `CBaseEntity::AcceptInput`, there could be chance that the activator player was disconnected or the activator entity was destroyed, which will cause the activator pointer to be null to pass to `CBaseEntity::AcceptInput`.
