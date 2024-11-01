@@ -59,9 +59,6 @@
 			"HookEntity8"	"filter_enemy"
 			"HookEntity9"	"filter_origin"
 			"HookEntity10"	"filter_multi"
-			"MaxCommandCount"	"2"
-			"Command1"	"Deactivate"	// entity 'game_ui' inputs "Deactivate".
-			"Command2"	"TestActivator"		// entity 'filter_*' inputs "TestActivator".
 		}
 
 		"Offsets"
@@ -89,9 +86,6 @@
 			"HookEntity8"	"filter_enemy"
 			"HookEntity9"	"filter_origin"
 			"HookEntity10"	"filter_multi"
-			"MaxCommandCount"	"2"
-			"Command1"	"Deactivate"	// entity 'game_ui' inputs "Deactivate".
-			"Command2"	"TestActivator"		// entity 'filter_*' inputs "TestActivator".
 		}
 
 		"Offsets"
@@ -119,9 +113,6 @@
 			"HookEntity8"	"filter_enemy"
 			"HookEntity9"	"filter_origin"
 			"HookEntity10"	"filter_multi"
-			"MaxCommandCount"	"2"
-			"Command1"	"Deactivate"	// entity 'game_ui' inputs "Deactivate".
-			"Command2"	"TestActivator"		// entity 'filter_*' inputs "TestActivator".
 		}
 
 		"Offsets"
@@ -149,9 +140,6 @@
 			"HookEntity8"	"filter_enemy"
 			"HookEntity9"	"filter_origin"
 			"HookEntity10"	"filter_multi"
-			"MaxCommandCount"	"2"
-			"Command1"	"Deactivate"	// entity 'game_ui' inputs "Deactivate".
-			"Command2"	"TestActivator"		// entity 'filter_*' inputs "TestActivator".
 		}
 
 		"Offsets"
@@ -181,9 +169,6 @@
 			"HookEntity10"	"filter_enemy"
 			"HookEntity11"	"filter_origin"
 			"HookEntity12"	"filter_multi"
-			"MaxCommandCount"	"2"
-			"Command1"	"Deactivate"
-			"Command2"	"TestActivator"
 		}
 
 		"Offsets"
@@ -216,9 +201,6 @@
 			"HookEntity13"	"filter_melee_damage"
 			"HookEntity14"	"filter_origin"
 			"HookEntity15"	"filter_multi"
-			"MaxCommandCount"	"2"
-			"Command1"	"Deactivate"
-			"Command2"	"TestActivator"
 		}
 
 		"Offsets"
@@ -249,9 +231,6 @@
 			"HookEntity11"	"filter_enemy"
 			"HookEntity12"	"filter_origin"
 			"HookEntity13"	"filter_multi"
-			"MaxCommandCount"	"2"
-			"Command1"	"Deactivate"
-			"Command2"	"TestActivator"
 		}
 
 		"Offsets"

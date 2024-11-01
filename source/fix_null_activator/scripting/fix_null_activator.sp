@@ -8,14 +8,12 @@
 #define GAMEDATA_FILE "fix_null_activator.games"
 #define DHOOK_FUNCTION "CBaseEntity::AcceptInput"
 #define KEY_MAX_ENTITY_COUNT "MaxEntityCount"
-#define KEY_MAX_COMMAND_COUNT "MaxCommandCount"
 #define STRING_LENTH	64
 
-#define PLUGIN_VERSION 	"1.1.1"
+#define PLUGIN_VERSION 	"1.2"
 
 DynamicHook g_hHook_AcceptInput = null;
 ArrayList g_hArrEntityList = null;
-ArrayList g_hArrCommandNames = null;
 
 // Original Author: GoD-Tony. 
 // Modified by blueblur.
@@ -44,19 +42,10 @@ public void OnPluginStart()
 	if (!gd.GetKeyValue("MaxEntityCount", szEntityCount, sizeof(szEntityCount)))
 		SetFailState("Failed to get key section \""... KEY_MAX_ENTITY_COUNT ..."\" from gamedata file \""... GAMEDATA_FILE ..."\".");
 
-	int iMaxCommandCount = 0;
-	char szCommandCount[STRING_LENTH];
-	if (!gd.GetKeyValue("MaxCommandCount", szCommandCount, sizeof(szCommandCount)))
-		SetFailState("Failed to get key section \""... KEY_MAX_COMMAND_COUNT ..."\" from gamedata file \""... GAMEDATA_FILE ..."\".");
-
 	iMaxEntityCount = StringToInt(szEntityCount);
 	if (!iMaxEntityCount) SetFailState("Key section \""... KEY_MAX_ENTITY_COUNT ..."\" is 0. Plugin Disabled.");
 
-	iMaxCommandCount = StringToInt(szCommandCount);
-	if (!iMaxCommandCount) SetFailState("Key section \""... KEY_MAX_COMMAND_COUNT ..."\" is 0. Plugin Disabled.");
-
 	g_hArrEntityList = new ArrayList(ByteCountToCells(STRING_LENTH));
-	g_hArrCommandNames = new ArrayList(ByteCountToCells(STRING_LENTH));
 
 	char szEntityName[STRING_LENTH];
 	for (int i = 1; i < iMaxEntityCount; i++)
@@ -69,17 +58,6 @@ public void OnPluginStart()
 		g_hArrEntityList.PushString(szEntityName);
 	}
 
-	char szCommandName[STRING_LENTH];
-	for (int i = 1; i < iMaxEntityCount; i++)
-	{
-		static char number[STRING_LENTH];
-		Format(number, sizeof(number), "Command%d", i);
-		if (!gd.GetKeyValue(number, szCommandName, sizeof(szCommandName)))
-			continue;
-
-		g_hArrCommandNames.PushString(szCommandName);
-	}
-
 	g_hHook_AcceptInput = DynamicHook.FromConf(gd, DHOOK_FUNCTION);
 	if (!g_hHook_AcceptInput) SetFailState("Failed to create dynamic hook for \""...  DHOOK_FUNCTION ..."\"");
 
@@ -90,7 +68,6 @@ public void OnPluginEnd()
 {
 	if (g_hHook_AcceptInput) delete g_hHook_AcceptInput;
 	if (g_hArrEntityList) delete g_hArrEntityList;
-	if (g_hArrCommandNames) delete g_hArrCommandNames;
 }
 
 // HACKHACK: This is too resource consuming. Any better way to hook entity?
@@ -116,38 +93,17 @@ MRESReturn DHook_CBaseEntity_AcceptInput(int pThis, DHookReturn hReturn, DHookPa
 	int pActivator = hParams.Get(2);
 
 	char szEntityName[128];
-	if (!GetEntityClassname(pThis, szEntityName, sizeof(szEntityName)))
-		return MRES_Ignored;
+	GetEntityClassname(pThis, szEntityName, sizeof(szEntityName));
 
-	for (int i = 0; i < g_hArrEntityList.Length; i++)
+	// if player disconnected or activator entity destroyed.
+	if (pActivator == -1)
 	{
-		static char szEntityName2[STRING_LENTH];
-		g_hArrEntityList.GetString(i, szEntityName2, sizeof(szEntityName2));
+		if (StrEqual(szEntityName, "game_ui") && StrEqual(szInputName, "Deactivate"))
+			SetEntProp(pThis, Prop_Data, "m_nNextThinkTick", -1);
 
-		// is this the entity we want to check
-		if (!StrEqual(szEntityName, szEntityName2))
-			continue;
-
-		for (int j = 0; j < g_hArrCommandNames.Length; j++)
-		{
-			static char szCommandName[STRING_LENTH];
-			g_hArrCommandNames.GetString(j, szCommandName, sizeof(szCommandName));
-
-			// is this the input command we want to check
-			if (!StrEqual(szInputName, szCommandName))
-				continue;
-
-			// if player disconnected or activator entity destroyed.
-			if (pActivator == -1)
-			{
-				// Manually disable the think which should be set to -1 on CGameUI::Deactivate.
-				if (StrEqual(szEntityName, "game_ui") && StrEqual(szInputName, "Deactivate"))
-					SetEntProp(pThis, Prop_Data, "m_nNextThinkTick", -1);
-
-				hReturn.Value = false;
-				return MRES_Supercede;
-			}
-		}
+		// this operation is not successful.
+		hReturn.Value = false;
+		return MRES_Supercede;
 	}
 
 	return MRES_Ignored;

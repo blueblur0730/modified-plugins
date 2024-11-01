@@ -29,13 +29,6 @@
 		"HookEntity1"	"game_ui"   // the second blank is the entity name.
         "HookEntity2"	"filter_*"
         "HookEntityx"	"..."
-
-        // here to define how many input command we want to check in the plugin. should be equal to the number of "Commandx" below.
-		"MaxCommandCount"	"2"
-
-        // fill in the first blank with "Commandx", x means the number, has to be sequential.
-		"Command1"	"Deactivate"	    // entity 'game_ui' inputs "Deactivate".
-		"Command2"	"TestActivator"		// entity 'filter_*' inputs "TestActivator".
 	}
 ```
 
@@ -46,4 +39,4 @@
 - When calling `CBaseEntity::AcceptInput`, there could be chance that the activator player was disconnected or the activator entity was destroyed, which will cause the activator pointer to be null to pass to `CBaseEntity::AcceptInput`.
 `CBaseEntity::AcceptInput` dose not perform any check for the null activator pointer, so once this null pointer is passed to the target input function and this function try to access the pointer, the game crashes. This could be existed in any source games and any entity that is related to this logic such as `game_ui`, `filter_* entity`, etc.
 
-- This plugin detours the `CBaseEntity::AcceptInput` function and checks if the activator pointer is null before calling the target input function. If the activator pointer is null, `CBaseEntity::AcceptInput` will be skipped and won't call the target input function.
+- This plugin dynamic hooks the `CBaseEntity::AcceptInput` function with specific entity and checks if the activator pointer is null before calling the target input function. If the activator pointer is null, `CBaseEntity::AcceptInput` will be skipped and won't call the target input function.
