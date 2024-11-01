@@ -23,7 +23,7 @@
 	"Keys"
 	{
         	// here to define how many entity we want to hook. should be equal to the number of "HookEntityx" below.
-		"MaxEntityCount"	"10"
+		"MaxEntityCount"	"x"
 
         	// fill in the first blank with "HookEntityx", x means the number, has to be sequential.
 		"HookEntity1"	"game_ui"   // the second blank is the entity name.
