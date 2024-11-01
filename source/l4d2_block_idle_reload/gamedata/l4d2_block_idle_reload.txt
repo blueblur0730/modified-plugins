@@ -7,7 +7,7 @@
             "CBaseCombatWeapon::FinishReload"
             {
                 "offset"    "CBaseCombatWeapon::FinishReload"
-                "callconv"  "thiscall"
+                "hooktype"  "entity"
                 "return"    "void"
                 "this"      "entity"
             }

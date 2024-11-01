@@ -2,42 +2,13 @@
 {
 	"#default"
 	{
-		"#supported"
-		{
-			"game"		"cstrike"
-			"game"		"dod"
-			"game"		"hl2mp"
-			"engine"	"sdk2013"
-		}
-
-		"Keys"
-		{
-			"MaxEntityCount"	"10"
-
-			"HookEntity1"	"game_ui"
-			"HookEntity2"	"filter_activator_class"
-			"HookEntity3"	"filter_activator_mass_greater"
-			"HookEntity4"	"filter_activator_name"
-			"HookEntity5"	"filter_activator_team"
-			"HookEntity6"	"filter_base"
-			"HookEntity7"	"filter_damage_type"
-			"HookEntity8"	"filter_enemy"
-			"HookEntity9"	"filter_origin"
-			"HookEntity10"	"filter_multi"
-
-			"MaxCommandCount"	"2"
-
-			"Command1"	"Deactivate"	// entity 'game_ui' inputs "Deactivate".
-			"Command2"	"TestActivator"		// entity 'filter_*' inputs "TestActivator".
-		}
-
 		"Functions"
 		{
 			// bool CBaseEntity::AcceptInput( const char *szInputName, CBaseEntity *pActivator, CBaseEntity *pCaller, variant_t Value, int outputID )
 			"CBaseEntity::AcceptInput"
 			{
 				"offset"	"CBaseEntity::AcceptInput"
-				"callconv"	"thiscall"
+				"hooktype"	"entity"
 				"return"	"bool"
 				"this"		"entity"
 				"arguments"
@@ -71,7 +42,28 @@
 				}
 			}
 		}
-		
+	}
+	
+	"cstrike"
+	{
+		"Keys"
+		{
+			"MaxEntityCount"	"10"
+			"HookEntity1"	"game_ui"
+			"HookEntity2"	"filter_activator_class"
+			"HookEntity3"	"filter_activator_mass_greater"
+			"HookEntity4"	"filter_activator_name"
+			"HookEntity5"	"filter_activator_team"
+			"HookEntity6"	"filter_base"
+			"HookEntity7"	"filter_damage_type"
+			"HookEntity8"	"filter_enemy"
+			"HookEntity9"	"filter_origin"
+			"HookEntity10"	"filter_multi"
+			"MaxCommandCount"	"2"
+			"Command1"	"Deactivate"	// entity 'game_ui' inputs "Deactivate".
+			"Command2"	"TestActivator"		// entity 'filter_*' inputs "TestActivator".
+		}
+
 		"Offsets"
 		{
 			"CBaseEntity::AcceptInput"
@@ -81,10 +73,86 @@
 			}
 		}
 	}
-	
+
+	"dod"
+	{
+		"Keys"
+		{
+			"MaxEntityCount"	"10"
+			"HookEntity1"	"game_ui"
+			"HookEntity2"	"filter_activator_class"
+			"HookEntity3"	"filter_activator_mass_greater"
+			"HookEntity4"	"filter_activator_name"
+			"HookEntity5"	"filter_activator_team"
+			"HookEntity6"	"filter_base"
+			"HookEntity7"	"filter_damage_type"
+			"HookEntity8"	"filter_enemy"
+			"HookEntity9"	"filter_origin"
+			"HookEntity10"	"filter_multi"
+			"MaxCommandCount"	"2"
+			"Command1"	"Deactivate"	// entity 'game_ui' inputs "Deactivate".
+			"Command2"	"TestActivator"		// entity 'filter_*' inputs "TestActivator".
+		}
+
+		"Offsets"
+		{
+			"CBaseEntity::AcceptInput"
+			{
+				"windows"	"36"
+				"linux"		"37"
+			}
+		}
+	}
+
+	"hl2mp"
+	{
+		"Keys"
+		{
+			"MaxEntityCount"	"10"
+			"HookEntity1"	"game_ui"
+			"HookEntity2"	"filter_activator_class"
+			"HookEntity3"	"filter_activator_mass_greater"
+			"HookEntity4"	"filter_activator_name"
+			"HookEntity5"	"filter_activator_team"
+			"HookEntity6"	"filter_base"
+			"HookEntity7"	"filter_damage_type"
+			"HookEntity8"	"filter_enemy"
+			"HookEntity9"	"filter_origin"
+			"HookEntity10"	"filter_multi"
+			"MaxCommandCount"	"2"
+			"Command1"	"Deactivate"	// entity 'game_ui' inputs "Deactivate".
+			"Command2"	"TestActivator"		// entity 'filter_*' inputs "TestActivator".
+		}
+
+		"Offsets"
+		{
+			"CBaseEntity::AcceptInput"
+			{
+				"windows"	"36"
+				"linux"		"37"
+			}
+		}
+	}
 
 	"tf"
 	{
+		"Keys"
+		{
+			"MaxEntityCount"	"10"
+			"HookEntity1"	"game_ui"
+			"HookEntity2"	"filter_activator_class"
+			"HookEntity3"	"filter_activator_mass_greater"
+			"HookEntity4"	"filter_activator_name"
+			"HookEntity5"	"filter_activator_team"
+			"HookEntity6"	"filter_base"
+			"HookEntity7"	"filter_damage_type"
+			"HookEntity8"	"filter_enemy"
+			"HookEntity9"	"filter_origin"
+			"HookEntity10"	"filter_multi"
+			"MaxCommandCount"	"2"
+			"Command1"	"Deactivate"	// entity 'game_ui' inputs "Deactivate".
+			"Command2"	"TestActivator"		// entity 'filter_*' inputs "TestActivator".
+		}
 
 		"Offsets"
 		{
@@ -101,7 +169,6 @@
 		"Keys"
 		{
 			"MaxEntityCount"	"12"
-
 			"HookEntity1"	"game_ui"
 			"HookEntity2"	"filter_activator_class"
 			"HookEntity3"	"filter_activator_context"
@@ -114,9 +181,7 @@
 			"HookEntity10"	"filter_enemy"
 			"HookEntity11"	"filter_origin"
 			"HookEntity12"	"filter_multi"
-
 			"MaxCommandCount"	"2"
-
 			"Command1"	"Deactivate"
 			"Command2"	"TestActivator"
 		}
@@ -136,7 +201,6 @@
 		"Keys"
 		{
 			"MaxEntityCount"	"15"
-
 			"HookEntity1"	"game_ui"
 			"HookEntity2"	"filter_activator_class"
 			"HookEntity3"	"filter_activator_context"
@@ -152,9 +216,7 @@
 			"HookEntity13"	"filter_melee_damage"
 			"HookEntity14"	"filter_origin"
 			"HookEntity15"	"filter_multi"
-
 			"MaxCommandCount"	"2"
-
 			"Command1"	"Deactivate"
 			"Command2"	"TestActivator"
 		}
@@ -174,7 +236,6 @@
 		"Keys"
 		{
 			"MaxEntityCount"	"13"
-
 			"HookEntity1"	"game_ui"
 			"HookEntity2"	"filter_activator_class"
 			"HookEntity3"	"filter_activator_context"
@@ -188,9 +249,7 @@
 			"HookEntity11"	"filter_enemy"
 			"HookEntity12"	"filter_origin"
 			"HookEntity13"	"filter_multi"
-
 			"MaxCommandCount"	"2"
-
 			"Command1"	"Deactivate"
 			"Command2"	"TestActivator"
 		}

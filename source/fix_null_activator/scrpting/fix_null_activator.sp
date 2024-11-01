@@ -6,14 +6,14 @@
 #include <dhooks>
 
 #define GAMEDATA_FILE "fix_null_activator.games"
-#define DETOUR_FUNCTION "CBaseEntity::AcceptInput"
+#define DHOOK_FUNCTION "CBaseEntity::AcceptInput"
 #define KEY_MAX_ENTITY_COUNT "MaxEntityCount"
 #define KEY_MAX_COMMAND_COUNT "MaxCommandCount"
 #define STRING_LENTH	64
 
-#define PLUGIN_VERSION 	"1.1"
+#define PLUGIN_VERSION 	"1.1.1"
 
-DynamicDetour g_hDTR_AcceptInput = null;
+DynamicHook g_hHook_AcceptInput = null;
 ArrayList g_hArrEntityList = null;
 ArrayList g_hArrCommandNames = null;
 
@@ -36,8 +36,8 @@ public void OnPluginStart()
 	if (!gd) SetFailState("Failed to load gamedata file \""... GAMEDATA_FILE ..."\"");
 
 	int iOff = -1;
-	iOff = gd.GetOffset(DETOUR_FUNCTION);
-	if (iOff == -1) SetFailState("Failed to find \""...  DETOUR_FUNCTION ..."\" offset");
+	iOff = gd.GetOffset(DHOOK_FUNCTION);
+	if (iOff == -1) SetFailState("Failed to find \""...  DHOOK_FUNCTION ..."\" offset");
 
 	int iMaxEntityCount = 0;
 	char szEntityCount[STRING_LENTH];
@@ -80,28 +80,19 @@ public void OnPluginStart()
 		g_hArrCommandNames.PushString(szCommandName);
 	}
 
-	g_hDTR_AcceptInput = DynamicDetour.FromConf(gd, DETOUR_FUNCTION);
-	if (!g_hDTR_AcceptInput) SetFailState("Failed to create detour for \""...  DETOUR_FUNCTION ..."\"");
-
-	if (!g_hDTR_AcceptInput.Enable(Hook_Pre, DTR_CBaseEntity_AcceptInput))
-		SetFailState("Failed to enable detour for \""...  DETOUR_FUNCTION ..."\"");
+	g_hHook_AcceptInput = DynamicHook.FromConf(gd, DHOOK_FUNCTION);
+	if (!g_hHook_AcceptInput) SetFailState("Failed to create dynamic hook for \""...  DHOOK_FUNCTION ..."\"");
 
 	delete gd;
 }
 
 public void OnPluginEnd()
 {
-	if (g_hDTR_AcceptInput)
-	{
-		g_hDTR_AcceptInput.Disable(Hook_Pre, DTR_CBaseEntity_AcceptInput);
-		delete g_hDTR_AcceptInput;
-	} 
-
+	if (g_hHook_AcceptInput) delete g_hHook_AcceptInput;
 	if (g_hArrEntityList) delete g_hArrEntityList;
 	if (g_hArrCommandNames) delete g_hArrCommandNames;
 }
 
-/*
 // HACKHACK: This is too resource consuming. Any better way to hook entity?
 public void OnEntityCreated(int entity, const char[] classname)
 {
@@ -111,13 +102,14 @@ public void OnEntityCreated(int entity, const char[] classname)
 		g_hArrEntityList.GetString(i, szEntityName, sizeof(szEntityName));
 
 		if (StrEqual(classname, szEntityName))
-			g_hDTR_AcceptInput.HookEntity(Hook_Pre, entity, DTR_CBaseEntity_AcceptInput);
+		{
+			g_hHook_AcceptInput.HookEntity(Hook_Pre, entity, DHook_CBaseEntity_AcceptInput);
+			break;
+		}
 	}
 }
-*/
 
-// Use detour for AcceptInput. much better than check every entity in OnEntityCreated?
-MRESReturn DTR_CBaseEntity_AcceptInput(int pThis, DHookReturn hReturn, DHookParam hParams)
+MRESReturn DHook_CBaseEntity_AcceptInput(int pThis, DHookReturn hReturn, DHookParam hParams)
 {
 	char szInputName[128];
 	hParams.GetString(1, szInputName, sizeof(szInputName));
