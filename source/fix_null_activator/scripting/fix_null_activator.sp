@@ -10,10 +10,10 @@
 #define KEY_MAX_ENTITY_COUNT "MaxEntityCount"
 #define STRING_LENTH	64
 
-#define PLUGIN_VERSION 	"1.2"
+#define PLUGIN_VERSION 	"1.2.1"
 
 DynamicHook g_hHook_AcceptInput = null;
-ArrayList g_hArrEntityList = null;
+StringMap g_hMapEntityList = null;
 
 // Original Author: GoD-Tony. 
 // Modified by blueblur.
@@ -35,7 +35,7 @@ public void OnPluginStart()
 
 	int iOff = -1;
 	iOff = gd.GetOffset(DHOOK_FUNCTION);
-	if (iOff == -1) SetFailState("Failed to find \""...  DHOOK_FUNCTION ..."\" offset");
+	if (iOff == -1) SetFailState("Failed to find \""... DHOOK_FUNCTION ..."\" offset");
 
 	int iMaxEntityCount = 0;
 	char szEntityCount[STRING_LENTH];
@@ -45,7 +45,7 @@ public void OnPluginStart()
 	iMaxEntityCount = StringToInt(szEntityCount);
 	if (!iMaxEntityCount) SetFailState("Key section \""... KEY_MAX_ENTITY_COUNT ..."\" is 0. Plugin Disabled.");
 
-	g_hArrEntityList = new ArrayList(ByteCountToCells(STRING_LENTH));
+	g_hMapEntityList = new StringMap();
 
 	char szEntityName[STRING_LENTH];
 	for (int i = 1; i < iMaxEntityCount; i++)
@@ -55,7 +55,7 @@ public void OnPluginStart()
 		if (!gd.GetKeyValue(number, szEntityName, sizeof(szEntityName)))
 			continue;
 
-		g_hArrEntityList.PushString(szEntityName);
+		g_hMapEntityList.SetString(number, szEntityName);
 	}
 
 	g_hHook_AcceptInput = DynamicHook.FromConf(gd, DHOOK_FUNCTION);
@@ -67,16 +67,46 @@ public void OnPluginStart()
 public void OnPluginEnd()
 {
 	if (g_hHook_AcceptInput) delete g_hHook_AcceptInput;
-	if (g_hArrEntityList) delete g_hArrEntityList;
+	if (g_hMapEntityList) delete g_hMapEntityList;
 }
 
+// currently the entities related to this bug is created before the map start.
+// use OnMapStart to save some cycles.
+// let's just finish this huge cycle before we play. :D
+public void OnMapStart()
+{
+	int entity = -1;
+	while ((entity = FindEntityByClassname(entity, "*")) != -1)
+	{
+		static char szEntityName[STRING_LENTH];
+		GetEntityClassname(entity, szEntityName, sizeof(szEntityName));
+
+		for (int i = 0; i < g_hMapEntityList.Size; i++)
+		{
+			static char szListName[STRING_LENTH];
+			static char number[STRING_LENTH];
+			Format(number, sizeof(number), "HookEntity%d", i + 1);
+			g_hMapEntityList.GetString(number, szListName, sizeof(szListName));
+
+			if (StrEqual(szEntityName, szListName))
+			{
+				g_hHook_AcceptInput.HookEntity(Hook_Pre, entity, DHook_CBaseEntity_AcceptInput);
+				break;
+			}
+		}
+	}
+}
+
+/*
 // HACKHACK: This is too resource consuming. Any better way to hook entity?
 public void OnEntityCreated(int entity, const char[] classname)
 {
-	for (int i = 0; i < g_hArrEntityList.Length; i++)
+	for (int i = 0; i < g_hMapEntityList.Size; i++)
 	{
 		static char szEntityName[STRING_LENTH];
-		g_hArrEntityList.GetString(i, szEntityName, sizeof(szEntityName));
+		static char number[STRING_LENTH];
+		Format(number, sizeof(number), "HookEntity%d", i + 1);
+		g_hMapEntityList.GetString(number, szEntityName, sizeof(szEntityName));
 
 		if (StrEqual(classname, szEntityName))
 		{
@@ -85,6 +115,7 @@ public void OnEntityCreated(int entity, const char[] classname)
 		}
 	}
 }
+*/
 
 MRESReturn DHook_CBaseEntity_AcceptInput(int pThis, DHookReturn hReturn, DHookParam hParams)
 {
