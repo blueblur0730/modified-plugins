@@ -2,16 +2,13 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#include <sdktools>
 #include <dhooks>
 
 #define GAMEDATA_FILE "l4d2_inputkill_block"
 #define DETOUR_INPUTKILL "CBaseEntity::InputKill"
 #define DETOUR_INPUTKILLHIERARCHY "CBaseEntity::InputKillHierarchy"
-#define TEAM_SURVIVOR 2
-#define TEAM_L4D1_SURVIVORS 4
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 DynamicDetour g_hDTR_InputKill = null;
 DynamicDetour g_hDTR_InputKillHierarchy = null;
@@ -73,60 +70,45 @@ public void OnPluginEnd()
 	} 
 }
 
-// we just dont want this to kick a human survivor player.
 MRESReturn DTR_CBaseEntity_InputKill(int pThis)
 {
-	if (CheckThis(pThis))
+	if (CheckPlayer(pThis))
 		return MRES_Supercede;
-		
+
 	return MRES_Ignored;
 }
 
 MRESReturn DTR_CBaseEntity_InputKillHierarchy(int pThis)
 {
-	if (CheckThis(pThis))
+	if (CheckPlayer(pThis))
 		return MRES_Supercede;
-		
+
 	return MRES_Ignored;
 }
 
-bool CheckThis(int client)
+bool CheckPlayer(int client)
 {
-	// a human survivor player, kepp it going.
-	if (IsHumanSurvivor(client))
-		return false;
-
-	// else it's a L4D1 Survivor bot or fake survivor bot, skip it.
-	return true;
-}
-
-bool IsHumanSurvivor(int client)
-{
+	// not a client, let the input kills.
 	if (client < 1 || client > MaxClients)
 		return false;
 
 	if (!IsClientInGame(client))
 		return false;
 
-	if (GetClientTeam(client) != TEAM_SURVIVOR)	
-		return false;
-
-	// a human survivor player.
-	if (!IsFakeClient(client))
-		return true;
-
-	// here is an exception for L4D1 survivors. this is the bot that should be kicked.
-	if (IsFakeClient(client) && GetClientTeam(client) == TEAM_L4D1_SURVIVORS)
-		return false;
-
-	// what if you are just an idle bot?
+	// we only want to kick bots.
 	if (IsFakeClient(client))
 	{
+		// or you are just an idle human? if so, dont let the input kills you.
 		int target = GetClientOfUserId(GetEntProp(client, Prop_Send, "m_humanSpectatorUserID"));
-		if (target < 1 || target > MaxClients) 
-			return false;
-	}
+		if (target >= 1 || target <= MaxClients) 
+			return true;
 
-	// alright you are an idle bot.
-	return true;
+		// you are bot.
+		return false;
+	}
+	else
+	{
+		// a human player. dont let the input kills you.
+		return true;
+	}
 }
