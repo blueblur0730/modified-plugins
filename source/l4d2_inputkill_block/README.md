@@ -2,7 +2,7 @@
 
 ### Introduction
 
-- This plugin blocks entity input "Kill" and "KillHierarchy" from in effect on human players. (normally, this shouldn't be happenned.)
+- This plugin blocks entity input "Kill" and "KillHierarchy" from being in effect on human players. (normally, this shouldn't be happenned.)
 
 ### requirements
 

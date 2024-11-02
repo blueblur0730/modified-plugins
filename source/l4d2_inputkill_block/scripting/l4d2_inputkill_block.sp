@@ -8,10 +8,11 @@
 #define DETOUR_INPUTKILL "CBaseEntity::InputKill"
 #define DETOUR_INPUTKILLHIERARCHY "CBaseEntity::InputKillHierarchy"
 
-#define PLUGIN_VERSION "1.1"
+#define PLUGIN_VERSION "1.2"
 
 DynamicDetour g_hDTR_InputKill = null;
 DynamicDetour g_hDTR_InputKillHierarchy = null;
+ConVar g_hCvar_ShouldKickBot;
 
 public Plugin myinfo = 
 {
@@ -36,6 +37,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
 	CreateConVar("l4d2_inputkill_block_version", PLUGIN_VERSION, "Version of the plugin", FCVAR_NOTIFY|FCVAR_DONTRECORD);
+	g_hCvar_ShouldKickBot = CreateConVar("l4d2_inputkill_block_kickbot", "1", "Should prevent bots from being kicked?", _, true, 0.0, true, 1.0);
 
 	GameData gd = new GameData(GAMEDATA_FILE);
 	if (!gd) SetFailState("Failed to load gamedata file \""...GAMEDATA_FILE..."\".");
@@ -98,6 +100,10 @@ bool CheckPlayer(int client)
 	// we only want to kick bots.
 	if (IsFakeClient(client))
 	{
+		// bot lives matter.
+		if (g_hCvar_ShouldKickBot.BoolValue)
+			return true;
+
 		// or you are just an idle human? if so, dont let the input kills you.
 		int target = GetClientOfUserId(GetEntProp(client, Prop_Send, "m_humanSpectatorUserID"));
 		if (target >= 1 || target <= MaxClients) 
