@@ -3,7 +3,7 @@
 #include <sourcemod>
 #include <sdktools>
 
-#define GAMEDATA_FILE "l4d2_fix_jockey_ride_stuck"
+#define GAMEDATA_FILE "l4d2_jockey_ride_stuck_fix"
 #define SDKCALL_FUNCTION "CTerrorPlayer::OnRideEnded"
 
 #define PLUGIN_VERSION "1.1"
