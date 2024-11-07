@@ -1,0 +1,16 @@
+"Games"
+{
+	"left4dead2"
+	{
+		"Signatures"
+		{
+			// from left4dhooks by Silvers.
+			"CTerrorPlayer::OnRideEnded"
+			{
+				"library"	"server"
+				"linux"		"@_ZN13CTerrorPlayer11OnRideEndedEPS_"
+				"windows"	"\x55\x8B\x2A\x83\x2A\x2A\x53\x56\x57\x68\x2A\x2A\x2A\x2A\x8B\x2A\xE8"
+			}
+		}
+	}
+}
