@@ -1,29 +1,16 @@
 "Phrases"
 {
-	"Advertisement_Readyup_Limit"
-	{
-		"#format"	"{1:d}"
-		"en"		"{blue}❀ You have ( {olive}{1}{default} ) chances to reqeust weapons by pressing {olive}E+R{defualt} before {green}ReadyUp{default} get lived."
-		"chi"		"{blue}❀ {default}你在{green}ReadyUp{default}结束前按{olive}E+R{defualt}有 ( {olive}{1}{default} ) 次获取武器的机会."
-	}
-
-	"Advertisement_Readyup"
-	{
-		"en"		"{blue}❀ You can request weapons freely by pressing {olive}E+R{defualt} before {green}ReadyUp{default} get lived."
-		"chi"		"{blue}❀ {default}你在{green}ReadyUp{default}结束前可以按{olive}E+R{defualt}自由获取武器."
-	}
-
 	"Advertisement_Limit"
 	{
 		"#format"	"{1:d}"
-		"en"		"{blue}❀ You have ( {olive}{1}{default} ) chances to reqeust weapons by pressing {olive}E+R{defualt} inside the {green}safe area{defualt}."
-		"chi"		"{blue}❀ {default}你在{green}安全区内{default}按{olive}E+R{defualt}有( {olive}{1}{default} ) 次获取武器的机会."
+		"en"		"[{green}!{default}] You have ( {olive}{1}{default} ) chances to reqeust weapons by pressing {olive}E+R{default} or typeing {olive}/getitem{default} inside the {green}safe area{default}."
+		"chi"		"[{green}!{default}] {default}在{green}安全区内{default}按 {olive}E+R{default} 或输入 {olive}/getitem{default} 有( {olive}{1}{default} ) 次获取武器的机会."
 	}
 
 	"Advertisement"
 	{
-		"en"		"{blue}❀ You can reqeust weapons freely by pressing {olive}E+R{defualt} inside the {green}safe area{defualt}."
-		"chi"		"{blue}❀ {default}你在{green}安全区内{default}可以按{olive}E+R{defualt}自由获取武器."
+		"en"		"[{green}!{default}] You can reqeust weapons freely by pressing {olive}E+R{default} or typeing {olive}/getitem{default} inside the {green}safe area{default}."
+		"chi"		"[{green}!{default}] {default}在{green}安全区内{default}可以按 {olive}E+R{default} 或输入 {olive}/getitem{default} 自由获取武器."
 	}
 
 	"MainTitle"
@@ -34,49 +21,49 @@
 
 	"SecondaryOn"
 	{
-		"en"		"Sencondary            ★On"
-		"chi"		"副武器          ★启用"
+		"en"		"Sencondary —— ★On"
+		"chi"		"副武器 —— ★启用"
 	}
 
 	"SecondaryOff"
 	{
-		"en"		"Sencondary            ✰Off"
-		"chi"		"副武器          ✰禁用"
+		"en"		"Sencondary —— ✰Off"
+		"chi"		"副武器 —— ✰禁用"
 	}
 	"Tier1On"
 	{
-		"en"		"Tier 1           	★On"
-		"chi"		"小枪            ★启用"
+		"en"		"Tier 1 —— ★On"
+		"chi"		"小枪 —— ★启用"
 	}
 
 	"Tier1Off"
 	{
-		"en"		"Tier 1           	✰Off"
-		"chi"		"小枪            ✰禁用"
+		"en"		"Tier 1 —— ✰Off"
+		"chi"		"小枪 —— ✰禁用"
 	}
 
 	"Tier2On"
 	{
-		"en"		"Tier 2           	★On"
-		"chi"		"大枪            ★启用"
+		"en"		"Tier 2 —— ★On"
+		"chi"		"大枪 —— ★启用"
 	}
 
 	"Tier2Off"
 	{
-		"en"		"Tier 2           	✰Off"
-		"chi"		"大枪            ✰禁用"
+		"en"		"Tier 2 —— ✰Off"
+		"chi"		"大枪 —— ✰禁用"
 	}
 
 	"ItemOn"
 	{
-		"en"		"Item           	★On"
-		"chi"		"物品            ★启用"
+		"en"		"Item —— ★On"
+		"chi"		"物品 —— ★启用"
 	}
 
 	"ItemOff"
 	{
-		"en"		"Item           	✰Off"
-		"chi"		"物品            ✰禁用"
+		"en"		"Item —— ✰Off"
+		"chi"		"物品 —— ✰禁用"
 	}
 
 	"AdminMenu"
@@ -87,8 +74,8 @@
 
 	"RoundStarted"
 	{
-		"en"		"{blue}❀ {green}Round{default} has started, can not request weapons now!"
-		"chi"		"{blue}❀ {green}对局{default} 已正式开始, 无法获取武器!"
+		"en"		"[{green}!{default}] {green}Round{default} has started, can not request weapons now!"
+		"chi"		"[{green}!{default}] {green}对局{default} 已正式开始, 无法获取武器!"
 	}
 
 	"Secondary"
@@ -100,28 +87,28 @@
 	"GetItemWithLimit"
 	{
 		"#format"	"{1:N},{2:s},{3:d},{4:d}"
-		"en"		"{blue}❀ {green}{1} {default}acquired {blue}{2}{default}, Limit: [{blue}{3}{default} / {green}{4}{default}]"
-		"chi"		"{blue}❀ {green}{1} {default}获取了 {blue}{2}{default}, 次数: [{blue}{3}{default} / {green}{4}{default}]"
+		"en"		"[{green}!{default}] {green}{1} {default}acquired {blue}{2}{default}, Limit: [{blue}{3}{default} / {green}{4}{default}]"
+		"chi"		"[{green}!{default}] {green}{1} {default}获取了 {blue}{2}{default}, 次数: [{blue}{3}{default} / {green}{4}{default}]"
 	}
 
 	"ReachedLimit"
 	{
 		"#format"	"{1:d}"
-		"en"		"{blue}❀ {default}You have reached the{green} requests limits{default} ({green}{1}{default} times)."
-		"chi"		"{blue}❀ {default}已达{green}获取次数{default}上限 ({green}{1}{default} 次)."
+		"en"		"[{green}!{default}] {default}You have reached the{green} requests limits{default} ({green}{1}{default} times)."
+		"chi"		"[{green}!{default}] {default}已达{green}获取次数{default}上限 ({green}{1}{default} 次)."
 	}
 
 	"GetItem"
 	{
 		"#format"	"{1:N},{2:s}"
-		"en"		"{blue}❀ {green}{1} {default}acquired {blue}{2}"
-		"chi"		"{blue}❀ {green}{1} {default}获取了 {blue}{2}"
+		"en"		"{blue}[{green}!{default}] {green}{1} {default}acquired {blue}{2}"
+		"chi"		"[{green}!{default}] {green}{1} {default}获取了 {blue}{2}"
 	}
 
 	"UseItInSafeRoom"
 	{
-		"en"		"{blue}❀ {default}Please use this function inside{green} the safe area {default}."
-		"chi"		"{blue}❀ {default}请在{green} 安全区域 {default}内使用此功能."
+		"en"		"[{green}!{default}] {default}Please use this function inside{green} the safe area {default}."
+		"chi"		"[{green}!{default}] {default}请在{green} 安全区域 {default}内使用此功能."
 	}
 
 	"Tier1"
@@ -202,6 +189,47 @@
 		"chi"		"禁止安全区域外使用"
 	}
 
+	"admin"
+	{
+		"en"		"Admin"
+		"chi"		"管理员"
+	}
+
+	"Menu_e"
+	{
+		"#format"	"{1:N},{2:t}"
+		"en"		"<{blue}Admin{default}> {green}{1} {default}turned {2} the{blue} Secondary{default} menu."
+		"chi"		"<{blue}管理员{default}> {green}{1} {default}{2}了{blue}副武器{default}菜单."
+	}
+
+	"Menu_f"
+	{
+		"#format"	"{1:N},{2:t}"
+		"en"		"<{blue}Admin{default}> {green}{1} {default}turned {2} the{blue} Tier 1{default} menu."
+		"chi"		"<{blue}管理员{default}> {green}{1} {default}{2}了{blue}小枪{default}菜单."
+	}
+
+	"Menu_g"
+	{
+		"#format"	"{1:N},{2:t}"
+		"en"		"<{blue}Admin{default}> {green}{1} {default}turned {2} the{blue} Tier 2{default} menu."
+		"chi"		"<{blue}管理员{default}> {green}{1} {default}{2}了{blue}大枪{default}菜单."
+	}
+
+	"Menu_h"
+	{
+		"#format"	"{1:N},{2:t}"
+		"en"		"<{blue}Admin{default}> {green}{1} {default}turned {2} the{blue} Item{default} menu."
+		"chi"		"<{blue}管理员{default}> {green}{1} {default}{2}了{blue}物品{default}菜单."
+	}
+
+	"Menu_i"
+	{
+		"#format"	"{1:N},{2:t}"
+		"en"		"<{blue}Admin{default}> {green}{1} {default}has turned {2} the{blue} E+R{default} function when out of safe area."
+		"chi"		"<{blue}管理员{default}> {green}{1} {default}已{2}安全区域外使用{blue}E+R{default}功能"
+	}
+
 	"On"
 	{
 		"en"		"on"
@@ -212,46 +240,5 @@
 	{
 		"en"		"off"
 		"chi"		"关闭"
-	}
-
-	"admin"
-	{
-		"en"		"Admin"
-		"chi"		"管理员"
-	}
-
-	"Menu_e"
-	{
-		"#format"	"{1:s},{2:N},{3:s}"
-		"en"		"{blue}<{1}> {green}{2} {default}turned {3} the{blue} Secondary{default} menu."
-		"chi"		"{blue}<{1}> {green}{2} {default}{3}了{blue}副武器{default}菜单."
-	}
-
-	"Menu_f"
-	{
-		"#format"	"{1:s},{2:N},{3:s}"
-		"en"		"{blue}<{1}> {green}{2} {default}turned {3} the{blue} Tier 1{default} menu."
-		"chi"		"{blue}<{1}> {green}{2} {default}{3}了{blue}小枪{default}菜单."
-	}
-
-	"Menu_g"
-	{
-		"#format"	"{1:s},{2:N},{3:s}"
-		"en"		"{blue}<{1}> {green}{2} {default}turned {3} the{blue} Tier 2{default} menu."
-		"chi"		"{blue}<{1}> {green}{2} {default}{3}了{blue}大枪{default}菜单."
-	}
-
-	"Menu_h"
-	{
-		"#format"	"{1:s},{2:N},{3:s}"
-		"en"		"{blue}<{1}> {green}{2} {default}turned {3} the{blue} Item{default} menu."
-		"chi"		"{blue}<{1}> {green}{2} {default}{3}了{blue}物品{default}菜单."
-	}
-
-	"Menu_i"
-	{
-		"#format"	"{1:s},{2:N},{3:s}"
-		"en"		"{blue}<{1}> {green}{2} {default}has turned {3} the{blue} E+R{default} function when out of safe area."
-		"chi"		"{blue}<{1}> {green}{2} {default}已{3}安全区域外使用{blue}E+R{default}功能"
 	}
 }
