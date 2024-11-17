@@ -1,0 +1,78 @@
+"Phrases"
+{
+    "NoSpectator"
+    {
+        "en"        "[{green}!{default}] Spectators are not allowed to vote."
+        "chi"       "[{green}!{default}] 旁观者不能进行投票."
+    }
+
+    "VoteMenuTitle"
+    {
+        "en"        "Choose a vote option:"
+        "chi"       "选择投票选项:"
+    }
+
+    "NoVoteItem"
+    {
+        "en"        "[{green}!{default}] No vote item found."
+        "chi"       "[{green}!{default}] 未找到投票项目."
+    }
+
+    "VoteMenuTitle2"
+    {
+        "#format"   "{1:s}"
+        "en"        "Choose '{1}' options:"
+        "chi"       "选择 '{1}' 选项:"
+    }
+
+    "VoteInProgress"
+    {
+        "en"        "[{green}!{default}] A vote is already in progress."
+        "chi"       "[{green}!{default}] 现在正有一个投票正在进行."
+    }
+
+    "VoteFailedDisPlay"
+    {
+        "en"        "[{green}!{default}] Vote failed to display. May be there is a vote in progress."
+        "chi"       "[{green}!{default}] 投票发起失败. 也许现在正有一个投票正在进行."
+    }
+
+    "HasInitiatedVote"
+    {
+        "#format"   "{1:N}"
+        "en"        "[{green}!{default}] {teamcolor}{1} {default} has initiated a vote."
+        "chi"       "[{green}!{default}] {teamcolor}{1} {default} 发起了一个投票."
+    }
+
+    "Voted"
+    {
+        "#format"   "{1:N}"
+        "en"        "[{green}!{default}] {teamcolor}{1} {default} has voted."
+        "chi"       "[{green}!{default}] {teamcolor}{1} {default} 已投票."
+    }
+
+    "PassingVote"
+    {
+        "en"        "[{green}!{default}] The vote has passed."
+        "chi"       "[{green}!{default}] 投票已通过."
+    }
+
+    "VoteFailed"
+    {
+        "en"        "[{green}!{default}] The vote has failed."
+        "chi"       "[{green}!{default}] 投票未能通过."
+    }
+
+    "HealthRestored"
+    {
+        "#format"   "{1:N}"
+        "en"        "[{green}!{default}] {olive}Admin{default} {teamcolor}{1}{default} has restored all players' health."
+        "chi"       "[{green}!{default}] {olive}管理员{default} {teamcolor}{1}{default} 恢复了所有玩家的生命值."
+    }
+
+    "HealthRestoredConsole"
+    {
+        "en"        "[{green}!{default}] {olive}Admin{default} ({green}Console{default}) has restored all players' health."
+        "chi"       "[{green}!{default}] {olive}管理员{default} ({green}控制台{default}) 恢复了所有玩家的生命值."
+    }
+}
