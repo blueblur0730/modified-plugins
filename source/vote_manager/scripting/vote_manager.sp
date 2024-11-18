@@ -2,22 +2,24 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#include <sdktools>
 #include <colors>
 
 // thses two are just for l4d2. for general use, use nativevotes.
 #include <l4d2_nativevote>
-#include <left4dhooks>	  // restores l4d2 players health.
+
+// restores l4d2 players health.
+#include <left4dhooks>	  
+#include <sdktools>
 
 #define CONFIG_PATH "configs/vote_manager.cfg"
 #define DEBUG		0
 
-static KeyValues kv[MAXPLAYERS + 1] = { null, ... };
-static ConVar	 g_hCvar_Balancer	= null;
-static int		 g_iBalancer		= 0;
-static char		 g_sConfigPath[PLATFORM_MAX_PATH];
+KeyValues 	kv[MAXPLAYERS + 1] 	= { null, ... };
+ConVar	 	g_hCvar_Balancer	= null;
+int		 	g_iBalancer			= 0;
+char		g_sConfigPath[PLATFORM_MAX_PATH];
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 public Plugin myinfo =
 {
@@ -175,7 +177,7 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 					CPrintToChat(param1, "%t", "VoteInProgress");
 
 				L4D2NativeVote vote = L4D2NativeVote(VoteHandler);
-				vote.SetTitle("Pass %s?", sDisplayBuffer);
+				vote.SetTitle("通过 %s?", sDisplayBuffer);
 				vote.Initiator = param1;
 				vote.SetInfo(sBuffer);
 
@@ -216,21 +218,16 @@ void VoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
 	switch (action)
 	{
 		case VoteAction_Start:
-		{
 			CPrintToChatAllEx(param1, "%t", "HasInitiatedVote", param1);
-		}
 
 		case VoteAction_PlayerVoted:
 		{
 			CPrintToChatAllEx(param1, "%t", "Voted", param1);
 
-			if (param2 == VOTE_YES)
+			switch (param2)
 			{
-				vote.YesCount++;
-			}
-			else if (param2 == VOTE_NO)
-			{
-				vote.NoCount++;
+				case VOTE_YES: vote.YesCount++;
+				case VOTE_NO: vote.NoCount++;
 			}
 		}
 
@@ -248,7 +245,7 @@ void VoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
 
 			if (vote.YesCount >= RoundToFloor(float(vote.PlayerCount) / float(iFactor == -1 ? 3 / 2 : iFactor)))
 			{
-				vote.SetPass("Passing...");
+				vote.SetPass("正在执行...");
 				CPrintToChatAll("%t", "PassingVote");
 
 				char sInfo[256];
