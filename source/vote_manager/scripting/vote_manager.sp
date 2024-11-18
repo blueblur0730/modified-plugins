@@ -174,7 +174,10 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 				PrintToServer("Prepare to vote for %s", sBuffer);
 #endif
 				if (!L4D2NativeVote_IsAllowNewVote())
+				{
 					CPrintToChat(param1, "%t", "VoteInProgress");
+					return;
+				}	
 
 				L4D2NativeVote vote = L4D2NativeVote(VoteHandler);
 				vote.SetTitle("通过 %s?", sDisplayBuffer);
