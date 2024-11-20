@@ -86,7 +86,7 @@ static const char g_sValveMaps[][][] =
 	{"#L4D360UI_CampaignName_C14",	"C14 临死一搏"},
 };
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 #include "l4d2_map_manager/map_loop.sp"
 #include "l4d2_map_manager/map_vote.sp"
@@ -102,9 +102,15 @@ public Plugin myinfo =
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
+	if (GetEngineVersion() != Engine_Left4Dead2)
+	{
+		strcopy(error, err_max, "Plugin only supports Left 4 Dead 2.");
+		return APLRes_SilentFailure;
+	}
+	
     // void OnNextMapPreserved(const char[] map);
     g_hFWD_OnPreservedMap = new GlobalForward("OnNextMapPreserved", ET_Event, Param_String);
-	RegPluginLibrary("l4d2_map_vote");
+	RegPluginLibrary("l4d2_map_manager");
 	return APLRes_Success;
 }
 

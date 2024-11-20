@@ -87,4 +87,10 @@
         "en"        "[{green}!{default}] Switching map to {lightgreen}{1}{default}."
         "chi"       "[{green}!{default}] 正在切换至地图 {lightgreen}{1}{default}."
     }
+
+    "SwitchingMapRandom"
+    {
+        "en"        "[{green}!{default}] Switching map to a {lightgreen}random map{default}."
+        "chi"       "[{green}!{default}] 正在切换至{lightgreen}随机地图{default}."
+    }
 }

@@ -15,10 +15,12 @@ static void OnFinaleWon(const char[] output, int caller, int activator, float de
     if (!g_bIsFinalMap)
         return;
 
+	!strlen(g_sPreservedMap) ?  CPrintToChatAll("%t", "SwitchingMapRandom")
+	:  CPrintToChatAll("%t", "SwitchingMap", g_sPreservedMap);
+
     !g_bPreserved ? CreateTimer(3.0, Timer_SwitchMap) :
     (!strlen(g_sPreservedMap) ? CreateTimer(3.0, Timer_SwitchMap) : CreateTimer(3.0, Timer_SwitchPreservedMap))
 
-    CPrintToChatAll("%t", "SwitchingMap", g_sPreservedMap);
     g_bPreserved = false;
 }
 
