@@ -1,0 +1,90 @@
+"Phrases"
+{
+    "ChooseMapType"
+    {
+        "en"        "---Choose Map Type---"
+        "chi"       "---选择地图类型---"
+    }
+
+    "OfficialMaps"
+    {
+        "en"        "Official Maps"
+        "chi"       "官方地图"
+    }
+
+    "ThirdPartyMaps"
+    {
+        "en"        "Third Party Maps"
+        "chi"       "三方地图"
+    }
+
+    "ChooseMap"
+    {
+        "en"        "---Choose Maps---"
+        "chi"       "---选择地图---"
+    }
+
+    "ChooseLevel"
+    {
+        "en"        "---Choose Levels---"
+        "chi"       "---选择章节---"
+    }
+
+    "VoteInProgress"
+    {
+        "en"        "[{green}!{default}] There's a vote in progress currently."
+        "chi"       "[{green}!{default}] 当前正有投票在进行中."
+    }
+
+    "FailedToVote"
+    {
+        "en"        "[{red}!{default}] Failed to initiate a vote."
+        "chi"       "[{red}!{default}] 发起投票失败."
+    }
+
+    "InitiatedVote"
+    {
+        "#format"   "{1:N},{2:s}"
+        "en"        "[{green}!{default}] {blue}{1}{default} initiated a vote for {olive}{2}{default}."
+        "chi"       "[{green}!{default}] {blue}{1}{default} 发起了投票: {olive}{2}{default}."
+    }
+
+    "Voted"
+    {
+        "#format"   "{1:N}"
+        "en"        "[{green}!{default}] {blue}{1}{default} voted."
+        "chi"       "[{green}!{default}] {blue}{1}{default} 已投票."
+    }
+
+    "VoteFailed"
+    {
+        "en"        "[{red}!{default}] Vote did not pass."
+        "chi"       "[{red}!{default}] 投票未能通过."
+    }
+
+    "ChoosePreserveMapType"
+    {
+        "en"        "---Choose Preserve Map Type---"
+        "chi"       "---选择预定地图类型---"
+    }
+
+    "PreservedMap"
+    {
+        "#format"   "{1:s}"
+        "en"        "[{green}!{default}] Next campaign map preserved: {lightgreen}{1}{default}."
+        "chi"       "[{green}!{default}] 下一战役地图已预定: {lightgreen}{1}{default}."
+    }
+
+    "NotifyPreserve"
+    {
+        "en"        "[{green}!{default}] Type {lightgreen}/preservemap{default} to preserve the next campaign map."
+        "chi"       "[{green}!{default}] 输入 {lightgreen}/preservemap{default} 预定下一战役地图."
+    }
+
+    "SwitchingMap"
+    {
+        "#format"   "{1:s}"
+        "en"        "[{green}!{default}] Switching map to {lightgreen}{1}{default}."
+        "chi"       "[{green}!{default}] 正在切换至地图 {lightgreen}{1}{default}."
+    }
+}
