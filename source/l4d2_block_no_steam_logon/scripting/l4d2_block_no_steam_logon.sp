@@ -60,7 +60,7 @@ methodmap CBaseClient {
     }
 }
 
-#define PLUGIN_VERSION "1.2"
+#define PLUGIN_VERSION "1.2.1"
 
 public Plugin myinfo = 
 {
@@ -105,7 +105,7 @@ MRESReturn DTR_OnValidateAuthTicketResponseHelper_Pre(DHookParam hParam)
     if (!hParam.IsNull(2)) pBaseClient = view_as<CBaseClient>(hParam.Get(2));
     else return MRES_Ignored;
 
-    PrintLog("### Found a client with auth problem, pBaseClient: %d", pBaseClient);
+    PrintLog("### Detour Function called, pBaseClient: %d", pBaseClient);
 
     char sName[128];
     switch (g_iOS)
@@ -160,7 +160,10 @@ MRESReturn DTR_OnValidateAuthTicketResponseHelper_Pre(DHookParam hParam)
         case Response_NoSteamLogon, Response_UnknownError, Response_UnknownError2, Response_UnknownError3:
         {
             if (g_bDropOrNot)
+            {
+                PrintLog("### Bypassing no steaam logon disconnection for client: %s", sName);
                 return MRES_Supercede;
+            } 
         }
          
         default: return MRES_Ignored;
