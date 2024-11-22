@@ -319,6 +319,9 @@ void TeleportTank(int client)
 						if (!g_bGame)
 						{
 							// L4D1
+							// HACK: not tested. l4d1 dose not have vscript support also the 'logic_script' entity.
+							// this get a little bit tricky to implement a new target for the tank.
+							// hopefully this is right.
 							SDKCall(g_hSDKCall_OnCommandAttack, g_hMemoryBlock.Address, client, newtarget);
 #if DEBUG
 							PrintToServer("### Teleport Tank: Setting new behavior for tank.");

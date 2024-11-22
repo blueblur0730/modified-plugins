@@ -1,4 +1,4 @@
-# [L4D2] Stucked Tank Teleport
+# [L4D1 & 2] Stucked Tank Teleport
 
 ### Introduction
 
@@ -12,6 +12,7 @@
 
 - [MidHook Extension](https://github.com/Scags/SM-MidHooks).
   - [Alliedmodders](https://forums.alliedmods.net/showthread.php?t=343973).
+- SourceScarmble Extention.
 - DHook.
 - Left 4 DHooks Direct.
 - colors.inc
@@ -101,9 +102,13 @@ forward void MidHook_OnTankSuicide(int tank);
   - Added a notice sound when the tank is teleported.
   - Added a highlight effect when the tank is teleported.
 
-- 10/3/24 v1.4
+- 11/22/24 v1.4
   - Fixed byte pathing on L4D2 windows.
-  - Added supports for L4D1 (unfinished)
+  - Removed some useless event code and comments.
+  - Added supports for L4D1.
+
+- 11/23/24 v1.4.2
+  - Fixed some logic bugs.
 
 ### Some Thoughts
 
