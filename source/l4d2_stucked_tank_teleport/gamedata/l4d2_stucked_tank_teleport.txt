@@ -68,6 +68,12 @@
                 "linux"     "16"
                 "windows"   "8"
             }
+
+            "TankAttack__var_flDamage"
+            {
+                "linux"     "12"
+                "windows"   "12"
+            }
         }
 
         "Signatures"
