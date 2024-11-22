@@ -7,7 +7,7 @@
 
 enum OperatingSystem
 {
-    OS_Unknown = -1,
+    OS_Unknown_Copy = -1,
     OS_Windows = 0,
     OS_Linux = 1
 }
@@ -91,20 +91,19 @@ methodmap GameDataWrapper < GameData
     // use relative call address to setup call instead of setting from conf.
     public Handle CreateSDKCallOrFailEx(
         SDKCallType type,
-        const char[] name,
+        Address pFuncStart,
+        int offset,
         const SDKCallParamsWrapper[] params = {},
         int numParams = 0,
         bool hasReturnValue = false,
         const SDKCallParamsWrapper ret = {})
     {
-        // first we check the address, if failed, do not start to prepare.
-        Address pFunc = this.GetAddress(name);
-        int offset = LoadFromAddress(pFunc, NumberType_Int32);
-        pFunc += view_as<Address>(offset + 4);
+        int pOri = LoadFromAddress(pFuncStart, NumberType_Int32);
+        pFuncStart += view_as<Address>(pOri + offset);
 
         Handle result;
         StartPrepSDKCall(type);
-        PrepSDKCall_SetAddress(pFunc);
+        PrepSDKCall_SetAddress(pFuncStart);
 
         for (int i = 0; i < numParams; ++i)
             PrepSDKCall_AddParameter(params[i].type, params[i].pass, params[i].decflags, params[i].encflags);
@@ -113,7 +112,7 @@ methodmap GameDataWrapper < GameData
             PrepSDKCall_SetReturnInfo(ret.type, ret.pass, ret.decflags, ret.encflags);
 
         if (!(result = EndPrepSDKCall()))
-            SetFailState("[SDKCall] Failed to Prepare SDKCall for section \"%s\".", name);
+            SetFailState("[SDKCall] Failed to Prepare SDKCall for a raw address call.");
 
         return result;
     }
@@ -143,6 +142,7 @@ methodmap GameDataWrapper < GameData
         return hSetup;
     }
 
+    // create a dynamic hook from conf, simply return its handle.
     public DynamicHook CreateDynamicHookOrFail(const char[] name)
     {
         DynamicHook hSetup = DynamicHook.FromConf(this, name);
@@ -152,8 +152,9 @@ methodmap GameDataWrapper < GameData
         return hSetup;
     }
 
+    // create a dynamic hook from conf, specify the hook type and immediately hooks the target.
     public DynamicHook CreateDynamicHookOrFailEx(
-            const char[] name
+            const char[] name,
             HookType type,
             int entity = -1,
             Address pAdr = Address_Null,
@@ -187,10 +188,10 @@ methodmap GameDataWrapper < GameData
                 if (preHook != INVALID_FUNCTION && postHook != INVALID_FUNCTION)
                     SetFailState("[DHooks] Failed to create dynamic hook of a GameRules object because no callback is specified for section \"%s\".", name);
 
-                if (preHook != INVALID_FUNCTION && !hSetup.HookGameRules(Hook_Pre, preHook, removalHook))
+                if (preHook != INVALID_FUNCTION && !hSetup.HookGamerules(Hook_Pre, preHook, removalHook))
                     SetFailState("[DHooks] Failed to pre-dhook section \"%s\".", name);
 
-                if (postHook != INVALID_FUNCTION && !hSetup.HookGameRules(Hook_Post, postHook, removalHook))
+                if (postHook != INVALID_FUNCTION && !hSetup.HookGamerules(Hook_Post, postHook, removalHook))
                     SetFailState("[DHooks] Failed to post-dhook section \"%s\".", name);
             }
 
@@ -199,13 +200,13 @@ methodmap GameDataWrapper < GameData
                 if (pAdr == Address_Null) SetFailState("Invalid address for section \"%s\".", name);
                 
                 if (preHook != INVALID_FUNCTION && postHook != INVALID_FUNCTION)
-                    SetFailState("Failed to create dynamic hook of a GameRules object because no callback is specified for section \"%s\".", name);
+                    SetFailState("[DHooks] Failed to create dynamic hook of a GameRules object because no callback is specified for section \"%s\".", name);
 
-                if (preHook != INVALID_FUNCTION && !hSetup.HookRaw(Hook_Pre, pAdr, preHook, removalHook))
-                    SetFailState("Failed to pre-dhook section \"%s\".", name);
+                if (preHook != INVALID_FUNCTION && !hSetup.HookRaw(Hook_Pre, pAdr, preHook))
+                    SetFailState("[DHooks] Failed to pre-dhook section \"%s\".", name);
 
-                if (postHook != INVALID_FUNCTION && !hSetup.HookRaw(Hook_Post, pAdr, postHook, removalHook))
-                    SetFailState("Failed to post-dhook section \"%s\".", name);
+                if (postHook != INVALID_FUNCTION && !hSetup.HookRaw(Hook_Post, pAdr, postHook))
+                    SetFailState("[DHooks] Failed to post-dhook section \"%s\".", name);
             }
         }
 
@@ -214,12 +215,18 @@ methodmap GameDataWrapper < GameData
 #endif
 
 #if defined __sourcescramble_ext_included
-    public MemoryPatch CreatePatchOrFail(const char[] name, bool enable = false) {
+    public MemoryPatch CreateMemoryPatchOrFail(const char[] name, bool enable = false) {
         MemoryPatch hPatch = MemoryPatch.CreateFromConf(this, name);
         if (!(enable ? hPatch.Enable() : hPatch.Validate()))
             SetFailState("[MemoryPatch] Failed to patch section \"%s\" through source scramble.", name);
 
         return hPatch;
+    }
+
+    public MemoryBlock CreateMemoryBlockOrFail(const char[] name) {
+        int iOff = this.Super.GetOffset(name);
+        MemoryBlock hBlock = new MemoryBlock(iOff);
+        if (!hBlock) SetFailState("[MemoryBlock] Failed to create memory block for section \"%s\".", name);
     }
 #endif
 

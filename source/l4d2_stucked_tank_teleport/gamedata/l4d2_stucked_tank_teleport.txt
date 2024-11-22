@@ -1,17 +1,119 @@
 "Games"
 {
-    "#default"
+	"#default"
+	{
+		"Offsets"
+		{
+			"OS"
+			{
+				"linux"			"1"
+				"windows"		"0"
+			}
+		}
+	}
+
+    "left4dead"
     {
+        "Adresses"
+        {
+            "TankAttack::Update__OnSuicide"
+            {
+                "linux"
+                {
+                    "signature" "TankAttack::Update"
+                    "offset"    "0x69D"
+                }
+
+                "windowws"
+                {
+                    "signature" "TankAttack::Update"
+                    "offset"    "0x2FE"
+                }
+            }
+
+            "NavAreaBuildPath<ShortestPathCost>"
+            {
+                "linux"
+                {
+                    "signature" "NavAreaBuildPath<ShortestPathCost>"
+                }
+
+                "windows"
+                {
+                    "signature" "CAbandonmentAwardTemplate::FireGameEvent"
+                    "offset"    "0x488"
+                }
+            }
+        }
+
         "Offsets"
         {
-            "OS"
+            // found on TankBehavior::InitialContainedAction. the operator new size of TankAttack.
+            // windows: find TankAttack's vtable, click in the constructor.
+            // it has one xref to TankBehavior::InitialContainedAction, click in.
+            "TankAttackPointerSize"
             {
-                "linux"     "1"
-                "windows"   "0"
+                "linux"     "18540" // 0x486C
+                "windows"   "18540"
+            }
+
+            "CBaseEntity::GetBaseEntity"
+            {
+                "linux"     "6"
+                "windows"   "5"
+            }
+
+            "TankAttack__arg_CBaseEntity"
+            {
+                "linux"     "16"
+                "windows"   "8"
+            }
+
+            "TankAttack__var_flDamage"
+            {
+                "linux"     "12"
+                "windows"   "12"
+            }
+        }
+
+        "Signatures"
+        {
+            // search string is "Tank committing suicide\n"
+            "TankAttack::Update"
+            {
+                "libaray"   "server"
+                "linux"     "@_ZN10TankAttack6UpdateEP4Tankf"
+                "windows"   "\x83\xEC\x78\x53\x55\x8B\xAC\x24\x88\x00\x00\x00"
+                /* 83 EC 78 53 55 8B AC 24 88 00 00 00 */
+            }
+
+            "NavAreaBuildPath<ShortestPathCost>"
+            {
+                "library"   "server"
+                "linux"     "@_Z16NavAreaBuildPathI16ShortestPathCostEbP8CNavAreaS2_PK6VectorRT_PS2_fib"
+            }
+
+            // windows sig:
+            // count from the buttom of the vtable, the 7th is this.
+            // well actually we can read the address but whatever we have found it.
+            "TankAttack::OnCommandAttack"
+            {
+                "library"   "server"
+                "linux"     "@_ZN10TankAttack15OnCommandAttackEP4TankP11CBaseEntity"
+                "windows"   "\x56\x8B\x74\x24\x10\x8B\x06\x8B\x90\x40\x01\x00\x00"
+                /* 56 8B 74 24 10 8B 06 8B 90 40 01 00 00 */
+            }
+
+            // search for vtable of CAbandonmentAwardTemplate, the 1st one (not constructor) is this.
+            "CAbandonmentAwardTemplate::FireGameEvent"
+            {
+                "library"   "server"
+                "windows"   "\x83\xEC\x14\x55\x56\x8B\x74\x24\x20"
+                /* 83 EC 14 55 56 8B 74 24 20 */
             }
         }
     }
-    
+
     "left4dead2"
     {
         "Addresses"
@@ -23,7 +125,7 @@
                     "signature" "TankAttack::Update"
                     "offset"    "0x261"
                 }
-
+                
                 "windows"
                 {
                     "signature" "TankAttack::Update"
@@ -38,6 +140,12 @@
             {
                 "linux"     "6"
                 "windows"   "5"
+            }
+
+            "TankAttack__arg_CBaseEntity"
+            {
+                "linux"     "16"  // 0x10
+                "windows"   "12"   // 0xC
             }
         }
 
