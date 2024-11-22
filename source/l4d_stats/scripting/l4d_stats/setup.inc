@@ -63,16 +63,16 @@ void SetupConVars()
 	g_hCvar_FriendlyFireCooldownMode							 = CreateConVar("l4d_stats_ffire_cooldownmode", "1", "Friendly fire cooldown mode. 0 = Disable, 1 = Player specific, 2 = General", _, true, 0.0, true, 2.0);
 
 	// Game mode Cvars
-	g_hCvar_GameMode[GAMEMODE_COOP]								 = CreateConVar("l4d_stats_enablecoop", "1", "Enable/Disable coop stat tracking", _, true, 0.0, true, 1.0);
-	g_hCvar_GameMode[GAMEMODE_SURVIVAL]							 = CreateConVar("l4d_stats_enablesv", "1", "Enable/Disable survival stat tracking", _, true, 0.0, true, 1.0);
-	g_hCvar_GameMode[GAMEMODE_VERSUS]							 = CreateConVar("l4d_stats_enableversus", "1", "Enable/Disable versus stat tracking", _, true, 0.0, true, 1.0);
-	g_hCvar_GameMode[GAMEMODE_TEAMVERSUS]						 = CreateConVar("l4d_stats_enableteamversus", "1", "[L4D2] Enable/Disable team versus stat tracking", _, true, 0.0, true, 1.0);
-	g_hCvar_GameMode[GAMEMODE_REALISM]							 = CreateConVar("l4d_stats_enablerealism", "1", "[L4D2] Enable/Disable realism stat tracking", _, true, 0.0, true, 1.0);
-	g_hCvar_GameMode[GAMEMODE_SCAVENGE]							 = CreateConVar("l4d_stats_enablescavenge", "1", "[L4D2] Enable/Disable scavenge stat tracking", _, true, 0.0, true, 1.0);
-	g_hCvar_GameMode[GAMEMODE_TEAMSCAVENGE]						 = CreateConVar("l4d_stats_enableteamscavenge", "1", "[L4D2] Enable/Disable team scavenge stat tracking", _, true, 0.0, true, 1.0);
-	g_hCvar_GameMode[GAMEMODE_REALISMVERSUS]					 = CreateConVar("l4d_stats_enablerealismvs", "1", "[L4D2] Enable/Disable realism versus stat tracking", _, true, 0.0, true, 1.0);
-	g_hCvar_GameMode[GAMEMODE_TEAMREALISMVERSUS]				 = CreateConVar("l4d_stats_enableteamrealismvs", "1", "[L4D2] Enable/Disable team realism versus stat tracking", _, true, 0.0, true, 1.0);
-	g_hCvar_GameMode[GAMEMODE_OTHERMUTATIONS]					 = CreateConVar("l4d_stats_enablemutations", "1", "[L4D2] Enable/Disable mutations stat tracking", _, true, 0.0, true, 1.0);
+	g_hCvar_GameMode[CVAR_GAMEMODE_COOP]						 = CreateConVar("l4d_stats_enablecoop", "1", "Enable/Disable coop stat tracking", _, true, 0.0, true, 1.0);
+	g_hCvar_GameMode[CVAR_GAMEMODE_SURVIVAL]					 = CreateConVar("l4d_stats_enablesv", "1", "Enable/Disable survival stat tracking", _, true, 0.0, true, 1.0);
+	g_hCvar_GameMode[CVAR_GAMEMODE_VERSUS]						 = CreateConVar("l4d_stats_enableversus", "1", "Enable/Disable versus stat tracking", _, true, 0.0, true, 1.0);
+	g_hCvar_GameMode[CVAR_GAMEMODE_TEAMVERSUS]					 = CreateConVar("l4d_stats_enableteamversus", "1", "[L4D2] Enable/Disable team versus stat tracking", _, true, 0.0, true, 1.0);
+	g_hCvar_GameMode[CVAR_GAMEMODE_REALISM]						 = CreateConVar("l4d_stats_enablerealism", "1", "[L4D2] Enable/Disable realism stat tracking", _, true, 0.0, true, 1.0);
+	g_hCvar_GameMode[CVAR_GAMEMODE_SCAVENGE]					 = CreateConVar("l4d_stats_enablescavenge", "1", "[L4D2] Enable/Disable scavenge stat tracking", _, true, 0.0, true, 1.0);
+	g_hCvar_GameMode[CVAR_GAMEMODE_TEAMSCAVENGE]				 = CreateConVar("l4d_stats_enableteamscavenge", "1", "[L4D2] Enable/Disable team scavenge stat tracking", _, true, 0.0, true, 1.0);
+	g_hCvar_GameMode[CVAR_GAMEMODE_REALISMVERSUS]				 = CreateConVar("l4d_stats_enablerealismvs", "1", "[L4D2] Enable/Disable realism versus stat tracking", _, true, 0.0, true, 1.0);
+	g_hCvar_GameMode[CVAR_GAMEMODE_TEAMREALISMVERSUS]			 = CreateConVar("l4d_stats_enableteamrealismvs", "1", "[L4D2] Enable/Disable team realism versus stat tracking", _, true, 0.0, true, 1.0);
+	g_hCvar_GameMode[CVAR_GAMEMODE_OTHERMUTATIONS]				 = CreateConVar("l4d_stats_enablemutations", "1", "[L4D2] Enable/Disable mutations stat tracking", _, true, 0.0, true, 1.0);
 
 	// Game mode depended Cvars
 	g_hCvar_RealismMultiplier									 = CreateConVar("l4d_stats_realismmultiplier", "1.4", "[L4D2] Realism score multiplier for coop score", _, true, 1.0);

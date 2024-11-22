@@ -501,7 +501,13 @@ void GetClientRankMute(Database owner, DBResultSet hndl, const char[] error, int
 	{
 		while (hndl.FetchRow())
 		{
-			g_bClientRankMute[client] = (hndl.FetchInt(0) != 0);
+			if (!hndl.IsFieldNull(0))
+				g_bClientRankMute[client] = (hndl.FetchInt(0) != 0);
+			else
+			{
+				LogError("GetClientRankMute failed! Reason: No data in current row result. Field Number: %d", 0);
+				break;
+			}
 		}
 	}
 }
@@ -690,7 +696,13 @@ void ReadDbMotdCallback(Database owner, DBResultSet hndl, const char[] error, in
 	}
 
 	if (hndl.FetchRow())
-		hndl.FetchString(0, g_sMessageOfTheDay, sizeof(g_sMessageOfTheDay));
+	{
+		if (!hndl.IsFieldNull(0))
+			hndl.FetchString(0, g_sMessageOfTheDay, sizeof(g_sMessageOfTheDay));
+		else
+			LogError("ReadDbMotdCallback Query failed: No data in current row result. Field number: %d", 0);
+	}
+		
 }
 
 bool UpdateServerSettings(Client, const char[] Key, const char[] Value, const char[] Desc)
@@ -784,7 +796,10 @@ void UpdateMapTimingStat(Database owner, DBResultSet hndl, const char[] error, D
 	if (hndl.RowCount > 0)
 	{
 		hndl.FetchRow();
-		OldTime = hndl.FetchFloat(0);
+		if (!hndl.IsFieldNull(0))
+			OldTime = hndl.FetchFloat(0);
+		else
+			LogError("UpdateMapTimingStat Query failed: No data in current row result. Field number: %d", 0);
 
 		if ((g_iCurrentGamemodeID != GAMEMODE_SURVIVAL && OldTime <= TotalTime) || (g_iCurrentGamemodeID == GAMEMODE_SURVIVAL && OldTime >= TotalTime))
 		{
@@ -855,7 +870,14 @@ void GetClientTop10(Database owner, DBResultSet hndl, const char[] error, int cl
 	char SteamID[MAX_LINE_WIDTH];
 	while (hndl.FetchRow())
 	{
-		hndl.FetchString(1, SteamID, sizeof(SteamID));
+		if (!hndl.IsFieldNull(1))
+			hndl.FetchString(1, SteamID, sizeof(SteamID));
+		else
+		{
+			LogError("GetClientTop10 failed! Reason: No data in current row result. Field number: %d", 1);
+			break;
+		}
+
 		QueryClientStatsSteamID(client, SteamID, CM_TOP10);
 	}
 }
@@ -907,7 +929,12 @@ void GetClientPoints(Database owner, DBResultSet hndl, const char[] error, int c
 	}
 
 	if (hndl.FetchRow())
-		g_iClientPoints[client] = hndl.FetchInt(0);
+	{
+		if (!hndl.IsFieldNull(0))
+			g_iClientPoints[client] = hndl.FetchInt(0);
+		else
+			LogError("GetClientPoints Query failed: No data in current row result. Field number: %d", 0)
+	}
 }
 
 // Generate client's gamemode point total.
@@ -924,13 +951,61 @@ void GetClientGameModePoints(DBResultSet hndl, const char[] error, int client)
 
 	while (hndl.FetchRow())
 	{
-		g_iClientGameModePoints[client][GAMEMODE_COOP]			 = hndl.FetchInt(GAMEMODE_COOP);
-		g_iClientGameModePoints[client][GAMEMODE_VERSUS]		 = hndl.FetchInt(GAMEMODE_VERSUS);
-		g_iClientGameModePoints[client][GAMEMODE_REALISM]		 = hndl.FetchInt(GAMEMODE_REALISM);
-		g_iClientGameModePoints[client][GAMEMODE_SURVIVAL]		 = hndl.FetchInt(GAMEMODE_SURVIVAL);
-		g_iClientGameModePoints[client][GAMEMODE_SCAVENGE]		 = hndl.FetchInt(GAMEMODE_SCAVENGE);
-		g_iClientGameModePoints[client][GAMEMODE_REALISMVERSUS]	 = hndl.FetchInt(GAMEMODE_REALISMVERSUS);
-		g_iClientGameModePoints[client][GAMEMODE_OTHERMUTATIONS] = hndl.FetchInt(GAMEMODE_OTHERMUTATIONS);
+		if (!hndl.IsFieldNull(GAMEMODE_COOP))
+			g_iClientGameModePoints[client][GAMEMODE_COOP]			 = hndl.FetchInt(GAMEMODE_COOP);
+		else
+		{
+			g_iClientGameModePoints[client][GAMEMODE_COOP]			 = 0;
+			LogError("GetClientGameModePoints Query failed: No data in current row result. Field number: %d", GAMEMODE_COOP);
+		}
+
+		if (!hndl.IsFieldNull(GAMEMODE_VERSUS))
+			g_iClientGameModePoints[client][GAMEMODE_VERSUS]		 = hndl.FetchInt(GAMEMODE_VERSUS);
+		else
+		{
+			g_iClientGameModePoints[client][GAMEMODE_VERSUS]		 = 0;
+			LogError("GetClientGameModePoints Query failed: No data in current row result. Field number: %d", GAMEMODE_VERSUS);
+		}
+
+		if (!hndl.IsFieldNull(GAMEMODE_REALISM))
+			g_iClientGameModePoints[client][GAMEMODE_REALISM]		 = hndl.FetchInt(GAMEMODE_REALISM);
+		else
+		{
+			g_iClientGameModePoints[client][GAMEMODE_REALISM]		 = 0;
+			LogError("GetClientGameModePoints Query failed: No data in current row result. Field number: %d", GAMEMODE_REALISM);
+		}
+
+		if (!hndl.IsFieldNull(GAMEMODE_SURVIVAL))
+			g_iClientGameModePoints[client][GAMEMODE_SURVIVAL]		 = hndl.FetchInt(GAMEMODE_SURVIVAL);
+		else
+		{
+			g_iClientGameModePoints[client][GAMEMODE_SURVIVAL]		 = 0;
+			LogError("GetClientGameModePoints Query failed: No data in current row result. Field number: %d", GAMEMODE_SURVIVAL);
+		}
+
+		if (!hndl.IsFieldNull(GAMEMODE_SCAVENGE))
+			g_iClientGameModePoints[client][GAMEMODE_SCAVENGE]		 = hndl.FetchInt(GAMEMODE_SCAVENGE);
+		else
+		{
+			g_iClientGameModePoints[client][GAMEMODE_SCAVENGE]		 = 0;
+			LogError("GetClientGameModePoints Query failed: No data in current row result. Field number: %d", GAMEMODE_SCAVENGE);
+		}
+
+		if (!hndl.IsFieldNull(GAMEMODE_REALISMVERSUS))
+			g_iClientGameModePoints[client][GAMEMODE_REALISMVERSUS]	 = hndl.FetchInt(GAMEMODE_REALISMVERSUS);
+		else
+		{
+			g_iClientGameModePoints[client][GAMEMODE_REALISMVERSUS]	 = 0;
+			LogError("GetClientGameModePoints Query failed: No data in current row result. Field number: %d", GAMEMODE_REALISMVERSUS);
+		}
+
+		if (!hndl.IsFieldNull(GAMEMODE_OTHERMUTATIONS))
+			g_iClientGameModePoints[client][GAMEMODE_OTHERMUTATIONS] = hndl.FetchInt(GAMEMODE_OTHERMUTATIONS);
+		else
+		{
+			g_iClientGameModePoints[client][GAMEMODE_OTHERMUTATIONS] = 0;
+			LogError("GetClientGameModePoints Query failed: No data in current row result. Field number: %d", GAMEMODE_OTHERMUTATIONS);
+		}
 	}
 }
 
@@ -963,7 +1038,15 @@ void GetClientNextRank(Database owner, DBResultSet hndl, const char[] error, int
 	}
 
 	if (hndl.FetchRow())
-		g_iClientNextRank[client] = hndl.FetchInt(0);
+	{
+		if (!hndl.IsFieldNull(0))
+			g_iClientNextRank[client] = hndl.FetchInt(0);
+		else
+		{
+			g_iClientNextRank[client] = 0;
+			LogError("GetClientRankRankChange Query failed: No data in current row result. Field number: %d", 0);
+		}
+	}
 	else
 		g_iClientNextRank[client] = 0;
 }
@@ -1034,6 +1117,9 @@ void GetClientRankPlayerJoined(Database owner, DBResultSet hndl, const char[] er
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			if (!IsClientInGame(i) || IsFakeClient(i))
+				continue;
+
 			if (!g_bClientRankMute[i])
 				CPrintToChat(i, "%t %t", "Tag", "JoinedWithRank", client, g_iClientRank[client], g_iClientPoints[client]);
 		}
@@ -1042,6 +1128,9 @@ void GetClientRankPlayerJoined(Database owner, DBResultSet hndl, const char[] er
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			if (!IsClientInGame(i) || IsFakeClient(i))
+				continue;
+
 			if (!g_bClientRankMute[i])
 				CPrintToChat(i, "%t %t", "Tag", "JoinedWithoutRank", client);
 		}
@@ -1061,7 +1150,15 @@ void GetClientRank(Database owner, DBResultSet hndl, const char[] error, int cli
 	}
 
 	if (hndl.FetchRow())
-		g_iClientRank[client] = hndl.FetchInt(0);
+	{
+		if (!hndl.IsFieldNull(0))
+			g_iClientRank[client] = hndl.FetchInt(0);
+		else
+		{
+			g_iClientRank[client] = 0;
+			LogError("GetClientRank Query failed: No data in current row result. Field number: %d", 0);
+		}
+	}
 }
 
 // Generate client's rank.
@@ -1077,7 +1174,15 @@ void GetClientGameModeRank(DBResultSet hndl, const char[] error, int client)
 	}
 
 	while (hndl.FetchRow())
-		g_iClientGameModeRank[client] = hndl.FetchInt(0);
+	{
+		if (!hndl.IsFieldNull(0))
+			g_iClientGameModeRank[client] = hndl.FetchInt(0);
+		else
+		{
+			g_iClientGameModeRank[client] = 0;
+			LogError("GetClientGameModeRank Query failed: No data in current row result. Field number: %d", 0);
+		}
+	}
 }
 
 // Generate total rank amount.
@@ -1090,7 +1195,15 @@ void GetRankTotal(Database owner, DBResultSet hndl, const char[] error, int data
 	}
 
 	while (hndl.FetchRow())
-		g_iRankTotal = hndl.FetchInt(0);
+	{
+		if (!hndl.IsFieldNull(0))
+			g_iRankTotal = hndl.FetchInt(0);
+		else
+		{
+			g_iRankTotal = 0;
+			LogError("GetRankTotal Query failed: No data in current row result. Field number: %d", 0);
+		}
+	}
 }
 
 // Generate total gamemode rank amount.
@@ -1103,7 +1216,15 @@ void GetGameModeRankTotal(Database owner, DBResultSet hndl, const char[] error, 
 	}
 
 	while (hndl.FetchRow())
-		g_iGameModeRankTotal = hndl.FetchInt(0);
+	{
+		if (!hndl.IsFieldNull(0))
+			g_iGameModeRankTotal = hndl.FetchInt(0);
+		else
+		{
+			g_iGameModeRankTotal = 0;
+			LogError("GetGameModeRankTotal Query failed: No data in current row result. Field number: %d", 0);
+		}
+	}
 }
 
 void ClearStatsMapsHandler(Database owner, DBResultSet hndl, const char[] error, int client)
@@ -1199,7 +1320,13 @@ void ExecuteTeamShuffle(Database owner, DBResultSet hndl, const char[] error, in
 
 	while (hndl.FetchRow())
 	{
-		hndl.FetchString(0, SteamID, sizeof(SteamID));
+		if (!hndl.IsFieldNull(0))
+			hndl.FetchString(0, SteamID, sizeof(SteamID));
+		else
+		{
+			LogError("ExecuteTeamShuffle failed! Reason: No data in current row result. Field number: %d", 0);
+			continue;
+		}
 		if (PlayersTrie.GetValue(SteamID, client))
 		{
 			team = GetClientTeam(client);

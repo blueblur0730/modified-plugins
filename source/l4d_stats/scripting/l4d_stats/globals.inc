@@ -3,8 +3,6 @@
 #endif
 #define _l4d_stats_globals_included
 
-#define PLUGIN_VERSION "2.6.0"
-
 // Set to false when stats seem to work properly
 #define DEBUG 0
 
@@ -60,6 +58,19 @@
 #define RANKVOTE_NOVOTE -1
 #define RANKVOTE_NO 0
 #define RANKVOTE_YES 1
+
+enum
+{
+    GAMEMODE_COOP = 0,
+    GAMEMODE_VERSUS = 1,
+    GAMEMODE_REALISM = 2,
+    GAMEMODE_SURVIVAL = 3,
+    GAMEMODE_SCAVENGE = 4,
+    GAMEMODE_REALISMVERSUS = 5,
+    GAMEMODE_OTHERMUTATIONS = 6,
+
+    GAMEMODES_SIZE = 7
+}
 
 char TM_MENU_CURRENT[16] = " <<";
 char DB_PLAYERS_TOTALPOINTS[512] = "points + points_survivors + points_infected + points_realism + points_survival + points_scavenge_survivors + points_scavenge_infected + points_realism_survivors + points_realism_infected + points_mutations";
@@ -164,20 +175,20 @@ ConVar g_hCvar_Enable;
 
 enum
 {
-    GAMEMODE_COOP = 0,
-    GAMEMODE_VERSUS = 1,
-    GAMEMODE_TEAMVERSUS = 2,
-    GAMEMODE_REALISM = 3,
-    GAMEMODE_SURVIVAL = 4,
-    GAMEMODE_SCAVENGE = 5,
-    GAMEMODE_TEAMSCAVENGE = 6,
-    GAMEMODE_REALISMVERSUS = 7,
-    GAMEMODE_TEAMREALISMVERSUS = 8,
-    GAMEMODE_OTHERMUTATIONS = 9,
+    CVAR_GAMEMODE_COOP = 0,
+    CVAR_GAMEMODE_VERSUS = 1,
+    CVAR_GAMEMODE_TEAMVERSUS = 2,
+    CVAR_GAMEMODE_REALISM = 3,
+    CVAR_GAMEMODE_SURVIVAL = 4,
+    CVAR_GAMEMODE_SCAVENGE = 5,
+    CVAR_GAMEMODE_TEAMSCAVENGE = 6,
+    CVAR_GAMEMODE_REALISMVERSUS = 7,
+    CVAR_GAMEMODE_TEAMREALISMVERSUS = 8,
+    CVAR_GAMEMODE_OTHERMUTATIONS = 9,
 
-    GAMEMODES_SIZE = 10
+    CVAR_GAMEMODES_SIZE = 10
 };
-ConVar g_hCvar_GameMode[GAMEMODES_SIZE];
+ConVar g_hCvar_GameMode[CVAR_GAMEMODES_SIZE];
 
 ConVar 
     g_hCvar_RealismMultiplier,

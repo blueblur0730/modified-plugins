@@ -52,5 +52,10 @@ void NativeQuery_IsMuted(Database owner, DBResultSet hndl, const char[] error, b
 	}
 
 	if (hndl.FetchRow())
-		bResult = view_as<bool>(hndl.FetchInt(0));
+	{
+		if (!hndl.IsFieldNull(0))
+			bResult = view_as<bool>(hndl.FetchInt(0));
+		else
+			s_bIsError = true;
+	}	
 }

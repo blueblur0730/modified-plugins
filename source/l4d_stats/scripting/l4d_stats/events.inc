@@ -279,6 +279,9 @@ void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "PlayerDeath_FF_Mode3", Attacker, Score, Victim);
 			}
@@ -363,6 +366,9 @@ void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 				{
 					for (int i = 1; i <= MaxClients; i++)
 					{
+						if (!IsClientInGame(i) || IsFakeClient(i))
+							continue;
+
 						if (!g_bClientRankMute[i])
 						{
 							char definitearticle[8];
@@ -387,6 +393,9 @@ void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 				{
 					for (int i = 1; i <= MaxClients; i++)
 					{
+						if (!IsClientInGame(i) || IsFakeClient(i))
+							continue;
+							
 						if (!g_bClientRankMute[i])
 						{
 							char definitearticle[8];
@@ -600,6 +609,9 @@ void Event_DefibPlayer(Event event, const char[] name, bool dontBroadcast)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "DefibPlayer_Mode3", Giver, Score, Recipient);
 			}
@@ -667,6 +679,9 @@ void Event_HealPlayer(Event event, const char[] name, bool dontBroadcast)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "HealPlayer_Mode3", Giver, Score, Recipient);
 			}
@@ -1098,6 +1113,9 @@ void Event_PlayerLedge(Event event, const char[] name, bool dontBroadcast)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "YouMadeHimLedged_Mode3", Attacker, Score, Victim);
 			}
@@ -1378,6 +1396,9 @@ void Event_JockeyRelease(Event event, const char[] name, bool dontBroadcast)
 			{
 				for (int i = 1; i <= MaxClients; i++)
 				{
+					if (!IsClientInGame(i) || IsFakeClient(i))
+						continue;
+
 					if (!g_bClientRankMute[i])
 						CPrintToChat(i, "%t %t", "Tag", "YouSavedFromJockey_Mode3", Rescuer, Score, Victim, Jockey);
 				}
@@ -1464,6 +1485,9 @@ void Event_ChargerKilled(Event event, const char[] name, bool dontBroadcast)
 			{
 				for (int i = 1; i <= MaxClients; i++)
 				{
+					if (!IsClientInGame(i) || IsFakeClient(i))
+						continue;
+
 					if (!g_bClientRankMute[i])
 						CPrintToChat(i, "%t %t", "Tag", "YouLeveledCharger_Mode3", Killer, Score);
 				}
@@ -1495,6 +1519,9 @@ void Event_ChargerKilled(Event event, const char[] name, bool dontBroadcast)
 
 				for (int i = 1; i <= MaxClients; i++)
 				{
+					if (!IsClientInGame(i) || IsFakeClient(i))
+						continue;
+
 					if (bIsBot)
 						Format(VictimName, sizeof(VictimName), "%T", "ASurvivor", i);
 
@@ -1659,8 +1686,6 @@ void Event_UpgradePackAdded(Event event, const char[] name, bool dontBroadcast)
 		char ModelName[128];
 		GetEntPropString(EntityID, Prop_Data, "m_ModelName", ModelName, sizeof(ModelName));
 
-
-
 		if ((Mode == 1 || Mode == 2) && !g_bClientRankMute[Player])
 		{
 			FormatModelName(ModelName, sizeof(ModelName), Player);
@@ -1671,6 +1696,9 @@ void Event_UpgradePackAdded(Event event, const char[] name, bool dontBroadcast)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 				{
 					FormatModelName(ModelName, sizeof(ModelName), i);
@@ -1727,6 +1755,9 @@ void Event_GascanPoured(Event event, const char[] name, bool dontBroadcast)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "YouPouredGasCan_Mode3", Player, Score);
 			}
@@ -1974,6 +2005,9 @@ void Event_PlayerPounced(Event event, const char[] name, bool dontBroadcast)
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 			if (!g_bClientRankMute[i])
 			{
 				if (bIsDeathFromAbove)
@@ -2033,6 +2067,9 @@ void Event_RevivePlayer(Event event, const char[] name, bool dontBroadcast)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "YouRevived_Mode3", Savior, Score, Victim);
 			}
@@ -2159,6 +2196,9 @@ void Event_Award_L4D1(Event event, const char[] name, bool dontBroadcast)
 			{
 				for (int i = 1; i <= MaxClients; i++)
 				{
+					if (!IsClientInGame(i) || IsFakeClient(i))
+						continue;
+
 					if (!g_bClientRankMute[i])
 						CPrintToChat(i, "%t %t", "Tag", "YouRescued_Mode3", User, Score, Recipient);
 				}
@@ -2208,6 +2248,9 @@ void Event_Award_L4D1(Event event, const char[] name, bool dontBroadcast)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "YouLetInfectedInSafeRoom_Mode3", User, Score);
 			}
@@ -2371,6 +2414,9 @@ void Event_Award_L4D2(Event event, const char[] name, bool dontBroadcast)
 			{
 				for (int i = 1; i <= MaxClients; i++)
 				{
+					if (!IsClientInGame(i) || IsFakeClient(i))
+						continue;
+
 					if (!g_bClientRankMute[i])
 						CPrintToChat(i, "%t %t", "Tag", "YouRescued_Mode3", User, Score, Recipient);
 				}
@@ -2420,6 +2466,9 @@ void Event_Award_L4D2(Event event, const char[] name, bool dontBroadcast)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+					
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "YouLetInfectedInSafeRoom_Mode3", User, Score);
 			}

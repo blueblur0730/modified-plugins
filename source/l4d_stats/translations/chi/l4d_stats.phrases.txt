@@ -181,7 +181,7 @@
 
     "JoinedWithRank"
     {
-        "#format"   "{1:N}.{2:i},{3:i}"
+        "#format"   "{1:N},{2:i},{3:i}"
         "chi"       "玩家 {olive}{1} {default}加入了游戏! (排名: {lightgreen}{2} {default}/ 积分: {lightgreen}{3}{default})"
     }
 

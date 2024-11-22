@@ -628,5 +628,8 @@ void InitGameData()
 		}
 	}
 
+	g_iOS = gd.GetOffset("OS");
+	if (g_iOS == -1) SetFailState("Failed to find offset for operating system.");
+
 	delete gd;
 }

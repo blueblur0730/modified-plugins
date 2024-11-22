@@ -68,7 +68,7 @@ Action Timer_AnnounceConnect(Handle timer, int client)
 
 Action Timer_ProtectedFriendly(Handle timer, int client)
 {
-	delete g_hTimerProtectedFriendly[client];
+	g_hTimerProtectedFriendly[client] = INVALID_HANDLE;
 	int ProtectedFriendlies	= g_iProtectedFriendlyCounter[client];
 	g_iProtectedFriendlyCounter[client] = 0;
 
@@ -99,6 +99,9 @@ Action Timer_ProtectedFriendly(Handle timer, int client)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "ProtectingFriendlies_Mode3", client, Score, ProtectedFriendlies);
 			}
@@ -111,8 +114,8 @@ Action Timer_ProtectedFriendly(Handle timer, int client)
 // Team infected damage score
 Action Timer_InfectedDamageCheck(Handle timer, int client)
 {
-	if (g_hTimerInfectedDamageCheck[client] != null)
-		delete g_hTimerInfectedDamageCheck[client];
+	if (g_hTimerInfectedDamageCheck[client] != INVALID_HANDLE)
+		g_hTimerInfectedDamageCheck[client] = INVALID_HANDLE;
 
 	if (client == 0 || IsClientBot(client))
 		return Plugin_Handled;
@@ -177,6 +180,9 @@ Action Timer_InfectedDamageCheck(Handle timer, int client)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 				{
 					if (InfectedDamage > 1)
@@ -184,9 +190,7 @@ Action Timer_InfectedDamageCheck(Handle timer, int client)
 					else
 						CPrintToChat(i, "%t %t", "Tag", "DamagedSurvivors_Amount_Mode3_All", client, Score, DamageCounter);
 				}
-
 			}
-
 		}
 	}
 
@@ -239,8 +243,8 @@ Action Timer_ShowTimerScore(Handle timer)
 
 Action Timer_ClearDatabase(Handle timer)
 {
-	if (g_hClearDatabaseTimer != null)
-		delete g_hClearDatabaseTimer;
+	if (g_hClearDatabaseTimer != INVALID_HANDLE)
+		g_hClearDatabaseTimer = INVALID_HANDLE;
 
 	g_iClearDatabaseCaller = -1;
 
@@ -283,6 +287,9 @@ Action Timer_PanicEventEnd(Handle timer)
 			{
 				for (int i = 1; i <= MaxClients; i++)
 				{
+					if (!IsClientInGame(i) || IsFakeClient(i))
+						continue;
+
 					if (IsClientInGame(i) && !IsClientBot(i) && GetClientTeam(i) == TEAM_SURVIVORS && !g_bClientRankMute[i])
 						CPrintToChat(i, "%t %t", "Tag", "AwardAfterPanicEvent", Score);
 				}
@@ -299,8 +306,8 @@ Action Timer_PanicEventEnd(Handle timer)
 // Calculate Boomer vomit hits and check Boomer Perfect Blindness award
 Action Timer_BoomerBlindnessCheck(Handle timer, int client)
 {
-	if (g_hTimerBoomerPerfectCheck[client] != null)
-		delete g_hTimerBoomerPerfectCheck[client];
+	if (g_hTimerBoomerPerfectCheck[client] != INVALID_HANDLE)
+		g_hTimerBoomerPerfectCheck[client] = INVALID_HANDLE;
 
 	if (client > 0 && !IsClientBot(client) && IsClientInGame(client) && GetClientTeam(client) == TEAM_INFECTED && g_iBoomerHitCounter[client] > 0)
 	{
@@ -360,6 +367,9 @@ Action Timer_BoomerBlindnessCheck(Handle timer, int client)
 				{
 					if (!g_bClientRankMute[i])
 					{
+						if (!IsClientInGame(i) || IsFakeClient(i))
+							continue;
+
 						if (AwardCounter > 0) CPrintToChat(i, "%t %t", "Tag", "PerfectBlindNess_Mode3", client, Score);
 						else CPrintToChat(i, "%t %t", "Tag", "BlindSurvivors_Mode3", client, Score, OriginalHitCounter);
 					}
@@ -439,8 +449,8 @@ Action Timer_EndChargerPummel(Handle timer, int client)
 // End charge impact counter state.
 Action Timer_EndCharge(Handle timer, int client)
 {
-	if (g_hChargerImpactCounterTimer[client] != null)
-		delete g_hChargerImpactCounterTimer[client];
+	if (g_hChargerImpactCounterTimer[client] != INVALID_HANDLE)
+		g_hChargerImpactCounterTimer[client] = INVALID_HANDLE;
 
 	int Counter	= g_iChargerImpactCounter[client];
 	g_iChargerImpactCounter[client] = 0;
@@ -485,6 +495,9 @@ Action Timer_EndCharge(Handle timer, int client)
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			if (!IsClientInGame(i) || IsFakeClient(i))
+				continue;
+
 			if (!g_bClientRankMute[i])
 				CPrintToChat(i, "%t %t", "Tag", "ScatteringRam_Mode3", client, Score, Counter);
 		}
@@ -522,7 +535,7 @@ Action Timer_FriendlyFireDamageEnd(Handle timer, DataPack dp)
 	int Attacker = dp.ReadCell();
 
 	// This may fail! What happens when a player skips and another joins with the same Client ID (is this even possible in such short time?)
-	delete g_hFriendlyFireTimer[Attacker][0];
+	g_hFriendlyFireTimer[Attacker][0] = INVALID_HANDLE;
 
 	char AttackerID[MAX_LINE_WIDTH];
 	dp.ReadString(AttackerID, sizeof(AttackerID));
@@ -566,12 +579,14 @@ Action Timer_FriendlyFireDamageEnd(Handle timer, DataPack dp)
 	{
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			if (!IsClientInGame(i) || IsFakeClient(i))
+				continue;
+
 			if (!g_bClientRankMute[i])
 				CPrintToChat(i, "%t %t", "Tag", "FriendlyFire_Mode3", Attacker, Score, HumanDamage + BotDamage);
 		}
 	}
 		
-
 	return Plugin_Handled;
 }
 
@@ -620,8 +635,8 @@ Action Timer_ShuffleTeams(Handle timer)
 // End of RANKVOTE.
 Action Timer_RankVote(Handle timer)
 {
-	if (g_hRankVoteTimer != null)
-		delete g_hRankVoteTimer;
+	if (g_hRankVoteTimer != INVALID_HANDLE)
+		g_hRankVoteTimer = INVALID_HANDLE;
 
 	if (!CheckHumans())
 	{
@@ -648,8 +663,8 @@ Action Timer_RankVote(Handle timer)
 // End friendly fire cooldown.
 Action Timer_FriendlyFireCooldownEnd(Handle timer, int client)
 {
-	if (g_hFriendlyFireTimer[g_iFriendlyFirePrm[client][0]][g_iFriendlyFirePrm[client][1]] != null)
-		delete g_hFriendlyFireTimer[g_iFriendlyFirePrm[client][0]][g_iFriendlyFirePrm[client][1]];
+	if (g_hFriendlyFireTimer[g_iFriendlyFirePrm[client][0]][g_iFriendlyFirePrm[client][1]] != INVALID_HANDLE)
+		g_hFriendlyFireTimer[g_iFriendlyFirePrm[client][0]][g_iFriendlyFirePrm[client][1]] = INVALID_HANDLE;
 
 	g_bFriendlyFireCooldown[g_iFriendlyFirePrm[client][0]][g_iFriendlyFirePrm[client][1]] = false;
 
@@ -657,10 +672,10 @@ Action Timer_FriendlyFireCooldownEnd(Handle timer, int client)
 }
 
 // End friendly fire cooldown.
-Action Timer_MeleeKill(Handle timer, any client)
+Action Timer_MeleeKill(Handle timer, int client)
 {
-	if (g_hMeleeKillTimer[client] != null)
-		delete g_hMeleeKillTimer[client];
+	if (g_hMeleeKillTimer[client] != INVALID_HANDLE)
+		g_hMeleeKillTimer[client] = INVALID_HANDLE;
 
 	int Counter = g_iMeleeKillCounter[client];
 	g_iMeleeKillCounter[client] = 0;
@@ -686,6 +701,9 @@ Action Timer_UpdatePlayers(Handle timer)
 		{
 			for (int i = 1; i <= MaxClients; i++)
 			{
+				if (!IsClientInGame(i) || IsFakeClient(i))
+					continue;
+
 				if (!g_bClientRankMute[i])
 					CPrintToChat(i, "%t %t", "Tag", "NotEnoughPlayers");
 			}
@@ -700,7 +718,7 @@ Action Timer_UpdatePlayers(Handle timer)
 	UpdateMapStat("playtime", 1);
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientConnected(i) && IsClientInGame(i) && !IsClientBot(i))
+		if (IsClientInGame(i) && !IsClientBot(i))
 			CheckPlayerDB(i);
 	}
 

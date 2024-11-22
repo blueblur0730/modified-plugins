@@ -1,0 +1,25 @@
+"Games"
+{
+    "left4dead2"
+    {
+        "Functions"
+        {
+            "CBaseCombatWeapon::FinishReload"
+            {
+                "offset"    "CBaseCombatWeapon::FinishReload"
+                "hooktype"  "entity"
+                "return"    "void"
+                "this"      "entity"
+            }
+        }
+
+        "Offsets"
+        {
+            "CBaseCombatWeapon::FinishReload"
+            {
+                "linux"     "280"
+                "windows"   "279"
+            }
+        }
+    }
+}

@@ -314,7 +314,12 @@ void NativeQuery_GetBestTime(Database owner, DBResultSet hndl, const char[] erro
 		return;
 
 	if (hndl.FetchRow())
-		s_harray.Push(hndl.FetchFloat(0));
+	{
+		if (!hndl.IsFieldNull(0))
+			s_harray.Push(hndl.FetchFloat(0));
+		else
+			bIsNotFound = true;
+	}
 }
 
 void NativeQuery_GetPlayCount(Database owner, DBResultSet hndl, const char[] error, bool bIsNotFound)
@@ -329,8 +334,14 @@ void NativeQuery_GetPlayCount(Database owner, DBResultSet hndl, const char[] err
 		return;
 
 	if (hndl.FetchRow())
-		s_harray.Push(hndl.FetchInt(0));
+	{
+		if (!hndl.IsFieldNull(0))
+			s_harray.Push(hndl.FetchInt(0));
+		else
+			bIsNotFound = true;
+	}
 }
+
 void NativeQuery_GetPlayersCount(Database owner, DBResultSet hndl, const char[] error, bool bIsNotFound)
 {
 	if (!hndl.RowCount)
@@ -343,7 +354,12 @@ void NativeQuery_GetPlayersCount(Database owner, DBResultSet hndl, const char[] 
 		return;
 
 	if (hndl.FetchRow())
-		s_harray.Push(hndl.FetchInt(0));
+	{
+		if (!hndl.IsFieldNull(0))
+			s_harray.Push(hndl.FetchInt(0));
+		else
+			bIsNotFound = true;
+	}
 }
 
 void NativeQuery_GetBestTimeDate(Database owner, DBResultSet hndl, const char[] error, bool bIsNotFound)
@@ -360,7 +376,12 @@ void NativeQuery_GetBestTimeDate(Database owner, DBResultSet hndl, const char[] 
 	char date[128];
 	if (hndl.FetchRow())
 	{
-		hndl.FetchString(0, date, sizeof(date));
-		s_harray.PushString(date);
+		if (!hndl.IsFieldNull(0))
+		{
+			hndl.FetchString(0, date, sizeof(date));
+			s_harray.PushString(date);
+		}
+		else
+			bIsNotFound = true;
 	}
 }

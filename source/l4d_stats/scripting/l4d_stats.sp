@@ -8,6 +8,8 @@
 #undef REQUIRE_PLUGIN
 #include <adminmenu>
 
+#define PLUGIN_VERSION "2.6.3"
+
 // here to define the global variables.
 #include "l4d_stats/globals.inc"
 
@@ -51,9 +53,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	if (test == Engine_Left4Dead2)
 		g_bLeft4Dead2 = true;
 
+	RegPluginLibrary("l4d_stats");
 	CreateNatives();
 
-	RegPluginLibrary("l4d_stats");
 	return APLRes_Success;
 }
 

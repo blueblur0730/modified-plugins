@@ -795,8 +795,15 @@ void NativeQuery_GetPlayerNameBySteamID(Database owner, DBResultSet hndl, const 
 	char Name[512];
 	if (hndl.FetchRow())
 	{
-		hndl.FetchString(0, Name, sizeof(Name));
-		s_hArray.PushString(Name);
+		if (!hndl.IsFieldNull(0))
+		{
+			hndl.FetchString(0, Name, sizeof(Name));
+			s_hArray.PushString(Name);
+		}
+		else
+		{
+			s_bIsNotFound = true;
+		}
 	}
 }
 
@@ -852,7 +859,11 @@ void NativeQuery_GetPlayerRankBySteamID(Database owner, DBResultSet hndl, const 
 	while (hndl.FetchRow())
 	{
 		count++;
-		hndl.FetchString(0, sBuffer, sizeof(sBuffer));
+		if (!hndl.IsFieldNull(0))
+			hndl.FetchString(0, sBuffer, sizeof(sBuffer));
+		else
+			continue;
+
 		if (strcmp(sBuffer, SteamID) == 0)
 		{
 			s_hArray.Push(count);
@@ -880,7 +891,12 @@ void NativeQuery_GetPlayerRankBySteamIDEx(Database owner, DBResultSet hndl, cons
 	while (hndl.FetchRow())
 	{
 		count++;
-		hndl.FetchString(0, sBuffer, sizeof(sBuffer));
+
+		if (!hndl.IsFieldNull(0))
+			hndl.FetchString(0, sBuffer, sizeof(sBuffer));
+		else
+			continue;
+
 		if (strcmp(sBuffer, AuthID) == 0)
 		{
 			s_hArray.Push(count);
@@ -926,8 +942,12 @@ void NativeQuery_UpdatePointsByRank(Database owner, DBResultSet hndl, const char
 		
 		if (data == count)
 		{
-			bFound = true;
-			hndl.FetchString(0, Name, sizeof(Name));
+			if (!hndl.IsFieldNull(0))
+			{
+				bFound = true;
+				hndl.FetchString(0, Name, sizeof(Name));
+			}
+
 			break;
 		}
 	}
@@ -960,8 +980,16 @@ void FetchStringData(DBResultSet hndl, int data)
 		
 		if (data == count)
 		{
-			hndl.FetchString(0, Name, sizeof(Name));
-			s_hArray.PushString(Name);
+			if (!hndl.IsFieldNull(0))
+			{
+				hndl.FetchString(0, Name, sizeof(Name));
+				s_hArray.PushString(Name);
+			}
+			else
+			{
+				s_bIsNotFound = true;
+			}
+
 			break;
 		}
 	}
@@ -985,7 +1013,11 @@ void FetchIntData(DBResultSet hndl, int data)
 		
 		if (data == count)
 		{
-			s_hArray.Push(hndl.FetchInt(0));
+			if (!hndl.IsFieldNull(0))
+				s_hArray.Push(hndl.FetchInt(0));
+			else
+				s_bIsNotFound = true;
+
 			break;
 		}
 	}
@@ -1000,7 +1032,12 @@ void FetchIntDataEx(DBResultSet hndl)
 		return;
 
 	if (hndl.FetchRow())
-		s_hArray.Push(hndl.FetchInt(0));
+	{
+		if (!hndl.IsFieldNull(0))
+			s_hArray.Push(hndl.FetchInt(0));
+		else
+			s_bIsNotFound = true;
+	}
 }
 
 void FetchFloatData(DBResultSet hndl, int data)
@@ -1021,7 +1058,11 @@ void FetchFloatData(DBResultSet hndl, int data)
 		
 		if (data == count)
 		{
-			s_hArray.Push(hndl.FetchFloat(0));
+			if (!hndl.IsFieldNull(0))
+				s_hArray.Push(hndl.FetchFloat(0));
+			else
+				s_bIsNotFound = true;
+
 			break;
 		}
 	}
@@ -1039,5 +1080,10 @@ void FetchFloatDataEx(DBResultSet hndl)
 		return;
 
 	if (hndl.FetchRow())
-		s_hArray.Push(hndl.FetchFloat(0));
+	{
+		if (!hndl.IsFieldNull(0))
+			s_hArray.Push(hndl.FetchFloat(0));
+		else
+			s_bIsNotFound = true;
+	}
 }
