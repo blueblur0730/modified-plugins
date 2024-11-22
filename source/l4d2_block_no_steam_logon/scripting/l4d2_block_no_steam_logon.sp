@@ -22,7 +22,9 @@ Handle
 
 GlobalForward g_hFWD_OnValidateAuthTicketResponseHelper = null;
 ConVar g_hCvar_DropOrNot = null;
+ConVar g_hCvar_CheckTimeOut = null;
 bool g_bDropOrNot = false;
+bool g_bCheckTimeOut = false;
 
 OperatingSystem g_iOS = OS_Unknown_Copy;
 int g_iOff_CBaseClient_m_Name = -1;
@@ -35,7 +37,7 @@ enum EAuthSessionResponse
     Response_VACBanned = 3,
     Response_InAnotherLocation = 4,
     Response_TimedOut = 5,
-    Response_UnknownError2 = 6, // also steam no logon?
+    Response_UnknownError2 = 6, // also steam no logon? maybe timeout.
     Response_UnknownError3 = 7, // also steam no logon?
     Response_NoSteamLogon = 8,
 }
@@ -60,7 +62,7 @@ methodmap CBaseClient {
     }
 }
 
-#define PLUGIN_VERSION "1.2.1"
+#define PLUGIN_VERSION "1.2.2"
 
 public Plugin myinfo = 
 {
@@ -80,7 +82,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	}
 
     // forward void OnValidateAuthTicketResponseHelper(const char[] sName, EAuthSessionResponse response);
-    g_hFWD_OnValidateAuthTicketResponseHelper = new GlobalForward("OnValidateAuthTicketResponseHelper", ET_Event, Param_String, Param_Any);
+    g_hFWD_OnValidateAuthTicketResponseHelper = new GlobalForward("OnValidateAuthTicketResponseHelper", ET_Event, Param_Any, Param_String);
     RegPluginLibrary("l4d2_block_no_steam_logon");
     return APLRes_Success;
 }
@@ -88,8 +90,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
     CreateConVar("l4d2_block_no_steam_logon_version", PLUGIN_VERSION, "Plugin Version", FCVAR_NOTIFY | FCVAR_DONTRECORD);
+
     g_hCvar_DropOrNot = CreateConVar("l4d2_block_no_steam_logon_enable", "1", "Enable to prevent no steam logon disconnection.", _, true, 0.0, true, 1.0);
     g_hCvar_DropOrNot.AddChangeHook(OnCvarChange);
+
+    g_hCvar_CheckTimeOut = CreateConVar("l4d2_block_no_steam_logon_check_timeout", "0", "Enable to check client's timeout.", _, true, 0.0, true, 1.0);
+    g_hCvar_CheckTimeOut.AddChangeHook(OnCvarChange);
     OnCvarChange(null, "", "");
     InitGameData();
 }
@@ -97,15 +103,17 @@ public void OnPluginStart()
 void OnCvarChange(ConVar convar, const char[] oldValue, const char[] newValue)
 {
     g_bDropOrNot = g_hCvar_DropOrNot.BoolValue;
+    g_bCheckTimeOut = g_hCvar_CheckTimeOut.BoolValue;
 }
 
 MRESReturn DTR_OnValidateAuthTicketResponseHelper_Pre(DHookParam hParam)
 {
-    CBaseClient pBaseClient;
-    if (!hParam.IsNull(2)) pBaseClient = view_as<CBaseClient>(hParam.Get(2));
-    else return MRES_Ignored;
-
+    CBaseClient pBaseClient = view_as<CBaseClient>(hParam.Get(1));
     PrintLog("### Detour Function called, pBaseClient: %d", pBaseClient);
+
+    // invalid addresses cause crashes.
+    if (view_as<int>(pBaseClient) <= 0)
+        return MRES_Ignored;
 
     char sName[128];
     switch (g_iOS)
@@ -122,7 +130,7 @@ MRESReturn DTR_OnValidateAuthTicketResponseHelper_Pre(DHookParam hParam)
         }
     }
 
-    EAuthSessionResponse response = view_as<EAuthSessionResponse>(hParam.Get(3));
+    EAuthSessionResponse response = view_as<EAuthSessionResponse>(hParam.Get(2));
     PrintLog("### Found a client with auth problem, name: %s, EAuthSessionResponse: %d", sName, response);
 
     Call_StartForward(g_hFWD_OnValidateAuthTicketResponseHelper);
@@ -134,14 +142,18 @@ MRESReturn DTR_OnValidateAuthTicketResponseHelper_Pre(DHookParam hParam)
     // in that case, we drop the client manully. this code is not represented in l4d2 engine, maybe the newer engine?
     // by default the time out check time is 4.0s in CNetChan::IsTimingOut().
     // https://github.com/nillerusr/source-engine/blob/29985681a18508e78dc79ad863952f830be237b6/engine/sv_steamauth.cpp#L623
-    INetChannel netchan = pBaseClient.GetNetChannel();
-    if (netchan && netchan.IsTimingOut())
+    
+    if (g_bCheckTimeOut)
     {
-        char reason[128];
-        Format(reason, sizeof(reason), CLIENTNAME_TIMED_OUT, sName);
-        PrintLog("### Disconnecting timed out client, reason: %s", reason);
-        pBaseClient.Disconnect(reason); // console msg: Dropped xxx from server ('reason')
-        return MRES_Supercede;
+        INetChannel netchan = pBaseClient.GetNetChannel();
+        if (netchan && netchan.IsTimingOut())
+        {
+            char reason[128];
+            Format(reason, sizeof(reason), CLIENTNAME_TIMED_OUT, sName);
+            PrintLog("### Disconnecting timed out client, reason: %s", reason);
+            pBaseClient.Disconnect(reason); // console msg: Dropped xxx from server ('reason')
+            return MRES_Supercede;
+        }
     }
 
 /*

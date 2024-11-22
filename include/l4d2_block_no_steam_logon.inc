@@ -24,7 +24,7 @@ enum EAuthSessionResponse
  * 
  * @noreturn
 */
-forward void OnValidateAuthTicketResponseHelper(const char[] sName, EAuthSessionResponse response);
+forward void OnValidateAuthTicketResponseHelper(EAuthSessionResponse response, const char[] sName);
 
 public SharedPlugin __pl_l4d2_block_no_steam_logon =
 {
