@@ -57,7 +57,7 @@ ConVar
 
 public Plugin myinfo =
 {
-	name = "[L4D2] Stucked Tank Teleport",
+	name = "[L4D1 & 2] Stucked Tank Teleport",
 	author = "blueblur, 东",
 	description = "MidHook to prevent stucked tank from death and teleport them.",
 	version	= PLUGIN_VERSION,
