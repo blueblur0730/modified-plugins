@@ -8,8 +8,8 @@
 #include <colors>
 #include <gamedata_wrapper>
 
-#define GAMEDATA_FILE					"l4d2_stucked_tank_teleport"
-#define TRANSLATION_FILE				"l4d2_stucked_tank_teleport.phrases"
+#define GAMEDATA_FILE					"l4d_stucked_tank_teleport"
+#define TRANSLATION_FILE				"l4d_stucked_tank_teleport.phrases"
 
 #define ADDRESS_NAME					"TankAttack::Update__OnSuicide"
 #define SDKCALL_GETBASEENTITY			"CBaseEntity::GetBaseEntity"
@@ -630,9 +630,6 @@ void InitGameData()
 			}
 		}
 	}
-
-	g_iOS = gd.GetOffset("OS");
-	if (g_iOS == -1) SetFailState("Failed to find offset for operating system.");
 
 	delete gd;
 }
