@@ -1,0 +1,86 @@
+"Phrases"
+{
+    "MenuTitle"
+    {
+        "en"        "Quick Access to the commands below:"
+        "chi"       "快速访问以下指令:"
+    }
+
+    "UnknownCommand"
+    {
+        "en"        "Unknown command"
+        "chi"       "未知指令"
+    }
+
+    "sm_serverinfo"
+    {
+        "en"        "Query Server Info"
+        "chi"       "查看服务器信息"
+    }
+
+    "sm_playerinfo"
+    {
+        "en"        "Query all Players' Info"
+        "chi"       "查询所有玩家信息"
+    }
+
+    "sm_vote"
+    {
+        "en"        "Open vote menu"
+        "chi"       "打开投票菜单"
+    }
+
+    "sm_mapvote"
+    {
+        "en"        "Open map vote menu"
+        "chi"       "打开地图投票菜单"
+    }
+
+    "sm_preservemap"
+    {
+        "en"        "Open map preservation menu"
+        "chi"       "打开预定地图菜单"
+    }
+
+    "sm_getitem"
+    {
+        "en"        "Open E+R menu"
+        "chi"       "打开E+R菜单"
+    }
+
+    "sm_tkbot"
+    {
+        "en"        "Takeover a bot"
+        "chi"       "接管一个bot"
+    }
+
+    "sm_zs"
+    {
+        "en"        "Suicide"
+        "chi"       "自杀"
+    }
+
+    "sm_afk"
+    {
+        "en"        "AFK"
+        "chi"       "闲置"
+    }
+
+    "sm_tgvote"
+    {
+        "en"        "Open Neko Special Vote menu"
+        "chi"       "打开Neko多特投票菜单"
+    }
+
+    "sm_team2"
+    {
+        "en"        "Switch to Team Survivors"
+        "chi"       "切换到生还队伍"
+    }
+
+    "sm_team3"
+    {
+        "en"        "Switch to Team SI"
+        "chi"       "切换到特感队伍"
+    }
+}

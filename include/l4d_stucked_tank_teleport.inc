@@ -1,7 +1,7 @@
-#if defined _l4d2_stucked_tank_teleport_included
+#if defined _l4d_stucked_tank_teleport_included
  #endinput
 #endif
-#define _l4d2_stucked_tank_teleport_included
+#define _l4d_stucked_tank_teleport_included
 
 /**
  * Called when a bot tank tried to suicide for stucked or lost its target for too long.
@@ -16,10 +16,10 @@
 */
 forward void MidHook_OnTankSuicide(int tank);
 
-public SharedPlugin __pl_l4d2_stucked_tank_teleport =
+public SharedPlugin __pl_l4d_stucked_tank_teleport =
 {
-	name = "l4d2_stucked_tank_teleport",
-	file = "l4d2_stucked_tank_teleport.smx",
+	name = "l4d_stucked_tank_teleport",
+	file = "l4d_stucked_tank_teleport.smx",
 #if defined REQUIRE_PLUGIN
 	required = 1,
 #else
