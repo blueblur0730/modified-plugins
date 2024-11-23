@@ -104,6 +104,16 @@
                 /* 56 8B 74 24 10 8B 06 8B 90 40 01 00 00 */
             }
 
+            // windows sig:
+            // constructor of TankAttack. the 1st one in the vtable.
+            "TankAttack::TankAttack"
+            {
+                "library"   "server"
+                "linux"     "@_ZN10TankAttackC2Ev"
+                "widnows"   "\x33\xC0\x56\x8B\xF1\xC7\x46\x04\x2A\x2A\x2A\x2A\xC7\x46\x2C\x01\x00\x00\x00\x89\x46\x20\x57\x33\xC9\x89\x4E\x24\x33\xD2\x33\xFF\x89\x56\x28\x89\x7E\x2C\x8D\x7E\x38\x89\x46\x0C\x89\x46\x10\x89\x46\x14\x89\x46\x18\x89\x46\x1C\x89\x46\x08\x88\x46\x30\x88\x46\x31\xC7\x06\x2A\x2A\x2A\x2A\xC7\x46\x04\x2A\x2A\x2A\x2A\x50\x8B\xCF\xC7\x46\x34\xFF\xFF\xFF\xFF\xE8\x2A\x2A\x2A\x2A\xD9\x05\x2A\x2A\x2A\x2A\xC7\x07\x2A\x2A\x2A\x2A"
+                /* 33 C0 56 8B F1 C7 46 04 ? ? ? ? C7 46 2C 01 00 00 00 89 46 20 57 33 C9 89 4E 24 33 D2 33 FF 89 56 28 89 7E 2C 8D 7E 38 89 46 0C 89 46 10 89 46 14 89 46 18 89 46 1C 89 46 08 88 46 30 88 46 31 C7 06 ? ? ? ? C7 46 04 ? ? ? ? 50 8B CF C7 46 34 FF FF FF FF E8 ? ? ? ? D9 05 ? ? ? ? C7 07 ? ? ? ? */
+            }
+
             // search for vtable of CAbandonmentAwardTemplate, the 1st one (not constructor) is this.
             "CAbandonmentAwardTemplate::FireGameEvent"
             {

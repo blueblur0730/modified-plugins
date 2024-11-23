@@ -14,6 +14,7 @@
 #define ADDRESS_NAME					"TankAttack::Update__OnSuicide"
 #define SDKCALL_GETBASEENTITY			"CBaseEntity::GetBaseEntity"
 #define SDKCALL_ONCOMMANDATTACK			"TankAttack::OnCommandAttack"
+#define SDKCALL_TANKATTACK				"TankAttack::TankAttack"
 #define ADDRESS_NAVAREABUILDPATH		"NavAreaBuildPath<ShortestPathCost>"
 #define OFFSETS_TANKATTACK_POINTER_SIZE "TankAttackPointerSize"
 #define OFFSETS_ARG						"TankAttack__arg_CBaseEntity"
@@ -37,6 +38,7 @@ GlobalForward	g_hFWD_OnTankSuicide;
 Handle
 	g_hSDKCall_GetBaseEntity	= null,
 	g_hSDKCall_NavAreaBuildPath = null,
+	g_hSDKCall_TankAttack		= null,
 	g_hSDKCall_OnCommandAttack	= null;
 
 ConVar
@@ -53,7 +55,7 @@ ConVar
 	g_hCvar_HighLightTime;
 
 #define DEBUG		   0
-#define PLUGIN_VERSION "1.4.2"
+#define PLUGIN_VERSION "1.4.3"
 
 public Plugin myinfo =
 {
@@ -322,7 +324,10 @@ void TeleportTank(int client)
 							// HACK: not tested. l4d1 dose not have vscript support also the 'logic_script' entity.
 							// this get a little bit tricky to implement a new target for the tank.
 							// hopefully this is right.
-							SDKCall(g_hSDKCall_OnCommandAttack, g_hMemoryBlock.Address, client, newtarget);
+							if (g_hMemoryBlock.Address != Address_Null)
+								SDKCall(g_hSDKCall_OnCommandAttack, g_hMemoryBlock.Address, client, newtarget);
+							else
+								LogError("Invalid memory block address. Failed to set new behavior for tank.");
 #if DEBUG
 							PrintToServer("### Teleport Tank: Setting new behavior for tank.");
 #endif
@@ -593,16 +598,15 @@ void InitGameData()
 	{
 		g_iOff_TankAttack__var_flDamage= gd.GetOffset(OFFSETS_VAR);
 		g_hMemoryBlock				   = gd.CreateMemoryBlockOrFail(OFFSETS_TANKATTACK_POINTER_SIZE);
+		g_hSDKCall_TankAttack		   = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_TANKATTACK);
+		SDKCall(g_hSDKCall_TankAttack, g_hMemoryBlock.Address);
 
-		SDKCallParamsWrapper params1[] = {
-			{ SDKType_CBaseEntity, SDKPass_Pointer },
-			{ SDKType_CBaseEntity, SDKPass_Pointer }
-		};
+		SDKCallParamsWrapper params1[] = {{ SDKType_CBaseEntity, SDKPass_Pointer }, { SDKType_CBaseEntity, SDKPass_Pointer }};
 		SDKCallParamsWrapper ret2	   = { SDKType_PlainOldData, SDKPass_Plain };
 		g_hSDKCall_OnCommandAttack	   = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCOMMANDATTACK, params1, sizeof(params1), true, ret2);
 
 		SDKCallParamsWrapper params2[] = {
-			{SDKType_PlainOldData,	SDKPass_Plain  },
+			{ SDKType_PlainOldData,	SDKPass_Plain  },
 			{ SDKType_PlainOldData, SDKPass_Plain  },
 			{ SDKType_Vector,		SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL },
 			{ SDKType_PlainOldData,	SDKPass_Plain },
