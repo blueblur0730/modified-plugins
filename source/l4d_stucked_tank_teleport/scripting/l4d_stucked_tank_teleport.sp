@@ -55,7 +55,7 @@ ConVar
 	g_hCvar_HighLightTime;
 
 #define DEBUG		   0
-#define PLUGIN_VERSION "1.4.3"
+#define PLUGIN_VERSION "1.4.4"
 
 public Plugin myinfo =
 {
@@ -116,6 +116,9 @@ public void OnPluginEnd()
 {
 	if (g_hMidHook)
 		delete g_hMidHook;
+
+	if (g_hMemoryBlock)
+		delete g_hMemoryBlock;
 }
 
 public void OnMapStart()
@@ -343,15 +346,17 @@ void TeleportTank(int client)
 						}
 					}
 				}
-				else
-				{
+			}
+
+			// after failed searching we tell everyone only once that this tank is died.
+			if (!g_bHasTeleported[client])
+			{
 #if DEBUG
-					PrintToServer("### Teleport Tank: tank died due to no connected path to survivors on the found teleportation position.");
+				PrintToServer("### Teleport Tank: tank died due to no connected path to survivors on the found teleportation position.");
 #endif
-					// force tank to die, respect original gaming rules.
-					ForcePlayerSuicide(client);
-					CPrintToChatAll("%t", "FailedToTeleport");
-				}
+				// force tank to die, respect original gaming rules.
+				ForcePlayerSuicide(client);
+				CPrintToChatAll("%t", "FailedToTeleport");
 			}
 		}
 		else
@@ -513,39 +518,40 @@ bool EnvBlockType(int entity)
 // credits to: 夜羽真白
 stock int GetClosetMobileSurvivor(int client, int exclude_client = -1)
 {
-	if (client > 0 && client <= MaxClients && IsClientInGame(client))
+	if (client <= 0 || client > MaxClients)
+		return 0;
+
+	if (!IsClientInGame(client))
+		return 0;
+	
+	int	  target	 = -1;
+	float selfPos[3] = { 0.0 }, targetPos[3] = { 0.0 };
+	GetClientAbsOrigin(client, selfPos);
+
+	// find all survivors and push them into a list. we will use the list to sort them by distance and find the closet one.
+	ArrayList targetList = new ArrayList(2);
+	for (int newTarget = 1; newTarget <= MaxClients; newTarget++)
 	{
-		int	  target	 = -1;
-		float selfPos[3] = { 0.0 }, targetPos[3] = { 0.0 };
-		GetClientAbsOrigin(client, selfPos);
-
-		// find all survivors and push them into a list. we will use the list to sort them by distance and find the closet one.
-		ArrayList targetList = new ArrayList(2);
-		for (int newTarget = 1; newTarget <= MaxClients; newTarget++)
+		if (IsValidSurvivor(newTarget) && IsPlayerAlive(newTarget) && !IsClientIncapped(newTarget) && !L4D_GetPinnedInfected(newTarget) && newTarget != client && newTarget != exclude_client)
 		{
-			if (IsValidSurvivor(newTarget) && IsPlayerAlive(newTarget) && !IsClientIncapped(newTarget) && !L4D_GetPinnedInfected(newTarget) && newTarget != client && newTarget != exclude_client)
-			{
-				GetClientAbsOrigin(newTarget, targetPos);
-				float dist = GetVectorDistance(selfPos, targetPos);
-				targetList.Set(targetList.Push(dist), newTarget, 1);	// each cell has 2 blocks, client index and distance.
-			}
+			GetClientAbsOrigin(newTarget, targetPos);
+			float dist = GetVectorDistance(selfPos, targetPos);
+			targetList.Set(targetList.Push(dist), newTarget, 1);	// each cell has 2 blocks, client index and distance.
 		}
-
-		// nothing found, return 0.
-		if (targetList.Length == 0)
-		{
-			delete targetList;
-			return 0;
-		}
-
-		// sort the list by distance, return the closet one.
-		targetList.Sort(Sort_Ascending, Sort_Float);
-		target = targetList.Get(0, 1);
-		delete targetList;
-		return target;
 	}
 
-	return 0;
+	// nothing found, return 0.
+	if (!targetList.Length)
+	{
+		delete targetList;
+		return 0;
+	}
+
+	// sort the list by distance, return the closet one.
+	targetList.Sort(Sort_Ascending, Sort_Float);
+	target = targetList.Get(0, 1);
+	delete targetList;
+	return target;
 }
 
 bool IsValidSurvivor(int client)
@@ -560,18 +566,21 @@ bool IsClientIncapped(int client)
 
 stock bool IsTank(int client)
 {
-	if (client > 0 && client <= MaxClients && IsClientInGame(client) && GetClientTeam(client) == 3)
-	{
-		int class = GetEntProp(client, Prop_Send, "m_zombieClass");
-		if (class == 8)
-			return true;
-	}
+	if (client <= 0 || client > MaxClients)
+		return false;
+
+	if (!IsClientInGame(client))
+		return false;
+
+	if (GetClientTeam(client) == 3)
+		return (GetEntProp(client, Prop_Send, "m_zombieClass") == 8);
+
 	return false;
 }
 
 stock void LoadTranslation(const char[] translation)
 {
-	char sPath[PLATFORM_MAX_PATH], sName[64];
+	char sPath[PLATFORM_MAX_PATH], sName[PLATFORM_MAX_PATH];
 
 	Format(sName, sizeof(sName), "translations/%s.txt", translation);
 	BuildPath(Path_SM, sPath, sizeof(sPath), sName);

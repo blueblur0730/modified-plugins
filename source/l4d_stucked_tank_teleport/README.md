@@ -110,6 +110,13 @@ forward void MidHook_OnTankSuicide(int tank);
 - 11/23/24 v1.4.2
   - Fixed some logic bugs.
 
+- 11/23/24 v1.4.3
+  - Fixed unused memory. Thanks to Lin for notification.
+
+- 11/26/24 v1.4.4
+  - Fixed a memory leak when unloading the plugin.
+  - Make the failure notification not that annoyingly get printed.
+
 ### Some Thoughts
 
 ``
