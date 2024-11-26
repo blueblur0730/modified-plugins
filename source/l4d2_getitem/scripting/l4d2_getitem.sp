@@ -607,28 +607,28 @@ void Menuadmin(int client)
 	menu.SetTitle(sBuffer);
 	
 	g_bMeleeDefault ?
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "SecondaryMenuOn") :
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "SecondaryMenuOff");
+	FormatEx(sBuffer, sizeof(sBuffer), "%t", "SecondaryMenuOff") :
+	FormatEx(sBuffer, sizeof(sBuffer), "%t", "SecondaryMenuOn");
 	menu.AddItem("e", sBuffer);
 
 	g_bInitialGunDefault ?
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "Tier1MenuOn") :
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "Tier1MenuOff");
+	FormatEx(sBuffer, sizeof(sBuffer), "%t", "Tier1MenuOff") :
+	FormatEx(sBuffer, sizeof(sBuffer), "%t", "Tier1MenuOn");
 	menu.AddItem("f", sBuffer);
 
 	g_bMenuAdvancedGunOpen ? 
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "Tier2MenuOn") :
- 	FormatEx(sBuffer, sizeof(sBuffer), "%t", "Tier2MenuOff");
+	FormatEx(sBuffer, sizeof(sBuffer), "%t", "Tier2MenuOff") :
+ 	FormatEx(sBuffer, sizeof(sBuffer), "%t", "Tier2MenuOn");
 	menu.AddItem("g", sBuffer);
 
 	g_bMenuThrowableOpen ?
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "ItemMenuOn") :
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "ItemMenuOff");
+	FormatEx(sBuffer, sizeof(sBuffer), "%t", "ItemMenuOff") :
+	FormatEx(sBuffer, sizeof(sBuffer), "%t", "ItemMenuOn");
 	menu.AddItem("h", sBuffer);
 
 	g_bSafeArea ?
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "AllowOutOn") :
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "AllowOutOff");
+	FormatEx(sBuffer, sizeof(sBuffer), "%t", "AllowOutOff") :
+	FormatEx(sBuffer, sizeof(sBuffer), "%t", "AllowOutOn");
 	menu.AddItem("i", sBuffer);
 	
 	menu.ExitBackButton = true;
@@ -772,5 +772,5 @@ stock bool SpecifyLanguage(int client)
 {
 	int lang = GetClientLanguage(client);
 
-	return lang == 13 ? true : false;
+	return lang == 23? true : false;
 }
