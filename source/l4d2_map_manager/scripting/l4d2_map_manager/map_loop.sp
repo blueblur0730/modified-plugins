@@ -15,11 +15,11 @@ static void OnFinaleWon(const char[] output, int caller, int activator, float de
     if (!g_bIsFinalMap)
         return;
 
-	!strlen(g_sPreservedMap) ?  CPrintToChatAll("%t", "SwitchingMapRandom")
+	g_sPreservedMap[0] == '\0' ?  CPrintToChatAll("%t", "SwitchingMapRandom")
 	:  CPrintToChatAll("%t", "SwitchingMap", g_sPreservedMap);
 
     !g_bPreserved ? CreateTimer(3.0, Timer_SwitchMap) :
-    (!strlen(g_sPreservedMap) ? CreateTimer(3.0, Timer_SwitchMap) : CreateTimer(3.0, Timer_SwitchPreservedMap))
+    (g_sPreservedMap[0] == '\0' ? CreateTimer(3.0, Timer_SwitchMap) : CreateTimer(3.0, Timer_SwitchPreservedMap))
 
     g_bPreserved = false;
 }
@@ -49,6 +49,9 @@ static void Timer_SwitchPreservedMap(Handle timer)
 		SDKCall(g_hSDKChangeMission, g_pTheDirector, sMissionName);
     else
         SwitchToOfficialMap();
+
+	for (int i = 0; i < strlen(g_sPreservedMap); i++)
+      g_sPreservedMap[i] = '\0' ; 
 }
 
 static void SwitchToOfficialMap()

@@ -86,7 +86,7 @@ static const char g_sValveMaps[][][] =
 	{"#L4D360UI_CampaignName_C14",	"C14 临死一搏"},
 };
 
-#define PLUGIN_VERSION "1.1"
+#define PLUGIN_VERSION "1.1.1"
 
 #include "l4d2_map_manager/map_loop.sp"
 #include "l4d2_map_manager/map_vote.sp"
