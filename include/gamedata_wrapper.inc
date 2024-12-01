@@ -12,6 +12,7 @@ enum OperatingSystem
     OS_Linux = 1
 }
 
+#if defined _sdktools_included
 enum struct SDKCallParamsWrapper
 {
     SDKType          type;
@@ -19,6 +20,7 @@ enum struct SDKCallParamsWrapper
     int              decflags;
     int              encflags;
 }
+#endif
 
 // credits to Forgetest.
 methodmap GameDataWrapper < GameData
