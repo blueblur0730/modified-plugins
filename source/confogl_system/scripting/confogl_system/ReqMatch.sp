@@ -9,10 +9,11 @@
 #define MAPRESTARTTIME 3.0
 #define RESETMINTIME   60.0
 
+bool RM_bIsMatchModeLoaded = false;
+
 static bool
 	RM_bDebugEnabled = RM_DEBUG,
 	// RM_bMatchRequest[2] = {false, ...},
-	RM_bIsMatchModeLoaded = false,
 	RM_bIsAMatchActive	  = false,
 	RM_bIsPluginsLoaded	  = false,
 	RM_bIsMapRestarted	  = false;
@@ -183,7 +184,7 @@ static void RM_Match_Load()
 	Call_Finish();
 }
 
-static void RM_Match_Unload(bool bForced = false)
+void RM_Match_Unload(bool bForced = false)
 {
 	bool bIsHumansOnServer = IsHumansOnServer();
 
@@ -193,7 +194,7 @@ static void RM_Match_Unload(bool bForced = false)
 			LogMessage("[%s] Match is no longer active, sb_all_bot_game reset to 0, IsHumansOnServer %b, bForced %b", RM_MODULE_NAME, bIsHumansOnServer, bForced);
 
 		RM_bIsAMatchActive = false;
-		RM_hSbAllBotGame.SetInt(0);
+		//RM_hSbAllBotGame.SetInt(0);
 	}
 
 	if (bIsHumansOnServer && !bForced)
@@ -268,54 +269,66 @@ static Action RM_Cmd_ForceMatch(int client, int args)
 
 	if (args < 1)
 	{
-		// SetCustomCfg(""); //old code
-		// RM_Match_Load(); //old code
-
-		if (client == 0)
+		if (!client)
 			PrintToServer("[Confogl] Please specify a config to load.");
 		else
 			CPrintToChat(client, "%t %t", "Tag", "SpecifyConfig");
+
 		return Plugin_Handled;
 	}
 
 	char sBuffer[128];
-	GetCmdArg(1, sBuffer, sizeof(sBuffer));
+	char sMap[PLATFORM_MAX_PATH];
+	switch (GetCmdArgs())
+	{
+		case 1:
+			GetCmdArg(1, sBuffer, sizeof(sBuffer));
 
-	// RM_UpdateCfgOn(sBuffer); //old code
+		case 2:
+		{
+			GetCmdArg(1, sBuffer, sizeof(sBuffer));
+			GetCmdArg(2, sMap, sizeof(sMap));
+		}
+	}
 
+	PrepareLoad(client, sBuffer, sMap)
+	return Plugin_Handled;
+}
+
+void PrepareLoad(int client, const char[] sBuffer, const char[] sMap)
+{
 	if (!RM_UpdateCfgOn(sBuffer, false))
 	{
-		if (client == 0)
+		if (!client)
 			PrintToServer("[Confogl] Config %s not found!", sBuffer);
 		else
 			CPrintToChat(client, "%t %t", "Tag", "RE_ConfigNotFound", sBuffer);
 
-		return Plugin_Handled;
+		return;
 	}
 
-	char sMap[PLATFORM_MAX_PATH], sDisplayName[PLATFORM_MAX_PATH];
-
-	if (args == 2)
+	if (!strlen(sMap))
 	{
-		GetCmdArg(2, sMap, sizeof(sMap));
+		RM_Match_Load();
+		return;
+	}
 
-		if (FindMap(sMap, sDisplayName, sizeof(sDisplayName)) == FindMap_NotFound)
-		{
-			if (client == 0)
-				PrintToServer("[Confogl] Map %s not found!", sMap);
-			else
-				CPrintToChat(client, "%t %t", "Tag", "MapNotFound", sMap);
+	char sDisplayName[PLATFORM_MAX_PATH];
+	if (FindMap(sMap, sDisplayName, sizeof(sDisplayName)) == FindMap_NotFound)
+	{
+		if (!client)
+			PrintToServer("[Confogl] Map %s not found!", sMap);
+		else
+			CPrintToChat(client, "%t %t", "Tag", "MapNotFound", sMap);
 
-			return Plugin_Handled;
-		}
-
+		return;
+	}
+	else
+	{
 		GetMapDisplayName(sDisplayName, sDisplayName, sizeof(sDisplayName));
 		RM_hChangeMap.SetString(sDisplayName);
+		RM_Match_Load();
 	}
-
-	RM_Match_Load();
-
-	return Plugin_Handled;
 }
 
 static Action RM_Cmd_ResetMatch(int client, int args)
@@ -394,18 +407,18 @@ static Action RM_CMD_ChangeMatch(int client, int args)
 	return Plugin_Handled;
 }
 
-static Action Timer_DelayToLoadMatchMode(Handle timer)
+static void Timer_DelayToLoadMatchMode(Handle timer)
 {
 	// Load
 	if (RM_bIsMatchModeLoaded)
-		return Plugin_Handled;
+		return;
 
 	if (RM_bDebugEnabled || IsDebugEnabled())
 		LogMessage("[%s] Match mode forced to load! [Change in this case!]", RM_MODULE_NAME);
 
 	RM_Match_Load();
 
-	return Plugin_Handled;
+	return;
 }
 
 void RM_OnClientDisconnect(int client)
@@ -416,11 +429,9 @@ void RM_OnClientDisconnect(int client)
 	CreateTimer(RESETMINTIME, RM_MatchResetTimer);
 }
 
-static Action RM_MatchResetTimer(Handle hTimer)
+static void RM_MatchResetTimer(Handle hTimer)
 {
 	RM_Match_Unload();
-
-	return Plugin_Stop;
 }
 
 stock bool IsAMatchActive()

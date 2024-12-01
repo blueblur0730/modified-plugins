@@ -2,25 +2,17 @@
 #pragma newdecls required
 
 #define DEBUG_ALL				   0
-#define PLUGIN_VERSION			   "1.3.5"	// 2.4.5 rework
+#define PLUGIN_VERSION			   "1.4"	// 2.4.5 rework
 
 #define VOTE_API_BUILTINVOTE 1		// will work in the future. for now dont turn it off.
-#define GAME_LEFT4DEAD2		 1
 
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
-#include <left4dhooks>
 #include <colors>
-
-#if VOTE_API_BUILTINVOTE
-	#tryinclude <builtinvotes>
-#else
-	#tryinclude <nativevotes>
-#endif
+#include <l4d2_nativevote>
 
 #undef REQUIRE_PLUGIN
-#include <confogl>
 #include <l4d2_changelevel>
 
 // Includes here
@@ -32,8 +24,8 @@
 #include "confogl_system/includes/predictable_unloader.sp"	// Predictable Unloader by Sir
 
 // Modules here
-#include "confogl_system/MatchVote.sp"
 #include "confogl_system/ReqMatch.sp"
+#include "confogl_system/MatchVote.sp"
 #include "confogl_system/CvarSettings.sp"
 #include "confogl_system/PasswordSystem.sp"
 #include "confogl_system/BotKick.sp"
@@ -57,7 +49,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	Configs_APL();	  // configs
 	RM_APL();	 	  // ReqMatch
 
-	RegPluginLibrary("confogl");
+	RegPluginLibrary("confogl_system");
 	return APLRes_Success;
 }
 
@@ -67,16 +59,12 @@ public void OnPluginStart()
 	// other wise plugin cant translate the phrases and goes rong.
 	LoadTranslation(TRANSLATION_FILE);
 
-	// here we retrieve the plugin path for predictable unloader to use.
-	char sPluginName[PLATFORM_MAX_PATH];
-	GetPluginFilename(INVALID_HANDLE, sPluginName, sizeof(sPluginName));
-
 	// Plugin functions
 	Fns_OnModuleStart();				// functions
 	Debug_OnModuleStart();				// debug
 	Configs_OnModuleStart();			// configs
 	CT_OnModuleStart();					// customtags
-	PU_OnPluginStart(sPluginName);		// Predictable Unloader
+	PU_OnPluginStart();					// Predictable Unloader
 
 	// Modules
 	MV_OnModuleStart();	   	// MatchVote
@@ -87,7 +75,7 @@ public void OnPluginStart()
 	BK_OnModuleStart();	   	// BotKick
 
 	// Other
-	AddCustomServerTag("confogl");
+	AddCustomServerTag("confogl_system");
 }
 
 public void OnPluginEnd()
@@ -98,7 +86,7 @@ public void OnPluginEnd()
 	PU_OnPluginEnd();	 	// Predictable Unloader
 
 	// Other
-	RemoveCustomServerTag("confogl");
+	RemoveCustomServerTag("confogl_system");
 }
 
 public void OnMapStart()
