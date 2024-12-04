@@ -1,7 +1,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION "2.1.1"
+#define PLUGIN_VERSION "build_241204"
 
 // define the macros to compile the part you need
 #define MODULE_PLAYERINFO 1

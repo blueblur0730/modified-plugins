@@ -35,6 +35,10 @@ void HL_OnPluginStart()
 
 void HL_OnClientPostAdminCheck(int iClient)
 {
+	if (!IsClientInGame(iClient) || IsFakeClient(iClient)) {
+		return;
+	}
+
 	if (!SteamWorks_IsConnected())
 	{
 		LogError("Steamworks: No Steam Connection!");
@@ -43,16 +47,16 @@ void HL_OnClientPostAdminCheck(int iClient)
 
 	hl_iClientTry[iClient] = 0;
 
-	TryCheckPlayerHours(iClient);
+	HL_TryCheckPlayerHours(iClient);
 }
 
-Action Timer_TryCheckPlayerHours(Handle hTimer, int iClient)
+Action HL_Timer_TryCheckPlayerHours(Handle hTimer, int iClient)
 {
-	TryCheckPlayerHours(iClient);
+	HL_TryCheckPlayerHours(iClient);
 	return Plugin_Stop;
 }
 
-void TryCheckPlayerHours(int iClient)
+void HL_TryCheckPlayerHours(int iClient)
 {
 	if (IsFakeClient(iClient) || !IsClientInGame(iClient))
 		return;
@@ -63,19 +67,19 @@ void TryCheckPlayerHours(int iClient)
 		return;
 	}
 
-	if (!CheckPlayerHours(iClient))
-		CreateTimer(1.0, Timer_TryCheckPlayerHours, iClient);
+	if (!HL_CheckPlayerHours(iClient))
+		CreateTimer(1.0, HL_Timer_TryCheckPlayerHours, iClient);
 }
 
-bool CheckPlayerHours(int iClient)
+bool HL_CheckPlayerHours(int iClient)
 {
 	int iPlayedTime;
 	bool bRequestStats = SteamWorks_RequestStats(iClient, APP_L4D2);
 	bool bGetStatCell = SteamWorks_GetStatCell(iClient, "Stat.TotalPlayTime.Total", iPlayedTime);
-	bool bPassHidden = false;
 
-	if (!bRequestStats || !bGetStatCell)
+	if (!bRequestStats || !bGetStatCell){
 		return false;
+	}
 
 	if (!iPlayedTime && hl_cvKickHiddenHours.BoolValue)
 	{
@@ -85,13 +89,12 @@ bool CheckPlayerHours(int iClient)
 		Call_Finish();
 		return true;
 	}
-	else bPassHidden = true
 
 	float fHours = SecToHours(iPlayedTime);
 	float fMinPlayedHours = hl_cvMinPlayedHours.FloatValue;
 	float fMaxPlayedHours = hl_cvMaxPlayedHours.FloatValue;
 
-	if (!bPassHidden)
+	if (iPlayedTime > 0)
 	{
 		if (fHours < fMinPlayedHours) KickClient(iClient, "%t", "KickUnDesiredHoursMin", fMinPlayedHours);
 		else if (fHours > fMaxPlayedHours) KickClient(iClient, "%t", "KickUnDesiredHoursMax", fMaxPlayedHours);

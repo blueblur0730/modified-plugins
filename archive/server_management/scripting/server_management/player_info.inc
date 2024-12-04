@@ -34,7 +34,10 @@ static ConVar
 
 /* player_info */
 static ConVar
-	 pi_cvEnableGeoip = null, pi_cvEnableDisconnect = null;
+	 pi_cvEnableGeoip = null, pi_cvEnableDisconnect = null, pi_cvMaxTryPlayerInfo;
+
+static int
+	 pi_iClientTry[MAXPLAYERS + 1];
 
 static char
 	 ip[MAXPLAYERS + 1][64];
@@ -57,6 +60,7 @@ void PI_OnPluginStart()
 
 	pi_cvEnableGeoip		= CreateConVar("player_info_enable_geoip", "1", "Enable geoip message");
 	pi_cvEnableDisconnect 	= CreateConVar("player_info_enable_disconnect", "1", "Enable custom disconnect message")
+	pi_cvMaxTryPlayerInfo 	= CreateConVar("sm_max_try_check_player_time", "5", "Maximum number of attempts to check the played time");
 
 	HookEvent("player_disconnect", PI_Event_PlayerDisconnect, EventHookMode_Pre);
 
@@ -110,31 +114,80 @@ public Action PI_Event_PlayerDisconnect(Handle hEvent, const char[] sName, bool 
 
 void PI_OnClientPutInServer(int iClient)
 {
-	if (IsValidClient_Pre(iClient) && IsClientInGame(iClient) && !IsFakeClient(iClient))
-	{
-		char  ccode[3];
-		char  city[32];
-		char  sName[128];
-		float fLerpTime;
-		int	  iPlayedTime;
-		fLerpTime = GetLerpTime(iClient) * 1000;
-		GetClientName(iClient, sName, sizeof(sName));
-		SteamWorks_GetStatCell(iClient, "Stat.TotalPlayTime.Total", iPlayedTime);
-		Call_StartForward(pi_fwOnGetPlayerTime);
-		Call_PushCell(iClient);
-		Call_PushCell(SecToHours(iPlayedTime));
-		Call_Finish();
+	if (!IsClientInGame(iClient) || IsFakeClient(iClient)) {
+		return;
+	}
 
-		if (pi_cvEnableGeoip.BoolValue && GeoipCode2(ip[iClient], ccode))
-		{
-			if(GeoipCity(ip[iClient], city, sizeof(city)))
-				CPrintToChatAll("%t", "Connected_Geocity", sName, ccode, city, fLerpTime, SecToHours(iPlayedTime));
-			else
-				CPrintToChatAll("%t", "Connected_Geoip", sName, ccode, fLerpTime, SecToHours(iPlayedTime));
+	if (!SteamWorks_IsConnected())
+	{
+		LogError("Steamworks: No Steam Connection!");
+		return;
+	}
+
+	pi_iClientTry[iClient] = 0;
+	PI_ShowPlayerInfo(iClient);
+}
+
+void PI_ShowPlayerInfo(int iClient)
+{
+	if (++ pi_iClientTry[iClient] > GetConVarInt(pi_cvMaxTryPlayerInfo))
+	{
+		if (IsValidClient_Pre(iClient) && !IsFakeClient(iClient)){
+			char  sName[128];
+			int	  iPlayedTime;
+			GetClientName(iClient, sName, sizeof(sName));
+			SteamWorks_GetStatCell(iClient, "Stat.TotalPlayTime.Total", iPlayedTime);
+			CPrintToChatAll("%t", "Connected", sName, GetLerpTime(iClient) * 1000, SecToHours(iPlayedTime));
+		}
+		return;
+	}
+
+	if (!PI_CheckPlayerInfo(iClient)) {
+		CreateTimer(1.0, PI_Timer_TryShowPlayerInfo, iClient);
+	}
+}
+
+Action PI_Timer_TryShowPlayerInfo(Handle hTimer, int iClient)
+{
+	if (!IsClientInGame(iClient) || IsFakeClient(iClient) ) {
+		return Plugin_Stop;
+	}
+
+	PI_ShowPlayerInfo(iClient);
+	return Plugin_Stop;
+}
+
+stock bool PI_CheckPlayerInfo(int iClient)
+{
+	char  ccode[3];
+	char  city[32];
+	char  sName[128];
+	float fLerpTime;
+	int	  iPlayedTime;
+	bool bRequestStats = SteamWorks_RequestStats(iClient, APP_L4D2);
+	bool bGetStatCell  = SteamWorks_GetStatCell(iClient, "Stat.TotalPlayTime.Total", iPlayedTime);
+	fLerpTime = GetLerpTime(iClient) * 1000;
+	GetClientName(iClient, sName, sizeof(sName));
+	Call_StartForward(pi_fwOnGetPlayerTime);
+	Call_PushCell(iClient);
+	Call_PushCell(SecToHours(iPlayedTime));
+	Call_Finish();
+
+	if (!bRequestStats || !bGetStatCell) {
+		return false;
+	}
+
+	if (pi_cvEnableGeoip.BoolValue && GeoipCode2(ip[iClient], ccode))
+	{
+		if(GeoipCity(ip[iClient], city, sizeof(city))){
+			CPrintToChatAll("%t", "Connected_Geocity", sName, ccode, city, fLerpTime, SecToHours(iPlayedTime));
+			return true;
 		}
 		else
-			CPrintToChatAll("%t", "Connected", sName, fLerpTime, SecToHours(iPlayedTime));
+			CPrintToChatAll("%t", "Connected_Geoip", sName, ccode, fLerpTime, SecToHours(iPlayedTime));
+		return true;
 	}
+	return true;
 }
 
 public Action Cmd_Info(int iClient, int iArgs)
