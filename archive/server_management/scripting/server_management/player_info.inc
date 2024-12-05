@@ -60,7 +60,7 @@ void PI_OnPluginStart()
 
 	pi_cvEnableGeoip		= CreateConVar("player_info_enable_geoip", "1", "Enable geoip message");
 	pi_cvEnableDisconnect 	= CreateConVar("player_info_enable_disconnect", "1", "Enable custom disconnect message")
-	pi_cvMaxTryPlayerInfo 	= CreateConVar("sm_max_try_check_player_time", "5", "Maximum number of attempts to check the played time");
+	pi_cvMaxTryPlayerInfo 	= CreateConVar("player_info_try_check_player_time", "3", "Maximum number of attempts to check the played time");
 
 	HookEvent("player_disconnect", PI_Event_PlayerDisconnect, EventHookMode_Pre);
 
