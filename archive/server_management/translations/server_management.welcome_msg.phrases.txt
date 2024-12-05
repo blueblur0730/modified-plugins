@@ -1,0 +1,195 @@
+"Phrases"
+{
+	"Message"		// this is general server welcome message.
+	{
+		"#format"	"{1:s}"		// 1: client name string
+		"en"		"{green}>{default} Hi! {olive}{1}\n{green}>{default} Welcome to {olive}NEPU's{default} Server!"
+		"chi"		"{green}>{default} 嗨! {olive}{1}\n{green}>{default} 欢迎来到{olive}NEPU{default}的服务器!"
+	}
+/**
+ * MoreMessage1, 2, 3... add more if you want to print more message.
+ * Use this rule with cvar "welcome_more_line".
+ * 
+*/
+	"MoreMessage0"
+	{
+		"en"		""
+		"chi"		""
+	}
+
+	"Header"		// your server name
+	{
+		"en"		"--- [{green}Server Infos{default}] ---"
+		"chi"		"--- [{green}服务器信息{default}] ---"
+	}
+
+	"PlayerNum"
+	{
+		"#format"	"{1:s},{2:d},{3:d}"		// [1: if(2 = 3) ? {green} : {olive}] 2: current player count 3: max server slots
+		"en"		"{green}>{default} Slots: {1}{2}{default}/{green}{3}{default}"
+		"chi"		"{green}>{default} 位数: {1}{2}{default}/{green}{3}{default}"
+	}
+
+	"MapName"
+	{
+		"#format"	"{1:s}"
+		"en"		"{green}>{default} Map: {teamcolor}{1}{default}"
+		"chi"		"{green}>{default} 地图: {teamcolor}{1}{default}"
+	}
+
+	"GameMode_RoundStatus"		// for versus and scavenge
+	{
+		"#format"	"{1:s},{2:s},{3:s}"		// 1: gamemode string 2: (if is scavenge)scavenge round number 3: first or second half
+		"en"		"{green}>{default} Gamemode: {teamcolor}{1}{default} - {teamcolor}{2}{3}{default}"
+		"chi"		"{green}>{default} 游戏模式: {teamcolor}{1}{default} - {teamcolor}{2}{3}{default}"
+	}
+
+	"GameMode_GeneralCoop"
+	{
+		"#format"	"{1:s},{2:s}"			// 1: gamemode string 2: difficulty string
+		"en"		"{green}>{default} Gamemode: {teamcolor}{1}{default} - {teamcolor}{2}{default}"
+		"chi"		"{green}>{default} 游戏模式: {teamcolor}{1}{default} - {teamcolor}{2}{default}"
+	}
+
+	"GameMode_NekoSpecials"
+	{
+		"#format"	"{1:s},{2:s},{3:d},{4:d}"			// 1: gamemode string 2: difficulty string
+		"en"		"{green}>{default} Gamemode: {teamcolor}{1}{default} - {teamcolor}{2}{default} - [{olive}{3}{default} t {olive}{4}{default} s]"
+		"chi"		"{green}>{default} 游戏模式: {teamcolor}{1}{default} - {teamcolor}{2}{default} - [{olive}{3}{default}特{olive}{4}{default}秒]"
+	}
+
+	"GameMode_NekoSpecialsStatus"
+	{
+		"#format"	"{1:s}"
+		"en"		"{green}>{default} Spawn Mode: {teamcolor}{1}{default}"
+		"chi"		"{green}>{default} 刷特模式: {teamcolor}{1}{default}"
+	}
+
+	"ReadyUpStatus"
+	{
+		"#format"	"{1:s}"			// 1: readyup status string
+		"en"		"{green}>{default} ReadyUp Status: {teamcolor}{1}{default}"
+		"chi"		"{green}>{default} ReadyUp 状态: {teamcolor}{1}{default}"
+	}
+
+	"ReadyUpCfgNameStatus"
+	{
+		"#format"	"{1:s}"			// 1: l4d_ready_cfg_name string value or "none" string
+		"en"		"{green}>{default} Config Name: {teamcolor}{1}{default}"
+		"chi"		"{green}>{default} 配置名称: {teamcolor}{1}{default}"
+	}
+
+	"FirstHalf"
+	{
+		"en"		"1st Half"
+		"chi"		"上半轮"
+	}
+
+	"SecondHalf"
+	{
+		"en"		"2st Half"
+		"chi"		"下半轮"
+	}
+
+	"unknown"
+	{
+		"en"		"Unknown"
+		"chi"		"未知"
+	}
+
+	"coop"
+	{
+		"en"		"Compaign"
+		"chi"		"战役"
+	}
+
+	"versus"
+	{
+		"en"		"Versus"
+		"chi"		"对抗"
+	}
+
+	"scavenge"
+	{
+		"en"		"Scavenge"
+		"chi"		"清道夫"
+	}
+
+	"survival"
+	{
+		"en"		"Survival"
+		"chi"		"生还者"
+	}
+
+	"InReady"
+	{
+		"en"		"On"
+		"chi"		"开"
+	}
+
+	"OutReady"
+	{
+		"en"		"Off"
+		"chi"		"关"
+	}
+
+	"Empty"
+	{
+		"en"		"None"
+		"chi"		"无"
+	}
+
+    "Easy"
+    {
+        "en"    "Easy"
+        "chi"   "简单"
+    }
+
+    "Normal"
+    {
+        "en"    "Normal"
+        "chi"   "普通"
+    }
+
+    "Hard"
+    {
+        "en"    "Hard"
+        "chi"   "困难"
+    }
+
+    "Impossible"
+    {
+        "en"    "Impossible"
+        "chi"   "专家"
+    }
+
+	"Director_NS"
+	{
+		"en"	"Director"
+		"chi"	"导演"
+	}
+
+	"Normal_NS"
+	{
+		"en"	"Normal"
+		"chi"	"普通"
+	}
+
+	"Nightmare_NS"
+	{
+		"en"	"Nightmare"
+		"chi"	"噩梦"
+	}
+
+	"Hell_NS"
+	{
+		"en"	"Hell"
+		"chi"	"地狱"
+	}
+
+	"Flexible_NS"
+	{
+		"en"	"Flixible"
+		"chi"	"可变"
+	}
+}

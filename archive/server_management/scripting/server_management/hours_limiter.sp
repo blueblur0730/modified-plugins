@@ -3,8 +3,6 @@
 #endif
 #define _server_management_hours_limiter_included
 
-#define TRANSLATIONS_HOURSLIMITER "hours_limiter.phrases"
-
 /*
  * originally coded by TouchMe.
  * implemented by blueblur.
@@ -25,8 +23,6 @@ void HL_APL()
 
 void HL_OnPluginStart()
 {
-	LoadTranslations(TRANSLATIONS_HOURSLIMITER);
-
 	hl_cvMinPlayedHours = CreateConVar("sm_min_played_hours", "100.0", "Minimum number of hours allowed to play");
 	hl_cvMaxPlayedHours = CreateConVar("sm_max_played_hours", "99999.0", "Maximum number of hours allowed to play");
 	hl_cvMaxTryCheckPlayerHours = CreateConVar("sm_max_try_check_player_hours", "5", "Maximum number of attempts to check the played time");
@@ -46,13 +42,13 @@ void HL_OnClientPostAdminCheck(int iClient)
 	TryCheckPlayerHours(iClient);
 }
 
-Action Timer_TryCheckPlayerHours(Handle hTimer, int iClient)
+static Action Timer_TryCheckPlayerHours(Handle hTimer, int iClient)
 {
 	TryCheckPlayerHours(iClient);
 	return Plugin_Stop;
 }
 
-void TryCheckPlayerHours(int iClient)
+static void TryCheckPlayerHours(int iClient)
 {
 	if (IsFakeClient(iClient) || !IsClientInGame(iClient))
 		return;
@@ -67,7 +63,7 @@ void TryCheckPlayerHours(int iClient)
 		CreateTimer(1.0, Timer_TryCheckPlayerHours, iClient);
 }
 
-bool CheckPlayerHours(int iClient)
+static bool CheckPlayerHours(int iClient)
 {
 	int iPlayedTime;
 	bool bRequestStats = SteamWorks_RequestStats(iClient, APP_L4D2);

@@ -1,0 +1,50 @@
+"Phrases"
+{
+    "Message_MapTime"
+    {
+        "en"    "{green}Ad{default}> {olive}Current Time{default}: {lightgreen}{time}{default}\n{green}Ad{default}> {olive}Current Map{default}: {lightgreen}{map}"
+        "chi"   "{green}Ad{default}> {olive}当前时间{default}: {lightgreen}{time}{default}\n{green}Ad{default}> {olive}当前地图{default}: {lightgreen}{map}"
+    }
+
+    "Message_NEonRiuM_Is_Baka"
+    {
+        "en"    "{green}Ad{default}> Welcome to {olive}NEPU's{default} SI Delivery Server!\n {green}Ad{default}> Server is{green} master-hidden, lobby-unreserved{default}, Do not share any information about the server like {red}IP{default}!"
+        "chi"   "{green}Ad{default}> 欢迎来到{olive}NEPU{default}的多特服!\n {green}Ad{default}> 本服{green}非公开不匹配{default}, 请不要分享任何关于本服的信息, 例如{red}IP{default}!"
+    }
+
+    "Message_Vote"
+    {
+        "en"    "{green}Ad{default}> Use {lightgreen}/vote{default} to open vote menu."
+        "chi"   "{green}Ad{default}> 使用 {lightgreen}/vote{default} 打开投票菜单."
+    }
+
+    "Message_Commands"
+    {
+        "en"    "{green}Ad{default}> Use {lightgreen}/menu{default} to see and access all available commands."
+        "chi"   "{green}Ad{default}> 使用 {lightgreen}/menu{default} 查看并访问所有可用命令."
+    }
+
+    "Message_ItemHint"
+    {
+        "en"    "{green}Ad{default}> Use {lightgreen}/setcolor{default} to {green}customize your hint color{default}! /setcolor <item/spot> <r> <g> <b>"
+        "chi"   "{green}Ad{default}> 使用{lightgreen}/setcolor{default}来{green}自定义光圈颜色{default}! /setcolor <item/spot> <r> <g> <b>"
+    }
+
+    "Message_Boomer_Is_Your_Friend"
+    {
+        "en"    "{green}Ad{default}> Do not kill {green}the boomer near your teammates{default}! It is annoying and will slow your progress."
+        "chi"   "{green}Ad{default}> 不要爆了{green}队友旁的Boomer{default}! 这不仅降低了游玩体验, 还会拖慢你的进度."
+    }
+
+    "Message_About_NekoSI"
+    {
+        "en"    "{green}Ad{default}> Server use {lightgreen}Neko Special 7.11{default} plugin, use {olive}/tgvote{default} to open vote menu."
+        "chi"   "{green}Ad{default}> 本服多特插件为{lightgreen}Neko多特7.11{default}, 使用{olive}/tgvote{default}打开配置投票菜单."
+    }
+
+    "Message_NightVision"
+    {
+        "en"    "{green}Ad{default}> Double tap '{olive}F{default}' to turn on/off {green}Night Vision{default}."
+        "chi"    "{green}Ad{default}> 双击 '{olive}F{default}' 开启/关闭{green}夜视仪{default}."
+    }
+}

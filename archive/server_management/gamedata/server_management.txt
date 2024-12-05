@@ -1,0 +1,26 @@
+"Games"
+{
+    "left4dead2"
+    {
+        "Signatures"
+        {
+            // from left4dhooks by Silvers.
+			/*
+			 * CTerrorGameRules::SetCampaignScores(int,int)
+			 * Search for unique string "singlechapter"
+			 * -> has two xref from same function, CTerrorGameRules::IsSingleChapterMode()
+			 * -> has two xref, one is CRestartGameIssue::ExecuteCommand() (exclude the other, CServerGameDLL::ServerHibernationUpdate(), which has string "FCVAR_NEVER_AS_STRING")
+			 * -> CRestartGameIssue::ExecuteCommand() calls CDirectorVersusMode::VoteRestartVersusLevel() (fourth call..?)
+			 * -> first call is CTerrorGameRules::SetCampaignScores()
+			 * make sure to double check uniqueness when done
+			 */
+			"CTerrorGameRules::SetCampaignScores"
+			{
+				"library"	"server"
+				"linux"		"@_ZN16CTerrorGameRules17SetCampaignScoresEii"
+				"windows"	"\x55\x8B\xEC\x56\x57\x8B\x7D\x08\x8B\xF1\x39\xBE\x2A\x2A\x2A\x2A\x74\x2A\xE8\x2A\x2A\x2A\x2A\x89\xBE\x2A\x2A\x2A\x2A\x8B"
+				/* 55 8B EC 56 57 8B 7D 08 8B F1 39 BE ? ? ? ? 74 ? E8 ? ? ? ? 89 BE ? ? ? ? 8B */
+			}
+        }
+    }
+}
