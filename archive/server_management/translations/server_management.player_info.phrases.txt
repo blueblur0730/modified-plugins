@@ -1,0 +1,170 @@
+"Phrases"
+{
+	"BRACKET_START"
+	{
+		"en"			"┌ "
+	}
+
+	"BRACKET_MIDDLE"
+	{
+		"en"			"├ "
+	}
+
+	"BRACKET_END"
+	{
+		"en"			"└ "
+	}
+
+	"HEADER"
+	{
+		"en"			"<{green}Player Info{default}>"
+		"chi"			"<{green}玩家信息{default}>"
+	}
+
+	"INFO"
+	{
+		"#format"		"{1:N},{2:s},{3:s},{4:.1f},{5:s},{6:s}"
+		"en"			"{teamcolor}{1}{default}[{olive}{2}{default}] Lerp: {3}{4}{default} | Hours: {green}{5}{default} | [{green}{6}{default}]"
+		"chi"			"{teamcolor}{1}{default}[{olive}{2}{default}] Lerp: {3}{4}{default} | 时长: {green}{5}{default} | [{green}{6}{default}]"
+	}
+
+	"Connecting"
+	{
+		"#format"		"{1:s}"
+		"en"			"[{green}!{default}] Player {olive}{1}{default} is connecting..."
+		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} 正在连接..."
+	}
+
+	"Unknown_PlayedTime"
+	{
+		"en"			"Unknown"
+		"chi"			"未知"
+	}
+
+	"Connected"
+	{
+		"#format"		"{1:s},{2:.1f}"
+		"en"			"[{green}!{default}] Player {olive}{1}{default} connected. (Lerp: {olive}{2}{default})"
+		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} 已连接. (Lerp: {olive}{2}{default})"	
+	}
+
+	"Connected_Geoip"
+	{
+		"#format"		"{1:s},{2:s},{3:s},{4:.1f}"
+		"en"			"[{green}!{default}] Player {olive}{1}{default} [{olive}{2}{default} - {olive}{3}{default}] connected. (Lerp: {olive}{4}{default})"
+		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} [{olive}{2}{default} - {olive}{3}{default}] 已连接. (Lerp: {olive}{4}{default})"
+	}
+
+	"Connected_Unknown_PlayedTime"
+	{
+		"#format"		"{1:s},{2:.1f}"
+		"en"			"[{green}!{default}] Player {olive}{1}{default} connected. (Lerp: {olive}{2}{default} | Hours: {green}Unknown{default})"
+		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} 已连接. (Lerp: {olive}{2}{default}) | 时长: {green}未知{default})"	
+	}
+
+	"Connected_PlayeTime"
+	{
+		"#format"		"{1:s},{2:.1f},{3:s}"
+		"en"			"[{green}!{default}] Player {olive}{1}{default} connected. (Lerp: {olive}{2}{default} | Hours: {green}{3}{default})"
+		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} 已连接. (Lerp: {olive}{2}{default}) | 时长: {green}{3}{default})"
+	}
+
+	"Connected_Geoip_Unknown_PlayedTime"
+	{
+		"#format"		"{1:s},{2:s},{3:.1f}"
+		"en"			"[{green}!{default}] Player {olive}{1}{default} {2} connected. (Lerp: {olive}{3}{default} | Hours: {green}Unknown{default})"
+		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} {2} 已连接. (Lerp: {olive}{3}{default} | 时长: {green}未知{default})"
+	}
+
+	"Connected_Geoip_PlayeTime"
+	{
+		"#format"		"{1:s},{2:s},{3:.1f},{4:s}"
+		"en"			"[{green}!{default}] Player {olive}{1}{default} {2} connected. (Lerp: {olive}{3}{default} | Hours: {green}{4}{default})"
+		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} {2} 已连接. (Lerp: {olive}{3}{default} | 时长: {green}{4}{default})"
+	}
+
+	"Disconnected"
+	{
+		"#format"		"{1:N},{2:t}"
+		"en"			"[{green}!{default}] Player {olive}{1}{default} disconnected - [{green}{2}{default}]"
+		"chi"			"[{green}!{default}] 玩家 {olive}{1}{default} 断开连接 - [{green}{2}{default}]"
+	}
+
+	"TYPE_NONE"
+	{
+		"en"			"Unknow"
+		"chi"			"未知"
+	}
+
+	"TYPE_CONNECTION_REJECTED"
+	{
+		"en"			"Connection rejected"
+		"chi"			"连接被拒绝"
+	}
+
+	"TYPE_TIMED_OUT"
+	{
+		"en"			"Connection timed out"
+		"chi"			"连接超时"
+	}
+
+	"TYPE_BY_CONSOLE"
+	{
+		"en"			"Kicked by console"
+		"chi"			"被服务器踢出"
+	}
+
+	"TYPE_BY_USER"
+	{
+		"en"			"Disconnected by user"
+		"chi"			"自主断开连接"
+	}
+
+	"TYPE_HIGH_PING"
+	{
+		"en"			"Ping is too high"
+		"chi"			"Ping值过高"
+	}
+
+	"TYPE_NO_STEAM_LOGEN"
+	{
+		"en"			"No Steam Logon"
+		"chi"			"Steam验证失效"	// 这是个..很综合的理由
+	}
+
+	"TYPE_ACCOUNT_BEING_USED"
+	{
+		"en"			"Account is being used in another"
+		"chi"			"账号正在被另一人使用"
+	}
+
+	"TYPE_CONNECTION_LOST"
+	{
+		"en"			"Steam connection lost"
+		"chi"			"Steam连接丢失"
+	}
+
+	"TYPE_NOT_OWNER"
+	{
+		"en"			"This account dosen't own this game"
+		"chi"			"该账号未拥有该游戏"
+	}
+
+	"TYPE_VALIDATION_REJECTED"
+	{
+		"en"			"Validation rejected"
+		"chi"			"验证被拒绝"
+	}
+
+	"TYPE_CERTIFICATE_LENGTH"
+	{
+		"en"			"Certificate Length issue"
+		"chi"			"证书长度问题"
+	}
+
+	"TYPE_PURE_SERVER"
+	{
+		"en"			"Game files dosen't match with the server's"
+		"chi"			"游戏文件与服务器不符"
+	}
+}

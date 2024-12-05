@@ -1,0 +1,23 @@
+"Phrases"
+{
+    "AdminSay"
+    {
+        "#format"   "{1:N},{2:s}"
+        "en"        "{default}(Admin) {teamcolor}{1} {default}: {2}"
+        "chi"       "{default}(管理员) {teamcolor}{1} {default}: {2}"
+    }
+
+    "SurvivorSay"
+    {
+        "#format"   "{1:N},{2:s}"   // 1:client, 2:sChat(the content the client said)
+        "en"        "{default}(Survivor) {blue}{1} {default}: {2}"
+        "chi"       "{default}(生还者) {blue}{1} {default}:{2}"
+    }
+
+    "InfectedSay"
+    {
+        "#format"   "{1:N},{2:s}"
+        "en"        "{default}(Infected) {red}{1} {default}: {2}"
+        "chi"       "{default}(感染者) {red}{1} {default}: {2}"
+    }
+}

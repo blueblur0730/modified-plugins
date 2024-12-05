@@ -1,0 +1,39 @@
+"Phrases"
+{
+	"BrokenFlowDetected"
+	{
+		"en"		"[{orange}!{default}] Broken flow detected. Map will restart in 5s!"
+		"chi"		"[{orange}!{default}] 检测到地图进度问题. 地图将在五秒内重启!"
+	}
+
+	"Restarting"
+	{
+		"en"		"[{orange}!{default}] Map will restart in 5s!"
+		"chi"		"[{orange}!{default}] 地图将会在五秒内重启!"
+	}
+
+	"VersusRestarting"
+	{
+		"en"		"[{orange}!{default}] Map will restart in 5s, both team's {olive}versus scores{default} will be preserved!"
+		"chi"		"[{orange}!{default}] 地图将会在五秒内重启, 双方队伍的{olive}对抗得分{default}将会得到保存!"
+	}
+
+    "ServerRestarting"
+    {
+        "en"        "[!] Server is restarting."
+        "chi"       "[!] 服务器正在重启."
+    }
+
+    "ManuallyRestartServer"
+    {
+        "#format"   "{1:N}"
+        "en"        "[{orange}!{default}] Manually restarting server in 5 seconds later... by {olive}{1}{default}"
+        "chi"       "[{orange}!{default}] 管理员 {olive}{1}{default} 重启服务器, 5s后执行..."
+    }
+
+    "ManuallyRestartServer_NoName"
+    {
+        "en"        "[{orange}!{default}] Manually restarting server in 5 seconds later..."
+        "chi"       "[{orange}!{default}] 服务器将在5s后重启..."
+    }
+}

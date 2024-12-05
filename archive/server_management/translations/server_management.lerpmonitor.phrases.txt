@@ -1,0 +1,84 @@
+"Phrases"
+{
+    "SettingList"
+    {
+        "en"        "[{green}!{default}] {olive}Lerp setting list{default}:"
+        "chi"       "[{green}!{default}] {olive}Lerp 设定列表{default}:"
+    }
+
+    "ListFormat"
+    {
+        "#format"   "{1:N},{2:s},{3:.01f}"
+        "en"        "{blue}{1}{default} [{olive}{2}{default}]: {green}{3}{default}"
+        "chi"       "{blue}{1}{default} [{olive}{2}{default}]: {green}{3}{default}"
+    }
+
+    "NothingHere"
+    {
+        "en"        "[{green}!{default}] There is nothing here!"
+        "chi"       "[{green}!{default}] 这儿啥也没有!"
+    }
+
+    "KickMessage"
+    {
+        "#format"   "{1:.01f},{2:.01f}"
+        "en"        "Illegal lerp value (min: {1}, max: {2})"
+        "chi"       "非法的lerp值 (min: {1}, max: {2})"
+    }
+
+    "MovedToSpec"
+    {
+        "#format"   "{1:N},{2:.01f}"
+        "en"        "{olive}Lerp{default}> {teamcolor}{1} {default}was moved to spectators for lerp {teamcolor}{2}{default}."
+        "chi"       "{olive}Lerp{default}> {teamcolor}{1} {default}因lerp值为 {teamcolor}{2} {default}而被移到旁观者."
+    }
+
+    "IllegalLerp"
+    {
+        "#format"   "{1:.01f},{2:.01f}"
+        "en"        "{olive}Lerp{default}> Illegal lerp value (min: {teamcolor}{1}{default}, max: {teamcolor}{2}{default})"
+        "chi"       "{olive}Lerp{default}> 非法的lerp值 (min: {teamcolor}{1}{default}, max: {teamcolor}{2}{default})"
+    }
+
+    "DirectKick"
+    {
+        "#format"   "{1:N},{2:.01f}"
+        "en"        "{olive}Lerp{default}> {teamcolor}{1} {default}was kicked for lerp {teamcolor}{2}."
+        "chi"       "{olive}Lerp{default}> {teamcolor}{1} {default}因lerp值为 {teamcolor}{2} {default}而被踢出."
+    }
+
+    "LerpNotify"
+    {
+        "#format"   "{1:N},{2:.01f}"
+        "en"        "{olive}Lerp{default}> {teamcolor}{1} {default}@ {teamcolor}{2}"
+        "chi"       "{olive}Lerp{default}> {teamcolor}{1} {default}@ {teamcolor}{2}"
+    }
+
+    "LerpChanged"
+    {
+        "#format"   "{1:N},{2:.01f},{3:.01f},{4:s},{5:d},{6:d}"
+        "en"        "{olive}Lerp{default}> {teamcolor}{1} {default}@ {teamcolor}{2} {default}<== {green}{3} {default}[{4}{5}{default}/{6} {olive}changes]"
+        "chi"       "{olive}Lerp{default}> {teamcolor}{1} {default}@ {teamcolor}{2} {default}<== {green}{3} {default}[{4}{5}{default}/{6} {olive}次变更]"
+    }
+
+    "MoveToSepc_Changed"
+    {
+        "#format"   "{1:N}"
+        "en"        "{olive}Lerp{default}> {teamcolor}{1} {default}was moved to spectators (illegal lerp change)!"
+        "chi"       "{olive}Lerp{default}> {teamcolor}{1} {default}被移到了旁观者 (非法改变lerp值)!"
+    }
+
+    "ChangeBack"
+    {
+        "#format"   "{1:.01f}"
+        "en"        "{olive}Lerp{default}> Illegal change during midgame! Change it back to {teamcolor}{1}."
+        "chi"       "{olive}Lerp{default}> 中途非法改变lerp值! 请改回 {teamcolor}{1}."
+    }
+
+    "LerpChanged_NoLimit"
+    {
+        "#format"   "{1:N},{2:.01f},{3:.01f}"
+        "en"        "{olive}Lerp{default}> {teamcolor}{1} {default}@ {teamcolor}{2} {default}<== {green}{3}"
+        "chi"       "{olive}Lerp{default}> {teamcolor}{1} {default}@ {teamcolor}{2} {default}<== {green}{3}"
+    }
+}

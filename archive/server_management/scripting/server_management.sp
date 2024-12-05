@@ -1,55 +1,47 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION "build_241204"
-
-// define the macros to compile the part you need
-#define MODULE_PLAYERINFO 1
-#define MODULE_WELCOMEMSG 1
-#define MODULE_CHANGELOG 1
-#define MODULE_HOURSLIMITER 1
-
-#define APP_L4D2 550
-#define STEAMID_SIZE 32
-
 #include <sourcemod>
 #include <sdktools>
-#include <SteamWorks>
-#include <colors>
-#include <geoip>
 #include <left4dhooks>
-#undef REQUIRE_PLUGIN
-#include <readyup>
+#include <colors>
+#include <gamedata_wrapper>
 
-bool
-	g_bIsLerpmonitorAvailable = false,
-    g_bReadyUpAvailable = false;
+#define GAMEDATA_FILE "server_management"
+#define STEAMID_SIZE 32
 
-bool g_bIsInReady = true;
+bool 
+	g_bReadyUpAvailable = false,
+	g_bIsInReady = false,
+	g_bCoopSystem = false,
+	g_bIsConfoglAvailable = false,
+	g_bChangeLevelAvailable = false,
+	g_bNekoSpecials = false;
 
-#include "server_management/includes/util.inc"
+Handle g_hSDKCall_fSetCampaignScores = null;
 
-#if MODULE_WELCOMEMSG
-	#include "server_management/welcome_msg.inc"
-#endif
+// utilities here
+#include "server_management/includes/util.sp"
 
-#if MODULE_PLAYERINFO
-	#include "server_management/player_info.inc"
-#endif
+// Modules here
+#include "server_management/welcome_msg.sp"
+#include "server_management/player_info.sp"
+#include "server_management/restarter.sp"
+#include "server_management/bequiet.sp"
+#include "server_management/prefix.sp"
+#include "server_management/advertisement.sp"
+#include "server_management/lerpmonitor.sp"
+#include "server_management/vote_manager.sp"
+#include "server_management/hours_limiter.sp"
+//#include "server_management/changelog.sp"
 
-#if MODULE_HOURSLIMITER
-	#include "server_management/hours_limiter.inc"
-#endif
-
-#if MODULE_CHANGELOG
-	#include "server_management/changelog.inc"
-#endif
+#define PLUGIN_VERSION "r1.6.1"
 
 public Plugin myinfo =
 {
-	name = "Server Management",
-	author = "blueblur, credits to TouchMe, stars",
-	description = "Intergrated server management method.",
+	name = "[L4D2] Server Management",
+	author = "blueblur, Many Others.",
+	description = "Intergrated Server Management.",
 	version	= PLUGIN_VERSION,
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
@@ -64,87 +56,113 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 		return APLRes_SilentFailure;
 	}
 
-#if MODULE_HOURSLIMITER
-	HL_APL();
-#endif
-
-#if MODULE_PLAYERINFO
-	PL_APL();
-#endif
-
+	_lerpmonitor_AskPluginLoad2(late);
+	_advertisement_AskPluginLoad2(late);
 	RegPluginLibrary("server_management");
 	return APLRes_Success;
 }
 
 public void OnPluginStart()
 {
-#if MODULE_WELCOMEMSG
-    WM_OnPluginStart();
-#endif
+	IniGameData();
+	CreateConVar("server_management_version", PLUGIN_VERSION, "Server Management Version", FCVAR_NOTIFY | FCVAR_DONTRECORD);
+	
+    _welcome_message_OnPluginStart();
+    _player_info_OnPluginStart();
+	_restarter_OnPluginStart();
+	_bequiet_OnPluginStart();
+	_prefix_OnPluginStart();
+	_advertisement_OnPluginStart();
+	_lerpmonitor_OnPluginStart();
+	_vote_manager_OnPluginStart();
+    //HL_OnPluginStart();
+    //CL_OnPluginStart();
+}
 
-#if MODULE_PLAYERINFO
-    PI_OnPluginStart();
-#endif
+public void OnPluginEnd()
+{
+	_restarter_OnPluginEnd();
+	_prefix_OnPluginEnd();
+	_advertisement_OnPluginEnd();
+	_vote_manager_OnPluginEnd();
+}
 
-#if MODULE_HOURSLIMITER
-    HL_OnPluginStart();
-#endif
+public void OnConfigsExecuted()
+{
+	_restarter_OnConfigsExecuted();
+	_prefix_OnConfigsExecuted();
+}
 
-#if MODULE_CHANGELOG
-    CL_OnPluginStart();
-#endif
+public void OnMapStart() 
+{
+	_restarter_OnMapStart();
+	_prefix_OnMapStart();
+	_lerpmonitor_OnMapStart();
+	_advertisement_OnMapStart();
+}
+
+public void OnMapEnd()
+{
+	_restarter_OnMapEnd();
+	_prefix_OnMaEnd();
+	_lerpmonitor_OnMapEnd();
 }
 
 public void OnAllPluginsLoaded()
 {
-	g_bReadyUpAvailable = LibraryExists("readyup");
-#if MODULE_CHANGELOG
-	CL_OnAllPluginsLoaded();
-#endif
+	if (LibraryExists("coop_system"))	g_bCoopSystem = true;
+	if (LibraryExists("readyup"))		g_bReadyUpAvailable = true;
+	if (LibraryExists("confogl_system"))	g_bIsConfoglAvailable = true;
+	if (LibraryExists("l4d2_changelevel"))	g_bChangeLevelAvailable = true;
+	if (LibraryExists("nekospecials"))	g_bNekoSpecials = true;
+	//CL_OnAllPluginsLoaded();
 }
 
 public void OnClientPostAdminCheck(int iClient)
 {
-#if MODULE_HOURSLIMITER
-	HL_OnClientPostAdminCheck(iClient);
-#endif
+	//HL_OnClientPostAdminCheck(iClient);
 }
 
 public void OnClientConnected(int iClient)
 {
-#if MODULE_PLAYERINFO
-	PI_OnClientConnected(iClient);
-#endif
+	_player_info_OnClientConnected(iClient);
+	_restarter_OnClientConnected(iClient);
 }
 
 public void OnClientPutInServer(int client)
 {
-#if MODULE_WELCOMEMSG
-	WM_OnClientPutInServer(client);
-#endif
+	_welcome_message_OnClientPutInServer(client);
+	_player_info_OnClientPutInServer(client);
+	_lerpmonitor_OnClientPutInServer(client);
+	_advertisement_OnClientPutInServer(client);
+}
 
-#if MODULE_PLAYERINFO
-	PI_OnClientPutInServer(client);
-#endif
+public void OnClientSettingsChanged(int client)
+{
+	_lerpmonitor_OnClientSettingsChanged(client);
 }
 
 public void SteamWorks_OnValidateClient(int iOwnerAuthId, int iAuthId)
 {
-#if MODULE_PLAYERINFO
-	PI_SteamWorks_OnValidateClient(iAuthId);
-#endif
+	_player_info_SteamWorks_OnValidateClient(iAuthId);
 }
 
 public void OnLibraryRemoved(const char[] name)
 {
-	if (StrEqual(name, "readyup")) g_bReadyUpAvailable = false;
-	if (StrEqual(name, "lerpmonitor")) g_bIsLerpmonitorAvailable = false;
+	if (strcmp(name, "coop_system") == 0) g_bCoopSystem = false;
+	if (strcmp(name, "readyup") == 0) g_bReadyUpAvailable = false;
+	if (strcmp(name, "confogl_system") == 0) g_bIsConfoglAvailable = false;
+	if (strcmp(name, "l4d2_changelevel") == 0) g_bChangeLevelAvailable = false;
+	if (strcmp(name, "nekospecials") == 0) g_bNekoSpecials = false;
 }
 
 public void OnLibraryAdded(const char[] name)
 {
-	if (StrEqual(name, "readyup")) g_bReadyUpAvailable = true;
-	if (StrEqual(name, "lerpmonitor")) g_bIsLerpmonitorAvailable = true;
+	if (strcmp(name, "coop_system") == 0) g_bCoopSystem = true;
+	if (strcmp(name, "readyup") == 0) g_bReadyUpAvailable = true;
+	if (strcmp(name, "confogl_system") == 0) g_bIsConfoglAvailable = true;
+	if (strcmp(name, "l4d2_changelevel") == 0) g_bChangeLevelAvailable = true;
+	if (strcmp(name, "nekospecials") == 0) g_bNekoSpecials = true;
 }
 
 public void OnReadyUpInitiate()
@@ -155,4 +173,14 @@ public void OnReadyUpInitiate()
 public void OnRoundIsLive()
 {
 	g_bIsInReady = false;
+}
+
+void IniGameData()
+{
+    GameDataWrapper gd = new GameDataWrapper(GAMEDATA_FILE);
+
+	SDKCallParamsWrapper params[] = {{SDKType_PlainOldData, SDKPass_Plain}, {SDKType_PlainOldData, SDKPass_Plain}};
+	g_hSDKCall_fSetCampaignScores = gd.CreateSDKCallOrFail(SDKCall_GameRules, SDKConf_Signature, "CTerrorGameRules::SetCampaignScores", params, sizeof(params));
+
+    delete gd;
 }

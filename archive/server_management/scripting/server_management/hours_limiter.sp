@@ -3,8 +3,6 @@
 #endif
 #define _server_management_hours_limiter_included
 
-#define TRANSLATIONS_HOURSLIMITER "hours_limiter.phrases"
-
 /*
  * originally coded by TouchMe.
  * implemented by blueblur.
@@ -25,8 +23,6 @@ void HL_APL()
 
 void HL_OnPluginStart()
 {
-	LoadTranslations(TRANSLATIONS_HOURSLIMITER);
-
 	hl_cvMinPlayedHours = CreateConVar("sm_min_played_hours", "100.0", "Minimum number of hours allowed to play");
 	hl_cvMaxPlayedHours = CreateConVar("sm_max_played_hours", "99999.0", "Maximum number of hours allowed to play");
 	hl_cvMaxTryCheckPlayerHours = CreateConVar("sm_max_try_check_player_hours", "5", "Maximum number of attempts to check the played time");
