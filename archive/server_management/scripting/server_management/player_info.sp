@@ -9,22 +9,17 @@
 
 #include <geoip>
 
-// for nomasters server this may not work.
-// use http request extentions instead.
 #undef REQUIRE_EXTENSIONS
 #tryinclude <SteamWorks>
 
 #undef REQUIRE_EXTENSIONS
 #tryinclude <ripext>
 
-// Steamworks constants
-#define APP_L4D2 550
-
 // ripext constants
-#define HOST_PATH					"https://partner.steam-api.com"
-#define TOTAL_PLAYTIME_URL			"IPlayerService/GetOwnedGames/v1/?format=json&appids_filter[0]=550"
-#define REAL_PLAYTIME_URL			"ISteamUserStats/GetUserStatsForGame/v2/?"
-#define VALVEKEY					"64FB8F83E5A7D8A9055FCA25A7F7D9EF"
+#define APP_L4D2 				550
+#define HOST_PATH				"https://api.steampowered.com"
+#define TOTAL_PLAYTIME_URL		"IPlayerService/GetOwnedGames/v1"
+#define REAL_PLAYTIME_URL		"ISteamUserStats/GetUserStatsForGame/v2"
 
 #define ANNOUNCE_GEOIP			(1<<0)
 #define ANNOUNCE_PLAYTIME		(1<<1)
@@ -56,15 +51,23 @@ enum DisconnectType
 
 /* player_info */
 static ConVar
-	g_hCvar_AnnounceType = null, g_hCvar_EnableDisconnect = null;
+	g_hCvar_AnnounceType = null, g_hCvar_EnableDisconnect = null, g_hCvar_MaxTryPlayerInfo = null, g_hCvar_APIKey = null;
 
 static ConVar
 	g_hCvar_RequestMethod = null; //g_hCvar_HoursStyle = null;
 
 static int g_iAAnnounceType = 0;
+static int pi_iClientTry[MAXPLAYERS + 1];
+
+static GlobalForward g_hFWD_OnGetPlayTime = null;
 
 static char
 	ip[MAXPLAYERS + 1][64];
+
+void _player_info_AskPluginLoad2()
+{
+	g_hFWD_OnGetPlayTime = new GlobalForward("OnGetPlayerHours", ET_Event, Param_Cell, Param_Cell);
+}
 
 void _player_info_OnPluginStart()
 {
@@ -74,7 +77,9 @@ void _player_info_OnPluginStart()
 	g_hCvar_EnableDisconnect 	= CreateConVar("player_info_enable_disconnect", "1", "Enable custom disconnect message");
 
 	g_hCvar_RequestMethod		= CreateConVar("player_info_request_method", "1", "Request method: 0=SteamWorks, 1=ripext.");
-	//g_hCvar_HoursStyle			= CreateConVar("player_info_hours_style", "1", "Hours style: 1=total, 2=real, 3=last2week.");
+	//g_hCvar_HoursStyle		= CreateConVar("player_info_hours_style", "1", "Hours style: 1=total, 2=real, 3=last2week.");
+	g_hCvar_MaxTryPlayerInfo 	= CreateConVar("player_info_try_check_player_time", "3", "Maximum number of attempts to check the played time");
+	g_hCvar_APIKey				= CreateConVar("player_info_api_key", "xxx", "API Key for requesting.");
 
 	g_hCvar_AnnounceType.AddChangeHook(OnCvarChanged);
 	OnCvarChanged(null, "", "");
@@ -116,7 +121,7 @@ void _player_info_OnClientConnected(int iClient)
 
 void _player_info_OnClientPutInServer(int iClient)
 {
-	if (IsValidClient_Pre(iClient) && !IsFakeClient(iClient))
+	if (IsClientInGame(iClient) && !IsFakeClient(iClient))
 	{
 		char  ccode[3];
 		char  sName[128];
@@ -145,15 +150,14 @@ void _player_info_OnClientPutInServer(int iClient)
 			{
 				case 0:
 				{
-					int	iPlayedTime = 0;
-					SteamWorks_GetStatCell(iClient, "Stat.TotalPlayTime.Total", iPlayedTime);
-					if (iPlayedTime <= 0)
-						CPrintToChatAll("%t", "Connected_Unknown_PlayedTime", sName, fLerpTime);
-					else
+					if (!SteamWorks_IsConnected())
 					{
-						Format(sPlayedTime, sizeof(sPlayedTime), "%.02f", SecToHours(iPlayedTime));
-						CPrintToChatAll("%t", "Connected_PlayeTime", sName, fLerpTime, sPlayedTime);
+						LogError("Steamworks: No Steam Connection!");
+						return;
 					}
+
+					pi_iClientTry[iClient] = 0;
+					PI_ShowPlayerInfo(iClient);
 				}
 
 				case 1:
@@ -169,8 +173,8 @@ void _player_info_OnClientPutInServer(int iClient)
 				}
 			}
 		}
-
-		if (g_iAAnnounceType == (ANNOUNCE_PLAYTIME | ANNOUNCE_GEOIP))
+/*
+		if (g_iAAnnounceType == (ANNOUNCE_PLAYTIME & ANNOUNCE_GEOIP))
 		{
 			char sBuffer[32], sPlayedTime[32];
 			if (GeoipCode2(ip[iClient], ccode))
@@ -205,8 +209,65 @@ void _player_info_OnClientPutInServer(int iClient)
 					}
 				}
 			}
-		}	
+		}
+*/
 	}
+
+}
+
+static void PI_ShowPlayerInfo(int iClient)
+{
+	// failed to retreive, abort.
+	if (++ pi_iClientTry[iClient] > g_hCvar_MaxTryPlayerInfo.IntValue) {
+		if (IsValidClient_Pre(iClient) && !IsFakeClient(iClient)) {
+			char  sName[128];
+			float fLerpTime = GetLerpTime(iClient) * 1000;
+			GetClientName(iClient, sName, sizeof(sName));
+			CPrintToChatAll("%t", "Connected_Unknown_PlayedTime", sName, fLerpTime);
+		}
+	}
+
+	if (!PI_CheckPlayerInfo(iClient)) {
+		CreateTimer(1.0, PI_Timer_TryShowPlayerInfo, iClient);
+	}
+}
+
+static void PI_Timer_TryShowPlayerInfo(Handle hTimer, int iClient)
+{
+	if (!IsClientInGame(iClient) || IsFakeClient(iClient) ) {
+		return;
+	}
+
+	PI_ShowPlayerInfo(iClient);
+}
+
+static bool PI_CheckPlayerInfo(int iClient)
+{
+	int	 iPlayedTime;
+	bool bRequestStats = SteamWorks_RequestStats(iClient, APP_L4D2);
+	bool bGetStatCell  = SteamWorks_GetStatCell(iClient, "Stat.TotalPlayTime.Total", iPlayedTime);
+
+	if (!bRequestStats || !bGetStatCell) {
+		return false;
+	}
+
+	// only call the success callback.
+	Call_StartForward(g_hFWD_OnGetPlayTime);
+	Call_PushCell(iClient);
+	Call_PushCell(SecToHours(iPlayedTime));
+	Call_Finish();
+
+	char  sName[128];
+	float fLerpTime;
+		
+	fLerpTime = GetLerpTime(iClient) * 1000;
+	GetClientName(iClient, sName, sizeof(sName));
+
+	char sPlayedTime[128];
+	Format(sPlayedTime, sizeof(sPlayedTime), "%.02f", SecToHours(iPlayedTime));
+	CPrintToChatAll("%t", "Connected_PlayeTime", sName, fLerpTime, sPlayedTime);
+
+	return true;
 }
 
 static Action Event_PlayerDisconnect_Pre(Event hEvent, const char[] sName, bool dontBroadcast)
@@ -333,28 +394,29 @@ static Action Cmd_Info(int iClient, int iArgs)
 	return Plugin_Handled;
 }
 
+// from l4d2_playtime_interface by Forgetest.
 static stock void GetPlayerTime(int client)
 {
-	char authId64[65], URL[1024];
-	GetClientAuthId(client, AuthId_SteamID64, authId64, sizeof(authId64));
-	if (StrEqual(authId64, "STEAM_ID_STOP_IGNORING_RETVALS")) return;
-
-	Format(URL, sizeof(URL), "%s/%s&key=%s&steamid=%s", HOST_PATH, TOTAL_PLAYTIME_URL, VALVEKEY, authId64);
-	HTTPRequest httpRequest = new HTTPRequest(URL);
-	httpRequest.Get(HTTPResponse_GetOwnedGames, client);
-	
-	CreateTimer(1.0, GetRealTime, client);
-}
-
-static stock void GetRealTime(Handle hTimer, int client)
-{
-	char authId64[65], URL[1024];
+	char authId64[65];
 	GetClientAuthId(client, AuthId_SteamID64, authId64, sizeof(authId64));
 	if (StrEqual(authId64, "STEAM_ID_STOP_IGNORING_RETVALS")) return;
 	
-	Format(URL, sizeof(URL), "%s/%skey=%s&steamid=%s&appid=550", HOST_PATH, REAL_PLAYTIME_URL, VALVEKEY, authId64);
-	HTTPRequest httpRequest = new HTTPRequest(URL);
-	httpRequest.Get(HTTPResponse_GetUserStatsForGame, client);
+	char apikey[65];
+	g_hCvar_APIKey.GetString(apikey, sizeof(apikey));
+
+	HTTPRequest request = new HTTPRequest(HOST_PATH...TOTAL_PLAYTIME_URL);
+	request.AppendQueryParam("key", "%s", apikey);
+	request.AppendQueryParam("steamid", "%s", authId64);
+	request.AppendQueryParam("appids_filter[0]", "%i", APP_L4D2);
+	request.AppendQueryParam("include_appinfo", "%i", 0);
+	request.AppendQueryParam("include_played_free_games", "%i", 0);
+	request.Get(HTTPResponse_GetOwnedGames, client);
+
+	request = new HTTPRequest(HOST_PATH...REAL_PLAYTIME_URL);
+	request.AppendQueryParam("key", "%s", apikey);
+	request.AppendQueryParam("steamid", "%s", authId64);
+	request.AppendQueryParam("appid", "%i", APP_L4D2);
+	request.Get(HTTPResponse_GetUserStatsForGame, client);
 }
 
 // playtime
@@ -367,7 +429,7 @@ static void HTTPResponse_GetOwnedGames(HTTPResponse response, int client)
 		player_t[client].retrieved = false;
 		return;
 	}
-	
+
 	// go to response body
 	JSONObject dataObj = view_as<JSONObject>(view_as<JSONObject>(response.Data).Get("response"));
 	
