@@ -10,42 +10,45 @@
 
 /* hours_limiter */
 static ConVar
-	hl_cvMinPlayedHours = null, hl_cvMaxPlayedHours = null, hl_cvMaxTryCheckPlayerHours = null, hl_cvKickHiddenHours = null;
+	g_hCvar_cvMinPlayedHours = null, g_hCvar_cvMaxPlayedHours = null, g_hCvar_cvMaxTryCheckPlayerHours = null, g_hCvar_cvKickHiddenHours = null;
 
-static GlobalForward hl_fwOnVerifiedHiddenHoursPlayer = null;
+static GlobalForward g_hFWD_OnVerifiedHiddenHoursPlayer = null;
 
-static int hl_iClientTry[MAXPLAYERS + 1];
+static int g_iClientTry[MAXPLAYERS + 1];
 
-void HL_APL()
+void _hours_limiter_AskPluginLoad2()
 {
-	hl_fwOnVerifiedHiddenHoursPlayer = new GlobalForward("OnVerifiedHiddenHoursPlayer", ET_Ignore, Param_Cell);
+	g_hFWD_OnVerifiedHiddenHoursPlayer = new GlobalForward("OnVerifiedHiddenHoursPlayer", ET_Ignore, Param_Cell);
 }
 
-void HL_OnPluginStart()
+void _hours_limiter_OnPluginStart()
 {
-	hl_cvMinPlayedHours = CreateConVar("sm_min_played_hours", "100.0", "Minimum number of hours allowed to play");
-	hl_cvMaxPlayedHours = CreateConVar("sm_max_played_hours", "99999.0", "Maximum number of hours allowed to play");
-	hl_cvMaxTryCheckPlayerHours = CreateConVar("sm_max_try_check_player_hours", "5", "Maximum number of attempts to check the played time");
-	hl_cvKickHiddenHours = CreateConVar("sm_kick_hidden_hours", "1", "Kick hidden hours?");
+	LoadTranslation("server_management.hours_limiter.phrases")
+	g_hCvar_cvMinPlayedHours = CreateConVar("sm_min_played_hours", "100.0", "Minimum number of hours allowed to play");
+	g_hCvar_cvMaxPlayedHours = CreateConVar("sm_max_played_hours", "99999.0", "Maximum number of hours allowed to play");
+	g_hCvar_cvMaxTryCheckPlayerHours = CreateConVar("sm_max_try_check_player_hours", "5", "Maximum number of attempts to check the played time");
+	g_hCvar_cvKickHiddenHours = CreateConVar("sm_kick_hidden_hours", "1", "Kick hidden hours?");
 }
 
-void HL_OnClientPostAdminCheck(int iClient)
+void _hours_limiter_OnClientPostAdminCheck(int iClient)
 {
+	if (!IsClientInGame(iClient) || IsFakeClient(iClient)) {
+		return;
+	}
+
 	if (!SteamWorks_IsConnected())
 	{
 		LogError("Steamworks: No Steam Connection!");
 		return;
 	}
 
-	hl_iClientTry[iClient] = 0;
-
+	g_iClientTry[iClient] = 0;
 	TryCheckPlayerHours(iClient);
 }
 
-static Action Timer_TryCheckPlayerHours(Handle hTimer, int iClient)
+static void Timer_TryCheckPlayerHours(Handle hTimer, int iClient)
 {
 	TryCheckPlayerHours(iClient);
-	return Plugin_Stop;
 }
 
 static void TryCheckPlayerHours(int iClient)
@@ -53,44 +56,43 @@ static void TryCheckPlayerHours(int iClient)
 	if (IsFakeClient(iClient) || !IsClientInGame(iClient))
 		return;
 
-	if (++ hl_iClientTry[iClient] > hl_cvMaxTryCheckPlayerHours.IntValue)
+	if (++ g_iClientTry[iClient] > g_hCvar_cvMaxTryCheckPlayerHours.IntValue)
 	{
-		KickClient(iClient, "%t", "TryCheckPlayerHours", hl_iClientTry[iClient]);
+		KickClient(iClient, "%T", "TryCheckPlayerHours", g_iClientTry[iClient], iClient);
 		return;
 	}
 
-	if (!CheckPlayerHours(iClient))
+	if (!HL_CheckPlayerHours(iClient))
 		CreateTimer(1.0, Timer_TryCheckPlayerHours, iClient);
 }
 
-static bool CheckPlayerHours(int iClient)
+static bool HL_CheckPlayerHours(int iClient)
 {
 	int iPlayedTime;
 	bool bRequestStats = SteamWorks_RequestStats(iClient, APP_L4D2);
 	bool bGetStatCell = SteamWorks_GetStatCell(iClient, "Stat.TotalPlayTime.Total", iPlayedTime);
-	bool bPassHidden = false;
 
-	if (!bRequestStats || !bGetStatCell)
+	if (!bRequestStats || !bGetStatCell){
 		return false;
+	}
 
-	if (!iPlayedTime && hl_cvKickHiddenHours.BoolValue)
+	if (!iPlayedTime && g_hCvar_cvKickHiddenHours.BoolValue)
 	{
-		KickClient(iClient, "%t", "KickHiddenHours");
-		Call_StartForward(hl_fwOnVerifiedHiddenHoursPlayer);
+		KickClient(iClient, "%T", "KickHiddenHours", iClient);
+		Call_StartForward(g_hFWD_OnVerifiedHiddenHoursPlayer);
 		Call_PushCell(iClient);
 		Call_Finish();
 		return true;
 	}
-	else bPassHidden = true
 
 	float fHours = SecToHours(iPlayedTime);
-	float fMinPlayedHours = hl_cvMinPlayedHours.FloatValue;
-	float fMaxPlayedHours = hl_cvMaxPlayedHours.FloatValue;
+	float fMinPlayedHours = g_hCvar_cvMinPlayedHours.FloatValue;
+	float fMaxPlayedHours = g_hCvar_cvMaxPlayedHours.FloatValue;
 
-	if (!bPassHidden)
+	if (iPlayedTime > 0)
 	{
-		if (fHours < fMinPlayedHours) KickClient(iClient, "%t", "KickUnDesiredHoursMin", fMinPlayedHours);
-		else if (fHours > fMaxPlayedHours) KickClient(iClient, "%t", "KickUnDesiredHoursMax", fMaxPlayedHours);
+		if (fHours < fMinPlayedHours) KickClient(iClient, "%T", "KickUnDesiredHoursMin", fMinPlayedHours, iClient);
+		else if (fHours > fMaxPlayedHours) KickClient(iClient, "%T", "KickUnDesiredHoursMax", fMaxPlayedHours, iClient);
 	}
 
 	return true;

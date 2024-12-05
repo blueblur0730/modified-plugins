@@ -32,10 +32,10 @@ Handle g_hSDKCall_fSetCampaignScores = null;
 #include "server_management/advertisement.sp"
 #include "server_management/lerpmonitor.sp"
 #include "server_management/vote_manager.sp"
-//#include "server_management/hours_limiter.sp"
+#include "server_management/hours_limiter.sp"
 //#include "server_management/changelog.sp"
 
-#define PLUGIN_VERSION "r1.6.1"
+#define PLUGIN_VERSION "r1.7"
 
 public Plugin myinfo =
 {
@@ -58,6 +58,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	_lerpmonitor_AskPluginLoad2(late);
 	_advertisement_AskPluginLoad2(late);
+	_player_info_AskPluginLoad2();
+	_hours_limiter_AskPluginLoad2();
 	RegPluginLibrary("server_management");
 	return APLRes_Success;
 }
@@ -75,8 +77,7 @@ public void OnPluginStart()
 	_advertisement_OnPluginStart();
 	_lerpmonitor_OnPluginStart();
 	_vote_manager_OnPluginStart();
-    //HL_OnPluginStart();
-    //CL_OnPluginStart();
+    _hours_limiter_OnPluginStart();
 }
 
 public void OnPluginEnd()
@@ -115,12 +116,11 @@ public void OnAllPluginsLoaded()
 	if (LibraryExists("confogl_system"))	g_bIsConfoglAvailable = true;
 	if (LibraryExists("l4d2_changelevel"))	g_bChangeLevelAvailable = true;
 	if (LibraryExists("nekospecials"))	g_bNekoSpecials = true;
-	//CL_OnAllPluginsLoaded();
 }
 
 public void OnClientPostAdminCheck(int iClient)
 {
-	//HL_OnClientPostAdminCheck(iClient);
+	_hours_limiter_OnClientPostAdminCheck(iClient);
 }
 
 public void OnClientConnected(int iClient)
