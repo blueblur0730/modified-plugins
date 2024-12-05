@@ -81,7 +81,6 @@ static Action UnloadPlugins(int args)
 	// Refresh first, then unload this plugin.
 	// Using Timers because these are time crucial and ServerCommands aren't a 100% reliable in terms of execution order.
 	CreateTimer(0.1, Timer_RefreshPlugins);
-	//CreateTimer(0.5, Timer_UnloadSelf);	// no need.
 
 	return Plugin_Handled;
 }

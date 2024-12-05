@@ -241,7 +241,7 @@ static Action RM_Match_MapRestart_Timer(Handle hTimer, DataPack hDp)
 	return Plugin_Stop;
 }
 
-static bool RM_UpdateCfgOn(const char[] cfgfile, bool bIsPrint = true)
+bool RM_UpdateCfgOn(const char[] cfgfile, bool bPrint = true)
 {
 	if (SetCustomCfg(cfgfile))
 	{
@@ -253,7 +253,7 @@ static bool RM_UpdateCfgOn(const char[] cfgfile, bool bIsPrint = true)
 		return true;
 	}
 
-	if (bIsPrint)
+	if (bPrint)
 		CPrintToChatAll("%t %t", "Tag", "UsingDefault", cfgfile);
 
 	return false;

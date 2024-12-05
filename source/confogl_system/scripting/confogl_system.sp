@@ -22,6 +22,8 @@
 #include "confogl_system/includes/configs.sp"
 #include "confogl_system/includes/customtags.sp"
 #include "confogl_system/includes/predictable_unloader.sp"	// Predictable Unloader by Sir
+#include "confogl_system/includes/autoloader.sp"
+#include "confogl_system/includes/config_generator.sp"
 
 // Modules here
 #include "confogl_system/ReqMatch.sp"
@@ -65,6 +67,8 @@ public void OnPluginStart()
 	Configs_OnModuleStart();			// configs
 	CT_OnModuleStart();					// customtags
 	PU_OnPluginStart();					// Predictable Unloader
+	AL_OnPluginStart();					// AutoLoader
+	CG_OnPluginStart();					// ChangeLevel
 
 	// Modules
 	MV_OnModuleStart();	   	// MatchVote
@@ -99,15 +103,27 @@ public void OnMapEnd()
 	PS_OnMapEnd();	  // PasswordSystem
 }
 
+public void OnServerEnterHibernation()
+{
+	AL_OnServerEnterHibernation();	// AutoLoader
+}
+
+public void OnServerExitHibernation()
+{
+	AL_OnServerExitHibernation();	// AutoLoader
+}
+
 public void OnConfigsExecuted()
 {
 	MV_OnConfigsExecuted();		// MatchVote
 	CVS_OnConfigsExecuted();	// CvarSettings
+	AL_OnConfigsExecuted();		// AutoLoader
 }
 
 public void OnClientDisconnect(int client)
 {
 	RM_OnClientDisconnect(client);	  // ReqMatch
+	AL_OnClientDisconnect();	// AutoLoader
 }
 
 public bool OnClientConnect(int client, char[] rejectmsg, int maxlen)
@@ -123,6 +139,7 @@ public void OnClientPutInServer(int client)
 {
 	RM_OnClientPutInServer();	 		// ReqMatch
 	PS_OnClientPutInServer(client);	   	// PasswordSystem
+	AL_OnClientPutInServer(client);		// AutoLoader
 }
 
 public void OnLibraryAdded(const char[] name)
