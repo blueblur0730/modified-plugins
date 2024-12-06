@@ -29,10 +29,10 @@
  *
  */
 
-#if defined _confogl_included
+#if defined _confogl_system_included
 	#endinput
 #endif
-#define _confogl_included
+#define _confogl_system_included
 
 /* Forwards */
 

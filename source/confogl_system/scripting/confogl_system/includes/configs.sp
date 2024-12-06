@@ -48,19 +48,20 @@ static void InitPaths()
 
 bool SetCustomCfg(const char[] cfgname)
 {
-	if (!strlen(cfgname)) {
+	if (!strlen(cfgname)) 
+	{
 		customCfgPath[0] = 0;
 		hCustomConfig.RestoreDefault();
 
-		if (IsDebugEnabled()) {
+		if (IsDebugEnabled()) 
 			LogMessage("[%s] Custom Config Path Reset - Using Default", CONFIGS_MODULE_NAME);
-		}
 
 		return true;
 	}
 
 	Format(customCfgPath, sizeof(customCfgPath), "%s%s%c%s", cfgPath, customCfgDir, DirSeparator, cfgname);
-	if (!DirExists(customCfgPath)) {
+	if (!DirExists(customCfgPath)) 
+	{
 		Debug_LogError(CONFIGS_MODULE_NAME, "Custom config directory %s does not exist!", customCfgPath);
 		// Revert customCfgPath
 		customCfgPath[0] = 0;
@@ -68,10 +69,13 @@ bool SetCustomCfg(const char[] cfgname)
 	}
 
 	int thislen = strlen(customCfgPath);
-	if ((thislen + 1) < sizeof(customCfgPath)) {
+	if ((thislen + 1) < sizeof(customCfgPath)) 
+	{
 		customCfgPath[thislen] = DirSeparator;
 		customCfgPath[(thislen + 1)] = 0;
-	} else {
+	}
+	else 
+	{
 		Debug_LogError(CONFIGS_MODULE_NAME, "Custom config directory %s path too long!", customCfgPath);
 		customCfgPath[0] = 0;
 		return false;
@@ -88,60 +92,63 @@ void BuildConfigPath(char[] buffer, const int maxlength, const char[] sFileName)
 	if (customCfgPath[0]) {
 		Format(buffer, maxlength, "%s%s", customCfgPath, sFileName);
 
-		if (FileExists(buffer)) {
-			if (IsDebugEnabled()) {
+		if (FileExists(buffer)) 
+		{
+			if (IsDebugEnabled()) 
 				LogMessage("[%s] Built custom config path: %s", CONFIGS_MODULE_NAME, buffer);
-			}
 
 			return;
-		} else {
-			if (IsDebugEnabled()) {
+		}
+		else 
+		{
+			if (IsDebugEnabled()) 
 				LogMessage("[%s] Custom config not available: %s", CONFIGS_MODULE_NAME, buffer);
-			}
 		}
 	}
 
 	Format(buffer, maxlength, "%s%s", configsPath, sFileName);
-	if (IsDebugEnabled()) {
+	if (IsDebugEnabled()) 
 		LogMessage("[%s] Built default config path: %s", CONFIGS_MODULE_NAME, buffer);
-	}
 }
 
 void ExecuteCfg(const char[] sFileName)
 {
-	if (strlen(sFileName) == 0) {
+	if (!strlen(sFileName)) 
 		return;
-	}
 
 	char sFilePath[PLATFORM_MAX_PATH];
 
-	if (customCfgPath[0]) {
+	if (customCfgPath[0]) 
+	{
 		Format(sFilePath, sizeof(sFilePath), "%s%s", customCfgPath, sFileName);
 
-		if (FileExists(sFilePath)) {
-			if (IsDebugEnabled()) {
+		if (FileExists(sFilePath)) 
+		{
+			if (IsDebugEnabled()) 
 				LogMessage("[%s] Executing custom cfg file %s", CONFIGS_MODULE_NAME, sFilePath);
-			}
 
 			ServerCommand("exec %s%s", customCfgPath[strlen(cfgPath)], sFileName);
 
 			return;
-		} else {
-			if (IsDebugEnabled()) {
+		}
+		else 
+		{
+			if (IsDebugEnabled()) 
 				LogMessage("[%s] Couldn't find custom cfg file %s, trying default", CONFIGS_MODULE_NAME, sFilePath);
-			}
 		}
 	}
 
 	Format(sFilePath, sizeof(sFilePath), "%s%s", cfgPath, sFileName);
 
-	if (FileExists(sFilePath)) {
-		if (IsDebugEnabled()) {
+	if (FileExists(sFilePath)) 
+	{
+		if (IsDebugEnabled()) 
 			LogMessage("[%s] Executing default config %s", CONFIGS_MODULE_NAME, sFilePath);
-		}
 
 		ServerCommand("exec %s", sFileName);
-	} else {
+	} 
+	else 
+	{
 		Debug_LogError(CONFIGS_MODULE_NAME, "Could not execute server config \"%s\", file not found", sFilePath);
 	}
 }

@@ -3,71 +3,39 @@
 #endif
 #define __match_vote_included
 
-static Handle
-	g_hVote = null;
-
 static KeyValues
-	g_hModesKV = null;
+	kv[MAXPLAYERS + 1] = { null, ... };
 
 static ConVar
 	g_hEnabled		   = null,
-	g_hCvarPlayerLimit = null,
-	g_hMaxPlayers	   = null,
-	g_hSvMaxPlayers	   = null;
+	g_hCvarPlayerLimit = null;
 
 static char
-	g_sCfg[32];
-
-static bool
-	g_bOnSet	= false,
-	g_bShutdown = false;
+	g_sConfigPath[PLATFORM_MAX_PATH];
 
 void MV_OnModuleStart()
 {
-	char sBuffer[PLATFORM_MAX_PATH];
-	g_hModesKV = new KeyValues("MatchModes");
-	BuildPath(Path_SM, sBuffer, sizeof(sBuffer), MATCHMODES_PATH);
+	BuildPath(Path_SM, g_sConfigPath, sizeof(g_sConfigPath), MATCHMODES_PATH);
 
-	if (!g_hModesKV.ImportFromFile(sBuffer))
-		SetFailState("Couldn't load matchmodes.txt!");
+	if (!FileExists(g_sConfigPath))
+		SetFailState("[Confogl] \""...MATCHMODES_PATH..."\" dose not exist.");
 
 	g_hEnabled		   = CreateConVarEx("match_vote_enabled", "1", "Plugin enabled", _, true, 0.0, true, 1.0);
-	g_hMaxPlayers	   = CreateConVarEx("mv_maxplayers", "30", "How many slots would you like the Server to be at Config Load/Unload?", _, true, 1.0, true, 32.0);
 	g_hCvarPlayerLimit = CreateConVarEx("match_player_limit", "1", "Minimum # of players in game to start the vote", _, true, 1.0, true, 32.0);
 
 	RegConsoleCmd("sm_match", MatchRequest);
-	RegConsoleCmd("sm_chmatch", ChangeMatchRequest);
 	RegConsoleCmd("sm_rmatch", MatchReset);
-
-	AddCommandListener(Listener_Quit, "quit");
-	AddCommandListener(Listener_Quit, "_restart");
-	AddCommandListener(Listener_Quit, "crash");
-
-	g_hSvMaxPlayers = FindConVar("sv_maxplayers");
 }
 
 void MV_OnConfigsExecuted()
 {
-	if (!g_bOnSet)
-	{
-		g_hSvMaxPlayers.SetInt(g_hMaxPlayers.IntValue);
-		g_bOnSet = true;
-	}
+
 }
 
 void MV_OnPluginEnd()
 {
-	if (g_bShutdown)
-		return;
-
-	delete g_hModesKV;
-	g_hSvMaxPlayers.SetInt(g_hMaxPlayers.IntValue);
-}
-
-static Action Listener_Quit(int iClient, const char[] sCommand, int iArgc)
-{
-	g_bShutdown = true;
-	return Plugin_Continue;
+	for (int i = 1; i < MaxClients; i++)
+		if (kv[i]) delete kv[i];
 }
 
 static Action MatchRequest(int iClient, int iArgs)
@@ -78,37 +46,22 @@ static Action MatchRequest(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
+	if (GetClientTeam(iClient) <= TEAM_SPECTATE)
+	{
+		CPrintToChat(iClient, "%t %t", "Tag", "NoSpec");
+		return Plugin_Handled;
+	}
+
 	if (!iClient)
 	{
-		CReplyToCommand(iClient, "%t %t", "Tag", "NoConsole");
+		ReplyToCommand(iClient, "%t %t", "Tag", "NoConsole");
 		return Plugin_Handled;
 	}
 
-	if (LGO_IsMatchModeLoaded())
+	if (RM_bIsMatchModeLoaded)
 	{
-		ChangeMatchRequest(iClient, iArgs);
-		// CPrintToChat(iClient, "%t %t", "Tag", "MatchLoaded");
+		CPrintToChat(iClient, "%t %t", "Tag", "MatchLoaded");
 		return Plugin_Handled;
-	}
-
-	if (iArgs > 0)
-	{
-		// config specified
-		char sCfg[64], sName[64];
-		GetCmdArg(1, sCfg, sizeof(sCfg));
-
-		if (FindConfigName(sCfg, sName, sizeof(sName)))
-		{
-			if (StartMatchVote(iClient, sName))
-			{
-				strcopy(g_sCfg, sizeof(g_sCfg), sCfg);
-
-				// caller is voting for
-				FakeClientCommand(iClient, "Vote Yes");
-			}
-
-			return Plugin_Handled;
-		}
 	}
 
 	// show main menu
@@ -116,190 +69,179 @@ static Action MatchRequest(int iClient, int iArgs)
 	return Plugin_Handled;
 }
 
-static bool FindConfigName(const char[] sConfig, char[] sName, const int iMaxLength)
-{
-	g_hModesKV.Rewind();
-
-	if (g_hModesKV.GotoFirstSubKey())
-	{
-		do
-		{
-			if (g_hModesKV.JumpToKey(sConfig))
-			{
-				g_hModesKV.GetString("name", sName, iMaxLength);
-				return true;
-			}
-		}
-		while (g_hModesKV.GotoNextKey(false));
-	}
-
-	return false;
-}
-
 static void MatchModeMenu(int iClient)
 {
 	char sTitle[64];
-	Format(sTitle, sizeof(sTitle), "%t", "Title_Match");
-
+	Format(sTitle, sizeof(sTitle), "%T", "Title_Match", iClient);
 	Menu hMenu = new Menu(MatchModeMenuHandler);
 	hMenu.SetTitle(sTitle);
 
-	char sBuffer[64];
-	g_hModesKV.Rewind();
+    if (!kv[iClient])
+    {
+        kv[iClient] = new KeyValues("");
+        kv[iClient].ImportFromFile(g_sConfigPath);
+    }
 
-	if (g_hModesKV.GotoFirstSubKey())
+	kv[iClient].Rewind();
+	if (kv[iClient].GotoFirstSubKey(false))
 	{
 		do
 		{
-			g_hModesKV.GetSectionName(sBuffer, sizeof(sBuffer));
-			hMenu.AddItem(sBuffer, sBuffer);
+			TraverseKeys(hMenu, iClient);
 		}
-		while (g_hModesKV.GotoNextKey(false));
-	}
+		while (kv[iClient].GotoNextKey(false));
 
-	hMenu.Display(iClient, 20);
+		if (!hMenu.ItemCount)
+        {
+            CPrintToChat(iClient, "%t", "NoVoteItem");
+            delete hMenu;
+            delete kv[iClient];
+            return;
+        }
+        else
+        {
+            hMenu.Display(iClient, 30);
+        }
+	}
+	else
+	{
+        CPrintToChat(iClient, "%t", "NoVoteItem");
+        delete hMenu;
+        delete kv[iClient];
+        return;
+	}
 }
 
-static int MatchModeMenuHandler(Menu menu, MenuAction action, int param1, int param2)
+static void MatchModeMenuHandler(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 		delete menu;
 
-	else if (action == MenuAction_Select)
+	if (action == MenuAction_Cancel)
+    {
+        if (param2 == MenuCancel_ExitBack)
+            MatchModeMenu(param1);
+    }
+
+	if (action == MenuAction_Select)
 	{
-		char sInfo[64], sBuffer[64];
-		menu.GetItem(param2, sInfo, sizeof(sInfo));
+        char sBuffer[MAX_MESSAGE_LENGTH], sDisplayBuffer[MAX_MESSAGE_LENGTH];
+        menu.GetItem(param2, sBuffer, sizeof(sBuffer), _, sDisplayBuffer, sizeof(sDisplayBuffer));
 
-		g_hModesKV.Rewind();
-
-		if (g_hModesKV.JumpToKey(sInfo) && g_hModesKV.GotoFirstSubKey())
+		if (kv[param1].JumpToKey(sBuffer))
 		{
-			char sTitle[64];
-			Format(sTitle, sizeof(sTitle), "%t", "Title_Config", sInfo);
+			kv[param1].SavePosition();
+            if (kv[param1].GotoFirstSubKey(false))
+            {
+                Menu menu2 = new Menu(MatchModeMenuHandler);
+                Format(sBuffer, sizeof(sBuffer), "%T", "VoteMenuTitle2", param1, sDisplayBuffer);
+                menu2.SetTitle(sBuffer);
 
-			Menu hMenu = new Menu(ConfigsMenuHandler);
-			hMenu.SetTitle(sTitle);
+                do
+                {
+                    TraverseKeys(menu2, param1);
+                }
+                while (kv[param1].GotoNextKey(false));
+                kv[param1].GoBack();
 
-			do
-			{
-				g_hModesKV.GetSectionName(sInfo, sizeof(sInfo));
-				g_hModesKV.GetString("name", sBuffer, sizeof(sBuffer));
-
-				hMenu.AddItem(sInfo, sBuffer);
-			}
-			while (g_hModesKV.GotoNextKey());
-
-			hMenu.Display(param1, 20);
+                if (!menu2.ItemCount)
+                {
+                    CPrintToChat(param1, "%t", "NoVoteItem");
+                    MatchModeMenu(param1);
+                    delete menu2;
+                }
+                else
+                {
+                    menu2.ExitBackButton = true;
+                    menu2.Display(param1, 30);
+                }
+            }
 		}
 		else
 		{
-			CPrintToChat(param1, "%t %t", "Tag", "ConfigNotFound");
-			MatchModeMenu(param1);
-		}
-	}
+            if (!L4D2NativeVote_IsAllowNewVote())
+            {
+                CPrintToChat(param1, "%t", "VoteInProgress");
+                return;
+            }
 
-	return 0;
-}
+            int iPlayerCount = 0;
+	        int[] iClients = new int[MaxClients];
+			int iConnectedCount = ProcessPlayers(iClients, iPlayerCount);
 
-static int ConfigsMenuHandler(Menu menu, MenuAction action, int param1, int param2)
-{
-	if (action == MenuAction_End)
-		delete menu;
-
-	else if (action == MenuAction_Cancel)
-		MatchModeMenu(param1);
-
-	else if (action == MenuAction_Select)
-	{
-		char sInfo[64], sBuffer[64];
-		menu.GetItem(param2, sInfo, sizeof(sInfo), _, sBuffer, sizeof(sBuffer));
-
-		if (StartMatchVote(param1, sBuffer))
-		{
-			strcopy(g_sCfg, sizeof(g_sCfg), sInfo);
-			// caller is voting for
-			FakeClientCommand(param1, "Vote Yes");
-		}
-		else MatchModeMenu(param1);
-	}
-
-	return 0;
-}
-
-static bool StartMatchVote(int iClient, const char[] sCfgName)
-{
-	if (GetClientTeam(iClient) <= TEAM_SPECTATE)
-	{
-		CPrintToChat(iClient, "%t %t", "Tag", "NoSpec");
-		return false;
-	}
-
-	if (IsBuiltinVoteInProgress())
-	{
-		CPrintToChat(iClient, "%t %t", "Tag", "VoteInProgress", CheckBuiltinVoteDelay());
-		return false;
-	}
-
-	int[] iPlayers		= new int[MaxClients];
-	int iNumPlayers		= 0;
-	int iConnectedCount = ProcessPlayers(iPlayers, iNumPlayers);
-
-	if (iConnectedCount > 0)
-	{
-		CPrintToChat(iClient, "%t %t", "Tag", "PlayersConnecting");
-		return false;
-	}
-
-	if (iNumPlayers < g_hCvarPlayerLimit.IntValue)
-	{
-		CPrintToChat(iClient, "%t %t", "Tag", "NotEnoughPlayers", iNumPlayers, g_hCvarPlayerLimit.IntValue);
-		return false;
-	}
-
-	char sTitle[64];
-	Format(sTitle, sizeof(sTitle), "%T", "Title_LoadConfig", LANG_SERVER, sCfgName);
-
-	g_hVote = CreateBuiltinVote(VoteActionHandler, BuiltinVoteType_Custom_YesNo, BuiltinVoteAction_Cancel | BuiltinVoteAction_VoteEnd | BuiltinVoteAction_End);
-	SetBuiltinVoteArgument(g_hVote, sTitle);
-	SetBuiltinVoteInitiator(g_hVote, iClient);
-	SetBuiltinVoteResultCallback(g_hVote, MatchVoteResultHandler);
-	DisplayBuiltinVote(g_hVote, iPlayers, iNumPlayers, 20);
-	return true;
-}
-
-static void VoteActionHandler(Handle vote, BuiltinVoteAction action, int param1, int param2)
-{
-	switch (action)
-	{
-		case BuiltinVoteAction_End:
-		{
-			delete vote;
-			g_hVote = null;
-		}
-		case BuiltinVoteAction_Cancel:
-			DisplayBuiltinVoteFail(vote, view_as<BuiltinVoteFailReason>(param1));
-	}
-}
-
-static void MatchVoteResultHandler(Handle vote, int num_votes, int num_clients, const int[][] client_info, int num_items, const int[][] item_info)
-{
-	for (int i = 0; i < num_items; i++)
-	{
-		if (item_info[i][BUILTINVOTEINFO_ITEM_INDEX] == BUILTINVOTES_VOTE_YES)
-		{
-			if (item_info[i][BUILTINVOTEINFO_ITEM_VOTES] > (num_votes / 2))
+			if (iConnectedCount > 0)
 			{
-				char sVotepass[64];
-				Format(sVotepass, sizeof(sVotepass), "%T", "VotePass_Loading", LANG_SERVER);
-
-				DisplayBuiltinVotePass(vote, sVotepass);
-				ServerCommand("sm_forcematch %s", g_sCfg);
+				CPrintToChat(param1, "%t %t", "Tag", "PlayersConnecting");
 				return;
 			}
+
+			if (iPlayerCount < g_hCvarPlayerLimit.IntValue)
+			{
+				CPrintToChat(param1, "%t %t", "Tag", "NotEnoughPlayers", iPlayerCount, g_hCvarPlayerLimit.IntValue);
+				return;
+			}
+
+	        for (int i = 1; i <= MaxClients; i++)
+	        {
+		        if (IsClientInGame(i) && !IsFakeClient(i))
+		        {
+			        if (GetClientTeam(i) == L4D2Team_Spectator)
+				         continue;
+
+			        iClients[iPlayerCount++] = i;
+		        }
+	        }
+
+		    L4D2NativeVote vote = L4D2NativeVote(LoadVoteHandler);
+            vote.SetTitle("加载 %s?", sDisplayBuffer);
+            vote.Initiator = param1;
+            vote.SetInfo(sBuffer);
+
+            if (!vote.DisplayVote(iClients, iPlayerCount, 20))
+            {
+                CPrintToChat(param1, "%t", "VoteFailedDisPlay");
+                LogError("[Confogl] Vote failed to display.");
+            } 
 		}
 	}
+}
 
-	DisplayBuiltinVoteFail(vote, BuiltinVoteFail_Loses);
+static void LoadVoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
+{
+    switch (action)
+    {
+		case VoteAction_Start:
+			CPrintToChatAllEx(param1, "%t", "HasInitiatedVote", param1);
+
+		case VoteAction_PlayerVoted:
+		{
+			CPrintToChatAllEx(param1, "%t", "Voted", param1);
+
+			switch (param2)
+			{
+				case VOTE_YES: vote.YesCount++;
+				case VOTE_NO: vote.NoCount++;
+			}
+		}
+
+		case VoteAction_End:
+		{
+			if (vote.YesCount >= vote.PlayerCount / 2)
+			{
+				vote.SetPass("正在执行...");
+                CPrintToChatAll("%t", "PassingVote");
+
+				char sInfo[256];
+				vote.GetInfo(sInfo, sizeof(sInfo));
+				PrepareLoad(0, sInfo, "");
+			}
+			else
+            {
+                CPrintToChatAll("%t", "VoteFailed");
+                vote.SetFail();
+            }
+		}
+    }
 }
 
 static Action MatchReset(int iClient, int iArgs)
@@ -310,13 +252,19 @@ static Action MatchReset(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
+	if (GetClientTeam(iClient) <= TEAM_SPECTATE)
+	{
+		CPrintToChat(iClient, "%t %t", "Tag", "NoSpec");
+		return Plugin_Handled;
+	}
+
 	if (!iClient)
 	{
 		CReplyToCommand(iClient, "%t %t", "Tag", "NoConsole");
 		return Plugin_Handled;
 	}
 
-	if (!LGO_IsMatchModeLoaded())
+	if (!RM_bIsMatchModeLoaded)
 	{
 		CPrintToChat(iClient, "%t %t", "Tag", "MatchNotLoaded");
 		return Plugin_Handled;
@@ -327,257 +275,98 @@ static Action MatchReset(int iClient, int iArgs)
 	return Plugin_Handled;
 }
 
-static bool StartResetMatchVote(int iClient)
+static void StartResetMatchVote(int iClient)
 {
-	if (GetClientTeam(iClient) <= TEAM_SPECTATE)
-	{
-		CPrintToChat(iClient, "%t %t", "Tag", "NoSpec");
-		return false;
-	}
+    if (!L4D2NativeVote_IsAllowNewVote())
+    {
+        CPrintToChat(iClient, "%t", "VoteInProgress");
+        return;
+    }
 
-	if (IsBuiltinVoteInProgress())
-	{
-		CPrintToChat(iClient, "%t %t", "Tag", "VoteInProgress", CheckBuiltinVoteDelay());
-		return false;
-	}
-
-	int[] iPlayers		= new int[MaxClients];
-	int iNumPlayers		= 0;
-	int iConnectedCount = ProcessPlayers(iPlayers, iNumPlayers);
+    int iPlayerCount = 0;
+	int[] iClients = new int[MaxClients];
+	int iConnectedCount = ProcessPlayers(iClients, iPlayerCount);
 
 	if (iConnectedCount > 0)
 	{
 		CPrintToChat(iClient, "%t %t", "Tag", "PlayersConnecting");
-		return false;
+		return;
 	}
 
-	char sTitle[64];
-	Format(sTitle, sizeof(sTitle), "%T", "Title_OffConfogl", LANG_SERVER);
+	if (iPlayerCount < g_hCvarPlayerLimit.IntValue)
+	{
+		CPrintToChat(iClient, "%t %t", "Tag", "NotEnoughPlayers", iPlayerCount, g_hCvarPlayerLimit.IntValue);
+		return;
+	}
 
-	g_hVote = CreateBuiltinVote(VoteActionHandler, BuiltinVoteType_Custom_YesNo, BuiltinVoteAction_Cancel | BuiltinVoteAction_VoteEnd | BuiltinVoteAction_End);
-	SetBuiltinVoteArgument(g_hVote, sTitle);
-	SetBuiltinVoteInitiator(g_hVote, iClient);
-	SetBuiltinVoteResultCallback(g_hVote, ResetMatchVoteResultHandler);
-	DisplayBuiltinVote(g_hVote, iPlayers, iNumPlayers, 20);
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			if (GetClientTeam(i) == L4D2Team_Spectator)
+				    continue;
 
-	FakeClientCommand(iClient, "Vote Yes");
-	return true;
+			iClients[iPlayerCount++] = i;
+		}
+	}
+
+	L4D2NativeVote vote = L4D2NativeVote(ResetVoteHandler);
+    vote.SetTitle("卸载当前配置?");
+    vote.Initiator = iClient;
+
+    if (!vote.DisplayVote(iClients, iPlayerCount, 20))
+    {
+        CPrintToChat(iClient, "%t", "VoteFailedDisPlay");
+        LogError("[Confogl] Vote failed to display.");
+    } 
 }
 
-static void ResetMatchVoteResultHandler(Handle vote, int num_votes, int num_clients, const int[][] client_info, int num_items, const int[][] item_info)
+static void ResetVoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
 {
-	for (int i = 0; i < num_items; i++)
-	{
-		if (item_info[i][BUILTINVOTEINFO_ITEM_INDEX] == BUILTINVOTES_VOTE_YES)
-		{
-			if (item_info[i][BUILTINVOTEINFO_ITEM_VOTES] > (num_votes / 2))
-			{
-				char sVotepass[24];
-				Format(sVotepass, sizeof(sVotepass), "%T", "VotePass_Unloading", LANG_SERVER);
+    switch (action)
+    {
+		case VoteAction_Start:
+			CPrintToChatAllEx(param1, "%t", "HasInitiatedVote", param1);
 
-				DisplayBuiltinVotePass(vote, sVotepass);
-				ServerCommand("sm_resetmatch");
-				return;
+		case VoteAction_PlayerVoted:
+		{
+			CPrintToChatAllEx(param1, "%t", "Voted", param1);
+
+			switch (param2)
+			{
+				case VOTE_YES: vote.YesCount++;
+				case VOTE_NO: vote.NoCount++;
 			}
 		}
-	}
 
-	DisplayBuiltinVoteFail(vote, BuiltinVoteFail_Loses);
-}
-
-static Action ChangeMatchRequest(int iClient, int iArgs)
-{
-	if (!g_hEnabled.BoolValue)
-	{
-		CPrintToChat(iClient, "%t %t", "Tag", "Disabled");
-		return Plugin_Handled;
-	}
-
-	if (!iClient)
-	{
-		CReplyToCommand(iClient, "%t %t", "Tag", "NoConsole");
-		return Plugin_Handled;
-	}
-
-	if (!LGO_IsMatchModeLoaded())
-	{
-		MatchRequest(iClient, iArgs);
-		// CPrintToChat(iClient, "%t %t", "Tag", "MatchNotLoaded");
-		return Plugin_Handled;
-	}
-
-	if (iArgs > 0)
-	{
-		// config specified
-		char sCfg[64], sName[64];
-		GetCmdArg(1, sCfg, sizeof(sCfg));
-		if (FindConfigName(sCfg, sName, sizeof(sName)))
+		case VoteAction_End:
 		{
-			if (StartChMatchVote(iClient, sName))
+			if (vote.YesCount >= vote.PlayerCount / 2)
 			{
-				strcopy(g_sCfg, sizeof(g_sCfg), sCfg);
-
-				// caller is voting for
-				FakeClientCommand(iClient, "Vote Yes");
+				vote.SetPass("正在卸载...");
+                CPrintToChatAll("%t", "VotePass_Unloading");
+				RM_Match_Unload(true);
 			}
-			return Plugin_Handled;
+			else
+            {
+                CPrintToChatAll("%t", "VoteFailed");
+                vote.SetFail();
+            }
 		}
-	}
-
-	// show main menu
-	ChMatchModeMenu(iClient);
-	return Plugin_Handled;
+    }
 }
 
-static void ChMatchModeMenu(int iClient)
+static void TraverseKeys(Menu menu, int client)
 {
-	char sTitle[64];
-	Format(sTitle, sizeof(sTitle), "%t", "Title_Match");
+    static char sBuffer[MAX_MESSAGE_LENGTH], sKeyValue[MAX_MESSAGE_LENGTH]; //sTranslated[MAX_MESSAGE_LENGTH];
+	if (kv[client].GetSectionName(sBuffer, sizeof(sBuffer)))
+    {
+        kv[client].GetString(NULL_STRING, sKeyValue, sizeof(sKeyValue), "NoKeyValue");
 
-	Menu hMenu = new Menu(ChMatchModeMenuHandler);
-	hMenu.SetTitle(sTitle);
-
-	char sBuffer[64];
-	g_hModesKV.Rewind();
-
-	if (g_hModesKV.GotoFirstSubKey())
-	{
-		do
-		{
-			g_hModesKV.GetSectionName(sBuffer, sizeof(sBuffer));
-			hMenu.AddItem(sBuffer, sBuffer);
-		}
-		while (g_hModesKV.GotoNextKey(false));
-	}
-
-	hMenu.Display(iClient, 20);
-}
-
-static int ChMatchModeMenuHandler(Menu menu, MenuAction action, int param1, int param2)
-{
-	if (action == MenuAction_End)
-		delete menu;
-
-	else if (action == MenuAction_Select)
-	{
-		char sInfo[64], sBuffer[64];
-		menu.GetItem(param2, sInfo, sizeof(sInfo));
-
-		g_hModesKV.Rewind();
-
-		if (g_hModesKV.JumpToKey(sInfo) && g_hModesKV.GotoFirstSubKey())
-		{
-			char sTitle[64];
-			Format(sTitle, sizeof(sTitle), "%t", "Title_Config", sInfo);
-
-			Menu hMenu = new Menu(ChConfigsMenuHandler);
-			hMenu.SetTitle(sTitle);
-
-			do
-			{
-				g_hModesKV.GetSectionName(sInfo, sizeof(sInfo));
-				g_hModesKV.GetString("name", sBuffer, sizeof(sBuffer));
-
-				hMenu.AddItem(sInfo, sBuffer);
-			}
-			while (g_hModesKV.GotoNextKey());
-
-			hMenu.Display(param1, 20);
-		}
-		else
-		{
-			CPrintToChat(param1, "%t %t", "Tag", "ConfigNotFound");
-			ChMatchModeMenu(param1);
-		}
-	}
-
-	return 0;
-}
-
-static int ChConfigsMenuHandler(Menu menu, MenuAction action, int param1, int param2)
-{
-	if (action == MenuAction_End)
-		delete menu;
-
-	else if (action == MenuAction_Cancel)
-		ChMatchModeMenu(param1);
-
-	else if (action == MenuAction_Select)
-	{
-		char sInfo[64], sBuffer[64];
-		menu.GetItem(param2, sInfo, sizeof(sInfo), _, sBuffer, sizeof(sBuffer));
-
-		if (StartChMatchVote(param1, sBuffer))
-		{
-			strcopy(g_sCfg, sizeof(g_sCfg), sInfo);
-			// caller is voting for
-			FakeClientCommand(param1, "Vote Yes");
-		}
-		else ChMatchModeMenu(param1);
-	}
-
-	return 0;
-}
-
-static bool StartChMatchVote(int iClient, const char[] sCfgName)
-{
-	if (GetClientTeam(iClient) <= TEAM_SPECTATE)
-	{
-		CPrintToChat(iClient, "%t %t", "Tag", "NoSpec");
-		return false;
-	}
-
-	if (IsBuiltinVoteInProgress())
-	{
-		CPrintToChat(iClient, "%t %t", "Tag", "VoteInProgress", CheckBuiltinVoteDelay());
-		return false;
-	}
-
-	int[] iPlayers		= new int[MaxClients];
-	int iNumPlayers		= 0;
-	int iConnectedCount = ProcessPlayers(iPlayers, iNumPlayers);
-
-	if (iNumPlayers < g_hCvarPlayerLimit.IntValue)
-	{
-		CPrintToChat(iClient, "%t %t", "Tag", "NotEnoughPlayers");
-		return false;
-	}
-
-	if (iConnectedCount > 0)
-	{
-		CPrintToChat(iClient, "%t %t", "Tag", "PlayersConnecting");
-		return false;
-	}
-
-	char sTitle[64];
-	Format(sTitle, sizeof(sTitle), "%T", "Title_ChangeConfogl", LANG_SERVER, sCfgName);
-
-	g_hVote = CreateBuiltinVote(VoteActionHandler, BuiltinVoteType_Custom_YesNo, BuiltinVoteAction_Cancel | BuiltinVoteAction_VoteEnd | BuiltinVoteAction_End);
-	SetBuiltinVoteArgument(g_hVote, sTitle);
-	SetBuiltinVoteInitiator(g_hVote, iClient);
-	SetBuiltinVoteResultCallback(g_hVote, ChMatchVoteResultHandler);
-	DisplayBuiltinVote(g_hVote, iPlayers, iNumPlayers, 20);
-
-	return true;
-}
-
-static void ChMatchVoteResultHandler(Handle vote, int num_votes, int num_clients, const int[][] client_info, int num_items, const int[][] item_info)
-{
-	for (int i = 0; i < num_items; i++)
-	{
-		if (item_info[i][BUILTINVOTEINFO_ITEM_INDEX] == BUILTINVOTES_VOTE_YES)
-		{
-			if (item_info[i][BUILTINVOTEINFO_ITEM_VOTES] > (num_votes / 2))
-			{
-				char sVotepass[24];
-				Format(sVotepass, sizeof(sVotepass), "%T", "VotePass_Changed", LANG_SERVER);
-
-				DisplayBuiltinVotePass(vote, sVotepass);
-				ServerCommand("sm_forcechangematch %s", g_sCfg);
-				return;
-			}
-		}
-	}
-
-	DisplayBuiltinVoteFail(vote, BuiltinVoteFail_Loses);
+        //Format(sTranslated, sizeof(sTranslated), "%T", client, sBuffer);
+        if (StrEqual(sKeyValue, "NoKeyValue"))
+            menu.AddItem(sBuffer, sBuffer);
+        else
+            menu.AddItem(sKeyValue, sBuffer);
+    }
 }
