@@ -10,20 +10,21 @@ void CG_OnPluginStart()
 
 static Action Command_DumpPluigns(int args)
 {
-	if (args < 3)
+	if (args < 2)
 	{
-		PrintToServer("[Confogl] Usage: sm_make_confogl <name> <plugin_path> <cvar_path>");
+		PrintToServer("[Confogl] Usage: sm_make_confogl <name> <plugin_path>");
 		return Plugin_Handled;
 	}
 
-	char szPath[256], char szEntry[256];
+	char szPath[256], szEntry[256], szSearchPath[256];
 	GetCmdArg(2, szPath, sizeof(szPath));	// optional/some_confogl_plugin
-	BuildPath(Path_SM, szEntry, sizeof(szEntry), szPath);
+	Format(szSearchPath, sizeof(szSearchPath), "%s/%s", "plugins", szPath);	// plugins/optional/some_confogl_plugin
+	BuildPath(Path_SM, szEntry, sizeof(szEntry), szSearchPath);
 
 	DirectoryListing hDir = OpenDirectory(szEntry);
 	if (!hDir)
 	{
-		PrintToServer(client, "[Confogl] Failed to open folder path: \"%s\".", szEntry);
+		PrintToServer("[Confogl] Failed to open folder path: \"%s\".", szEntry);
 		return Plugin_Handled;
 	}
 
@@ -40,14 +41,14 @@ static Action Command_DumpPluigns(int args)
 			continue;
 
 		int len = strlen(szFile);
-		if( len > 3 &&
+		if( len > 4 &&
 			szFile[len - 4] == '.' &&
 			szFile[len - 3] == 's' &&
 			szFile[len - 2] == 'm' &&
 			szFile[len - 1] == 'x'
 		)
 		{
-			Format(szFile, sizeof(szFile), "%s/%s", szEntry, szFile);	// optional/some_confogl_plugin/xxx.smx
+			Format(szFile, sizeof(szFile), "%s/%s", szPath, szFile);	// optional/some_confogl_plugin/xxx.smx
 			hArray.PushString(szFile);
 		}
 	}
@@ -64,7 +65,7 @@ static Action Command_DumpPluigns(int args)
 		return Plugin_Handled;
 	}
 
-	BuildPath(Path_SM, szName, sizeof(szName), "../../cfg/cfgogl/%s/confogl_plugins.cfg", szName);	// ../../cfg/cfgogl/some_confogl_config/confogl_plugins.cfg
+	Format(szName, sizeof(szName), "cfg/cfgogl/%s/confogl_plugins.cfg", szName);	// ../../cfg/cfgogl/some_confogl_config/confogl_plugins.cfg
 	File hFile = OpenFile(szName, "w");
 	if (!hFile)
 	{

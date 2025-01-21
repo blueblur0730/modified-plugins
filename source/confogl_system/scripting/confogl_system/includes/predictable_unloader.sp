@@ -42,7 +42,7 @@ static Action UnloadPlugins(int args)
 	if (bIsChMatch)
 		return Plugin_Handled;
 
-	char stockpluginname[64];
+	char stockPluginName[64];
 	Handle currentPlugin = null;
 	Handle pluginIterator = GetPluginIterator();
 
@@ -52,11 +52,11 @@ static Action UnloadPlugins(int args)
 		if (!currentPlugin)
 			continue;
 
-		GetPluginFilename(currentPlugin, stockpluginname, sizeof(stockpluginname));
+		GetPluginFilename(currentPlugin, stockPluginName, sizeof(stockPluginName));
 
 		// We're not pushing ourselves into the array as we'll unload it on a timer at the end.
-		if (!StrEqual(sPlugin, stockpluginname))
-			aReservedPlugins.PushString(stockpluginname);
+		if (!StrEqual(sPlugin, stockPluginName))
+			aReservedPlugins.PushString(stockPluginName);
 	}
 
 	delete currentPlugin;	 // This one I probably don't have to close, but whatevs.
@@ -78,17 +78,17 @@ static Action UnloadPlugins(int args)
 	CVS_OnModuleEnd();
 	PS_OnModuleEnd();
 
-	// Refresh first, then unload this plugin.
-	// Using Timers because these are time crucial and ServerCommands aren't a 100% reliable in terms of execution order.
-	CreateTimer(0.1, Timer_RefreshPlugins);
+	RequestFrame(NextFrame_RefreshPlugins);
+	//CreateTimer(0.1, Timer_RefreshPlugins);
 
 	return Plugin_Handled;
 }
 
-static void Timer_RefreshPlugins(Handle timer)
+static void NextFrame_RefreshPlugins()
 {
 #if DEBUG_ALL
 	PrintToServer("### Timer_RefreshPlugins: Refreshing plugins now");
 #endif
 	ServerCommand("sm plugins refresh");
+	ServerExecute();
 }

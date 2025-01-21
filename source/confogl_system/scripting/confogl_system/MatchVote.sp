@@ -90,10 +90,11 @@ static void MatchModeMenu(int iClient)
 			TraverseKeys(hMenu, iClient);
 		}
 		while (kv[iClient].GotoNextKey(false));
+		kv[iClient].Rewind(false);
 
 		if (!hMenu.ItemCount)
         {
-            CPrintToChat(iClient, "%t", "NoVoteItem");
+            CPrintToChat(iClient, "%t %t", "Tag", "NoVoteItem");
             delete hMenu;
             delete kv[iClient];
             return;
@@ -105,7 +106,7 @@ static void MatchModeMenu(int iClient)
 	}
 	else
 	{
-        CPrintToChat(iClient, "%t", "NoVoteItem");
+        CPrintToChat(iClient, "%t %t", "Tag", "NoVoteItem");
         delete hMenu;
         delete kv[iClient];
         return;
@@ -130,8 +131,8 @@ static void MatchModeMenuHandler(Menu menu, MenuAction action, int param1, int p
 
 		if (kv[param1].JumpToKey(sBuffer))
 		{
-			kv[param1].SavePosition();
-            if (kv[param1].GotoFirstSubKey(false))
+			//kv[param1].SavePosition();
+            if (kv[param1].GotoFirstSubKey())
             {
                 Menu menu2 = new Menu(MatchModeMenuHandler);
                 Format(sBuffer, sizeof(sBuffer), "%T", "VoteMenuTitle2", param1, sDisplayBuffer);
@@ -141,12 +142,12 @@ static void MatchModeMenuHandler(Menu menu, MenuAction action, int param1, int p
                 {
                     TraverseKeys(menu2, param1);
                 }
-                while (kv[param1].GotoNextKey(false));
-                kv[param1].GoBack();
+                while (kv[param1].GotoNextKey());
+                //kv[param1].GoBack();
 
                 if (!menu2.ItemCount)
                 {
-                    CPrintToChat(param1, "%t", "NoVoteItem");
+                    CPrintToChat(param1, "%t %t", "Tag", "NoVoteItem");
                     MatchModeMenu(param1);
                     delete menu2;
                 }
@@ -161,7 +162,7 @@ static void MatchModeMenuHandler(Menu menu, MenuAction action, int param1, int p
 		{
             if (!L4D2NativeVote_IsAllowNewVote())
             {
-                CPrintToChat(param1, "%t", "VoteInProgress");
+                CPrintToChat(param1, "%t %t", "Tag", "VoteInProgress");
                 return;
             }
 
@@ -199,7 +200,7 @@ static void MatchModeMenuHandler(Menu menu, MenuAction action, int param1, int p
 
             if (!vote.DisplayVote(iClients, iPlayerCount, 20))
             {
-                CPrintToChat(param1, "%t", "VoteFailedDisPlay");
+                CPrintToChat(param1, "%t %t", "Tag", "VoteFailedDisPlay");
                 LogError("[Confogl] Vote failed to display.");
             } 
 		}
@@ -211,12 +212,10 @@ static void LoadVoteHandler(L4D2NativeVote vote, VoteAction action, int param1, 
     switch (action)
     {
 		case VoteAction_Start:
-			CPrintToChatAllEx(param1, "%t", "HasInitiatedVote", param1);
+			CPrintToChatAllEx(param1, "%t %t", "Tag", "HasInitiatedVote", param1);
 
 		case VoteAction_PlayerVoted:
 		{
-			CPrintToChatAllEx(param1, "%t", "Voted", param1);
-
 			switch (param2)
 			{
 				case VOTE_YES: vote.YesCount++;
@@ -229,15 +228,16 @@ static void LoadVoteHandler(L4D2NativeVote vote, VoteAction action, int param1, 
 			if (vote.YesCount >= vote.PlayerCount / 2)
 			{
 				vote.SetPass("正在执行...");
-                CPrintToChatAll("%t", "PassingVote");
+                CPrintToChatAll("%t %t", "Tag", "PassingVote");
 
-				char sInfo[256];
+				char sInfo[256], sMap[256];
 				vote.GetInfo(sInfo, sizeof(sInfo));
-				PrepareLoad(0, sInfo, "");
+				GetCurrentMap(sMap, sizeof(sMap));
+				PrepareLoad(0, sInfo, sMap);
 			}
 			else
             {
-                CPrintToChatAll("%t", "VoteFailed");
+                CPrintToChatAll("%t %t", "Tag", "VoteFailed");
                 vote.SetFail();
             }
 		}
@@ -316,7 +316,7 @@ static void StartResetMatchVote(int iClient)
 
     if (!vote.DisplayVote(iClients, iPlayerCount, 20))
     {
-        CPrintToChat(iClient, "%t", "VoteFailedDisPlay");
+        CPrintToChat(iClient, "%t %t", "Tag", "VoteFailedDisPlay");
         LogError("[Confogl] Vote failed to display.");
     } 
 }
@@ -326,11 +326,11 @@ static void ResetVoteHandler(L4D2NativeVote vote, VoteAction action, int param1,
     switch (action)
     {
 		case VoteAction_Start:
-			CPrintToChatAllEx(param1, "%t", "HasInitiatedVote", param1);
+			CPrintToChatAllEx(param1, "%t %t", "Tag", "HasInitiatedVote", param1);
 
 		case VoteAction_PlayerVoted:
 		{
-			CPrintToChatAllEx(param1, "%t", "Voted", param1);
+			CPrintToChatAllEx(param1, "%t %t", "Tag", "Voted", param1);
 
 			switch (param2)
 			{
@@ -344,12 +344,12 @@ static void ResetVoteHandler(L4D2NativeVote vote, VoteAction action, int param1,
 			if (vote.YesCount >= vote.PlayerCount / 2)
 			{
 				vote.SetPass("正在卸载...");
-                CPrintToChatAll("%t", "VotePass_Unloading");
+                CPrintToChatAll("%t %t", "Tag", "VotePass_Unloading");
 				RM_Match_Unload(true);
 			}
 			else
             {
-                CPrintToChatAll("%t", "VoteFailed");
+                CPrintToChatAll("%t %t", "Tag", "VoteFailed");
                 vote.SetFail();
             }
 		}

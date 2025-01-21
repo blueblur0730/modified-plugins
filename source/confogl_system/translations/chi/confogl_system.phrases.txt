@@ -2,98 +2,114 @@
 {
     "Tag"
     {
-        "chi"        "[{olive}Confogl{default}]"	// 你可以填自己的服务器logo或者tag
+        "chi"           "[{olive}Confogl{default}]"	// 你可以填自己的服务器logo或者tag
     }
 
     // MatchVote.sp
     "Disabled"
     {
-        "chi"        "插件已 {red}禁用{default}"
+        "chi"           "插件已 {red}禁用{default}"
     }
 
     "NoConsole"
     {
-        "chi"        "你不能从控制台使用此指令."
+        "chi"           "你不能从控制台使用此指令."
     }
 
     "Title_Match"
     {
-        "chi"        "选择配置:"
+        "chi"           "选择配置:"
     }
 
-    "Title_Config"
+    "NoVoteItem"
     {
-        "#format"   "{1:s}"
-        "chi"        "选择类型 {1}:"
+        "chi"           "没有找到投票选项."
     }
 
-    "ConfigNotFound"
+    "VoteMenuTitle2"
     {
-        "chi"        "没有找到相应的配置."
+        "#format"       "{1:s}"
+        "chi"           "选择类型 {1}:"
     }
 
     "NoSpec"
     {
-        "chi"        "旁观者不允许发起投票."
+        "chi"           "旁观者不允许发起投票."
     }
 
     "MatchLoaded"
     {
-        "chi"        "配置已经加载!"
+        "chi"           "配置已经加载!"
     }
 
     "NotEnoughPlayers"
     {
-        "#format"   "{1:d},{2:d}"
-        "chi"        "不能发起投票. {red}人数不足{default} ({red}{1}{default}/{green}{2}{default})."
-    }
-
-    "Title_LoadConfig"
-    {
-        "#format"   "{1:s}"
-        "chi"        "加载 Confogl 配置 '{1}' ?"
+        "#format"       "{1:d},{2:d}"
+        "chi"           "不能发起投票. {red}人数不足{default} ({red}{1}{default}/{green}{2}{default})."
     }
 
     "VoteInProgress"
     {
-        "#format"   "{1:d}"
-        "chi"        "{red}投票正进行中{default}, 请等待 {green}{1}{default} 秒."
-    }
-
-    "VotePass_Loading"
-    {
-        "chi"        "配置加载中..."
+        "chi"           "投票正进行中."
     }
 
     "MatchNotLoaded"
     {
-        "chi"        "{red}没有配置{default} 加载."
+        "chi"           "{red}没有配置{default} 加载."
+    }
+
+    "VoteFailedDisPlay"
+    {
+        "chi"           "投票未能成功发起."
+    }
+
+    "PassingVote"
+    {
+        "chi"           "投票通过."
     }
 
     "PlayersConnecting"
     {
-        "chi"        "不能发起投票. 玩家正在连接."
+        "chi"           "不能发起投票. 玩家正在连接."
     }
 
-    "Title_OffConfogl"
+    "HasInitiatedVote"
     {
-        "chi"        "卸载 Confogl 配置?"
+        "#format"       "{1:N}"
+        "chi"           "{teamcolor}{1}{default} 发起了一个投票."
+    }
+
+    "Voted"
+    {
+        "#format"       "{1:N}"
+        "chi"           "{teamcolor}{1}{default} 已投票."
+    }
+
+    "VoteFailedNotEnough"
+    {
+        "#format"       "{1:d}"
+        "chi"           "投票失败. 未能获得足够多的票数 ({red}{1}{default})."
+    }
+
+    "VoteFailed"
+    {
+        "chi"           "投票未能通过."
     }
 
     "VotePass_Unloading"
     {
-        "chi"        "Confogl 配置卸载中..."
+        "chi"           "Confogl 正在卸载.."
     }
 
     "Title_ChangeConfogl"
     {
-        "#format"   "{1:s}"
-        "chi"        "更改 Confogl 配置为 '{1}'?"
+        "#format"       "{1:s}"
+        "chi"           "更改confogl配置为 '{1}'?"
     }
 
     "VotePass_Changed"
     {
-        "chi"        "配置更改中..."
+        "chi"           "游戏配置已更改..."
     }
 
     // ClientSettings.sp

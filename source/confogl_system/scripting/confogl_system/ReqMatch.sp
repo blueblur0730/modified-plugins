@@ -9,8 +9,6 @@
 #define MAPRESTARTTIME 3.0
 #define RESETMINTIME   60.0
 
-bool RM_bIsMatchModeLoaded = false;
-
 static bool
 	RM_bDebugEnabled = RM_DEBUG,
 	// RM_bMatchRequest[2] = {false, ...},
@@ -20,8 +18,7 @@ static bool
 
 static GlobalForward
 	RM_hFwdMatchLoad   = null,
-	RM_hFwdMatchUnload = null,
-	RM_HFwdChMatch	   = null;
+	RM_hFwdMatchUnload = null;
 
 static ConVar
 	RM_hSbAllBotGame	   = null,
@@ -38,7 +35,6 @@ void RM_APL()
 {
 	RM_hFwdMatchLoad   = CreateGlobalForward("LGO_OnMatchModeLoaded", ET_Ignore);
 	RM_hFwdMatchUnload = CreateGlobalForward("LGO_OnMatchModeUnloaded", ET_Ignore);
-	RM_HFwdChMatch     = CreateGlobalForward("LGO_OnChMatch", ET_Ignore);
 
 	CreateNative("LGO_IsMatchModeLoaded", native_IsMatchModeLoaded);
 }
@@ -55,8 +51,6 @@ void RM_OnModuleStart()
 	RegAdminCmd("sm_forcematch", RM_Cmd_ForceMatch, ADMFLAG_CONFIG, "Forces the game to use match mode");
 	RegAdminCmd("sm_fm", RM_Cmd_ForceMatch, ADMFLAG_CONFIG, "Forces the game to use match mode");
 	RegAdminCmd("sm_resetmatch", RM_Cmd_ResetMatch, ADMFLAG_CONFIG, "Forces match mode to turn off REGRADLESS for always on or forced match");
-	RegAdminCmd("sm_forcechangematch", RM_CMD_ChangeMatch, ADMFLAG_CONFIG, "Forces the match to be changed");
-	RegAdminCmd("sm_fchmatch", RM_CMD_ChangeMatch, ADMFLAG_CONFIG, "Forces the match to be changed");
 
 	RM_hSbAllBotGame = FindConVar("sb_all_bot_game");
 	RM_hReloaded	 = FindConVarEx("match_reloaded");
@@ -342,83 +336,6 @@ static Action RM_Cmd_ResetMatch(int client, int args)
 	RM_Match_Unload(true);
 
 	return Plugin_Handled;
-}
-
-static Action RM_CMD_ChangeMatch(int client, int args)
-{
-	if (args < 1)
-	{
-		if (client == 0)
-			PrintToServer("[Confogl] Please specify a config to load.");
-		else
-			CPrintToChat(client, "%t %t", "Tag", "SpecifyConfig");
-
-		return Plugin_Handled;
-	}
-
-	char sBuffer[128];
-	GetCmdArg(1, sBuffer, sizeof(sBuffer));
-
-	if (!RM_UpdateCfgOn(sBuffer, false))
-	{
-		if (client == 0)
-			PrintToServer("[Confogl] Config %s not found!", sBuffer);
-		else
-			CPrintToChat(client, "%t %t", "Tag", "RE_ConfigNotFound", sBuffer);
-
-		return Plugin_Handled;
-	}
-
-	char sMap[PLATFORM_MAX_PATH], sDisplayName[PLATFORM_MAX_PATH];
-
-	if (args == 2)
-	{
-		GetCmdArg(2, sMap, sizeof(sMap));
-
-		if (FindMap(sMap, sDisplayName, sizeof(sDisplayName)) == FindMap_NotFound)
-		{
-			if (client == 0)
-				PrintToServer("[Confogl] Map %s not found!", sMap);
-			else
-					CPrintToChat(client, "%t %t", "Tag", "MapNotFound", sMap);
-
-			return Plugin_Handled;
-		}
-
-		GetMapDisplayName(sDisplayName, sDisplayName, sizeof(sDisplayName));
-		RM_hChangeMap.SetString(sDisplayName);
-	}
-
-	// Unload
-	if (!RM_bIsMatchModeLoaded)
-		return Plugin_Handled;
-
-	Call_StartForward(RM_HFwdChMatch);
-	Call_Finish();
-
-	if (RM_bDebugEnabled || IsDebugEnabled())
-		LogMessage("[%s] Match mode forced to unload! [Change in this case!]", RM_MODULE_NAME);
-
-	RM_Match_Unload(true);
-
-	// give time to fully finish unloading.
-	CreateTimer(1.0, Timer_DelayToLoadMatchMode);
-
-	return Plugin_Handled;
-}
-
-static void Timer_DelayToLoadMatchMode(Handle timer)
-{
-	// Load
-	if (RM_bIsMatchModeLoaded)
-		return;
-
-	if (RM_bDebugEnabled || IsDebugEnabled())
-		LogMessage("[%s] Match mode forced to load! [Change in this case!]", RM_MODULE_NAME);
-
-	RM_Match_Load();
-
-	return;
 }
 
 void RM_OnClientDisconnect(int client)
