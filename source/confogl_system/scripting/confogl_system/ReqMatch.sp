@@ -45,7 +45,7 @@ void RM_OnModuleStart()
 	RM_hAutoLoad		   = CreateConVarEx("match_autoload", "0", "Has match mode start up automatically when a player connects and the server is not in match mode", _, true, 0.0, true, 1.0);
 	RM_hAutoCfg			   = CreateConVarEx("match_autoconfig", "", "Specify which config to load if the autoloader is enabled");
 	RM_hConfigFile_On	   = CreateConVarEx("match_execcfg_on", "confogl.cfg", "Execute this config file upon match mode starts and every map after that.");
-	RM_hConfigFile_Plugins = CreateConVarEx("match_execcfg_plugins", "generalfixes.cfg;confogl_plugins.cfg;sharedplugins.cfg", "Execute this config file upon match mode starts. This will only get executed once and meant for plugins that needs to be loaded.");	   // rework
+	RM_hConfigFile_Plugins = CreateConVarEx("match_execcfg_plugins", "confogl_plugins.cfg;sharedplugins.cfg", "Execute this config file upon match mode starts. This will only get executed once and meant for plugins that needs to be loaded.");	   // rework
 	RM_hConfigFile_Off	   = CreateConVarEx("match_execcfg_off", "confogl_off.cfg", "Execute this config file upon match mode ends.");
 
 	RegAdminCmd("sm_forcematch", RM_Cmd_ForceMatch, ADMFLAG_CONFIG, "Forces the game to use match mode");
@@ -116,6 +116,7 @@ static void RM_Match_Load()
 		if (RM_bDebugEnabled || IsDebugEnabled())
 			LogMessage("[%s] Loading plugins and reload self", RM_MODULE_NAME);
 
+		RM_bIsLoadingConfig = true;
 		RM_hReloaded.SetInt(1);
 		RM_hConfigFile_Plugins.GetString(sBuffer, sizeof(sBuffer));
 
@@ -176,6 +177,8 @@ static void RM_Match_Load()
 
 	Call_StartForward(RM_hFwdMatchLoad);
 	Call_Finish();
+
+	RM_bIsLoadingConfig = false;
 }
 
 void RM_Match_Unload(bool bForced = false)

@@ -3,92 +3,72 @@
 #endif
 #define __confogl_predictable_unloader_included
 
-static ArrayList aReservedPlugins;
-static bool		 bIsChMatch = false;
-static char		 sPlugin[PLATFORM_MAX_PATH];
-
 void PU_OnPluginStart()
 {
-	// here we retrieve the plugin path for predictable unloader to use.
-	GetPluginFilename(INVALID_HANDLE, sPlugin, sizeof(sPlugin));
-
-#if DEBUG_ALL
-	PrintToServer("### PU_OnPluginStart: %s", sPlugin);
-#endif
-
 	RegServerCmd("pred_unload_plugins", UnloadPlugins, "Unload Plugins!");
-
-	// Reserved Plugins
-	aReservedPlugins = new ArrayList(PLATFORM_MAX_PATH);
 }
 
 void PU_OnPluginEnd()
 {
-	delete aReservedPlugins;
-}
-
-public void LGO_OnChMatch()
-{
-	bIsChMatch = true;
-}
-
-public void LGO_OnMatchModeLoaded()
-{
-	bIsChMatch = false;
+	// we merged this together, so dont let it confuse the loading process.
+	if (!RM_bIsLoadingConfig)
+		ServerCommand("sm plugins refresh");
 }
 
 static Action UnloadPlugins(int args)
 {
-	if (bIsChMatch)
-		return Plugin_Handled;
+	ArrayStack aReservedPlugins = new ArrayStack();
+	Handle mySelf = GetMyHandle();
 
-	char stockPluginName[64];
-	Handle currentPlugin = null;
-	Handle pluginIterator = GetPluginIterator();
-
-	while (MorePlugins(pluginIterator))
+	// Thanks to Forgetest.
+	if (args == -1)
 	{
-		currentPlugin = ReadPlugin(pluginIterator);
-		if (!currentPlugin)
-			continue;
+		// Ourself as the last to unload.
+		aReservedPlugins.Push(mySelf);
+	}
+	else
+	{
+		Handle currentPlugin = null;
+		Handle pluginIterator = GetPluginIterator();
+		while (MorePlugins(pluginIterator))
+		{
+			currentPlugin = ReadPlugin(pluginIterator);
+			if (!currentPlugin)
+				continue;
 
-		GetPluginFilename(currentPlugin, stockPluginName, sizeof(stockPluginName));
+			// We're not pushing ourselves into the array as we'll unload it on a timer at the end.
+			if (currentPlugin != mySelf)
+			aReservedPlugins.Push(currentPlugin);
+		}
 
-		// We're not pushing ourselves into the array as we'll unload it on a timer at the end.
-		if (!StrEqual(sPlugin, stockPluginName))
-			aReservedPlugins.PushString(stockPluginName);
+		delete pluginIterator;
 	}
 
-	delete currentPlugin;	 // This one I probably don't have to close, but whatevs.
-	delete pluginIterator;
 
 	ServerCommand("sm plugins load_unlock");
 
-	for (int iSize = aReservedPlugins.Length; iSize > 0; iSize--)
+	char sReserved[PLATFORM_MAX_PATH];
+	while (!aReservedPlugins.Empty)
 	{
-		static char sReserved[PLATFORM_MAX_PATH];
-		aReservedPlugins.GetString(iSize - 1, sReserved, sizeof(sReserved));	// -1 because of how arrays work. :)
+		Handle hPlugin = aReservedPlugins.Pop();
+		GetPluginFilename(hPlugin, sReserved, sizeof(sReserved));
 		ServerCommand("sm plugins unload %s", sReserved);
 	}
 
-	// clear all buffers.
-	aReservedPlugins.Clear();
+	delete aReservedPlugins;
 
 	// this is going to need a hook. some status should be reset if we dont want to unload ourselves.
-	CVS_OnModuleEnd();
-	PS_OnModuleEnd();
-
-	RequestFrame(NextFrame_RefreshPlugins);
-	//CreateTimer(0.1, Timer_RefreshPlugins);
+	if (args != -1) 
+	{
+		CVS_OnModuleEnd();
+		PS_OnModuleEnd();
+		RequestFrame(NextFrame_RefreshPlugins);
+	}
 
 	return Plugin_Handled;
 }
 
 static void NextFrame_RefreshPlugins()
 {
-#if DEBUG_ALL
-	PrintToServer("### Timer_RefreshPlugins: Refreshing plugins now");
-#endif
-	ServerCommand("sm plugins refresh");
-	ServerExecute();
+	UnloadPlugins(-1);
 }

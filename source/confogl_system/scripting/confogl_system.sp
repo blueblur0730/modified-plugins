@@ -2,7 +2,7 @@
 #pragma newdecls required
 
 #define DEBUG_ALL				   0
-#define PLUGIN_VERSION			   "r1.6"	// 2.4.5 rework
+#define PLUGIN_VERSION			   "r1.6.2"	// 2.4.5 rework
 
 #include <sourcemod>
 #include <sdktools>
@@ -12,7 +12,9 @@
 #undef REQUIRE_PLUGIN
 #include <l4d2_changelevel>
 
-bool RM_bIsMatchModeLoaded = false;
+bool 
+	RM_bIsMatchModeLoaded = false,
+	RM_bIsLoadingConfig   = false;
 
 // Basic helper here.
 #include "confogl_system/includes/constants.sp"

@@ -163,19 +163,20 @@ methodmap L4D2NativeVote {
 	}
 	
 	public void SetPass(const char[] fmt, any ...) {
+        char buffer[256];
         BfWrite bf = UserMessageToBfWrite(StartMessageAll("VotePass", USERMSG_RELIABLE));
 	    bf.WriteByte(-1);
 	    bf.WriteString("#L4D_TargetID_Player");
-	    bf.WriteString(fmt);
+        VFormat(buffer, sizeof(buffer), fmt, 3);
+	    bf.WriteString(buffer);
 	    EndMessage();
-	    CreateTimer(1.0, ResetVote_Timer);
+        RequestFrame(OnNextFrame_ResetVote);
     }
 
 	public void SetFail() {
 	    BfWrite bf = UserMessageToBfWrite(StartMessageAll("VoteFail", USERMSG_RELIABLE));
 	    bf.WriteByte(-1);
 	    EndMessage();
-	    CreateTimer(1.0, ResetVote_Timer);
     }
 }
 
@@ -263,7 +264,7 @@ static void UpdateVotes(VoteAction action, int param1 = -1, int param2 = -1)
 	}
 }
 
-static void ResetVote_Timer(Handle timer)
+static void OnNextFrame_ResetVote()
 {
 	ResetVote();
 }
