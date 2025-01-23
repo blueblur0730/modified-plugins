@@ -1,10 +1,8 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define DEBUG_ALL				   1
-#define PLUGIN_VERSION			   "r1.4"	// 2.4.5 rework
-
-#define VOTE_API_BUILTINVOTE 1		// will work in the future. for now dont turn it off.
+#define DEBUG_ALL				   0
+#define PLUGIN_VERSION			   "r1.6"	// 2.4.5 rework
 
 #include <sourcemod>
 #include <sdktools>
@@ -12,22 +10,20 @@
 #include <colors>
 
 #undef REQUIRE_PLUGIN
-#include <l4d2_nativevote>
-
-#undef REQUIRE_PLUGIN
 #include <l4d2_changelevel>
 
 bool RM_bIsMatchModeLoaded = false;
 
-// Includes here
+// Basic helper here.
 #include "confogl_system/includes/constants.sp"
 #include "confogl_system/includes/functions.sp"
 #include "confogl_system/includes/debug.sp"
 #include "confogl_system/includes/configs.sp"
 #include "confogl_system/includes/customtags.sp"
 #include "confogl_system/includes/predictable_unloader.sp"	// Predictable Unloader by Sir
+#include "confogl_system/includes/voting.sp"				// nativevote by Powerlord, fdxx. This built-in version is to make sure our vote can work as usual.
 
-// Modules here
+// Main Modules here.
 #include "confogl_system/ReqMatch.sp"
 #include "confogl_system/MatchVote.sp"
 #include "confogl_system/CvarSettings.sp"
@@ -53,14 +49,15 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	Configs_APL();	  // configs
 	RM_APL();	 	  // ReqMatch
 
-	RegPluginLibrary("confogl_system");
+	// make it consistent.
+	RegPluginLibrary("confogl");
 	return APLRes_Success;
 }
 
 public void OnPluginStart()
 {
 	// translation file should be the first thing to do. 
-	// other wise plugin cant translate the phrases and goes rong.
+	// other wise plugin cant translate the phrases and goes wrong.
 	LoadTranslation(TRANSLATION_FILE);
 
 	// Plugin functions
@@ -69,6 +66,7 @@ public void OnPluginStart()
 	Configs_OnModuleStart();			// configs
 	CT_OnModuleStart();					// customtags
 	PU_OnPluginStart();					// Predictable Unloader
+	VT_OnPluginStart();					// Voting
 
 	// Modules
 	MV_OnModuleStart();	   	// MatchVote
@@ -96,11 +94,13 @@ public void OnPluginEnd()
 public void OnMapStart()
 {
 	RM_OnMapStart();	// ReqMatch
+	VT_OnMapStart();	// Voting
 }
 
 public void OnMapEnd()
 {
 	PS_OnMapEnd();	  // PasswordSystem
+	VT_OnMapEnd();	  // Voting
 }
 
 public void OnConfigsExecuted()

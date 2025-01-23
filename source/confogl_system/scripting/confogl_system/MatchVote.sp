@@ -160,7 +160,7 @@ static void MatchModeMenuHandler(Menu menu, MenuAction action, int param1, int p
 		}
 		else
 		{
-            if (!L4D2NativeVote_IsAllowNewVote())
+            if (!ShouldAllowNewVote())
             {
                 CPrintToChat(param1, "%t %t", "Tag", "VoteInProgress");
                 return;
@@ -198,7 +198,7 @@ static void MatchModeMenuHandler(Menu menu, MenuAction action, int param1, int p
             vote.Initiator = param1;
             vote.SetInfo(sBuffer);
 
-            if (!vote.DisplayVote(iClients, iPlayerCount, 20))
+            if (!vote.DisplayVote(iClients, iPlayerCount, 20.0))
             {
                 CPrintToChat(param1, "%t %t", "Tag", "VoteFailedDisPlay");
                 LogError("[Confogl] Vote failed to display.");
@@ -277,7 +277,7 @@ static Action MatchReset(int iClient, int iArgs)
 
 static void StartResetMatchVote(int iClient)
 {
-    if (!L4D2NativeVote_IsAllowNewVote())
+    if (!ShouldAllowNewVote())
     {
         CPrintToChat(iClient, "%t", "VoteInProgress");
         return;
@@ -314,7 +314,7 @@ static void StartResetMatchVote(int iClient)
     vote.SetTitle("卸载当前配置?");
     vote.Initiator = iClient;
 
-    if (!vote.DisplayVote(iClients, iPlayerCount, 20))
+    if (!vote.DisplayVote(iClients, iPlayerCount, 20.0))
     {
         CPrintToChat(iClient, "%t %t", "Tag", "VoteFailedDisPlay");
         LogError("[Confogl] Vote failed to display.");
