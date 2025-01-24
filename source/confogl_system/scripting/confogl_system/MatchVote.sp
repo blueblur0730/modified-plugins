@@ -27,11 +27,6 @@ void MV_OnModuleStart()
 	RegConsoleCmd("sm_rmatch", MatchReset);
 }
 
-void MV_OnConfigsExecuted()
-{
-
-}
-
 void MV_OnPluginEnd()
 {
 	for (int i = 1; i < MaxClients; i++)
@@ -82,15 +77,16 @@ static void MatchModeMenu(int iClient)
         kv[iClient].ImportFromFile(g_sConfigPath);
     }
 
+	char sBuffer[64];
 	kv[iClient].Rewind();
-	if (kv[iClient].GotoFirstSubKey(false))
+	if (kv[iClient].GotoFirstSubKey())
 	{
 		do
 		{
-			TraverseKeys(hMenu, iClient);
+			kv[iClient].GetSectionName(sBuffer, sizeof(sBuffer));
+			hMenu.AddItem(sBuffer, sBuffer);
 		}
-		while (kv[iClient].GotoNextKey(false));
-		kv[iClient].Rewind(false);
+		while (kv[iClient].GotoNextKey());
 
 		if (!hMenu.ItemCount)
         {
@@ -126,84 +122,103 @@ static void MatchModeMenuHandler(Menu menu, MenuAction action, int param1, int p
 
 	if (action == MenuAction_Select)
 	{
+        char sBuffer[MAX_MESSAGE_LENGTH];
+        menu.GetItem(param2, sBuffer, sizeof(sBuffer));
+
+		kv[param1].Rewind();
+		if (kv[param1].JumpToKey(sBuffer) && kv[param1].GotoFirstSubKey())
+		{
+			char sName[256], sValue[256];
+            Menu menu2 = new Menu(SlectMenuHandler);
+            Format(sBuffer, sizeof(sBuffer), "%T", "VoteMenuTitle2", param1, sBuffer);
+            menu2.SetTitle(sBuffer);
+				
+            do
+            {
+				kv[param1].GetSectionName(sName, sizeof(sName));
+				kv[param1].GetString("name", sValue, sizeof(sValue));
+				menu2.AddItem(sName, sValue);
+            }
+            while (kv[param1].GotoNextKey());
+
+            if (!menu2.ItemCount)
+            {
+                CPrintToChat(param1, "%t %t", "Tag", "NoVoteItem");
+                MatchModeMenu(param1);
+                delete menu2;
+				delete kv[param1];
+            }
+            else
+            {
+                menu2.ExitBackButton = true;
+                menu2.Display(param1, 30);
+            }
+		}
+	}
+}
+
+static void SlectMenuHandler(Menu menu, MenuAction action, int param1, int param2)
+{
+	if (action == MenuAction_End)
+		delete menu;
+
+	if (action == MenuAction_Cancel)
+    {
+        if (param2 == MenuCancel_ExitBack)
+            MatchModeMenu(param1);
+    }
+
+	if (action == MenuAction_Select)
+	{
+        if (!ShouldAllowNewVote())
+        {
+            CPrintToChat(param1, "%t %t", "Tag", "VoteInProgress");
+            return;
+        }
+
+        int iPlayerCount = 0;
+	    int[] iClients = new int[MaxClients];
+		int iConnectedCount = 0;
+
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (IsClientInGame(i) && !IsFakeClient(i))
+			{
+				if (GetClientTeam(i) <= 1)
+					continue;
+
+				iClients[iPlayerCount++] = i;
+			}
+
+			if (!IsClientInGame(i) && IsClientConnected(i))
+				iConnectedCount++;
+		}
+
+		if (iConnectedCount > 0)
+		{
+			CPrintToChat(param1, "%t %t", "Tag", "PlayersConnecting");
+			return;
+		}
+
+		if (iPlayerCount < g_hCvarPlayerLimit.IntValue)
+		{
+			CPrintToChat(param1, "%t %t", "Tag", "NotEnoughPlayers", iPlayerCount, g_hCvarPlayerLimit.IntValue);
+			return;
+		}
+
         char sBuffer[MAX_MESSAGE_LENGTH], sDisplayBuffer[MAX_MESSAGE_LENGTH];
         menu.GetItem(param2, sBuffer, sizeof(sBuffer), _, sDisplayBuffer, sizeof(sDisplayBuffer));
 
-		if (kv[param1].JumpToKey(sBuffer))
-		{
-			//kv[param1].SavePosition();
-            if (kv[param1].GotoFirstSubKey())
-            {
-                Menu menu2 = new Menu(MatchModeMenuHandler);
-                Format(sBuffer, sizeof(sBuffer), "%T", "VoteMenuTitle2", param1, sDisplayBuffer);
-                menu2.SetTitle(sBuffer);
+		L4D2NativeVote vote = L4D2NativeVote(LoadVoteHandler);
+        vote.SetTitle("加载 %s?", sDisplayBuffer);
+        vote.Initiator = param1;
+        vote.SetInfo(sBuffer);
 
-                do
-                {
-                    TraverseKeys(menu2, param1);
-                }
-                while (kv[param1].GotoNextKey());
-                //kv[param1].GoBack();
-
-                if (!menu2.ItemCount)
-                {
-                    CPrintToChat(param1, "%t %t", "Tag", "NoVoteItem");
-                    MatchModeMenu(param1);
-                    delete menu2;
-                }
-                else
-                {
-                    menu2.ExitBackButton = true;
-                    menu2.Display(param1, 30);
-                }
-            }
-		}
-		else
-		{
-            if (!ShouldAllowNewVote())
-            {
-                CPrintToChat(param1, "%t %t", "Tag", "VoteInProgress");
-                return;
-            }
-
-            int iPlayerCount = 0;
-	        int[] iClients = new int[MaxClients];
-			int iConnectedCount = ProcessPlayers(iClients, iPlayerCount);
-
-			if (iConnectedCount > 0)
-			{
-				CPrintToChat(param1, "%t %t", "Tag", "PlayersConnecting");
-				return;
-			}
-
-			if (iPlayerCount < g_hCvarPlayerLimit.IntValue)
-			{
-				CPrintToChat(param1, "%t %t", "Tag", "NotEnoughPlayers", iPlayerCount, g_hCvarPlayerLimit.IntValue);
-				return;
-			}
-
-	        for (int i = 1; i <= MaxClients; i++)
-	        {
-		        if (IsClientInGame(i) && !IsFakeClient(i))
-		        {
-			        if (GetClientTeam(i) == L4D2Team_Spectator)
-				         continue;
-
-			        iClients[iPlayerCount++] = i;
-		        }
-	        }
-
-		    L4D2NativeVote vote = L4D2NativeVote(LoadVoteHandler);
-            vote.SetTitle("加载 %s?", sDisplayBuffer);
-            vote.Initiator = param1;
-            vote.SetInfo(sBuffer);
-
-            if (!vote.DisplayVote(iClients, iPlayerCount, 20.0))
-            {
-                CPrintToChat(param1, "%t %t", "Tag", "VoteFailedDisPlay");
-                LogError("[Confogl] Vote failed to display.");
-            } 
-		}
+        if (!vote.DisplayVote(iClients, iPlayerCount, 20.0))
+        {
+            CPrintToChat(param1, "%t %t", "Tag", "VoteFailedDisPlay");
+            LogError("[Confogl] Vote failed to display.");
+        } 
 	}
 }
 
@@ -285,7 +300,21 @@ static void StartResetMatchVote(int iClient)
 
     int iPlayerCount = 0;
 	int[] iClients = new int[MaxClients];
-	int iConnectedCount = ProcessPlayers(iClients, iPlayerCount);
+	int iConnectedCount = 0;
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			if (GetClientTeam(i) <= 1)
+				continue;
+
+			iClients[iPlayerCount++] = i;
+		}
+
+		if (!IsClientInGame(i) && IsClientConnected(i))
+			iConnectedCount++;
+	}
 
 	if (iConnectedCount > 0)
 	{
@@ -297,17 +326,6 @@ static void StartResetMatchVote(int iClient)
 	{
 		CPrintToChat(iClient, "%t %t", "Tag", "NotEnoughPlayers", iPlayerCount, g_hCvarPlayerLimit.IntValue);
 		return;
-	}
-
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i) && !IsFakeClient(i))
-		{
-			if (GetClientTeam(i) == L4D2Team_Spectator)
-				    continue;
-
-			iClients[iPlayerCount++] = i;
-		}
 	}
 
 	L4D2NativeVote vote = L4D2NativeVote(ResetVoteHandler);
@@ -353,20 +371,5 @@ static void ResetVoteHandler(L4D2NativeVote vote, VoteAction action, int param1,
                 vote.SetFail();
             }
 		}
-    }
-}
-
-static void TraverseKeys(Menu menu, int client)
-{
-    static char sBuffer[MAX_MESSAGE_LENGTH], sKeyValue[MAX_MESSAGE_LENGTH]; //sTranslated[MAX_MESSAGE_LENGTH];
-	if (kv[client].GetSectionName(sBuffer, sizeof(sBuffer)))
-    {
-        kv[client].GetString(NULL_STRING, sKeyValue, sizeof(sKeyValue), "NoKeyValue");
-
-        //Format(sTranslated, sizeof(sTranslated), "%T", client, sBuffer);
-        if (StrEqual(sKeyValue, "NoKeyValue"))
-            menu.AddItem(sBuffer, sBuffer);
-        else
-            menu.AddItem(sKeyValue, sBuffer);
     }
 }
