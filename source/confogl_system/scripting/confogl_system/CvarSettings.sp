@@ -294,7 +294,8 @@ static void AddCvar(const char[] cvar, const char[] newval)
 
 static void CVS_ConVarChange(ConVar hConVar, const char[] sOldValue, const char[] sNewValue)
 {
-	if (bTrackingStarted) {
+	if (bTrackingStarted) 
+	{
 		char sName[CVS_CVAR_MAXLEN];
 		hConVar.GetName(sName, sizeof(sName));
 
