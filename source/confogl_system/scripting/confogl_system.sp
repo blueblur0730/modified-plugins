@@ -2,7 +2,7 @@
 #pragma newdecls required
 
 #define DEBUG_ALL				   0
-#define PLUGIN_VERSION			   "r1.6.4"	// 2.4.5 rework
+#define PLUGIN_VERSION			   "r1.6.5"	// 2.4.5 rework
 
 #include <sourcemod>
 #include <sdktools>

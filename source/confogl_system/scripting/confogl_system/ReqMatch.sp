@@ -69,7 +69,7 @@ void RM_OnModuleStart()
 			LogMessage("[%s] Plugin was reloaded from match mode, executing match load", RM_MODULE_NAME);
 
 		RM_bIsPluginsLoaded = true;
-		RM_hReloaded.SetInt(0);
+		RM_hReloaded.BoolValue = false;
 		RM_Match_Load();
 	}
 
@@ -117,7 +117,7 @@ static void RM_Match_Load()
 			LogMessage("[%s] Loading plugins and reload self", RM_MODULE_NAME);
 
 		RM_bIsLoadingConfig = true;
-		RM_hReloaded.SetInt(1);
+		RM_hReloaded.BoolValue = true;
 		RM_hConfigFile_Plugins.GetString(sBuffer, sizeof(sBuffer));
 
 		// ExecuteCfg(sBuffer); //original
@@ -137,14 +137,14 @@ static void RM_Match_Load()
 		return;
 	}
 
+	if (RM_bIsMatchModeLoaded)
+		return;
+
 	RM_hConfigFile_On.GetString(sBuffer, sizeof(sBuffer));
 	ExecuteCfg(sBuffer);
 
 	if (RM_bDebugEnabled || IsDebugEnabled())
 		LogMessage("[%s] Match config executed", RM_MODULE_NAME);
-
-	if (RM_bIsMatchModeLoaded)
-		return;
 
 	if (RM_bDebugEnabled || IsDebugEnabled())
 		LogMessage("[%s] Setting match mode active", RM_MODULE_NAME);
