@@ -91,7 +91,7 @@ native void LGO_ExecuteConfigCfg(const char[] sFileName);
 
 public SharedPlugin __pl_confogl_system =
 {
-	name = "confogl_system",
+	name = "confogl",
 	file = "confogl_system.smx",
 #if defined REQUIRE_PLUGIN
 	required = 1,
