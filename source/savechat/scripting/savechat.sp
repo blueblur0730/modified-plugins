@@ -9,13 +9,15 @@
 #define TEAM_SPECTATOR 1
 #define TEAM_SURVIVOR 2
 #define TEAM_INFECTED 3
+
+#define LOGGER_NAME "savechat"
 #define CONFIG_PATH "configs/savechat.cfg"
 
 ConVar g_hHostport = null;
 bool g_bIsIdling[MAXPLAYERS + 1] = { false, ... };
 Logger g_hLogger = null;
 
-#define PLUGIN_VERSION "r1.3"	// 1.3 reworked.
+#define PLUGIN_VERSION "r1.5"	// 1.3 reworked.
 
 public Plugin myinfo = 
 {
@@ -31,11 +33,12 @@ public void OnPluginStart()
 	CreateConVar("sm_savechat_version", PLUGIN_VERSION, "Plugin version", FCVAR_DONTRECORD | FCVAR_NOTIFY);
 	g_hHostport = FindConVar("hostport");
 
-	g_hLogger = CreateLoggerOrFailed("savechat");
+	g_hLogger = CreateLoggerOrFailed(LOGGER_NAME);
 	g_hLogger.SetLevel(LogLevel_Info);
 	g_hLogger.SetPattern("[%Y-%m-%d %H:%M:%S.%e] [%n] %v");
 	g_hLogger.Info("--- [Any] SaveChat "...PLUGIN_VERSION..." Loaded. ---");
 	g_hLogger.Flush();
+	g_hLogger.FlushOn(LogLevel_Info);
 
 	HookEvent("round_end", Event_RoundEnd, EventHookMode_PostNoCopy);
 	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
@@ -44,17 +47,28 @@ public void OnPluginStart()
 	HookEvent("bot_player_replace", Event_OnSwitchIdling, EventHookMode_Post);	// leave idle
 
 	char sPath[128];
-	KeyValues kv = new KeyValues("");
+	KeyValues kv = new KeyValues("Commands");
 	BuildPath(Path_SM, sPath, sizeof(sPath), CONFIG_PATH);
-	if (kv.ImportFromFile(sPath) && kv.GotoFirstSubKey())
+	if (kv.ImportFromFile(sPath))
 	{
-		do
+		int count = 1;
+		char sCommand[64];
+		if (kv.GotoFirstSubKey(false))
 		{
-			char sCommand[64];	// just use once.
-			kv.GetString(NULL_STRING, sCommand, sizeof(sCommand));
-			AddCommandListener(CommandListener, sCommand);
+			do
+			{
+				kv.GetString(NULL_STRING, sCommand, sizeof(sCommand));
+				AddCommandListener(CommandListener, sCommand);
+				count++;
+			}
+			while (kv.GotoNextKey(false));
 		}
-		while (kv.GotoNextKey());
+	}
+	else
+	{
+		delete kv;
+		delete g_hLogger;
+		SetFailState("Failed to load config file \""...CONFIG_PATH..."\".");
 	}
 
 	delete kv;
@@ -67,6 +81,7 @@ public void OnPluginEnd()
 
 public void OnMapStart()
 {
+	if (!g_hLogger) g_hLogger = CreateLoggerOrFailed(LOGGER_NAME);
 	StartOrEndPhrase(true);
 }
 
@@ -106,13 +121,18 @@ public void OnClientPostAdminCheck(int client)
 
 Action CommandListener(int client, char[] command, int argc)
 {
-	if (!IsClientInGame(client))
+	if (client > MaxClients)
+		return Plugin_Continue;
+
+	if (client > 0 && !IsClientInGame(client))
 		return Plugin_Continue;
 
 	static char sTeamName[12];
 	static char sMessage[255];
 
-	if (client > 0 && !g_bIsIdling[client]) GetTeamNameEx(GetClientTeam(client), sTeamName, sizeof(sTeamName));
+	if (client > 0 && !g_bIsIdling[client]) 
+		GetTeamNameEx(GetClientTeam(client), sTeamName, sizeof(sTeamName));
+
 	GetCmdArgString(sMessage, sizeof(sMessage));
 	StripQuotes(sMessage);
 
@@ -197,8 +217,8 @@ Logger CreateLoggerOrFailed(const char[] name)
 	if (!logger)	// if not exist, create new one.
 	{
 		FormatTime(sDate, sizeof(sDate), "%d-%m-%y", -1);
-		BuildPath(Path_SM, sChatFilePath, sizeof(sChatFilePath), "/logs/savechat[%s]-port[%i].log", sDate, g_hHostport.IntValue);
-		logger = Logger.CreateBaseFileLogger("savechat", sChatFilePath);
+		BuildPath(Path_SM, sChatFilePath, sizeof(sChatFilePath), "/logs/savechat/savechat[%s]-port[%i].log", sDate, g_hHostport.IntValue);
+		logger = BaseFileSink.CreateLogger(LOGGER_NAME, sChatFilePath);
 		if (!logger) SetFailState("Failed to create log file.");
 	}
 
