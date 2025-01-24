@@ -165,7 +165,7 @@
     "CvarInfo"
     {
         "#format"   "{1:s},{2:s},{3:s}"
-        "chi"        "服务端 Cvar: %s, 期望值: %s, 当前值: %s"
+        "chi"        "服务端 Cvar: {1}, 期望值: {2}, 当前值: {3}"
     }
 
     "ToSeeMore"

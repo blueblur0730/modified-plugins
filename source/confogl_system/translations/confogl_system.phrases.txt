@@ -165,7 +165,7 @@
     "CvarInfo"
     {
         "#format"   "{1:s},{2:s},{3:s}"
-        "en"        "Server CVar: %s, Desired Value: %s, Current Value: %s"
+        "en"        "Server CVar: {1}, Desired Value: {2}, Current Value: {3}"
     }
 
     "ToSeeMore"
