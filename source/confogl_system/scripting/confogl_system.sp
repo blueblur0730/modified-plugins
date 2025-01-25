@@ -2,7 +2,7 @@
 #pragma newdecls required
 
 #define DEBUG_ALL				   0
-#define PLUGIN_VERSION			   "r1.8"	// 2.4.5 rework
+#define PLUGIN_VERSION			   "r1.8.1"	// 2.4.5 rework
 
 #include <sourcemod>
 #include <sdktools>
@@ -24,12 +24,13 @@
 #define PLUGIN_TAG "Confogl"
 #define PLUGIN_TAG_SERVERCONSOLE "Confogl_console"
 
-bool 
+bool
 	g_bIsChangeLevelAvailable = false,
 	RM_bIsMatchModeLoaded = false,
 	RM_bIsLoadingConfig   = false;
 
 native void L4D_LobbyUnreserve();
+native bool L4D_LobbyIsReserved();
 
 // Basic helper here.
 #include "confogl_system/includes/constants.sp"
@@ -70,6 +71,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CVS_APL();		  // CvarSettings
 
 	MarkNativeAsOptional("L4D_LobbyUnreserve");
+	MarkNativeAsOptional("L4D_LobbyIsReserved");
 
 	// make it consistent.
 	RegPluginLibrary("confogl");

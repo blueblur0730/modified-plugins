@@ -43,9 +43,18 @@ static Action UL_KillLobbyRes(int client, int args)
 
 static void UL_RemoveLobby()
 {
-    g_hLogger.InfoEx("[%s] Removed lobby reservation.", UL_MODULE_NAME);
-    L4D_LobbyUnreserve();
+	if (!LibraryExists("left4dhooks"))
+	{
+		g_hLogger.InfoEx("[%s] Left4DHook library not found, lobby reservation will not be removed.", UL_MODULE_NAME);
+		return;
+	}
+
+	if (L4D_LobbyIsReserved())
+	{
+    	g_hLogger.InfoEx("[%s] Removed lobby reservation.", UL_MODULE_NAME);
+   	 	L4D_LobbyUnreserve();
 	
-	Call_StartForward(UL_OnRemoveLobby);
-	Call_Finish();
+		Call_StartForward(UL_OnRemoveLobby);
+		Call_Finish();
+	}
 }
