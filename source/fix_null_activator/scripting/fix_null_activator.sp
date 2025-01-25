@@ -7,10 +7,9 @@
 
 #define GAMEDATA_FILE "fix_null_activator.games"
 #define DHOOK_FUNCTION "CBaseEntity::AcceptInput"
-#define KEY_MAX_ENTITY_COUNT "MaxEntityCount"
-#define STRING_LENTH	64
+#define CONFIG_PATH "configs/fix_null_activator.cfg"
 
-#define PLUGIN_VERSION 	"1.2.2"
+#define PLUGIN_VERSION 	"1.3"
 
 DynamicHook g_hHook_AcceptInput = null;
 StringMap g_hMapEntityList = null;
@@ -37,31 +36,36 @@ public void OnPluginStart()
 	iOff = gd.GetOffset(DHOOK_FUNCTION);
 	if (iOff == -1) SetFailState("Failed to find \""... DHOOK_FUNCTION ..."\" offset");
 
-	int iMaxEntityCount = 0;
-	char szEntityCount[STRING_LENTH];
-	if (!gd.GetKeyValue("MaxEntityCount", szEntityCount, sizeof(szEntityCount)))
-		SetFailState("Failed to get key section \""... KEY_MAX_ENTITY_COUNT ..."\" from gamedata file \""... GAMEDATA_FILE ..."\".");
-
-	iMaxEntityCount = StringToInt(szEntityCount);
-	if (!iMaxEntityCount) SetFailState("Key section \""... KEY_MAX_ENTITY_COUNT ..."\" is 0. Plugin Disabled.");
-
-	g_hMapEntityList = new StringMap();
-
-	char szEntityName[STRING_LENTH];
-	for (int i = 1; i < iMaxEntityCount; i++)
-	{
-		static char number[STRING_LENTH];
-		Format(number, sizeof(number), "HookEntity%d", i);
-		if (!gd.GetKeyValue(number, szEntityName, sizeof(szEntityName)))
-			continue;
-
-		g_hMapEntityList.SetString(number, szEntityName);
-	}
-
 	g_hHook_AcceptInput = DynamicHook.FromConf(gd, DHOOK_FUNCTION);
 	if (!g_hHook_AcceptInput) SetFailState("Failed to create dynamic hook for \""...  DHOOK_FUNCTION ..."\"");
 
 	delete gd;
+
+	char sPath[256];
+	KeyValues kv = new KeyValues("Activators");
+	BuildPath(Path_SM, sPath, sizeof(sPath), CONFIG_PATH);
+	if (!kv.ImportFromFile(sPath))
+	{
+		delete kv;
+		SetFailState("Failed to load config file \""... CONFIG_PATH ..."\"");
+	}
+
+	g_hMapEntityList = new StringMap();
+
+	kv.Rewind();
+	char szInputName[64], szEntityName[64];
+	if (kv.GotoFirstSubKey())
+	{
+		do
+		{
+			kv.GetSectionName(szInputName, sizeof(szEntityName));
+			kv.GetString("entity_name", szEntityName, sizeof(szEntityName));
+			g_hMapEntityList.SetString(szEntityName, szInputName);
+		}
+		while (kv.GotoNextKey());
+	}
+
+	delete kv;
 }
 
 public void OnPluginEnd()
@@ -76,24 +80,12 @@ public void OnPluginEnd()
 public void OnMapStart()
 {
 	int entity = -1;
+	char szEntityName[64];
 	while ((entity = FindEntityByClassname(entity, "*")) != -1)
 	{
-		static char szEntityName[STRING_LENTH];
 		GetEntityClassname(entity, szEntityName, sizeof(szEntityName));
-
-		for (int i = 0; i < g_hMapEntityList.Size; i++)
-		{
-			static char szListName[STRING_LENTH];
-			static char number[STRING_LENTH];
-			Format(number, sizeof(number), "HookEntity%d", i + 1);
-			g_hMapEntityList.GetString(number, szListName, sizeof(szListName));
-
-			if (StrEqual(szEntityName, szListName))
-			{
-				g_hHook_AcceptInput.HookEntity(Hook_Pre, entity, DHook_CBaseEntity_AcceptInput);
-				break;
-			}
-		}
+		if (g_hMapEntityList.ContainsKey(szEntityName))
+			g_hHook_AcceptInput.HookEntity(Hook_Pre, entity, DHook_CBaseEntity_AcceptInput);
 	}
 }
 
@@ -103,8 +95,8 @@ public void OnEntityCreated(int entity, const char[] classname)
 {
 	for (int i = 0; i < g_hMapEntityList.Size; i++)
 	{
-		static char szEntityName[STRING_LENTH];
-		static char number[STRING_LENTH];
+		static char szEntityName[64];
+		static char number[64];
 		Format(number, sizeof(number), "HookEntity%d", i + 1);
 		g_hMapEntityList.GetString(number, szEntityName, sizeof(szEntityName));
 
@@ -119,8 +111,6 @@ public void OnEntityCreated(int entity, const char[] classname)
 
 MRESReturn DHook_CBaseEntity_AcceptInput(int pThis, DHookReturn hReturn, DHookParam hParams)
 {
-	//int pActivator = hParams.Get(2);
-
 	// if player disconnected or activator entity destroyed.
 	if (hParams.IsNull(2))
 	{
@@ -129,6 +119,13 @@ MRESReturn DHook_CBaseEntity_AcceptInput(int pThis, DHookReturn hReturn, DHookPa
 
 		char szInputName[128];
 		hParams.GetString(1, szInputName, sizeof(szInputName));
+
+		char szListInputName[128];
+		g_hMapEntityList.GetString(szEntityName, szListInputName, sizeof(szListInputName));
+
+		// only the input function with operation to access activator pointer needs to be check.
+		if (!StrEqual(szInputName, szListInputName))
+			return MRES_Ignored;
 
 		LogMessage("Entity %s called AcceptInput with null activator. InuputName: %s.", szEntityName, szInputName);
 
