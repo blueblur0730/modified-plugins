@@ -2,7 +2,7 @@
 #pragma newdecls required
 
 #define DEBUG_ALL				   0
-#define PLUGIN_VERSION			   "r1.7.1"	// 2.4.5 rework
+#define PLUGIN_VERSION			   "r1.8"	// 2.4.5 rework
 
 #include <sourcemod>
 #include <sdktools>
@@ -10,6 +10,19 @@
 
 #undef REQUIRE_PLUGIN
 #include <l4d2_changelevel>
+
+// toggle this to use extension log4sp or not.
+#define USEEXT 1
+
+#if USEEXT
+	#include <log4sp>
+#else
+	#define LOG4SP_NO_EXT
+	#include <log4sp>
+#endif
+
+#define PLUGIN_TAG "Confogl"
+#define PLUGIN_TAG_SERVERCONSOLE "Confogl_console"
 
 bool 
 	g_bIsChangeLevelAvailable = false,
@@ -21,7 +34,7 @@ native void L4D_LobbyUnreserve();
 // Basic helper here.
 #include "confogl_system/includes/constants.sp"
 #include "confogl_system/includes/functions.sp"
-#include "confogl_system/includes/debug.sp"
+#include "confogl_system/includes/logging.sp"				// requires log4sp 1.7.0+
 #include "confogl_system/includes/configs.sp"
 #include "confogl_system/includes/customtags.sp"
 #include "confogl_system/includes/predictable_unloader.sp"	// Predictable Unloader by Sir
@@ -70,8 +83,8 @@ public void OnPluginStart()
 	LoadTranslation(TRANSLATION_FILE);
 
 	// Plugin functions
+	LG_OnPluginStart();					// Logging
 	Fns_OnModuleStart();				// functions
-	Debug_OnModuleStart();				// debug
 	Configs_OnModuleStart();			// configs
 	CT_OnModuleStart();					// customtags
 	PU_OnPluginStart();					// Predictable Unloader
@@ -96,6 +109,7 @@ public void OnPluginEnd()
 	CVS_OnModuleEnd();	  	// CvarSettings
 	PS_OnModuleEnd();	 	// PasswordSystem
 	PU_OnPluginEnd();	 	// Predictable Unloader
+	LG_OnPluginEnd();		// Logging
 
 	// Other
 	RemoveCustomServerTag("confogl_system");
@@ -105,6 +119,7 @@ public void OnMapStart()
 {
 	RM_OnMapStart();	// ReqMatch
 	VT_OnMapStart();	// Voting
+	LG_OnMapStart();	// Logging
 }
 
 public void OnMapEnd()

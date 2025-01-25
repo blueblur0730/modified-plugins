@@ -160,7 +160,7 @@ static void PS_SetPasswordOnClients()
 		if (!IsClientInGame(client) || IsFakeClient(client))
 			continue;
 
-		LogMessage("[%s] Set password on %N, password %s", PS_MODULE_NAME, client, pwbuffer);
+		g_hLogger.InfoEx("[%s] Set password on %N, password %s", PS_MODULE_NAME, client, pwbuffer);
 		ClientCommand(client, "sv_password \"%s\"", pwbuffer);
 	}
 }

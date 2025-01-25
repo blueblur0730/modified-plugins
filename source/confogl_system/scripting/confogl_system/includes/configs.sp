@@ -53,8 +53,7 @@ bool SetCustomCfg(const char[] cfgname)
 		customCfgPath[0] = 0;
 		hCustomConfig.RestoreDefault();
 
-		if (IsDebugEnabled()) 
-			LogMessage("[%s] Custom Config Path Reset - Using Default", CONFIGS_MODULE_NAME);
+		g_hLogger.DebugEx("[%s] Custom Config Path Reset - Using Default", CONFIGS_MODULE_NAME);
 
 		return true;
 	}
@@ -62,7 +61,7 @@ bool SetCustomCfg(const char[] cfgname)
 	Format(customCfgPath, sizeof(customCfgPath), "%s%s%c%s", cfgPath, customCfgDir, DirSeparator, cfgname);
 	if (!DirExists(customCfgPath)) 
 	{
-		Debug_LogError(CONFIGS_MODULE_NAME, "Custom config directory %s does not exist!", customCfgPath);
+		g_hLogger.ErrorEx("[%s] Custom config directory %s does not exist!", CONFIGS_MODULE_NAME, customCfgPath);
 		// Revert customCfgPath
 		customCfgPath[0] = 0;
 		return false;
@@ -76,7 +75,7 @@ bool SetCustomCfg(const char[] cfgname)
 	}
 	else 
 	{
-		Debug_LogError(CONFIGS_MODULE_NAME, "Custom config directory %s path too long!", customCfgPath);
+		g_hLogger.ErrorEx("[%s] Custom config directory %s path too long!", CONFIGS_MODULE_NAME, customCfgPath);
 		customCfgPath[0] = 0;
 		return false;
 	}
@@ -94,21 +93,17 @@ void BuildConfigPath(char[] buffer, const int maxlength, const char[] sFileName)
 
 		if (FileExists(buffer)) 
 		{
-			if (IsDebugEnabled()) 
-				LogMessage("[%s] Built custom config path: %s", CONFIGS_MODULE_NAME, buffer);
-
+			g_hLogger.DebugEx("[%s] Built custom config path: %s.", CONFIGS_MODULE_NAME, buffer);
 			return;
 		}
 		else 
 		{
-			if (IsDebugEnabled()) 
-				LogMessage("[%s] Custom config not available: %s", CONFIGS_MODULE_NAME, buffer);
+			g_hLogger.InfoEx("[%s] Custom config not available: %s.", CONFIGS_MODULE_NAME, buffer);
 		}
 	}
 
 	Format(buffer, maxlength, "%s%s", configsPath, sFileName);
-	if (IsDebugEnabled()) 
-		LogMessage("[%s] Built default config path: %s", CONFIGS_MODULE_NAME, buffer);
+	g_hLogger.DebugEx("[%s] Built default config path: %s.", CONFIGS_MODULE_NAME, buffer);
 }
 
 void ExecuteCfg(const char[] sFileName)
@@ -124,17 +119,13 @@ void ExecuteCfg(const char[] sFileName)
 
 		if (FileExists(sFilePath)) 
 		{
-			if (IsDebugEnabled()) 
-				LogMessage("[%s] Executing custom cfg file %s", CONFIGS_MODULE_NAME, sFilePath);
-
+			g_hLogger.DebugEx("[%s] Executing custom cfg file %s.", CONFIGS_MODULE_NAME, sFilePath);
 			ServerCommand("exec %s%s", customCfgPath[strlen(cfgPath)], sFileName);
-
 			return;
 		}
 		else 
 		{
-			if (IsDebugEnabled()) 
-				LogMessage("[%s] Couldn't find custom cfg file %s, trying default", CONFIGS_MODULE_NAME, sFilePath);
+			g_hLogger.WarnEx("[%s] Couldn't find custom cfg file %s, trying default.", CONFIGS_MODULE_NAME, sFilePath);
 		}
 	}
 
@@ -142,14 +133,12 @@ void ExecuteCfg(const char[] sFileName)
 
 	if (FileExists(sFilePath)) 
 	{
-		if (IsDebugEnabled()) 
-			LogMessage("[%s] Executing default config %s", CONFIGS_MODULE_NAME, sFilePath);
-
+		g_hLogger.DebugEx("[%s] Executing default config %s.", CONFIGS_MODULE_NAME, sFilePath);
 		ServerCommand("exec %s", sFileName);
 	} 
 	else 
 	{
-		Debug_LogError(CONFIGS_MODULE_NAME, "Could not execute server config \"%s\", file not found", sFilePath);
+		g_hLogger.ErrorEx("[%s] Could not execute server config \"%s\", file not found.", CONFIGS_MODULE_NAME, sFilePath);
 	}
 }
 

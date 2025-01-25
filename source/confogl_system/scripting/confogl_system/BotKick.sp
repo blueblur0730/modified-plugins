@@ -89,19 +89,21 @@ bool BK_OnClientConnect(int iClient)
 		return true;
 	}
 
+	g_hLogger.InfoEx("[%s] Kicking infected bot %N", BK_MODULE_NAME, iClient)
 	KickClient(iClient, "[Confogl] Kicking infected bot..."); // If all else fails, bots arent allowed and must be kicked
 
 	return false;
 }
 
-static Action BK_CheckBotReplace_Timer(Handle hTimer, any iClient)
+static void BK_CheckBotReplace_Timer(Handle hTimer, int iClient)
 {
 	if (iClient != BK_lastvalidbot && IsClientInGame(iClient) && IsFakeClient(iClient))
+	{
+		g_hLogger.InfoEx("[%s] Kicking late bot %N", BK_MODULE_NAME, iClient)
 		KickClient(iClient, "[Confogl] Kicking late bot...");
+	}
 
 	else BK_lastvalidbot = -1;
-
-	return Plugin_Stop;
 }
 
 static void BK_PlayerBotReplace(Event hEvent, const char[] sEventName, bool bDontBroadcast)
@@ -144,7 +146,6 @@ static bool IsInvalidSurvivors(int iClient)
 		if (StrContains(sBotName, SurvivorNames[i], false) != -1)
 			return false;
 	}
-
 
 	return true;
 }

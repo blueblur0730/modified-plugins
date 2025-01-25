@@ -113,6 +113,12 @@
     }
 
     // ClientSettings.sp
+    "KickMessage_ProtectedOrMissing"
+    {
+        "#format"   "{1:s}"
+        "en"        "CVar '{1}' protected or missing! Hax?"
+    }
+
     "KickedForIllegalValue"
     {
         "#format"   "{1:L},{2:s},{3:f}"
@@ -138,6 +144,11 @@
     "Max"
     {
         "en"        "Max:"
+    }
+
+    "KickMessage_Prefix"
+    {
+        "en"        "Illegal Client Value for"
     }
 
     "ActionKick"

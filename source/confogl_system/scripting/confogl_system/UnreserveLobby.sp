@@ -43,7 +43,7 @@ static Action UL_KillLobbyRes(int client, int args)
 
 static void UL_RemoveLobby()
 {
-    LogMessage("[%s] Removed lobby reservation.", UL_MODULE_NAME);
+    g_hLogger.InfoEx("[%s] Removed lobby reservation.", UL_MODULE_NAME);
     L4D_LobbyUnreserve();
 	
 	Call_StartForward(UL_OnRemoveLobby);

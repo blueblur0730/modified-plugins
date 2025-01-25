@@ -44,7 +44,7 @@ methodmap L4D2NativeVote {
     public L4D2NativeVote(L4D2VoteHandler handler) {
         if (!ShouldAllowNewVote())
         {
-		    LogError("Failed to create new vote, a vote is in progress.");
+		    g_hLogger.Info("[Confogl] Failed to create new vote, a vote is in progress.");
             return view_as<L4D2NativeVote>(0);
         }
 

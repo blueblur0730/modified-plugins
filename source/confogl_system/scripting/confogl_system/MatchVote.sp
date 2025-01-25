@@ -3,6 +3,8 @@
 #endif
 #define __match_vote_included
 
+#define MODULE_MATCHVOTE "MatchVote"
+
 static KeyValues
 	kv[MAXPLAYERS + 1] = { null, ... };
 
@@ -217,7 +219,7 @@ static void SlectMenuHandler(Menu menu, MenuAction action, int param1, int param
         if (!vote.DisplayVote(iClients, iPlayerCount, 20.0))
         {
             CPrintToChat(param1, "%t %t", "Tag", "VoteFailedDisPlay");
-            LogError("[Confogl] Vote failed to display.");
+            g_hLogger.ErrorEx("[%s] Vote failed to display.", MODULE_MATCHVOTE);
         } 
 	}
 }
@@ -335,7 +337,7 @@ static void StartResetMatchVote(int iClient)
     if (!vote.DisplayVote(iClients, iPlayerCount, 20.0))
     {
         CPrintToChat(iClient, "%t %t", "Tag", "VoteFailedDisPlay");
-        LogError("[Confogl] Vote failed to display.");
+        g_hLogger.ErrorEx("[%s] Vote failed to display.", MODULE_MATCHVOTE);
     } 
 }
 

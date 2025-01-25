@@ -3,14 +3,12 @@
 #endif
 #define __reg_match_included
 
-#define RM_DEBUG	   false
 #define RM_MODULE_NAME "ReqMatch"
 
 #define MAPRESTARTTIME 3.0
 #define RESETMINTIME   60.0
 
 static bool
-	RM_bDebugEnabled = RM_DEBUG,
 	// RM_bMatchRequest[2] = {false, ...},
 	RM_bIsAMatchActive	  = false,
 	RM_bIsPluginsLoaded	  = false,
@@ -64,9 +62,7 @@ void RM_OnModuleStart()
 
 	if (RM_hReloaded.BoolValue)
 	{
-		if (RM_bDebugEnabled || IsDebugEnabled())
-			LogMessage("[%s] Plugin was reloaded from match mode, executing match load", RM_MODULE_NAME);
-
+		g_hLogger.DebugEx("[%s] Plugin was reloaded from match mode, executing match load", RM_MODULE_NAME);
 		RM_bIsPluginsLoaded = true;
 		RM_hReloaded.BoolValue = false;
 		RM_Match_Load();
@@ -81,9 +77,7 @@ void RM_OnMapStart()
 	if (!RM_bIsMatchModeLoaded)
 		return;
 
-	if (RM_bDebugEnabled || IsDebugEnabled())
-		LogMessage("[%s] New map, executing match config...", RM_MODULE_NAME);
-
+	g_hLogger.TraceEx("[%s] RM_OnMapStart() called, executing match config...", RM_MODULE_NAME);
 	RM_Match_Load();
 }
 
@@ -101,8 +95,7 @@ void RM_OnClientPutInServer()
 
 static void RM_Match_Load()
 {
-	if (RM_bDebugEnabled || IsDebugEnabled())
-		LogMessage("[%s] Match Load", RM_MODULE_NAME);
+	g_hLogger.TraceEx("[%s] RM_Match_Load() called.", RM_MODULE_NAME);
 
 	if (!RM_bIsAMatchActive)
 		RM_bIsAMatchActive = true;
@@ -112,8 +105,7 @@ static void RM_Match_Load()
 
 	if (!RM_bIsPluginsLoaded)
 	{
-		if (RM_bDebugEnabled || IsDebugEnabled())
-			LogMessage("[%s] Loading plugins and reload self", RM_MODULE_NAME);
+		g_hLogger.TraceEx("[%s] Loading plugins and reload self", RM_MODULE_NAME);
 
 		RM_bIsLoadingConfig = true;
 		RM_hReloaded.BoolValue = true;
@@ -142,11 +134,8 @@ static void RM_Match_Load()
 	RM_hConfigFile_On.GetString(sBuffer, sizeof(sBuffer));
 	ExecuteCfg(sBuffer);
 
-	if (RM_bDebugEnabled || IsDebugEnabled())
-		LogMessage("[%s] Match config executed", RM_MODULE_NAME);
-
-	if (RM_bDebugEnabled || IsDebugEnabled())
-		LogMessage("[%s] Setting match mode active", RM_MODULE_NAME);
+	g_hLogger.TraceEx("[%s] Match config executed", RM_MODULE_NAME);
+	g_hLogger.TraceEx("[%s] Setting match mode active", RM_MODULE_NAME);
 
 	RM_bIsMatchModeLoaded = true;
 	IsPluginEnabled(true, true);
@@ -171,8 +160,7 @@ static void RM_Match_Load()
 		hDp.WriteString(sMap);
 	}
 
-	if (RM_bDebugEnabled || IsDebugEnabled())
-		LogMessage("[%s] Match mode loaded!", RM_MODULE_NAME);
+	g_hLogger.InfoEx("[%s] Match mode loaded!", RM_MODULE_NAME);
 
 	hCustomConfig.GetString(sBuffer, sizeof(sBuffer));
 	Call_StartForward(RM_hFwdMatchLoad);
@@ -189,9 +177,7 @@ void RM_Match_Unload(bool bForced = false)
 
 	if (!bIsHumansOnServer || bForced)
 	{
-		if (RM_bDebugEnabled || IsDebugEnabled())
-			LogMessage("[%s] Match is no longer active, sb_all_bot_game reset to 0, IsHumansOnServer %b, bForced %b", RM_MODULE_NAME, bIsHumansOnServer, bForced);
-
+		g_hLogger.TraceEx("[%s] Match is no longer active, sb_all_bot_game reset to 0, IsHumansOnServer %b, bForced %b", RM_MODULE_NAME, bIsHumansOnServer, bForced);
 		RM_bIsAMatchActive = false;
 		//RM_hSbAllBotGame.SetInt(0);
 	}
@@ -199,8 +185,7 @@ void RM_Match_Unload(bool bForced = false)
 	if (bIsHumansOnServer && !bForced)
 		return;
 
-	if (RM_bDebugEnabled || IsDebugEnabled())
-		LogMessage("[%s] Unloading match mode...", RM_MODULE_NAME);
+	g_hLogger.TraceEx("[%s] Unloading match mode...", RM_MODULE_NAME);
 
 	char sBuffer[128];
 	RM_bIsMatchModeLoaded = false;
@@ -218,16 +203,13 @@ void RM_Match_Unload(bool bForced = false)
 	RM_hConfigFile_Off.GetString(sBuffer, sizeof(sBuffer));
 	ExecuteCfg(sBuffer);
 
-	if (RM_bDebugEnabled || IsDebugEnabled())
-		LogMessage("[%s] Match mode unloaded!", RM_MODULE_NAME);
+	g_hLogger.InfoEx("[%s] Match mode unloaded!", RM_MODULE_NAME);
 }
 
 static Action RM_Match_MapRestart_Timer(Handle hTimer, DataPack hDp)
 {
 	ServerCommand("sm plugins load_lock");	  // rework
-
-	if (RM_bDebugEnabled || IsDebugEnabled())
-		LogMessage("[%s] Restarting map...", RM_MODULE_NAME);
+	g_hLogger.InfoEx("[%s] Restarting map...", RM_MODULE_NAME);
 
 	char sMap[PLATFORM_MAX_PATH];
 	hDp.Reset();
@@ -246,10 +228,7 @@ bool RM_UpdateCfgOn(const char[] cfgfile, bool bPrint = true)
 	if (SetCustomCfg(cfgfile))
 	{
 		CPrintToChatAll("%t %t", "Tag", "LoadingConfig", cfgfile);
-
-		if (RM_bDebugEnabled || IsDebugEnabled())
-			LogMessage("[%s] Starting match on config %s", RM_MODULE_NAME, cfgfile);
-
+		g_hLogger.InfoEx("[%s] Starting match on config %s", RM_MODULE_NAME, cfgfile);
 		return true;
 	}
 
@@ -264,13 +243,12 @@ static Action RM_Cmd_ForceMatch(int client, int args)
 	if (RM_bIsMatchModeLoaded)
 		return Plugin_Handled;
 
-	if (RM_bDebugEnabled || IsDebugEnabled())
-		LogMessage("[%s] Match mode forced to load!", RM_MODULE_NAME);
+	g_hLogger.InfoEx("[%s] Match mode forced to load!", RM_MODULE_NAME);
 
 	if (args < 1)
 	{
 		if (!client)
-			PrintToServer("[Confogl] Please specify a config to load.");
+			g_hLogger_ServerConsole.Info("[Confogl] Please specify a config to load.");
 		else
 			CPrintToChat(client, "%t %t", "Tag", "SpecifyConfig");
 
@@ -300,7 +278,7 @@ void PrepareLoad(int client, const char[] sBuffer, const char[] sMap)
 	if (!RM_UpdateCfgOn(sBuffer, false))
 	{
 		if (!client)
-			PrintToServer("[Confogl] Config %s not found!", sBuffer);
+			g_hLogger_ServerConsole.InfoEx("[Confogl] Config %s not found!", sBuffer);
 		else
 			CPrintToChat(client, "%t %t", "Tag", "RE_ConfigNotFound", sBuffer);
 
@@ -317,7 +295,7 @@ void PrepareLoad(int client, const char[] sBuffer, const char[] sMap)
 	if (FindMap(sMap, sDisplayName, sizeof(sDisplayName)) == FindMap_NotFound)
 	{
 		if (!client)
-			PrintToServer("[Confogl] Map %s not found!", sMap);
+			g_hLogger_ServerConsole.InfoEx("[Confogl] Map %s not found!", sMap);
 		else
 			CPrintToChat(client, "%t %t", "Tag", "MapNotFound", sMap);
 
@@ -336,9 +314,7 @@ static Action RM_Cmd_ResetMatch(int client, int args)
 	if (!RM_bIsMatchModeLoaded)
 		return Plugin_Handled;
 
-	if (RM_bDebugEnabled || IsDebugEnabled())
-		LogMessage("[%s] Match mode forced to unload!", RM_MODULE_NAME);
-
+	g_hLogger.InfoEx("[%s] Match mode forced to unload!", RM_MODULE_NAME);
 	RM_Match_Unload(true);
 
 	return Plugin_Handled;
