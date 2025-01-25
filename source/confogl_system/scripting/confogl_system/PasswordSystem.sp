@@ -99,8 +99,10 @@ static void PS_ConVarDone(QueryCookie cookie, int client, ConVarQueryResult resu
 
 	if (client == GetClientOfUserId(userid) && IsClientConnected(client)) 
 	{
+		char sBuffer[64];
 		PS_bSuppress = true;
-		KickClient(client, "Bad password");
+		Format(sBuffer, sizeof(sBuffer), "%T", "WrongPassword", client);
+		KickClient(client, sBuffer);
 	}
 }
 
@@ -158,7 +160,7 @@ static void PS_SetPasswordOnClients()
 		if (!IsClientInGame(client) || IsFakeClient(client))
 			continue;
 
-		LogMessage("[%s] Set password on %N, password %s", PS_MODULE_NAME, client, pwbuffer);
+		g_hLogger.InfoEx("[%s] Set password on %N, password %s", PS_MODULE_NAME, client, pwbuffer);
 		ClientCommand(client, "sv_password \"%s\"", pwbuffer);
 	}
 }

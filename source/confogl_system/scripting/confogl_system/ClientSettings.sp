@@ -32,8 +32,7 @@ static Handle
 
 void CLS_OnModuleStart()
 {
-	CLSEntry clsetting;
-	ClientSettingsArray = new ArrayList(sizeof(clsetting));
+	ClientSettingsArray = new ArrayList(sizeof(CLSEntry));
 
 	RegConsoleCmd("confogl_clientsettings", _ClientSettings_Cmd, "List Client settings enforced by confogl");
 
@@ -63,18 +62,16 @@ static Action _CheckClientSettings_Timer(Handle hTimer)
 {
 	if (!IsPluginEnabled()) 
 	{
-		if (IsDebugEnabled())
-			LogMessage("[%s] Stopping client settings tracking", CLS_MODULE_NAME);
-
+		g_hLogger.DebugEx("[%s] Stopping client settings tracking", CLS_MODULE_NAME);
 		ClientSettingsCheckTimer = null;
 		return Plugin_Stop;
 	}
 
-	EnforceAllCliSettings();
+	EnforceAllClientSettings();
 	return Plugin_Continue;
 }
 
-static void EnforceAllCliSettings()
+static void EnforceAllClientSettings()
 {
 	for (int i = 1; i <= MaxClients; i++) 
 	{
@@ -104,8 +101,10 @@ static void _EnforceCliSettings_QueryReply(QueryCookie cookie, int client, ConVa
 
 	if (result)
 	{
-		LogMessage("[%s] Couldn't retrieve cvar %s from %L, kicked from server", CLS_MODULE_NAME, cvarName, client);
-		KickClient(client, "CVar '%s' protected or missing! Hax?", cvarName);
+		char sBuffer[128];
+		g_hLogger.InfoEx("[%s] Couldn't retrieve cvar %s from %L, kicked from server", CLS_MODULE_NAME, cvarName, client);
+		Format(sBuffer, sizeof(sBuffer), "%T", "KickMessage_ProtectedOrMissing", client, cvarName);
+		KickClient(client, sBuffer);
 		return;
 	}
 
@@ -122,28 +121,28 @@ static void _EnforceCliSettings_QueryReply(QueryCookie cookie, int client, ConVa
 		{
 			case CLSA_Kick: 
 			{
-				LogMessage("[%s] Kicking %L for bad %s value (%f). Min: %d %f Max: %d %f", \
+				g_hLogger.InfoEx("[%s] Kicking %L for bad %s value (%f). Min: %d %f Max: %d %f", \
 									CLS_MODULE_NAME, client, cvarName, fCvarVal, clsetting.CLSE_hasMin, \
 										clsetting.CLSE_min, clsetting.CLSE_hasMax, clsetting.CLSE_max);
 
 				CPrintToChatAll("%t %t", "Tag", "KickedForIllegalValue", \
 									client, cvarName, fCvarVal);
 
-				char kickMessage[256] = "Illegal Client Value for ";
-				Format(kickMessage, sizeof(kickMessage), "%s%s (%.2f)", kickMessage, cvarName, fCvarVal);
+				char kickMessage[256];
+				Format(kickMessage, sizeof(kickMessage), "%T %s (%.2f)", "KickMessage_Prefix", client, cvarName, fCvarVal);
 
 				if (clsetting.CLSE_hasMin)
-					Format(kickMessage, sizeof(kickMessage), "%s, Min %.2f", kickMessage, clsetting.CLSE_min);
+					Format(kickMessage, sizeof(kickMessage), "%s, %T %.2f", kickMessage, "Min", client, clsetting.CLSE_min);
 
 				if (clsetting.CLSE_hasMax)
-					Format(kickMessage, sizeof(kickMessage), "%s, Max %.2f", kickMessage, clsetting.CLSE_max);
+					Format(kickMessage, sizeof(kickMessage), "%s, %T %.2f", kickMessage, "Max", client, clsetting.CLSE_max);
 
-				KickClient(client, "%s", kickMessage);
+				KickClient(client, kickMessage);
 			}
 
 			case CLSA_Log:
 			{
-				LogMessage("[%s] Client %L has a bad %s value (%f). Min: %d %f Max: %d %f", \
+				g_hLogger.InfoEx("[%s] Client %L has a bad %s value (%f). Min: %d %f Max: %d %f", \
 									CLS_MODULE_NAME, client, cvarName, fCvarVal, clsetting.CLSE_hasMin, \
 										clsetting.CLSE_min, clsetting.CLSE_hasMax, clsetting.CLSE_max);
 			}
@@ -201,13 +200,13 @@ static Action _TrackClientCvar_Cmd(int args)
 {
 	if (args < 3 || args == 4) 
 	{
-		PrintToServer("Usage: confogl_trackclientcvar <cvar> <hasMin> <min> [<hasMax> <max> [<action>]]");
+		g_hLogger_ServerConsole.Info("Usage: confogl_trackclientcvar <cvar> <hasMin> <min> [<hasMax> <max> [<action>]]");
 
-		if (IsDebugEnabled()) 
+		if (g_hLogger.GetLevel() <= LogLevel_Warn) 
 		{
 			char cmdbuf[128];
 			GetCmdArgString(cmdbuf, sizeof(cmdbuf));
-			Debug_LogError(CLS_MODULE_NAME, "Invalid track client cvar: %s", cmdbuf);
+			g_hLogger.WarnEx("[%s] Tracking an invalid client cvar: %s, reason: not enough arguments, at least 3.", CLS_MODULE_NAME, cmdbuf);
 		}
 
 		return Plugin_Handled;
@@ -222,13 +221,13 @@ static Action _TrackClientCvar_Cmd(int args)
 
 	if (!strlen(cvar)) 
 	{
-		PrintToServer("Unreadable cvar");
+		g_hLogger_ServerConsole.Info("[Confogl] Unreadable cvar");
 
-		if (IsDebugEnabled()) 
+		if (g_hLogger.GetLevel() <= LogLevel_Warn) 
 		{
 			char cmdbuf[128];
 			GetCmdArgString(cmdbuf, sizeof(cmdbuf));
-			Debug_LogError(CLS_MODULE_NAME, "Invalid track client cvar: %s", cmdbuf);
+			g_hLogger.WarnEx("[%s] Tracking an invalid client cvar: %s, reason: no cvar specify.", CLS_MODULE_NAME, cmdbuf);
 		}
 
 		return Plugin_Handled;
@@ -264,12 +263,12 @@ static Action _ResetTracking_Cmd(int args)
 {
 	if (ClientSettingsCheckTimer != null) 
 	{
-		PrintToServer("Can't reset tracking in the middle of a match");
+		g_hLogger_ServerConsole.Info("[Confogl] Can't reset tracking in the middle of a match");
 		return Plugin_Handled;
 	}
 
 	ClearAllSettings();
-	PrintToServer("Client CVar Tracking Information Reset!");
+	g_hLogger_ServerConsole.Info("[Confogl] Client CVar Tracking Information Reset!");
 
 	return Plugin_Handled;
 }
@@ -285,12 +284,10 @@ static void _StartTracking()
 {
 	if (IsPluginEnabled() && ClientSettingsCheckTimer == null) 
 	{
-		if (IsDebugEnabled())
-			LogMessage("[%s] Starting repeating check timer", CLS_MODULE_NAME);
-
+		g_hLogger.DebugEx("[%s] Starting repeating check timer.", CLS_MODULE_NAME);
 		ClientSettingsCheckTimer = CreateTimer(CLIENT_CHECK_INTERVAL, _CheckClientSettings_Timer, _, TIMER_REPEAT);
 	} 
-	else PrintToServer("Can't start plugin tracking or tracking already started");
+	else g_hLogger_ServerConsole.Info("[Confogl] Can't start plugin tracking or tracking already started");
 
 }
 
@@ -298,29 +295,27 @@ static void _AddClientCvar(const char[] cvar, bool hasMin, float min, bool hasMa
 {
 	if (ClientSettingsCheckTimer != null) 
 	{
-		PrintToServer("Can't track new cvars in the middle of a match");
-
-		if (IsDebugEnabled())
-			LogMessage("[%s] Attempt to track new cvar %s during a match!", CLS_MODULE_NAME, cvar);
+		g_hLogger_ServerConsole.Info("[Confogl] Can't track new cvars in the middle of a match");
+		g_hLogger.WarnEx("[%s] Attempt to track new cvar %s during a match!", CLS_MODULE_NAME, cvar);
 
 		return;
 	}
 
 	if (!(hasMin || hasMax)) 
 	{
-		Debug_LogError(CLS_MODULE_NAME, "Client CVar %s specified without max or min", cvar);
+		g_hLogger.ErrorEx("[%s] Client CVar %s specified without max or min", CLS_MODULE_NAME, cvar);
 		return;
 	}
 
 	if (hasMin && hasMax && max < min) 
 	{
-		Debug_LogError(CLS_MODULE_NAME, "Client CVar %s specified max < min (%f < %f)", cvar, max, min);
+		g_hLogger.ErrorEx("[%s] Client CVar %s specified max < min (%f < %f)", CLS_MODULE_NAME, cvar, max, min);
 		return;
 	}
 
 	if (strlen(cvar) >= CLS_CVAR_MAXLEN) 
 	{
-		Debug_LogError(CLS_MODULE_NAME, "CVar Specified (%s) is longer than max cvar length (%d)", cvar, CLS_CVAR_MAXLEN);
+		g_hLogger.ErrorEx("[%s] CVar Specified (%s) is longer than max cvar length (%d)", CLS_MODULE_NAME, cvar, CLS_CVAR_MAXLEN);
 		return;
 	}
 
@@ -332,7 +327,7 @@ static void _AddClientCvar(const char[] cvar, bool hasMin, float min, bool hasMa
 		ClientSettingsArray.GetArray(i, newEntry, sizeof(newEntry));
 		if (strcmp(newEntry.CLSE_cvar, cvar, false) == 0) 
 		{
-			Debug_LogError(CLS_MODULE_NAME, "Attempt to track CVar %s, which is already being tracked.", cvar);
+			g_hLogger.WarnEx("[%s] Attempt to track CVar %s, which is already being tracked.", CLS_MODULE_NAME, cvar);
 			return;
 		}
 	}
@@ -344,8 +339,6 @@ static void _AddClientCvar(const char[] cvar, bool hasMin, float min, bool hasMa
 	newEntry.CLSE_action = action;
 	strcopy(newEntry.CLSE_cvar, CLS_CVAR_MAXLEN, cvar);
 
-	if (IsDebugEnabled())
-		LogMessage("[%s] Tracking Cvar %s Min %d %f Max %d %f Action %d", CLS_MODULE_NAME, cvar, hasMin, min, hasMax, max, action);
-
+	g_hLogger.InfoEx("[%s] Tracking Cvar %s Min %d %f Max %d %f Action %d", CLS_MODULE_NAME, cvar, hasMin, min, hasMax, max, action);
 	ClientSettingsArray.PushArray(newEntry, sizeof(newEntry));
 }

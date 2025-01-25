@@ -21,15 +21,15 @@
         "en"        "Select game config:"
     }
 
-    "Title_Config"
+    "NoVoteItem"
+    {
+        "en"        "No vote items found."
+    }
+
+    "VoteMenuTitle2"
     {
         "#format"   "{1:s}"
         "en"        "Select type {1}:"
-    }
-
-    "ConfigNotFound"
-    {
-        "en"        "No configs for such mode were found."
     }
 
     "NoSpec"
@@ -48,21 +48,9 @@
         "en"        "Vote cannot be started. {red}Not enough players{default} ({red}{1}{default}/{green}{2}{default})."
     }
 
-    "Title_LoadConfig"
-    {
-        "#format"   "{1:s}"
-        "en"        "Load confogl '{1}' config?"
-    }
-
     "VoteInProgress"
     {
-        "#format"   "{1:d}"
-        "en"        "{red}Vote in progress{default}, please wait {green}{1}{default} seconds."
-    }
-
-    "VotePass_Loading"
-    {
-        "en"        "Game Config loading..."
+        "en"        "{red}A vote is in progress{default}."
     }
 
     "MatchNotLoaded"
@@ -70,14 +58,42 @@
         "en"        "{red}No Game Config{default} loaded."
     }
 
+    "VoteFailedDisPlay"
+    {
+        "en"        "Vote failed to display."
+    }
+
+    "PassingVote"
+    {
+        "en"        "Vote passed."
+    }
+
     "PlayersConnecting"
     {
         "en"        "Vote cannot be started. Players are connecting."
     }
 
-    "Title_OffConfogl"
+    "HasInitiatedVote"
     {
-        "en"        "Turn off Confogl?"
+        "#format"   "{1:N}"
+        "en"        "{teamcolor}{1}{default} has initiated a vote."
+    }
+
+    "Voted"
+    {
+        "#format"   "{1:N}"
+        "en"        "{teamcolor}{1}{default} voted."
+    }
+
+    "VoteFailedNotEnough"
+    {
+        "#format"   "{1:d}"
+        "en"        "Vote failed. Not enough votes ({red}{1}{default})."
+    }
+
+    "VoteFailed"
+    {
+        "en"        "Vote did not pass."
     }
 
     "VotePass_Unloading"
@@ -97,6 +113,12 @@
     }
 
     // ClientSettings.sp
+    "KickMessage_ProtectedOrMissing"
+    {
+        "#format"   "{1:s}"
+        "en"        "CVar '{1}' protected or missing! Hax?"
+    }
+
     "KickedForIllegalValue"
     {
         "#format"   "{1:L},{2:s},{3:f}"
@@ -124,6 +146,11 @@
         "en"        "Max:"
     }
 
+    "KickMessage_Prefix"
+    {
+        "en"        "Illegal Client Value for"
+    }
+
     "ActionKick"
     {
         "en"        "Action: Kick"
@@ -149,7 +176,7 @@
     "CvarInfo"
     {
         "#format"   "{1:s},{2:s},{3:s}"
-        "en"        "Server CVar: %s, Desired Value: %s, Current Value: %s"
+        "en"        "Server CVar: {1}, Desired Value: {2}, Current Value: {3}"
     }
 
     "ToSeeMore"
@@ -213,5 +240,17 @@
     {
         "#format"   "{1:s}"
         "en"        "{default}Map '{olive}{1}{default}' not found!"
+    }
+
+    // UnreserveLobby.sp
+    "RemovedLobby"
+    {
+        "en"        "Removed lobby reservation."
+    }
+
+    // Password.sp
+    "WrongPassword"
+    {
+        "en"        "[Confogl] You need right password for cvar \"sv_password\"."
     }
 }

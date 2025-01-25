@@ -2,42 +2,53 @@
 #pragma newdecls required
 
 #define DEBUG_ALL				   0
-#define PLUGIN_VERSION			   "1.3.5"	// 2.4.5 rework
-
-#define VOTE_API_BUILTINVOTE 1		// will work in the future. for now dont turn it off.
-#define GAME_LEFT4DEAD2		 1
+#define PLUGIN_VERSION			   "r1.8.1"	// 2.4.5 rework
 
 #include <sourcemod>
 #include <sdktools>
-#include <sdkhooks>
-#include <left4dhooks>
 #include <colors>
 
-#if VOTE_API_BUILTINVOTE
-	#tryinclude <builtinvotes>
-#else
-	#tryinclude <nativevotes>
-#endif
-
 #undef REQUIRE_PLUGIN
-#include <confogl>
 #include <l4d2_changelevel>
 
-// Includes here
+// toggle this to use extension log4sp or not.
+#define USEEXT 1
+
+#if USEEXT
+	#include <log4sp>
+#else
+	#define LOG4SP_NO_EXT
+	#include <log4sp>
+#endif
+
+#define PLUGIN_TAG "Confogl"
+#define PLUGIN_TAG_SERVERCONSOLE "Confogl_console"
+
+bool
+	g_bIsChangeLevelAvailable = false,
+	RM_bIsMatchModeLoaded = false,
+	RM_bIsLoadingConfig   = false;
+
+native void L4D_LobbyUnreserve();
+native bool L4D_LobbyIsReserved();
+
+// Basic helper here.
 #include "confogl_system/includes/constants.sp"
 #include "confogl_system/includes/functions.sp"
-#include "confogl_system/includes/debug.sp"
+#include "confogl_system/includes/logging.sp"				// requires log4sp 1.7.0+
 #include "confogl_system/includes/configs.sp"
 #include "confogl_system/includes/customtags.sp"
 #include "confogl_system/includes/predictable_unloader.sp"	// Predictable Unloader by Sir
+#include "confogl_system/includes/voting.sp"				// nativevote by Powerlord, fdxx. This built-in version is to make sure our vote can work as usual.
 
-// Modules here
-#include "confogl_system/MatchVote.sp"
+// Main Modules here.
 #include "confogl_system/ReqMatch.sp"
+#include "confogl_system/MatchVote.sp"
 #include "confogl_system/CvarSettings.sp"
 #include "confogl_system/PasswordSystem.sp"
 #include "confogl_system/BotKick.sp"
 #include "confogl_system/ClientSettings.sp"
+#include "confogl_system/UnreserveLobby.sp"
 
 // Competitive Rework Team:
 // Confogl Team, A1m` (for confogl itself)
@@ -56,7 +67,13 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
 	Configs_APL();	  // configs
 	RM_APL();	 	  // ReqMatch
+	UL_APL();		  // UnreserveLobby
+	CVS_APL();		  // CvarSettings
 
+	MarkNativeAsOptional("L4D_LobbyUnreserve");
+	MarkNativeAsOptional("L4D_LobbyIsReserved");
+
+	// make it consistent.
 	RegPluginLibrary("confogl");
 	return APLRes_Success;
 }
@@ -64,19 +81,16 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
 	// translation file should be the first thing to do. 
-	// other wise plugin cant translate the phrases and goes rong.
+	// other wise plugin cant translate the phrases and goes wrong.
 	LoadTranslation(TRANSLATION_FILE);
 
-	// here we retrieve the plugin path for predictable unloader to use.
-	char sPluginName[PLATFORM_MAX_PATH];
-	GetPluginFilename(INVALID_HANDLE, sPluginName, sizeof(sPluginName));
-
 	// Plugin functions
+	LG_OnPluginStart();					// Logging
 	Fns_OnModuleStart();				// functions
-	Debug_OnModuleStart();				// debug
 	Configs_OnModuleStart();			// configs
 	CT_OnModuleStart();					// customtags
-	PU_OnPluginStart(sPluginName);		// Predictable Unloader
+	PU_OnPluginStart();					// Predictable Unloader
+	VT_OnPluginStart();					// Voting
 
 	// Modules
 	MV_OnModuleStart();	   	// MatchVote
@@ -85,9 +99,10 @@ public void OnPluginStart()
 	CVS_OnModuleStart();	// CvarSettings
 	PS_OnModuleStart();	   	// PasswordSystem
 	BK_OnModuleStart();	   	// BotKick
+	UL_OnModuleStart();		// UnreserveLobby
 
 	// Other
-	AddCustomServerTag("confogl");
+	AddCustomServerTag("confogl_system");
 }
 
 public void OnPluginEnd()
@@ -96,24 +111,27 @@ public void OnPluginEnd()
 	CVS_OnModuleEnd();	  	// CvarSettings
 	PS_OnModuleEnd();	 	// PasswordSystem
 	PU_OnPluginEnd();	 	// Predictable Unloader
+	LG_OnPluginEnd();		// Logging
 
 	// Other
-	RemoveCustomServerTag("confogl");
+	RemoveCustomServerTag("confogl_system");
 }
 
 public void OnMapStart()
 {
 	RM_OnMapStart();	// ReqMatch
+	VT_OnMapStart();	// Voting
+	LG_OnMapStart();	// Logging
 }
 
 public void OnMapEnd()
 {
 	PS_OnMapEnd();	  // PasswordSystem
+	VT_OnMapEnd();	  // Voting
 }
 
 public void OnConfigsExecuted()
 {
-	MV_OnConfigsExecuted();		// MatchVote
 	CVS_OnConfigsExecuted();	// CvarSettings
 }
 
@@ -135,6 +153,7 @@ public void OnClientPutInServer(int client)
 {
 	RM_OnClientPutInServer();	 		// ReqMatch
 	PS_OnClientPutInServer(client);	   	// PasswordSystem
+	UL_OnClientPutInServer();			// UnreserveLobby
 }
 
 public void OnLibraryAdded(const char[] name)

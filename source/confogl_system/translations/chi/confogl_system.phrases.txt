@@ -2,216 +2,255 @@
 {
     "Tag"
     {
-        "chi"        "[{olive}Confogl{default}]"	// 你可以填自己的服务器logo或者tag
+        "chi"           "[{olive}Confogl{default}]"	// 你可以填自己的服务器logo或者tag
     }
 
     // MatchVote.sp
     "Disabled"
     {
-        "chi"        "插件已 {red}禁用{default}"
+        "chi"           "插件已 {red}禁用{default}"
     }
 
     "NoConsole"
     {
-        "chi"        "你不能从控制台使用此指令."
+        "chi"           "你不能从控制台使用此指令."
     }
 
     "Title_Match"
     {
-        "chi"        "选择配置:"
+        "chi"           "选择配置:"
     }
 
-    "Title_Config"
+    "NoVoteItem"
     {
-        "#format"   "{1:s}"
-        "chi"        "选择类型 {1}:"
+        "chi"           "没有找到投票选项."
     }
 
-    "ConfigNotFound"
+    "VoteMenuTitle2"
     {
-        "chi"        "没有找到相应的配置."
+        "#format"       "{1:s}"
+        "chi"           "选择类型 {1}:"
     }
 
     "NoSpec"
     {
-        "chi"        "旁观者不允许发起投票."
+        "chi"           "旁观者不允许发起投票."
     }
 
     "MatchLoaded"
     {
-        "chi"        "配置已经加载!"
+        "chi"           "配置已经加载!"
     }
 
     "NotEnoughPlayers"
     {
-        "#format"   "{1:d},{2:d}"
-        "chi"        "不能发起投票. {red}人数不足{default} ({red}{1}{default}/{green}{2}{default})."
-    }
-
-    "Title_LoadConfig"
-    {
-        "#format"   "{1:s}"
-        "chi"        "加载 Confogl 配置 '{1}' ?"
+        "#format"       "{1:d},{2:d}"
+        "chi"           "不能发起投票. {red}人数不足{default} ({red}{1}{default}/{green}{2}{default})."
     }
 
     "VoteInProgress"
     {
-        "#format"   "{1:d}"
-        "chi"        "{red}投票正进行中{default}, 请等待 {green}{1}{default} 秒."
-    }
-
-    "VotePass_Loading"
-    {
-        "chi"        "配置加载中..."
+        "chi"           "投票正进行中."
     }
 
     "MatchNotLoaded"
     {
-        "chi"        "{red}没有配置{default} 加载."
+        "chi"           "{red}没有配置{default} 加载."
+    }
+
+    "VoteFailedDisPlay"
+    {
+        "chi"           "投票未能成功发起."
+    }
+
+    "PassingVote"
+    {
+        "chi"           "投票通过."
     }
 
     "PlayersConnecting"
     {
-        "chi"        "不能发起投票. 玩家正在连接."
+        "chi"           "不能发起投票. 玩家正在连接."
     }
 
-    "Title_OffConfogl"
+    "HasInitiatedVote"
     {
-        "chi"        "卸载 Confogl 配置?"
+        "#format"       "{1:N}"
+        "chi"           "{teamcolor}{1}{default} 发起了一个投票."
+    }
+
+    "Voted"
+    {
+        "#format"       "{1:N}"
+        "chi"           "{teamcolor}{1}{default} 已投票."
+    }
+
+    "VoteFailedNotEnough"
+    {
+        "#format"       "{1:d}"
+        "chi"           "投票失败. 未能获得足够多的票数 ({red}{1}{default})."
+    }
+
+    "VoteFailed"
+    {
+        "chi"           "投票未能通过."
     }
 
     "VotePass_Unloading"
     {
-        "chi"        "Confogl 配置卸载中..."
+        "chi"           "Confogl 正在卸载.."
     }
 
     "Title_ChangeConfogl"
     {
-        "#format"   "{1:s}"
-        "chi"        "更改 Confogl 配置为 '{1}'?"
+        "#format"       "{1:s}"
+        "chi"           "更改confogl配置为 '{1}'?"
     }
 
     "VotePass_Changed"
     {
-        "chi"        "配置更改中..."
+        "chi"           "游戏配置已更改..."
     }
 
     // ClientSettings.sp
+    "KickMessage_ProtectedOrMissing"
+    {
+        "#format"       "{1:s}"
+        "chi"           "Cvar '{1}' 受保护或缺失!"
+    }
+
     "KickedForIllegalValue"
     {
-        "#format"   "{1:L},{2:s},{3:f}"
-        "chi"        "{olive}{1}{default} 因参数 '{green}{2}{default}' {blue}({default}{3}{blue}) 不合法而被踢出游戏."
+        "#format"       "{1:L},{2:s},{3:f}"
+        "chi"           "{olive}{1}{default} 因参数 '{green}{2}{default}' {blue}({default}{3}{blue}) 不合法而被踢出游戏."
     }
 
     "TotalList"
     {
-        "#format"   "{1:d}"
-        "chi"        "已监测客户端Cvars (共 {1})"
+        "#format"       "{1:d}"
+        "chi"           "已监测客户端Cvars (共 {1})"
     }
 
     "ClientCvar"
     {
-        "chi"        "客户端Cvars:"
+        "chi"           "客户端Cvars:"
     }
 
     "Min"
     {
-        "chi"        "最小:"
+        "chi"           "最小:"
     }
 
     "Max"
     {
-        "chi"        "最大:"
+        "chi"           "最大:"
+    }
+
+    "KickMessage_Prefix"
+    {
+        "chi"           "非法的客户端参数:"
     }
 
     "ActionKick"
     {
-        "chi"        "行为: 踢出"
+        "chi"           "行为: 踢出"
     }
 
     "ActionLog"
     {
-        "chi"        "行为: 记录"
+        "chi"           "行为: 记录"
     }
 
     // CvarSettings.sp
     "NotStarted"
     {
-        "chi"        "Cvar监测尚未开启! 这不应该发生在已开始的游戏中!!!"
+        "chi"           "Cvar监测尚未开启! 这不应该发生在已开始的游戏中!!!"
     }
 
     "EnforcedCvars"
     {
-        "#format"   "{1:d}"
-        "chi"        "强制服务端Cvars (共 {1})"
+        "#format"       "{1:d}"
+        "chi"           "强制服务端Cvars (共 {1})"
     }
 
     "CvarInfo"
     {
-        "#format"   "{1:s},{2:s},{3:s}"
-        "chi"        "服务端 Cvar: %s, 期望值: %s, 当前值: %s"
+        "#format"       "{1:s},{2:s},{3:s}"
+        "chi"           "服务端 Cvar: {1}, 期望值: {2}, 当前值: {3}"
     }
 
     "ToSeeMore"
     {
-        "#format"   "{1:d}"
-        "chi"        "欲查询更多Cvars, 使用 confogl_cvarsettings {1}"
+        "#format"       "{1:d}"
+        "chi"           "欲查询更多Cvars, 使用 confogl_cvarsettings {1}"
     }
 
     "TrackedChange"
     {
-        "#format"   "{1:s},{2:s},{3:s}"
-        "chi"        "监测到服务端Cvar '{green}{1}{default}' 由 '{blue}{2}{default}' 更改为 '{blue}{3}{default}' !!!"
+        "#format"       "{1:s},{2:s},{3:s}"
+        "chi"           "监测到服务端Cvar '{green}{1}{default}' 由 '{blue}{2}{default}' 更改为 '{blue}{3}{default}' !!!"
     }
 
     // ReqMatch.sp
     "MatchModeLoaded"
     {
-        "chi"        "{default}配置已加载!"
+        "chi"           "{default}配置已加载!"
     }
 
     "ChangeMapTo"
     {
-        "#format"   "{1:s}"
-        "chi"        "{default}切换地图为 {green}{1}{default}!"
+        "#format"       "{1:s}"
+        "chi"           "{default}切换地图为 {green}{1}{default}!"
     }
 
     "RestartingMap"
     {
-        "chi"        "{default}重启地图中!"
+        "chi"           "{default}重启地图中!"
     }
 
     "MatchModeUnloaded"
     {
-        "chi"        "{default}配置已卸载!"
+        "chi"           "{default}配置已卸载!"
     }
 
     "LoadingConfig"
     {
-        "#format"   "{1:s}"
-        "chi"        "{default}正在加载 '{olive}{1}{default}'."
+        "#format"       "{1:s}"
+        "chi"           "{default}正在加载 '{olive}{1}{default}'."
     }
 
     "UsingDefault"
     {
-        "#format"   "{1:s}"
-        "chi"        "{default}配置 '{olive}{1}{default}' 寻求未果, 使用默认配置!"
+        "#format"       "{1:s}"
+        "chi"           "{default}配置 '{olive}{1}{default}' 寻求未果, 使用默认配置!"
     }
 
     "SpecifyConfig"
     {
-        "chi"        "{default}请选择一个 {olive}配置{default} 来加载."
+        "chi"           "{default}请选择一个 {olive}配置{default} 来加载."
     }
 
     "RE_ConfigNotFound"
     {
-        "#format"   "{1:s}"
-        "chi"        "{default}配置 '{olive}{1}{default}' 未找到!"
+        "#format"       "{1:s}"
+        "chi"           "{default}配置 '{olive}{1}{default}' 未找到!"
     }
 
     "MapNotFound"
     {
-        "#format"   "{1:s}"
-        "chi"        "{default}地图 '{olive}{1}{default}' 未找到!"
+        "#format"       "{1:s}"
+        "chi"           "{default}地图 '{olive}{1}{default}' 未找到!"
+    }
+
+    // UnreserveLobby.sp
+    "RemovedLobby"
+    {
+        "chi"           "已移除大厅匹配."
+    }
+
+    // Password.sp
+    "WrongPassword"
+    {
+        "chi"           "[Confogl] 你需要给cvar \"sv_password\" 设置正确的密码."
     }
 }
