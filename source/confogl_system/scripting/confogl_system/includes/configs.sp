@@ -15,7 +15,7 @@ static char
 	customCfgPath[PLATFORM_MAX_PATH] = "\0",
 	customCfgName[PLATFORM_MAX_PATH] = "\0";
 
-static ConVar
+ConVar
 	hCustomConfig = null;
 
 void Configs_APL()

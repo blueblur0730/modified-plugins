@@ -21,10 +21,17 @@ static bool
 static ArrayList
 	CvarSettingsArray = null;
 
+static ConVar
+	hShouldPrint = null;
+
+void CVS_APL()
+{
+	CreateNative("LGO_GetTrackedCvars", Native_GetTrackedCvars);	// int LGO_GetTrackedCvars(ArrayList &hCvarArray)
+}
+
 void CVS_OnModuleStart()
 {
-	CVSEntry cvsetting;
-	CvarSettingsArray = new ArrayList(sizeof(cvsetting));
+	CvarSettingsArray = new ArrayList(sizeof(CVSEntry));
 
 	RegConsoleCmd("confogl_cvarsettings", CVS_CvarSettings_Cmd, "List all ConVars being enforced by Confogl");
 	RegConsoleCmd("confogl_cvardiff", CVS_CvarDiff_Cmd, "List any ConVars that have been changed from their initialized values");
@@ -32,11 +39,14 @@ void CVS_OnModuleStart()
 	RegServerCmd("confogl_addcvar", CVS_AddCvar_Cmd, "Add a ConVar to be set by Confogl");
 	RegServerCmd("confogl_setcvars", CVS_SetCvars_Cmd, "Starts enforcing ConVars that have been added.");
 	RegServerCmd("confogl_resetcvars", CVS_ResetCvars_Cmd, "Resets enforced ConVars.  Cannot be used during a match!");
+
+	hShouldPrint = CreateConVarEx("cvarchange_shouldprint", "1", "Whether or not to print changes to ConVars", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 }
 
 void CVS_OnModuleEnd()
 {
 	ClearAllSettings();
+	delete CvarSettingsArray;
 }
 
 void CVS_OnConfigsExecuted()
@@ -294,7 +304,7 @@ static void AddCvar(const char[] cvar, const char[] newval)
 
 static void CVS_ConVarChange(ConVar hConVar, const char[] sOldValue, const char[] sNewValue)
 {
-	if (bTrackingStarted) 
+	if (bTrackingStarted && hShouldPrint.BoolValue) 
 	{
 		char sName[CVS_CVAR_MAXLEN];
 		hConVar.GetName(sName, sizeof(sName));
@@ -302,4 +312,13 @@ static void CVS_ConVarChange(ConVar hConVar, const char[] sOldValue, const char[
 		PrintToServer("[Confogl] Tracked Server CVar '%s' changed from '%s' to '%s' !!!", sName, sOldValue, sNewValue);
 		CPrintToChatAll("%t %t", "Tag", "TrackedChange", sName, sOldValue, sNewValue);
 	}
+}
+
+static int Native_GetTrackedCvars(Handle plugin, int numParams)
+{
+	if (!bTrackingStarted)
+		return -1;
+
+	SetNativeCellRef(1, CvarSettingsArray);
+	return CvarSettingsArray.Length;
 }

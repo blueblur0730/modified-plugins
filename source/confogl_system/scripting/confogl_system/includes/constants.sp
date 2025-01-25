@@ -7,8 +7,6 @@
 #define MATCHMODES_PATH "configs/matchmodes.txt"
 #define TEAM_SPECTATE 1
 
-bool g_bIsChangeLevelAvailable = false;
-
 enum
 {
 	L4D2Team_None = 0,

@@ -33,8 +33,8 @@ static ConVar
 
 void RM_APL()
 {
-	RM_hFwdMatchLoad   = CreateGlobalForward("LGO_OnMatchModeLoaded", ET_Ignore);
-	RM_hFwdMatchUnload = CreateGlobalForward("LGO_OnMatchModeUnloaded", ET_Ignore);
+	RM_hFwdMatchLoad   = CreateGlobalForward("LGO_OnMatchModeLoaded", ET_Ignore, Param_String, Param_String);	// LGO_OnMatchModeLoaded(const char[] config, const char[] maps)
+	RM_hFwdMatchUnload = CreateGlobalForward("LGO_OnMatchModeUnloaded", ET_Ignore, Param_String);	// LGO_OnMatchModeUnloaded(const char[] config)
 
 	CreateNative("LGO_IsMatchModeLoaded", native_IsMatchModeLoaded);
 }
@@ -153,9 +153,9 @@ static void RM_Match_Load()
 
 	CPrintToChatAll("%t %t", "Tag", "MatchModeLoaded");
 
+	char sMap[PLATFORM_MAX_PATH];
 	if (!RM_bIsMapRestarted && RM_hDoRestart.BoolValue)
 	{
-		char sMap[PLATFORM_MAX_PATH];
 		RM_hChangeMap.GetString(sMap, sizeof(sMap));
 
 		if (strlen(sMap) > 0)
@@ -174,7 +174,10 @@ static void RM_Match_Load()
 	if (RM_bDebugEnabled || IsDebugEnabled())
 		LogMessage("[%s] Match mode loaded!", RM_MODULE_NAME);
 
+	hCustomConfig.GetString(sBuffer, sizeof(sBuffer));
 	Call_StartForward(RM_hFwdMatchLoad);
+	Call_PushString(sBuffer);
+	Call_PushString(sMap);
 	Call_Finish();
 
 	RM_bIsLoadingConfig = false;
@@ -205,13 +208,14 @@ void RM_Match_Unload(bool bForced = false)
 	RM_bIsMapRestarted	= false;
 	RM_bIsPluginsLoaded = false;
 
+	hCustomConfig.GetString(sBuffer, sizeof(sBuffer));
 	Call_StartForward(RM_hFwdMatchUnload);
+	Call_PushString(sBuffer);
 	Call_Finish();
 
 	CPrintToChatAll("%t %t", "Tag", "MatchModeUnloaded");
 
 	RM_hConfigFile_Off.GetString(sBuffer, sizeof(sBuffer));
-
 	ExecuteCfg(sBuffer);
 
 	if (RM_bDebugEnabled || IsDebugEnabled())
@@ -353,12 +357,7 @@ static void RM_MatchResetTimer(Handle hTimer)
 	RM_Match_Unload();
 }
 
-stock bool IsAMatchActive()
-{
-	return RM_bIsAMatchActive;
-}
-
-static int native_IsMatchModeLoaded(Handle plugin, int numParams)
+static any native_IsMatchModeLoaded(Handle plugin, int numParams)
 {
 	return RM_bIsMatchModeLoaded;
 }

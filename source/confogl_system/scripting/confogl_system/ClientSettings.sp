@@ -32,8 +32,7 @@ static Handle
 
 void CLS_OnModuleStart()
 {
-	CLSEntry clsetting;
-	ClientSettingsArray = new ArrayList(sizeof(clsetting));
+	ClientSettingsArray = new ArrayList(sizeof(CLSEntry));
 
 	RegConsoleCmd("confogl_clientsettings", _ClientSettings_Cmd, "List Client settings enforced by confogl");
 
@@ -70,11 +69,11 @@ static Action _CheckClientSettings_Timer(Handle hTimer)
 		return Plugin_Stop;
 	}
 
-	EnforceAllCliSettings();
+	EnforceAllClientSettings();
 	return Plugin_Continue;
 }
 
-static void EnforceAllCliSettings()
+static void EnforceAllClientSettings()
 {
 	for (int i = 1; i <= MaxClients; i++) 
 	{
@@ -222,7 +221,7 @@ static Action _TrackClientCvar_Cmd(int args)
 
 	if (!strlen(cvar)) 
 	{
-		PrintToServer("Unreadable cvar");
+		PrintToServer("[Confogl] Unreadable cvar");
 
 		if (IsDebugEnabled()) 
 		{

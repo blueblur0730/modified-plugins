@@ -8,6 +8,14 @@
 static ConVar
 	UL_hEnable = null;
 
+static GlobalForward
+	UL_OnRemoveLobby = null;
+
+void UL_APL()
+{
+	UL_OnRemoveLobby = new GlobalForward("LGO_OnRemoveLobby", ET_Event);
+}
+
 void UL_OnModuleStart()
 {
 	UL_hEnable = CreateConVarEx("match_killlobbyres", "0", \
@@ -37,4 +45,7 @@ static void UL_RemoveLobby()
 {
     LogMessage("[%s] Removed lobby reservation.", UL_MODULE_NAME);
     L4D_LobbyUnreserve();
+	
+	Call_StartForward(UL_OnRemoveLobby);
+	Call_Finish();
 }

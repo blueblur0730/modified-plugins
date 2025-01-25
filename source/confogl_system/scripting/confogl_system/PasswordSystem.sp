@@ -99,8 +99,10 @@ static void PS_ConVarDone(QueryCookie cookie, int client, ConVarQueryResult resu
 
 	if (client == GetClientOfUserId(userid) && IsClientConnected(client)) 
 	{
+		char sBuffer[64];
 		PS_bSuppress = true;
-		KickClient(client, "Bad password");
+		Format(sBuffer, sizeof(sBuffer), "%T", "WrongPassword", client);
+		KickClient(client, sBuffer);
 	}
 }
 

@@ -34,23 +34,42 @@
 #endif
 #define _confogl_system_included
 
+enum struct CVSEntry
+{
+	ConVar CVSE_cvar;
+	char CVSE_oldval[64];
+	char CVSE_newval[64];
+}
+
 /* Forwards */
 
 /**
  * @brief Called when matchmode is fully loaded, before map restart.
  * @remarks Called just before confogl_plugins.cfg executes
  *
+ * @param config	Name of the config being loaded.
+ * @param maps		Map name that will be loaded to.
+ * 
  * @noreturn
  */
-forward void LGO_OnMatchModeLoaded();
+forward void LGO_OnMatchModeLoaded(const char[] config, const char[] maps);
 
 /**
  * @brief Called when matchmode is un-loaded, before map restart.
  * @remarks Plugins are unloaded immediately after this call finishes
  *
+ * @param config	Name of the config being unloaded.
+ * 
  * @noreturn
  */
-forward void LGO_OnMatchModeUnloaded();
+forward void LGO_OnMatchModeUnloaded(const char[] config);
+
+/**
+ * @brief Called when confogl removes lobby reservation.
+ * 
+ * @noreturn
+*/
+forward void LGO_OnRemoveLobby();
 
 /* NATIVES */
 
@@ -66,7 +85,7 @@ native bool LGO_IsMatchModeLoaded();
  * @brief Get current match name
  * @remarks Same name as the folder name in cfgogl/
  */
-native void LGO_GetConfigName(char[] sConfigName, iSize);
+native void LGO_GetConfigName(char[] sConfigName, int iSize);
 
 /**
  * @brief Build a filepath relative to the current running config.
@@ -88,6 +107,15 @@ native void LGO_BuildConfigPath(char[] buffer, int maxlength, const char[] sFile
  */
 native void LGO_ExecuteConfigCfg(const char[] sFileName);
 
+/**
+ * @brief Get the list of tracked cvars for the current config.
+ * @remarks This arraylist contains a set of enum struct array. See above.
+ * 
+ * @param hCvarArray	An array to store the cvars in
+ * 
+ * @return Size of the array. -1 if tracking has not started yet.
+*/
+native int LGO_GetTrackedCvars(ArrayList &hCvarArray);
 
 public SharedPlugin __pl_confogl_system =
 {

@@ -236,4 +236,10 @@
     {
         "chi"        "已移除大厅匹配."
     }
+
+    // Password.sp
+    "WrongPassword"
+    {
+        "chi"        "[Confogl] 你需要给cvar \"sv_password\" 设置正确的密码."
+    }
 }
