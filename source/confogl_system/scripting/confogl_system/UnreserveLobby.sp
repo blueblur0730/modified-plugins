@@ -10,7 +10,7 @@ static ConVar
 
 void UL_OnModuleStart()
 {
-	UL_hEnable = CreateConVarEx("match_killlobbyres", "1", \
+	UL_hEnable = CreateConVarEx("match_killlobbyres", "0", \
 		"Sets whether the plugin will clear lobby reservation once a match have begun", \
 		_, true, 0.0, true, 1.0 \
 	);
@@ -23,13 +23,18 @@ void UL_OnClientPutInServer()
 	if (!IsPluginEnabled() || !UL_hEnable.BoolValue) 
 		return;
 
-	L4D_LobbyUnreserve();
+	UL_RemoveLobby();
 }
 
 static Action UL_KillLobbyRes(int client, int args)
 {
-	L4D_LobbyUnreserve();
-	ReplyToCommand(client, "[Confogl] Removed lobby reservation.");
-
+	UL_RemoveLobby();
+	CReplyToCommand(client, "%t %t", "Tag", "RemovedLobby");    //[Confogl] Removed lobby reservation.
 	return Plugin_Handled;
+}
+
+static void UL_RemoveLobby()
+{
+    LogMessage("[%s] Removed lobby reservation.", UL_MODULE_NAME);
+    L4D_LobbyUnreserve();
 }

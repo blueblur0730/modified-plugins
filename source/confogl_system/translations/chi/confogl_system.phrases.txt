@@ -230,4 +230,10 @@
         "#format"   "{1:s}"
         "chi"        "{default}地图 '{olive}{1}{default}' 未找到!"
     }
+
+    // UnreserveLobby.sp
+    "RemovedLobby"
+    {
+        "chi"        "已移除大厅匹配."
+    }
 }

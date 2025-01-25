@@ -230,4 +230,10 @@
         "#format"   "{1:s}"
         "en"        "{default}Map '{olive}{1}{default}' not found!"
     }
+
+    // UnreserveLobby.sp
+    "RemovedLobby"
+    {
+        "en"        "Removed lobby reservation."
+    }
 }

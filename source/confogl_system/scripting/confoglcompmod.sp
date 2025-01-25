@@ -3,7 +3,7 @@
 
 #define DEBUG_ALL				   0
 
-#define PLUGIN_VERSION			   "1.1.1"    // rework of 2.4.5
+#define PLUGIN_VERSION			   "1.2"    // rework of 2.4.5
 
 // Load this plugin always before confogl_system, always after left4dhooks.
 
@@ -13,7 +13,6 @@
 #define MODULE_MAPINFO			   1	// MapInfo
 #define MODULE_WEAPONINFORMATION   1	// WeaponInformation
 #define MODULE_GHOSTTANK		   1	// GhostTank
-#define MODULE_UNRESERVELOBBY	   1	// UnreserveLobby
 #define MODULE_GHOSTWARP		   0	// GhostWarp (plugin l4d2_ghost_warp replaces this functionality)
 #define MODULE_SCOREMOD			   1	// ScoreMod
 #define MODULE_FINALESPAWN		   1	// FinaleSpawn
@@ -47,10 +46,6 @@
 
 #if MODULE_GHOSTTANK
 	#include "confoglcompmod/GhostTank.sp"
-#endif
-
-#if MODULE_UNRESERVELOBBY
-	#include "confoglcompmod/UnreserveLobby.sp"
 #endif
 
 #if MODULE_GHOSTWARP
@@ -131,10 +126,6 @@ public void OnPluginStart()
 
 #if MODULE_WEAPONINFORMATION
 	WI_OnModuleStart();	   // WeaponInformation
-#endif
-
-#if MODULE_UNRESERVELOBBY
-	UL_OnModuleStart();	   // UnreserveLobby
 #endif
 
 #if MODULE_ENTITYREMOVER
@@ -240,15 +231,10 @@ public void OnMapEnd()
 }
 #endif
 
-#if MODULE_UNRESERVELOBBY || MODULE_FINALESPAWN
-
+#if MODULE_FINALESPAWN
 public void OnClientPutInServer(int client)
 {
 	// Modules
-	#if MODULE_UNRESERVELOBBY
-	UL_OnClientPutInServer();	 // UnreserveLobby
-	#endif
-
 	#if MODULE_FINALESPAWN
 	FS_OnClientPutInServer(client);	   // FinaleSpawn
 	#endif

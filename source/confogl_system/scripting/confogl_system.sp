@@ -2,7 +2,7 @@
 #pragma newdecls required
 
 #define DEBUG_ALL				   0
-#define PLUGIN_VERSION			   "r1.6.5"	// 2.4.5 rework
+#define PLUGIN_VERSION			   "r1.7"	// 2.4.5 rework
 
 #include <sourcemod>
 #include <sdktools>
@@ -14,6 +14,8 @@
 bool 
 	RM_bIsMatchModeLoaded = false,
 	RM_bIsLoadingConfig   = false;
+
+native void L4D_LobbyUnreserve();
 
 // Basic helper here.
 #include "confogl_system/includes/constants.sp"
@@ -31,6 +33,7 @@ bool
 #include "confogl_system/PasswordSystem.sp"
 #include "confogl_system/BotKick.sp"
 #include "confogl_system/ClientSettings.sp"
+#include "confogl_system/UnreserveLobby.sp"
 
 // Competitive Rework Team:
 // Confogl Team, A1m` (for confogl itself)
@@ -49,6 +52,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
 	Configs_APL();	  // configs
 	RM_APL();	 	  // ReqMatch
+
+	MarkNativeAsOptional("L4D_LobbyUnreserve");
 
 	// make it consistent.
 	RegPluginLibrary("confogl");
@@ -76,6 +81,7 @@ public void OnPluginStart()
 	CVS_OnModuleStart();	// CvarSettings
 	PS_OnModuleStart();	   	// PasswordSystem
 	BK_OnModuleStart();	   	// BotKick
+	UL_OnModuleStart();		// UnreserveLobby
 
 	// Other
 	AddCustomServerTag("confogl_system");
@@ -127,6 +133,7 @@ public void OnClientPutInServer(int client)
 {
 	RM_OnClientPutInServer();	 		// ReqMatch
 	PS_OnClientPutInServer(client);	   	// PasswordSystem
+	UL_OnClientPutInServer();			// UnreserveLobby
 }
 
 public void OnLibraryAdded(const char[] name)
