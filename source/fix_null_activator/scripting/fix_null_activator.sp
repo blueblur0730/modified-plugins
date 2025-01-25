@@ -10,7 +10,7 @@
 #define KEY_MAX_ENTITY_COUNT "MaxEntityCount"
 #define STRING_LENTH	64
 
-#define PLUGIN_VERSION 	"1.2.1"
+#define PLUGIN_VERSION 	"1.2.2"
 
 DynamicHook g_hHook_AcceptInput = null;
 StringMap g_hMapEntityList = null;
@@ -119,16 +119,19 @@ public void OnEntityCreated(int entity, const char[] classname)
 
 MRESReturn DHook_CBaseEntity_AcceptInput(int pThis, DHookReturn hReturn, DHookParam hParams)
 {
-	char szInputName[128];
-	hParams.GetString(1, szInputName, sizeof(szInputName));
-	int pActivator = hParams.Get(2);
-
-	char szEntityName[128];
-	GetEntityClassname(pThis, szEntityName, sizeof(szEntityName));
+	//int pActivator = hParams.Get(2);
 
 	// if player disconnected or activator entity destroyed.
-	if (pActivator == -1)
+	if (hParams.IsNull(2))
 	{
+		char szEntityName[128];
+		GetEntityClassname(pThis, szEntityName, sizeof(szEntityName));
+
+		char szInputName[128];
+		hParams.GetString(1, szInputName, sizeof(szInputName));
+
+		LogMessage("Entity %s called AcceptInput with null activator. InuputName: %s.", szEntityName, szInputName);
+
 		if (StrEqual(szEntityName, "game_ui") && StrEqual(szInputName, "Deactivate"))
 			SetEntProp(pThis, Prop_Data, "m_nNextThinkTick", -1);
 
