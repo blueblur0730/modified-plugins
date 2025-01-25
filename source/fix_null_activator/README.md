@@ -16,20 +16,36 @@
 
 ### How to use
 
-- Open gamedata file "fix_null_activator.games.txt"
-- Find "Key" section, add the potential server-crashed entity that is related to pass null activator pointer to CBaseEntity::AcceptInput to the list, following the format:
+- Open config file "fix_null_activator.cfg"
+- The first sub-key should be an input's name like `Deactivate`, `TestActivator` etc. Go to the keys inside of it, the entity name is on the right of the key `entity_name`, fill in the entity you want to check. It would like this:
 
 ```
-	"Keys"
-	{
-        // here to define how many entity we want to hook. should be equal to the number of "HookEntityx" below.
-		"MaxEntityCount"	"10"
+"Activators"
+{
+    // input name
+    "Deactivate"
+    {
+        "entity_name"   "game_ui"
+    }
 
-        // fill in the first blank with "HookEntityx", x means the number, has to be sequential.
-		"HookEntity1"	"game_ui"   // the second blank is the entity name.
-        "HookEntity2"	"filter_*"
-        "HookEntityx"	"..."
-	}
+    "TestActivator"
+    {
+        "entity_name"   "filter_activator_class"
+        "entity_name"   "filter_activator_context"
+        "entity_name"   "filter_activator_infected_class"
+        "entity_name"   "filter_activator_mass_greater"
+        "entity_name"   "filter_activator_model"
+        "entity_name"   "filter_activator_name"
+        "entity_name"   "filter_activator_team"
+        "entity_name"   "filter_base"
+        "entity_name"   "filter_damage_type"
+        "entity_name"   "filter_enemy"
+        "entity_name"   "filter_health"
+        "entity_name"   "filter_melee_damage"
+        "entity_name"   "filter_origin"
+        "entity_name"   "filter_multi"
+    }
+}
 ```
 
 - Every change applys on next map start.
