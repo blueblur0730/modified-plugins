@@ -54,7 +54,7 @@ void LG_OnMapStart()
 Logger CreateServerConsoleLoggerOrFailed(const char[] name)
 {
 #if defined LOG4SP_NO_EXT
-    return INVALID_HANDLE;
+    return view_as<Logger>(INVALID_HANDLE);
 #else
     Logger log = Logger.Get(name);
 
@@ -71,7 +71,7 @@ Logger CreateServerConsoleLoggerOrFailed(const char[] name)
 Logger CreateBaseFileLoggerOrFailed(const char[] name)
 {
 #if defined LOG4SP_NO_EXT
-    return INVALID_HANDLE;
+    return view_as<Logger>(INVALID_HANDLE);
 #else
     Logger log = Logger.Get(name);
 
