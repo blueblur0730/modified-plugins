@@ -9,20 +9,20 @@ enum struct VoteData
 	bool bVoteStart;
 	char sDisplayText[64];
 	char sInfoStr[512];
-	int iInitiator;
-	int iYesCount;
-	int iNoCount;
-	int iPlayerCount;
-	bool bCanVote[MAXPLAYERS+1];
+	int	 iInitiator;
+	int	 iYesCount;
+	int	 iNoCount;
+	int	 iPlayerCount;
+	bool bCanVote[MAXPLAYERS + 1];
 }
 
-static VoteData g_VoteData;
-static int g_iVoteController;
+static VoteData		  g_VoteData;
+static int			  g_iVoteController;
 static PrivateForward g_hFwd;
-static ConVar g_cvInitiatorAutoVoteYes;
-static Handle g_hEndVoteTimer;
+static ConVar		  g_cvInitiatorAutoVoteYes;
+static Handle		  g_hEndVoteTimer;
 
-void VT_OnPluginStart()
+void				  VT_OnPluginStart()
 {
 	g_cvInitiatorAutoVoteYes = CreateConVarEx("initiator_auto_voteyes", "1", "If 1, initiator will auto vote yes", FCVAR_NONE, true, 0.0, true, 1.0);
 	AddCommandListener(CommandListener_Vote, "vote");
@@ -41,143 +41,147 @@ void VT_OnMapEnd()
 }
 
 methodmap L4D2NativeVote {
-    public L4D2NativeVote(L4D2VoteHandler handler) {
-        if (!ShouldAllowNewVote())
-        {
-		    g_hLogger.Info("[Confogl] Failed to create new vote, a vote is in progress.");
-            return view_as<L4D2NativeVote>(0);
-        }
 
-	    ResetVote();
-	    g_hFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
-	    g_hFwd.AddFunction(GetMyHandle(), handler);
-	    SetVoteEntityStatus(0);
-	    g_VoteData.bVoteInProgress = true;
+	public L4D2NativeVote(L4D2VoteHandler handler) {
+		if (!ShouldAllowNewVote())
+		{
+			g_hLogger.Info("[Confogl] Failed to create new vote, a vote is in progress.");
+			return view_as<L4D2NativeVote>(0);
+		}
 
-        return view_as<L4D2NativeVote>(1);
-    }
+		ResetVote();
+		g_hFwd = new PrivateForward(ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
+		g_hFwd.AddFunction(GetMyHandle(), handler);
+		SetVoteEntityStatus(0);
+		g_VoteData.bVoteInProgress = true;
 
-    public void SetTitle(const char[] title, any ...) {
-        VFormat(g_VoteData.sDisplayText, sizeof(g_VoteData.sDisplayText), title, 3);
-    }
+		return view_as<L4D2NativeVote>(1);
+	}
+
+	public void SetTitle(const char[] title, any...) {
+		VFormat(g_VoteData.sDisplayText, sizeof(g_VoteData.sDisplayText), title, 3);
+	}
 
 	public void GetTitle(char[] buffer, int maxlength) {
-        Format(buffer, maxlength, g_VoteData.sDisplayText);
-    }
+		Format(buffer, maxlength, g_VoteData.sDisplayText);
+	}
 
-	public void SetInfo(const char[] fmt, any ...) {
-        VFormat(g_VoteData.sInfoStr, sizeof(g_VoteData.sInfoStr), fmt, 3);
-    }
+	public void SetInfo(const char[] fmt, any...) {
+		VFormat(g_VoteData.sInfoStr, sizeof(g_VoteData.sInfoStr), fmt, 3);
+	}
 
 	public void GetInfo(char[] buffer, int maxlength) {
-        Format(buffer, maxlength, g_VoteData.sInfoStr);
-    }
+		Format(buffer, maxlength, g_VoteData.sInfoStr);
+	}
 
 	property int Initiator {
 		public set(int client) {
-            g_VoteData.iInitiator = client;
-        }
+			g_VoteData.iInitiator = client;
+		}
 
 		public get() {
-            return g_VoteData.iInitiator;
-        }
+			return g_VoteData.iInitiator;
+		}
 	}
 
-	// Broadcasts a vote to a list of clients.  
+	// Broadcasts a vote to a list of clients.
 	//
 	// @param clients		Array of clients to broadcast to.
 	// @param numClients	Number of clients in the array.
 	// @param time			Maximum time to leave vote on the screen.
-	// @return				True on success, False if in game numClients < 1 
+	// @return				True on success, False if in game numClients < 1
 	//						Or vote is invalid, Or there are other vote in progress.
 	public bool DisplayVote(int[] clients, int numClients, float time) {
-        if (!this || !g_VoteData.bVoteInProgress || g_VoteData.bVoteStart)
-		    return false;
+		if (!this || !g_VoteData.bVoteInProgress || g_VoteData.bVoteStart)
+			return false;
 
-	    int client;
-	    for (int i = 0; i < numClients; i++)
-	    {
-		    client = clients[i];
-		    if (client > 0 && client <= MaxClients && IsClientInGame(client) && !IsFakeClient(client))
-		    {
-		    	clients[g_VoteData.iPlayerCount++] = client;
-		    	g_VoteData.bCanVote[client] = true;
-		    }
-	    }
-	
-	    if (g_VoteData.iPlayerCount < 1)
-	    {
-		    ResetVote();
-		    return false;
-	    }
-	
-	    int initiator = g_VoteData.iInitiator;
-	    char sName[128];
-	    if (initiator > 0 && initiator <= MaxClients && IsClientInGame(initiator))
-	    {
-		    FormatEx(sName, sizeof(sName), "%N", initiator);
-		    if (g_cvInitiatorAutoVoteYes.BoolValue)
-			    CreateTimer(0.1, InitiatorVote_Timer, GetClientUserId(initiator));
-	    }
+		int client;
+		for (int i = 0; i < numClients; i++)
+		{
+			client = clients[i];
+			if (client > 0 && client <= MaxClients && IsClientInGame(client) && !IsFakeClient(client))
+			{
+				clients[g_VoteData.iPlayerCount++] = client;
+				g_VoteData.bCanVote[client]		   = true;
+			}
+		}
 
-	    BfWrite bf = UserMessageToBfWrite(StartMessage("VoteStart", clients, g_VoteData.iPlayerCount, USERMSG_RELIABLE));
-	    bf.WriteByte(-1);							// team. Valve represents no team as -1
-	    bf.WriteByte(initiator);					// initiator
-	    bf.WriteString("#L4D_TargetID_Player");		// issue. L4D_TargetID_Player which will let you create any vote you want.
-	    bf.WriteString(g_VoteData.sDisplayText);	// Vote issue text
-	    bf.WriteString(sName);						// initiatorName
-	    EndMessage();
+		if (g_VoteData.iPlayerCount < 1)
+		{
+			ResetVote();
+			return false;
+		}
 
-	    g_VoteData.bVoteStart = true;
-	    delete g_hEndVoteTimer;
-	    g_hEndVoteTimer = CreateTimer(time, EndVote_Timer);
+		int	 initiator = g_VoteData.iInitiator;
+		char sName[128];
+		if (initiator > 0 && initiator <= MaxClients && IsClientInGame(initiator))
+		{
+			FormatEx(sName, sizeof(sName), "%N", initiator);
+			if (g_cvInitiatorAutoVoteYes.BoolValue)
+				CreateTimer(0.1, InitiatorVote_Timer, GetClientUserId(initiator));
+		}
 
-	    UpdateVotes(VoteAction_Start, initiator);
-	    return true;
-    }
+		BfWrite bf = UserMessageToBfWrite(StartMessage("VoteStart", clients, g_VoteData.iPlayerCount, USERMSG_RELIABLE));
+		bf.WriteByte(-1);							// team. Valve represents no team as -1
+		bf.WriteByte(initiator);					// initiator
+		bf.WriteString("#L4D_TargetID_Player");		// issue. L4D_TargetID_Player which will let you create any vote you want.
+		bf.WriteString(g_VoteData.sDisplayText);	// Vote issue text
+		bf.WriteString(sName);						// initiatorName
+		EndMessage();
+
+		g_VoteData.bVoteStart = true;
+		delete g_hEndVoteTimer;
+		g_hEndVoteTimer = CreateTimer(time, EndVote_Timer);
+
+		UpdateVotes(VoteAction_Start, initiator);
+		return true;
+	}
 
 	property int YesCount {
+
 		public set(int value) {
-            g_VoteData.iYesCount = value;
-        }
+			g_VoteData.iYesCount = value;
+		}
 
 		public get() {
-            return g_VoteData.iYesCount;
-        }
+			return g_VoteData.iYesCount;
+		}
 	}
 
 	property int NoCount {
+
 		public set(int value) {
-            g_VoteData.iNoCount = value;
-        }
+			g_VoteData.iNoCount = value;
+		}
 
 		public get() {
-            return g_VoteData.iNoCount;
-        }
+			return g_VoteData.iNoCount;
+		}
 	}
 
 	property int PlayerCount {
+
 		public get() {
-            return g_VoteData.iPlayerCount;
-        }
+			return g_VoteData.iPlayerCount;
+		}
 	}
-	
-	public void SetPass(const char[] fmt, any ...) {
-        char buffer[256];
-        BfWrite bf = UserMessageToBfWrite(StartMessageAll("VotePass", USERMSG_RELIABLE));
-	    bf.WriteByte(-1);
-	    bf.WriteString("#L4D_TargetID_Player");
-        VFormat(buffer, sizeof(buffer), fmt, 3);
-	    bf.WriteString(buffer);
-	    EndMessage();
-        RequestFrame(OnNextFrame_ResetVote);
-    }
+
+	public void SetPass(const char[] fmt, any...) {
+		char	buffer[256];
+		BfWrite bf = UserMessageToBfWrite(StartMessageAll("VotePass", USERMSG_RELIABLE));
+		bf.WriteByte(-1);
+		bf.WriteString("#L4D_TargetID_Player");
+		VFormat(buffer, sizeof(buffer), fmt, 3);
+		bf.WriteString(buffer);
+		EndMessage();
+		RequestFrame(OnNextFrame_ResetVote);
+	}
 
 	public void SetFail() {
-	    BfWrite bf = UserMessageToBfWrite(StartMessageAll("VoteFail", USERMSG_RELIABLE));
-	    bf.WriteByte(-1);
-	    EndMessage();
-    }
+		BfWrite bf = UserMessageToBfWrite(StartMessageAll("VoteFail", USERMSG_RELIABLE));
+		bf.WriteByte(-1);
+		EndMessage();
+	}
 }
 
 static void InitiatorVote_Timer(Handle timer, int userid)
@@ -194,7 +198,7 @@ static void EndVote_Timer(Handle timer)
 {
 	if (g_VoteData.bVoteInProgress)
 		UpdateVotes(VoteAction_End, VOTEEND_TIMEEND);
-	
+
 	g_hEndVoteTimer = null;
 }
 
@@ -248,7 +252,7 @@ static void UpdateVotes(VoteAction action, int param1 = -1, int param2 = -1)
 			{
 				for (int i; i <= MaxClients; i++)
 					g_VoteData.bCanVote[i] = false;
-					
+
 				UpdateVotes(VoteAction_End, VOTEEND_FULLVOTED);
 			}
 		}
@@ -272,7 +276,7 @@ static void OnNextFrame_ResetVote()
 static void ResetVote()
 {
 	g_VoteData.bVoteInProgress = false;
-	g_VoteData.bVoteStart = false;
+	g_VoteData.bVoteStart	   = false;
 
 	delete g_hEndVoteTimer;
 	delete g_hFwd;
@@ -281,11 +285,11 @@ static void ResetVote()
 		SetVoteEntityStatus(-1);
 
 	g_VoteData.sDisplayText[0] = '\0';
-	g_VoteData.sInfoStr[0] = '\0';
-	g_VoteData.iInitiator = 0;
-	g_VoteData.iYesCount = 0;
-	g_VoteData.iNoCount = 0;
-	g_VoteData.iPlayerCount = 0;
+	g_VoteData.sInfoStr[0]	   = '\0';
+	g_VoteData.iInitiator	   = 0;
+	g_VoteData.iYesCount	   = 0;
+	g_VoteData.iNoCount		   = 0;
+	g_VoteData.iPlayerCount	   = 0;
 
 	for (int i; i <= MaxClients; i++)
 		g_VoteData.bCanVote[i] = false;
@@ -295,13 +299,13 @@ bool ShouldAllowNewVote()
 {
 	if (!g_VoteData.bVoteInProgress && CheckVoteController())
 		return GetVoteEntityStatus() == -1;
-	
+
 	return false;
 }
 
 bool CheckVoteController()
 {
-	g_iVoteController = FindEntityByClassname(MaxClients+1, "vote_controller");
+	g_iVoteController = FindEntityByClassname(MaxClients + 1, "vote_controller");
 	return g_iVoteController != -1;
 }
 

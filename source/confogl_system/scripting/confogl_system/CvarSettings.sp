@@ -3,15 +3,15 @@
 #endif
 #define __cvar_settings_included
 
-#define CVS_MODULE_NAME			"CvarSettings"
+#define CVS_MODULE_NAME "CvarSettings"
 
-#define CVS_CVAR_MAXLEN			64
+#define CVS_CVAR_MAXLEN 64
 
 enum struct CVSEntry
 {
 	ConVar CVSE_cvar;
-	char CVSE_oldval[CVS_CVAR_MAXLEN];
-	char CVSE_newval[CVS_CVAR_MAXLEN];
+	char   CVSE_oldval[CVS_CVAR_MAXLEN];
+	char   CVSE_newval[CVS_CVAR_MAXLEN];
 }
 
 static bool
@@ -21,7 +21,7 @@ static ArrayList
 	CvarSettingsArray = null;
 
 static ConVar
-	hShouldPrint = null;
+	 hShouldPrint = null;
 
 void CVS_APL()
 {
@@ -59,7 +59,7 @@ static Action CVS_SetCvars_Cmd(int args)
 	if (!IsPluginEnabled())
 		return Plugin_Handled;
 
-	if (bTrackingStarted) 
+	if (bTrackingStarted)
 	{
 		g_hLogger_ServerConsole.Info("[Confogl] Tracking has already been started");
 		return Plugin_Handled;
@@ -75,7 +75,7 @@ static Action CVS_SetCvars_Cmd(int args)
 
 static Action CVS_AddCvar_Cmd(int args)
 {
-	if (args != 2) 
+	if (args != 2)
 	{
 		g_hLogger_ServerConsole.Info("Usage: confogl_addcvar <cvar> <newValue>");
 
@@ -100,7 +100,7 @@ static Action CVS_AddCvar_Cmd(int args)
 
 static Action CVS_ResetCvars_Cmd(int args)
 {
-	if (IsPluginEnabled()) 
+	if (IsPluginEnabled())
 	{
 		g_hLogger_ServerConsole.Info("[Confogl] Can't reset tracking in the middle of a match");
 		return Plugin_Handled;
@@ -117,14 +117,14 @@ static Action CVS_CvarSettings_Cmd(int client, int args)
 	if (!IsPluginEnabled())
 		return Plugin_Handled;
 
-	if (!bTrackingStarted) 
+	if (!bTrackingStarted)
 	{
 		CReplyToCommand(client, "%t %t", "Tag", "NotStarted");
 		return Plugin_Handled;
 	}
 
 	char buffer[CVS_CVAR_MAXLEN], name[CVS_CVAR_MAXLEN];
-	int cvscount = CvarSettingsArray.Length;
+	int	 cvscount = CvarSettingsArray.Length;
 
 	CReplyToCommand(client, "%t %t", "Tag", "EnforcedCvars", cvscount);
 
@@ -139,7 +139,7 @@ static Action CVS_CvarSettings_Cmd(int client, int args)
 		temp = offset + 20;
 
 	CVSEntry cvsetting;
-	for (int i = offset; i < temp && i < cvscount; i++) 
+	for (int i = offset; i < temp && i < cvscount; i++)
 	{
 		CvarSettingsArray.GetArray(i, cvsetting, sizeof(cvsetting));
 
@@ -160,14 +160,14 @@ static Action CVS_CvarDiff_Cmd(int client, int args)
 	if (!IsPluginEnabled())
 		return Plugin_Handled;
 
-	if (!bTrackingStarted) 
+	if (!bTrackingStarted)
 	{
 		CReplyToCommand(client, "%t %t", "Tag", "NotStarted");
 		return Plugin_Handled;
 	}
 
 	char buffer[CVS_CVAR_MAXLEN], name[CVS_CVAR_MAXLEN];
-	int cvscount = CvarSettingsArray.Length;
+	int	 cvscount = CvarSettingsArray.Length;
 
 	GetCmdArg(1, buffer, sizeof(buffer));
 	int offset = StringToInt(buffer);
@@ -175,18 +175,18 @@ static Action CVS_CvarDiff_Cmd(int client, int args)
 	if (offset > cvscount)
 		return Plugin_Handled;
 
-	int foundCvars = 0;
+	int		 foundCvars = 0;
 
 	CVSEntry cvsetting;
 
-	while (offset < cvscount && foundCvars < 20) 
+	while (offset < cvscount && foundCvars < 20)
 	{
 		CvarSettingsArray.GetArray(offset, cvsetting, sizeof(cvsetting));
 
 		(cvsetting.CVSE_cvar).GetString(buffer, sizeof(buffer));
 		(cvsetting.CVSE_cvar).GetName(name, sizeof(name));
 
-		if (strcmp(cvsetting.CVSE_newval, buffer) != 0) 
+		if (strcmp(cvsetting.CVSE_newval, buffer) != 0)
 		{
 			CReplyToCommand(client, "%t %t", "Tag", "CvarInfo", name, cvsetting.CVSE_newval, buffer);
 			foundCvars++;
@@ -195,7 +195,7 @@ static Action CVS_CvarDiff_Cmd(int client, int args)
 		offset++;
 	}
 
-	if (offset < cvscount) 
+	if (offset < cvscount)
 		CReplyToCommand(client, "%t %t", "Tag", "ToSeeMore", offset);
 
 	return Plugin_Handled;
@@ -204,10 +204,10 @@ static Action CVS_CvarDiff_Cmd(int client, int args)
 static void ClearAllSettings()
 {
 	bTrackingStarted = false;
-	int iSize = CvarSettingsArray.Length;
+	int		 iSize	 = CvarSettingsArray.Length;
 	CVSEntry cvsetting;
 
-	for (int i = 0; i < iSize; i++) 
+	for (int i = 0; i < iSize; i++)
 	{
 		CvarSettingsArray.GetArray(i, cvsetting, sizeof(cvsetting));
 
@@ -220,10 +220,10 @@ static void ClearAllSettings()
 
 static void SetEnforcedCvars()
 {
-	int iSize = CvarSettingsArray.Length;
+	int		 iSize = CvarSettingsArray.Length;
 
 	CVSEntry cvsetting;
-	for (int i = 0; i < iSize; i++) 
+	for (int i = 0; i < iSize; i++)
 	{
 		CvarSettingsArray.GetArray(i, cvsetting, sizeof(cvsetting));
 
@@ -240,19 +240,19 @@ static void SetEnforcedCvars()
 
 static void AddCvar(const char[] cvar, const char[] newval)
 {
-	if (bTrackingStarted) 
+	if (bTrackingStarted)
 	{
 		g_hLogger.WarnEx("[%s] Attempt to track new cvar %s during a match!", CVS_MODULE_NAME, cvar);
 		return;
 	}
 
-	if (strlen(cvar) >= CVS_CVAR_MAXLEN) 
+	if (strlen(cvar) >= CVS_CVAR_MAXLEN)
 	{
 		g_hLogger.ErrorEx("[%s] CVar Specified (%s) is longer than max cvar/value length (%d)", CVS_MODULE_NAME, cvar, CVS_CVAR_MAXLEN);
 		return;
 	}
 
-	if (strlen(newval) >= CVS_CVAR_MAXLEN) 
+	if (strlen(newval) >= CVS_CVAR_MAXLEN)
 	{
 		g_hLogger.ErrorEx("[%s] New Value Specified (%s) is longer than max cvar/value length (%d)", CVS_MODULE_NAME, newval, CVS_CVAR_MAXLEN);
 		return;
@@ -260,24 +260,24 @@ static void AddCvar(const char[] cvar, const char[] newval)
 
 	ConVar newCvar = FindConVar(cvar);
 
-	if (newCvar == null) 
+	if (newCvar == null)
 	{
 		g_hLogger.ErrorEx("[%s] Could not find CVar specified (%s)", CVS_MODULE_NAME, cvar);
 		return;
 	}
 
-	char cvarBuffer[CVS_CVAR_MAXLEN];
-	int iSize = CvarSettingsArray.Length;
+	char	 cvarBuffer[CVS_CVAR_MAXLEN];
+	int		 iSize = CvarSettingsArray.Length;
 
 	CVSEntry newEntry;
 
-	for (int i = 0; i < iSize; i++) 
+	for (int i = 0; i < iSize; i++)
 	{
 		CvarSettingsArray.GetArray(i, newEntry, sizeof(newEntry));
 
 		(newEntry.CVSE_cvar).GetName(cvarBuffer, CVS_CVAR_MAXLEN);
 
-		if (strcmp(cvar, cvarBuffer, false) == 0) 
+		if (strcmp(cvar, cvarBuffer, false) == 0)
 		{
 			g_hLogger.WarnEx("[%s] Attempt to track ConVar %s, which is already being tracked.", CVS_MODULE_NAME, cvar);
 			return;
@@ -290,14 +290,14 @@ static void AddCvar(const char[] cvar, const char[] newval)
 	strcopy(newEntry.CVSE_oldval, CVS_CVAR_MAXLEN, cvarBuffer);
 	strcopy(newEntry.CVSE_newval, CVS_CVAR_MAXLEN, newval);
 	newCvar.AddChangeHook(CVS_ConVarChange);
-	
+
 	g_hLogger.DebugEx("[%s] cvar = %s, newval = %s, oldval = %s", CVS_MODULE_NAME, cvar, newval, cvarBuffer);
 	CvarSettingsArray.PushArray(newEntry, sizeof(newEntry));
 }
 
 static void CVS_ConVarChange(ConVar hConVar, const char[] sOldValue, const char[] sNewValue)
 {
-	if (bTrackingStarted && hShouldPrint.BoolValue) 
+	if (bTrackingStarted && hShouldPrint.BoolValue)
 	{
 		char sName[CVS_CVAR_MAXLEN];
 		hConVar.GetName(sName, sizeof(sName));

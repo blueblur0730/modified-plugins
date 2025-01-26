@@ -3,14 +3,14 @@
 #endif
 #define __password_system_included
 
-#define PS_MODULE_NAME			"PasswordSystem"
+#define PS_MODULE_NAME "PasswordSystem"
 
 static char
 	PS_sPassword[128] = "\0";
 
 static bool
 	PS_bIsPassworded = false,
-	PS_bSuppress = false;
+	PS_bSuppress	 = false;
 
 static ConVar
 	PS_hReloaded = null,
@@ -18,25 +18,23 @@ static ConVar
 
 void PS_OnModuleStart()
 {
-	PS_hPassword = CreateConVarEx( \
-		"password", \
-		"", \
-		"Set a password on the server, if empty password disabled. See Confogl's wiki for more information", \
-		FCVAR_DONTRECORD|FCVAR_PROTECTED \
-	);
+	PS_hPassword = CreateConVarEx(
+		"password",
+		"",
+		"Set a password on the server, if empty password disabled. See Confogl's wiki for more information",
+		FCVAR_DONTRECORD | FCVAR_PROTECTED);
 
 	PS_hReloaded = FindConVarEx("password_reloaded");
 
-	if (PS_hReloaded == null) 
+	if (PS_hReloaded == null)
 	{
-		PS_hReloaded = CreateConVarEx( \
-			"password_reloaded", \
-			"", \
-			"DONT TOUCH THIS CVAR! This will is to make sure that the password gets set upon the plugin is reloaded", \
-			FCVAR_DONTRECORD|FCVAR_UNLOGGED \
-		);
-	} 
-	else 
+		PS_hReloaded = CreateConVarEx(
+			"password_reloaded",
+			"",
+			"DONT TOUCH THIS CVAR! This will is to make sure that the password gets set upon the plugin is reloaded",
+			FCVAR_DONTRECORD | FCVAR_UNLOGGED);
+	}
+	else
 	{
 		char sBuffer[128];
 		PS_hReloaded.GetString(sBuffer, sizeof(sBuffer));
@@ -88,7 +86,7 @@ static Action PS_CheckPassword_Timer(Handle hTimer, int userid)
 
 static void PS_ConVarDone(QueryCookie cookie, int client, ConVarQueryResult result, const char[] cvarName, const char[] cvarValue, int userid)
 {
-	if (result == ConVarQuery_Okay) 
+	if (result == ConVarQuery_Okay)
 	{
 		char buffer[128];
 		PS_hPassword.GetString(buffer, sizeof(buffer));
@@ -97,7 +95,7 @@ static void PS_ConVarDone(QueryCookie cookie, int client, ConVarQueryResult resu
 			return;
 	}
 
-	if (client == GetClientOfUserId(userid) && IsClientConnected(client)) 
+	if (client == GetClientOfUserId(userid) && IsClientConnected(client))
 	{
 		char sBuffer[64];
 		PS_bSuppress = true;
@@ -110,11 +108,11 @@ static void PS_ConVarChange(ConVar convar, const char[] oldValue, const char[] n
 {
 	PS_hPassword.GetString(PS_sPassword, sizeof(PS_sPassword));
 
-	if (strlen(PS_sPassword) > 0) 
+	if (strlen(PS_sPassword) > 0)
 	{
 		PS_bIsPassworded = true;
 		PS_SetPasswordOnClients();
-	} 
+	}
 	else PS_bIsPassworded = false;
 }
 
@@ -155,7 +153,7 @@ static void PS_SetPasswordOnClients()
 	char pwbuffer[128];
 	PS_hPassword.GetString(pwbuffer, sizeof(pwbuffer));
 
-	for (int client = 1; client <= MaxClients; client++) 
+	for (int client = 1; client <= MaxClients; client++)
 	{
 		if (!IsClientInGame(client) || IsFakeClient(client))
 			continue;

@@ -23,7 +23,7 @@ void PU_OnPluginEnd()
 static Action UnloadPlugins(int args)
 {
 	ArrayStack aReservedPlugins = new ArrayStack();
-	Handle mySelf = GetMyHandle();
+	Handle	   mySelf			= GetMyHandle();
 
 	// Thanks to Forgetest.
 	if (args == -1)
@@ -33,7 +33,7 @@ static Action UnloadPlugins(int args)
 	}
 	else
 	{
-		Handle currentPlugin = null;
+		Handle currentPlugin  = null;
 		Handle pluginIterator = GetPluginIterator();
 		while (MorePlugins(pluginIterator))
 		{
@@ -43,12 +43,11 @@ static Action UnloadPlugins(int args)
 
 			// We're not pushing ourselves into the array as we'll unload it on a timer at the end.
 			if (currentPlugin != mySelf)
-			aReservedPlugins.Push(currentPlugin);
+				aReservedPlugins.Push(currentPlugin);
 		}
 
 		delete pluginIterator;
 	}
-
 
 	ServerCommand("sm plugins load_unlock");
 
@@ -62,7 +61,7 @@ static Action UnloadPlugins(int args)
 
 	delete aReservedPlugins;
 
-	if (args != -1) 
+	if (args != -1)
 	{
 		CVS_OnModuleEnd();
 		PS_OnModuleEnd();

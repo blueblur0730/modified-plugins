@@ -10,9 +10,9 @@
 
 static bool
 	// RM_bMatchRequest[2] = {false, ...},
-	RM_bIsAMatchActive	  = false,
-	RM_bIsPluginsLoaded	  = false,
-	RM_bIsMapRestarted	  = false;
+	RM_bIsAMatchActive	= false,
+	RM_bIsPluginsLoaded = false,
+	RM_bIsMapRestarted	= false;
 
 static GlobalForward
 	RM_hFwdMatchLoad   = null,
@@ -31,8 +31,8 @@ static ConVar
 
 void RM_APL()
 {
-	RM_hFwdMatchLoad   = CreateGlobalForward("LGO_OnMatchModeLoaded", ET_Ignore, Param_String, Param_String);	// LGO_OnMatchModeLoaded(const char[] config, const char[] maps)
-	RM_hFwdMatchUnload = CreateGlobalForward("LGO_OnMatchModeUnloaded", ET_Ignore, Param_String);	// LGO_OnMatchModeUnloaded(const char[] config)
+	RM_hFwdMatchLoad   = CreateGlobalForward("LGO_OnMatchModeLoaded", ET_Ignore, Param_String, Param_String);	 // LGO_OnMatchModeLoaded(const char[] config, const char[] maps)
+	RM_hFwdMatchUnload = CreateGlobalForward("LGO_OnMatchModeUnloaded", ET_Ignore, Param_String);				 // LGO_OnMatchModeUnloaded(const char[] config)
 
 	CreateNative("LGO_IsMatchModeLoaded", native_IsMatchModeLoaded);
 }
@@ -43,7 +43,7 @@ void RM_OnModuleStart()
 	RM_hAutoLoad		   = CreateConVarEx("match_autoload", "0", "Has match mode start up automatically when a player connects and the server is not in match mode", _, true, 0.0, true, 1.0);
 	RM_hAutoCfg			   = CreateConVarEx("match_autoconfig", "", "Specify which config to load if the autoloader is enabled");
 	RM_hConfigFile_On	   = CreateConVarEx("match_execcfg_on", "confogl.cfg", "Execute this config file upon match mode starts and every map after that.");
-	RM_hConfigFile_Plugins = CreateConVarEx("match_execcfg_plugins", "confogl_plugins.cfg;sharedplugins.cfg", "Execute this config file upon match mode starts. This will only get executed once and meant for plugins that needs to be loaded.");	   // rework
+	RM_hConfigFile_Plugins = CreateConVarEx("match_execcfg_plugins", "confogl_plugins.cfg;sharedplugins.cfg", "Execute this config file upon match mode starts. This will only get executed once and meant for plugins that needs to be loaded.");	  // rework
 	RM_hConfigFile_Off	   = CreateConVarEx("match_execcfg_off", "confogl_off.cfg", "Execute this config file upon match mode ends.");
 
 	CreateConVarEx("match_name", "", "The name of the match mode, only used for presentation globally.");
@@ -65,7 +65,7 @@ void RM_OnModuleStart()
 	if (RM_hReloaded.BoolValue)
 	{
 		g_hLogger.DebugEx("[%s] Plugin was reloaded from match mode, executing match load", RM_MODULE_NAME);
-		RM_bIsPluginsLoaded = true;
+		RM_bIsPluginsLoaded	   = true;
 		RM_hReloaded.BoolValue = false;
 		RM_Match_Load();
 	}
@@ -109,7 +109,7 @@ static void RM_Match_Load()
 	{
 		g_hLogger.TraceEx("[%s] Loading plugins and reload self", RM_MODULE_NAME);
 
-		RM_bIsLoadingConfig = true;
+		RM_bIsLoadingConfig	   = true;
 		RM_hReloaded.BoolValue = true;
 		RM_hConfigFile_Plugins.GetString(sBuffer, sizeof(sBuffer));
 
@@ -151,7 +151,7 @@ static void RM_Match_Load()
 
 		if (strlen(sMap) > 0)
 			CPrintToChatAll("%t %t", "Tag", "ChangeMapTo", sMap);
-		else 
+		else
 		{
 			GetCurrentMap(sMap, sizeof(sMap));
 			CPrintToChatAll("%t %t", "Tag", "RestartingMap");
@@ -181,7 +181,7 @@ void RM_Match_Unload(bool bForced = false)
 	{
 		g_hLogger.TraceEx("[%s] Match is no longer active, sb_all_bot_game reset to 0, IsHumansOnServer %b, bForced %b", RM_MODULE_NAME, bIsHumansOnServer, bForced);
 		RM_bIsAMatchActive = false;
-		//RM_hSbAllBotGame.SetInt(0);
+		// RM_hSbAllBotGame.SetInt(0);
 	}
 
 	if (bIsHumansOnServer && !bForced)
@@ -271,7 +271,7 @@ static Action RM_Cmd_ForceMatch(int client, int args)
 		}
 	}
 
-	PrepareLoad(client, sBuffer, sMap)
+	PrepareLoad(client, sBuffer, sMap);
 	return Plugin_Handled;
 }
 

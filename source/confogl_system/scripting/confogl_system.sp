@@ -1,8 +1,8 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define DEBUG_ALL				   0
-#define PLUGIN_VERSION			   "r1.8.2"	// 2.4.5 rework
+#define DEBUG_ALL	   0
+#define PLUGIN_VERSION "r1.8.2"	   // 2.4.5 rework
 
 #include <sourcemod>
 #include <sdktools>
@@ -14,20 +14,16 @@
 // toggle this to use extension log4sp or not.
 #define USEEXT 1
 
-#if USEEXT
-	#include <log4sp>
-#else
+#if !USEEXT
 	#define LOG4SP_NO_EXT
-	#include <log4sp>
 #endif
 
-#define PLUGIN_TAG "Confogl"
-#define PLUGIN_TAG_SERVERCONSOLE "Confogl_console"
+#include <log4sp> // requires log4sp 1.7.0+
 
 bool
 	g_bIsChangeLevelAvailable = false,
-	RM_bIsMatchModeLoaded = false,
-	RM_bIsLoadingConfig   = false;
+	RM_bIsMatchModeLoaded	  = false,
+	RM_bIsLoadingConfig		  = false;
 
 native void L4D_LobbyUnreserve();
 native bool L4D_LobbyIsReserved();
@@ -35,11 +31,11 @@ native bool L4D_LobbyIsReserved();
 // Basic helper here.
 #include "confogl_system/includes/constants.sp"
 #include "confogl_system/includes/functions.sp"
-#include "confogl_system/includes/logging.sp"				// requires log4sp 1.7.0+
+#include "confogl_system/includes/logging.sp"	 // requires log4sp 1.7.0+
 #include "confogl_system/includes/configs.sp"
 #include "confogl_system/includes/customtags.sp"
-#include "confogl_system/includes/predictable_unloader.sp"	// Predictable Unloader by Sir
-#include "confogl_system/includes/voting.sp"				// nativevote by Powerlord, fdxx. This built-in version is to make sure our vote can work as usual.
+#include "confogl_system/includes/predictable_unloader.sp"	  // Predictable Unloader by Sir
+#include "confogl_system/includes/voting.sp"				  // nativevote by Powerlord, fdxx. This built-in version is to make sure our vote can work as usual.
 
 // Main Modules here.
 #include "confogl_system/ReqMatch.sp"
@@ -56,17 +52,17 @@ native bool L4D_LobbyIsReserved();
 // other contributors: Sir, Forgetest, sheo, StarterX4 and so on...
 public Plugin myinfo =
 {
-	name = "[L4D2/ANY?] Confogl System",
-	author = "Competitive Rework Team, blueblur",
+	name		= "[L4D2/ANY?] Confogl System",
+	author		= "Competitive Rework Team, blueblur",
 	description = "Confogl System that is only used for server management.",
-	version	= PLUGIN_VERSION,
-	url	= "https://github.com/blueblur0730/modified-plugins"
+	version		= PLUGIN_VERSION,
+	url			= "https://github.com/blueblur0730/modified-plugins"
 };
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	Configs_APL();	  // configs
-	RM_APL();	 	  // ReqMatch
+	RM_APL();		  // ReqMatch
 	UL_APL();		  // UnreserveLobby
 	CVS_APL();		  // CvarSettings
 
@@ -80,25 +76,25 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-	// translation file should be the first thing to do. 
+	// translation file should be the first thing to do.
 	// other wise plugin cant translate the phrases and goes wrong.
 	LoadTranslation(TRANSLATION_FILE);
 
 	// Plugin functions
-	LG_OnPluginStart();					// Logging
-	Fns_OnModuleStart();				// functions
-	Configs_OnModuleStart();			// configs
-	CT_OnModuleStart();					// customtags
-	PU_OnPluginStart();					// Predictable Unloader
-	VT_OnPluginStart();					// Voting
+	LG_OnPluginStart();			// Logging
+	Fns_OnModuleStart();		// functions
+	Configs_OnModuleStart();	// configs
+	CT_OnModuleStart();			// customtags
+	PU_OnPluginStart();			// Predictable Unloader
+	VT_OnPluginStart();			// Voting
 
 	// Modules
-	MV_OnModuleStart();	   	// MatchVote
-	RM_OnModuleStart();	   	// ReqMatch
+	MV_OnModuleStart();		// MatchVote
+	RM_OnModuleStart();		// ReqMatch
 	CLS_OnModuleStart();	// ClientSettings
 	CVS_OnModuleStart();	// CvarSettings
-	PS_OnModuleStart();	   	// PasswordSystem
-	BK_OnModuleStart();	   	// BotKick
+	PS_OnModuleStart();		// PasswordSystem
+	BK_OnModuleStart();		// BotKick
 	UL_OnModuleStart();		// UnreserveLobby
 
 	// Other
@@ -107,11 +103,11 @@ public void OnPluginStart()
 
 public void OnPluginEnd()
 {
-	MV_OnPluginEnd();	 	// MatchVote
-	CVS_OnModuleEnd();	  	// CvarSettings
-	PS_OnModuleEnd();	 	// PasswordSystem
-	PU_OnPluginEnd();	 	// Predictable Unloader
-	LG_OnPluginEnd();		// Logging
+	MV_OnPluginEnd();	  // MatchVote
+	CVS_OnModuleEnd();	  // CvarSettings
+	PS_OnModuleEnd();	  // PasswordSystem
+	PU_OnPluginEnd();	  // Predictable Unloader
+	LG_OnPluginEnd();	  // Logging
 
 	// Other
 	RemoveCustomServerTag("confogl_system");
@@ -151,9 +147,9 @@ public bool OnClientConnect(int client, char[] rejectmsg, int maxlen)
 
 public void OnClientPutInServer(int client)
 {
-	RM_OnClientPutInServer();	 		// ReqMatch
-	PS_OnClientPutInServer(client);	   	// PasswordSystem
-	UL_OnClientPutInServer();			// UnreserveLobby
+	RM_OnClientPutInServer();		   // ReqMatch
+	PS_OnClientPutInServer(client);	   // PasswordSystem
+	UL_OnClientPutInServer();		   // UnreserveLobby
 }
 
 public void OnLibraryAdded(const char[] name)

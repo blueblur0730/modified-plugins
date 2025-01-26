@@ -3,20 +3,20 @@
 #endif
 #define __confogl_configs_included
 
-#define CONFIGS_MODULE_NAME				"Configs"
+#define CONFIGS_MODULE_NAME "Configs"
 
 static const char
 	customCfgDir[] = "cfgogl";
 
 static char
-	DirSeparator = '\0',
-	configsPath[PLATFORM_MAX_PATH] = "\0",
-	cfgPath[PLATFORM_MAX_PATH] = "\0",
+	DirSeparator					 = '\0',
+	configsPath[PLATFORM_MAX_PATH]	 = "\0",
+	cfgPath[PLATFORM_MAX_PATH]		 = "\0",
 	customCfgPath[PLATFORM_MAX_PATH] = "\0",
 	customCfgName[PLATFORM_MAX_PATH] = "\0";
 
 ConVar
-	hCustomConfig = null;
+	 hCustomConfig = null;
 
 void Configs_APL()
 {
@@ -29,7 +29,7 @@ void Configs_OnModuleStart()
 {
 	InitPaths();
 
-	hCustomConfig = CreateConVarEx("customcfg", "", "DONT TOUCH THIS CVAR! This is more magic bullshit!", FCVAR_DONTRECORD|FCVAR_UNLOGGED);
+	hCustomConfig = CreateConVarEx("customcfg", "", "DONT TOUCH THIS CVAR! This is more magic bullshit!", FCVAR_DONTRECORD | FCVAR_UNLOGGED);
 
 	char cfgString[PLATFORM_MAX_PATH];
 	hCustomConfig.GetString(cfgString, sizeof(cfgString));
@@ -48,7 +48,7 @@ static void InitPaths()
 
 bool SetCustomCfg(const char[] cfgname)
 {
-	if (!strlen(cfgname)) 
+	if (!strlen(cfgname))
 	{
 		customCfgPath[0] = 0;
 		hCustomConfig.RestoreDefault();
@@ -59,7 +59,7 @@ bool SetCustomCfg(const char[] cfgname)
 	}
 
 	Format(customCfgPath, sizeof(customCfgPath), "%s%s%c%s", cfgPath, customCfgDir, DirSeparator, cfgname);
-	if (!DirExists(customCfgPath)) 
+	if (!DirExists(customCfgPath))
 	{
 		g_hLogger.ErrorEx("[%s] Custom config directory %s does not exist!", CONFIGS_MODULE_NAME, customCfgPath);
 		// Revert customCfgPath
@@ -68,12 +68,12 @@ bool SetCustomCfg(const char[] cfgname)
 	}
 
 	int thislen = strlen(customCfgPath);
-	if ((thislen + 1) < sizeof(customCfgPath)) 
+	if ((thislen + 1) < sizeof(customCfgPath))
 	{
-		customCfgPath[thislen] = DirSeparator;
+		customCfgPath[thislen]		 = DirSeparator;
 		customCfgPath[(thislen + 1)] = 0;
 	}
-	else 
+	else
 	{
 		g_hLogger.ErrorEx("[%s] Custom config directory %s path too long!", CONFIGS_MODULE_NAME, customCfgPath);
 		customCfgPath[0] = 0;
@@ -88,15 +88,16 @@ bool SetCustomCfg(const char[] cfgname)
 
 void BuildConfigPath(char[] buffer, const int maxlength, const char[] sFileName)
 {
-	if (customCfgPath[0]) {
+	if (customCfgPath[0])
+	{
 		Format(buffer, maxlength, "%s%s", customCfgPath, sFileName);
 
-		if (FileExists(buffer)) 
+		if (FileExists(buffer))
 		{
 			g_hLogger.DebugEx("[%s] Built custom config path: %s.", CONFIGS_MODULE_NAME, buffer);
 			return;
 		}
-		else 
+		else
 		{
 			g_hLogger.InfoEx("[%s] Custom config not available: %s.", CONFIGS_MODULE_NAME, buffer);
 		}
@@ -108,22 +109,22 @@ void BuildConfigPath(char[] buffer, const int maxlength, const char[] sFileName)
 
 void ExecuteCfg(const char[] sFileName)
 {
-	if (!strlen(sFileName)) 
+	if (!strlen(sFileName))
 		return;
 
 	char sFilePath[PLATFORM_MAX_PATH];
 
-	if (customCfgPath[0]) 
+	if (customCfgPath[0])
 	{
 		Format(sFilePath, sizeof(sFilePath), "%s%s", customCfgPath, sFileName);
 
-		if (FileExists(sFilePath)) 
+		if (FileExists(sFilePath))
 		{
 			g_hLogger.DebugEx("[%s] Executing custom cfg file %s.", CONFIGS_MODULE_NAME, sFilePath);
 			ServerCommand("exec %s%s", customCfgPath[strlen(cfgPath)], sFileName);
 			return;
 		}
-		else 
+		else
 		{
 			g_hLogger.WarnEx("[%s] Couldn't find custom cfg file %s, trying default.", CONFIGS_MODULE_NAME, sFilePath);
 		}
@@ -131,12 +132,12 @@ void ExecuteCfg(const char[] sFileName)
 
 	Format(sFilePath, sizeof(sFilePath), "%s%s", cfgPath, sFileName);
 
-	if (FileExists(sFilePath)) 
+	if (FileExists(sFilePath))
 	{
 		g_hLogger.DebugEx("[%s] Executing default config %s.", CONFIGS_MODULE_NAME, sFilePath);
 		ServerCommand("exec %s", sFileName);
-	} 
-	else 
+	}
+	else
 	{
 		g_hLogger.ErrorEx("[%s] Could not execute server config \"%s\", file not found.", CONFIGS_MODULE_NAME, sFilePath);
 	}
@@ -147,11 +148,11 @@ static int _native_BuildConfigPath(Handle plugin, int numParams)
 	int iLen = 0;
 	GetNativeStringLength(3, iLen);
 
-	int iNewLen = iLen + 1;
+	int iNewLen		 = iLen + 1;
 	char[] sFileName = new char[iNewLen];
 	GetNativeString(3, sFileName, iNewLen);
 
-	iLen = GetNativeCell(2);
+	iLen		= GetNativeCell(2);
 
 	char[] sBuf = new char[iLen];
 	BuildConfigPath(sBuf, iLen, sFileName);
@@ -165,7 +166,7 @@ static int _native_ExecConfigCfg(Handle plugin, int numParams)
 	int iLen = 0;
 	GetNativeStringLength(1, iLen);
 
-	int iNewLen = iLen + 1;
+	int iNewLen		 = iLen + 1;
 	char[] sFileName = new char[iNewLen];
 	GetNativeString(1, sFileName, iNewLen);
 
