@@ -7,7 +7,7 @@
 
 void PU_OnPluginStart()
 {
-	RegServerCmd("pred_unload_plugins", UnloadPlugins, "Unload Plugins!");
+	RegServerCmd("pred_unload_plugins", Command_UnloadPlugins, "Unload Plugins!");
 }
 
 void PU_OnPluginEnd()
@@ -20,7 +20,13 @@ void PU_OnPluginEnd()
 	}
 }
 
-static Action UnloadPlugins(int args)
+static Action Command_UnloadPlugins(int args)
+{
+	UnloadPlugins(args);
+	return Plugin_Handled;
+}
+
+static void UnloadPlugins(int args)
 {
 	ArrayStack aReservedPlugins = new ArrayStack();
 	Handle	   mySelf			= GetMyHandle();
@@ -68,8 +74,6 @@ static Action UnloadPlugins(int args)
 		g_hLogger.InfoEx("[%s] Preparing for self unloading.", MODULE_PREDICTABLE_UNLOADER_NAME);
 		RequestFrame(NextFrame_RefreshPlugins);
 	}
-
-	return Plugin_Handled;
 }
 
 static void NextFrame_RefreshPlugins()

@@ -2,7 +2,7 @@
 #pragma newdecls required
 
 #define DEBUG_ALL	   0
-#define PLUGIN_VERSION "r1.8.2"	   // 2.4.5 rework
+#define PLUGIN_VERSION "r1.8.3"	   // 2.4.5 rework
 
 #include <sourcemod>
 #include <sdktools>
@@ -90,9 +90,9 @@ public void OnPluginStart()
 
 	// Modules
 	MV_OnModuleStart();		// MatchVote
+	CVS_OnModuleStart();	// CvarSettings
 	RM_OnModuleStart();		// ReqMatch
 	CLS_OnModuleStart();	// ClientSettings
-	CVS_OnModuleStart();	// CvarSettings
 	PS_OnModuleStart();		// PasswordSystem
 	BK_OnModuleStart();		// BotKick
 	UL_OnModuleStart();		// UnreserveLobby

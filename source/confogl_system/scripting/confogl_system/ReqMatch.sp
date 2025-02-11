@@ -11,8 +11,9 @@
 static bool
 	// RM_bMatchRequest[2] = {false, ...},
 	RM_bIsAMatchActive	= false,
-	RM_bIsPluginsLoaded = false,
 	RM_bIsMapRestarted	= false;
+
+bool RM_bIsPluginsLoaded = false;
 
 static GlobalForward
 	RM_hFwdMatchLoad   = null,
@@ -21,13 +22,14 @@ static GlobalForward
 static ConVar
 	RM_hSbAllBotGame	   = null,
 	RM_hDoRestart		   = null,
-	RM_hReloaded		   = null,
 	RM_hChangeMap		   = null,
 	RM_hAutoLoad		   = null,
 	RM_hAutoCfg			   = null,
 	RM_hConfigFile_On	   = null,
 	RM_hConfigFile_Plugins = null,
 	RM_hConfigFile_Off	   = null;
+
+ConVar RM_hReloaded	= null;
 
 void RM_APL()
 {

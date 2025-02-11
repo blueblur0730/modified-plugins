@@ -21,7 +21,7 @@ static ArrayList
 	CvarSettingsArray = null;
 
 static ConVar
-	 hShouldPrint = null;
+	hShouldPrint = null;
 
 void CVS_APL()
 {
@@ -30,7 +30,9 @@ void CVS_APL()
 
 void CVS_OnModuleStart()
 {
-	CvarSettingsArray = new ArrayList(sizeof(CVSEntry));
+	// only create this when loading a config for once.
+	if (!RM_bIsPluginsLoaded)
+		CvarSettingsArray = new ArrayList(sizeof(CVSEntry));
 
 	RegConsoleCmd("confogl_cvarsettings", CVS_CvarSettings_Cmd, "List all ConVars being enforced by Confogl");
 	RegConsoleCmd("confogl_cvardiff", CVS_CvarDiff_Cmd, "List any ConVars that have been changed from their initialized values");
@@ -44,8 +46,12 @@ void CVS_OnModuleStart()
 
 void CVS_OnModuleEnd()
 {
-	ClearAllSettings();
-	delete CvarSettingsArray;
+	// only free this when unloading the plugin
+	if (RM_bIsPluginsLoaded)
+	{
+		ClearAllSettings();
+		delete CvarSettingsArray;
+	}
 }
 
 void CVS_OnConfigsExecuted()
