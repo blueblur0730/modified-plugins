@@ -4,17 +4,16 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
-#include <dhooks>
 #include <left4dhooks>
 #include <l4d2util>
 #include <colors>
 
-#define PLUGIN_VERSION		 "2.2"
+#define PLUGIN_VERSION		 "2.3"
 
-#define GAMEDATA_FILE		 "l4d2_practice_with_dominators"
+//#define GAMEDATA_FILE		 "l4d2_practice_with_dominators"
 #define TRANSLATION_FILE	 "l4d2_practice_with_dominators.phrases"
-#define DETOUR_FUNCTION		 "CTerrorPlayer::IsDominatedBySpecialInfected"
-#define SDKCALL_FUNCTION	 "CTerrorPlayer::GetSpecialInfectedDominatingMe"
+//#define DETOUR_FUNCTION	 "CTerrorPlayer::IsDominatedBySpecialInfected"
+//#define SDKCALL_FUNCTION	 "CTerrorPlayer::GetSpecialInfectedDominatingMe"
 #define DEBUG				 0
 
 #define TAUNT_HIGH_THRESHOLD 0.4
@@ -48,9 +47,8 @@ static const char SINames[SIType_Size][] = {
 	"tank",
 };
 
-Handle g_hSDKCall_GetSIDominatingMe = null;
-
 ConVar
+	g_hCvar_Enable,
 	g_hCvar_DmgDone,
 	g_hCvar_ShouldDoDamage,
 	g_hCvar_ShouldPassToHook,
@@ -59,6 +57,19 @@ ConVar
 	g_hCvar_ShouldQuickStandUp,
 	g_hCvar_ShouldQuickSwitchWeapon,
 	g_hCvar_ShouldBlockNormalAttack;
+
+bool
+	g_bEnable,
+	g_bShouldDoDamage,
+	g_bShouldPassToHook,
+	g_bShouldChargerDieOnCarry,
+	g_bShouldTaunt,
+	g_bShouldQuickStandUp,
+	g_bShouldQuickSwitchWeapon,
+	g_bShouldBlockNormalAttack;
+
+float
+	g_flDmgDone;
 
 bool g_bIsHooked[MAXPLAYERS + 1]		= { false, ... };
 bool g_bIsDominated[MAXPLAYERS + 1]		= { false, ... };
@@ -88,16 +99,13 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	return APLRes_Success;
 }
 
-/*
- * ------------------------------
- * Public Forwards
- * ------------------------------
- */
 public void OnPluginStart()
 {
-	IniGameData();
+	//IniGameData();
+	LoadTranslation(TRANSLATION_FILE);
 	CreateConVar("l4d2_practice_with_dominators_version", PLUGIN_VERSION, "The version of Practice With Dominators plugin", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
+	g_hCvar_Enable					= CreateConVar("pwd_enable", "1", "Enable or disable this plugin.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	g_hCvar_DmgDone					= CreateConVar("pwd_ability_dmg_done", "24.0", "Damage done from dominator SIs' ability.");
 	g_hCvar_ShouldDoDamage			= CreateConVar("pwd_should_do_damage", "1", "Whether dominator SIs should do ability damage or not.", _, true, 0.0, true, 1.0);
 	g_hCvar_ShouldPassToHook		= CreateConVar("pwd_should_pass_to_hook", "0", "Whether to pass this plugin's damage to OnTakeDamage hook or not. (To tell other plugins.)", _, true, 0.0, true, 1.0);
@@ -107,10 +115,19 @@ public void OnPluginStart()
 	g_hCvar_ShouldQuickSwitchWeapon = CreateConVar("pwd_should_quick_switch_weapon", "1", "Whether to quick switch weapon or not", _, true, 0.0, true, 1.0);
 	g_hCvar_ShouldBlockNormalAttack = CreateConVar("pwd_should_block_normal_attack", "1", "Whether to block normal attack or not", _, true, 0.0, true, 1.0);
 
+	g_hCvar_Enable.AddChangeHook(OnConVarChanged);
+	g_hCvar_DmgDone.AddChangeHook(OnConVarChanged);
+	g_hCvar_ShouldDoDamage.AddChangeHook(OnConVarChanged);
+	g_hCvar_ShouldPassToHook.AddChangeHook(OnConVarChanged);
+	g_hCvar_ShouldChargerDieOnCarry.AddChangeHook(OnConVarChanged);
+	g_hCvar_ShouldTaunt.AddChangeHook(OnConVarChanged);
+	g_hCvar_ShouldQuickStandUp.AddChangeHook(OnConVarChanged);
+	g_hCvar_ShouldQuickSwitchWeapon.AddChangeHook(OnConVarChanged);
+	g_hCvar_ShouldBlockNormalAttack.AddChangeHook(OnConVarChanged);
+	OnConVarChanged(null, "", "");
+	
 	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
 	HookEvent("player_team", Event_PlayerTeam);
-	LoadTranslation(TRANSLATION_FILE);
-
 	LateHook();
 }
 
@@ -127,12 +144,6 @@ public Action L4D_OnFirstSurvivorLeftSafeArea(int client)
 
 	return Plugin_Continue;
 }
-
-/**
- * ---------------------
- * Event Hooks
- * ---------------------
- */
 
 void Event_PlayerTeam(Event event, const char[] name, bool dontBroadcast)
 {
@@ -187,21 +198,18 @@ void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 	}
 }
 
-/**
- * ----------------
- * SDKHooks
- * ----------------
- */
-
 // this cancels get up animation of survivor.
 void OnPostThinkPost(int client)
 {
-	if (IsClientAndInGame(client) && g_hCvar_ShouldQuickStandUp.BoolValue)
-		SetEntPropFloat(client, Prop_Send, "m_flCycle", 1000.0, 0);
+	if (IsClientAndInGame(client) && g_bShouldQuickStandUp)
+		SetEntPropFloat(client, Prop_Send, "m_flCycle", 1.0);
 }
 
 Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &fDamage, int &iDamagetype)
 {
+	if (!g_bEnable)
+		return Plugin_Continue;
+
 	if (!IsClientAndInGame(iVictim) || !IsClientAndInGame(iAttacker))
 		return Plugin_Continue;
 
@@ -218,14 +226,14 @@ Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &fDamage
 	if (zClass == SIType_Charger || zClass == SIType_Jockey || zClass == SIType_Smoker || zClass == SIType_Hunter)
 	{
 		// should their normal attack damage be blocked?
-		if (g_hCvar_ShouldBlockNormalAttack.BoolValue && (iDamagetype & DMG_CLUB))
+		if (g_bShouldBlockNormalAttack && (iDamagetype & DMG_CLUB))
 		{
 			fDamage = 0.0;
 			return Plugin_Changed;
 		}
 
 		// you are dominated.
-		if (!g_hCvar_ShouldDoDamage.BoolValue && (iDamagetype & DMG_GENERIC) && g_bIsDominated[iVictim])
+		if (!g_bShouldDoDamage && (iDamagetype & DMG_GENERIC) && g_bIsDominated[iVictim])
 		{
 			fDamage = 0.0;
 			return Plugin_Changed;
@@ -235,42 +243,26 @@ Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &fDamage
 	return Plugin_Continue;
 }
 
-/**
- * ------------------
- * DHook Callback
- * ------------------
- */
-
 // dominators are: hunter, jockey, charger, smoker.
-MRESReturn DTR_CTerrorPlayer_OnIsDominatedBySpecialInfected(int pPlayer, DHookReturn hReturn)
+// MRESReturn DTR_CTerrorPlayer_OnIsDominatedBySpecialInfected(int pPlayer, DHookReturn hReturn)
+public void L4D2_OnDominatedBySpecialInfected(int victim, int dominator)
 {
-	// dominated by SI ?
-	if (hReturn.Value)
-	{
-		// this function also calls on infected. (wth)
-		if (!IsClientAndInGame(pPlayer) || GetClientTeam(pPlayer) != L4D2Team_Survivor)
-			return MRES_Ignored;
+	if (!g_bEnable)
+		return;
+
+	g_bIsDominated[victim] = true;
+
+	// this function also calls on infected. (wth)
+	if (!IsClientAndInGame(victim) || GetClientTeam(victim) != L4D2Team_Survivor)
+		return;
 #if DEBUG
-		PrintToServer("### Player %N is dominated.", pPlayer);
-#endif
-		
-		int iAttacker = SDKCall(g_hSDKCall_GetSIDominatingMe, pPlayer);
-#if DEBUG
-		PrintToServer("### Dominator: %d.", iAttacker);
+	PrintToServer("### Player %N is dominated.", victim);
+	PrintToServer("### Dominator: %d.", dominator);
 #endif
 
-		// the domination is done.
-		ProcessDomination(iAttacker, pPlayer);
-	}
-
-	return MRES_Ignored;
+	// the domination is done.
+	ProcessDomination(dominator, victim);
 }
-
-/**
- * --------------
- * Processes
- * --------------
- */
 
 void ProcessDomination(int iAttacker, int iVictim)
 {
@@ -286,22 +278,23 @@ void ProcessDomination(int iAttacker, int iVictim)
 		bIsBot = false;
 	}
 
-	CPrintToChatAll("%t", "DamageReport", bIsBot ? "AI" : sName, L4D2_InfectedNames[zClass], iRemainingHealth, g_hCvar_DmgDone.FloatValue);
+	CPrintToChatAll("%t", "DamageReport", bIsBot ? "AI" : sName, L4D2_InfectedNames[zClass], iRemainingHealth, g_flDmgDone);
 
-	if (g_hCvar_ShouldDoDamage.BoolValue)
-		SDKHooks_TakeDamage(iVictim, iAttacker, iAttacker, g_hCvar_DmgDone.FloatValue, DMG_GENERIC, _, _, _, g_hCvar_ShouldPassToHook.BoolValue);
+	if (g_bShouldDoDamage)
+		SDKHooks_TakeDamage(iVictim, iAttacker, iAttacker, g_flDmgDone, DMG_GENERIC, _, _, _, g_bShouldPassToHook);
 
 	// otherwise you will be carried by 'nothing'
-	if (g_hCvar_ShouldChargerDieOnCarry.BoolValue && view_as<SIType>(zClass) == SIType_Charger && GetEntPropEnt(iVictim, Prop_Send, "m_carryAttacker") != 0)
+	if (g_bShouldChargerDieOnCarry && view_as<SIType>(zClass) == SIType_Charger && GetEntPropEnt(iVictim, Prop_Send, "m_carryAttacker") != 0)
 		L4D2_Charger_EndCarry(iVictim, iAttacker);
 
 	// lastly, kill the infected.
 	ForcePlayerSuicide(iAttacker);
+	g_bIsDominated[iVictim] = false;
 
 	int iWeapon = GetPlayerWeapon(iVictim);
 	CleanGetUp(iVictim, iWeapon);
 
-	if (g_hCvar_ShouldTaunt.BoolValue)
+	if (g_bShouldTaunt)
 		DoTaunt(iRemainingHealth, iVictim, zClass);
 }
 
@@ -314,7 +307,7 @@ void CleanGetUp(int client, int weapon)
 	PrintToServer("### CleanGetUp called when dominated, client: %d, weapon: %d, weapon name: %s", client, weapon, sName);
 #endif
 
-	if (!g_hCvar_ShouldQuickSwitchWeapon.BoolValue)
+	if (!g_bShouldQuickSwitchWeapon)
 		return;
 
 	/**
@@ -334,24 +327,13 @@ void CleanGetUp(int client, int weapon)
 #endif
 		SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", newNextAttack);
 		SetEntPropFloat(client, Prop_Send, "m_flNextAttack", newNextAttack);
-		SetEntPropFloat(weapon, Prop_Send, "m_flPlaybackRate", playBackRate);	// we cant cancel it. but we can accelerate it.
+		//SetEntPropFloat(weapon, Prop_Send, "m_flPlaybackRate", playBackRate);	// we cant cancel it. but we can accelerate it.
 	}
-
-	g_bIsDominated[client] = false;
 
 	/*
 		It turns out that may be deploy animation is predicted on client-side.
 		But we can still shoot while the deploy animation is still playing.
 		so just be it.
-	*/
-
-	/**
-	 * Should we reset the playback rate? it looks like this rate will exist for a while if you dont do anything,
-	 * but it does not actually affect the gameplay. (except for the animation looks really really 'fast')
-	 * Just left this question here to see if there is any need in the future.
-	 * 
-	 * playBackRate	= DEPLOY_ANIM_TIME * 0.1
-	 * SetEntPropFloat(weapon, Prop_Send, "m_flPlaybackRate", playBackRate);
 	*/
 }
 
@@ -406,15 +388,10 @@ int GetPlayerWeapon(int client)
 	return GetEntDataEnt2(client, m_hActiveWeapon);
 }
 
-/**
- * ---------------------
- * Initialization
- * ---------------------
- */
+/*
 void IniGameData()
 {
 	GameData gd = new GameData(GAMEDATA_FILE);
-
 	if (!gd) SetFailState("Failed to load game data \"" ... GAMEDATA_FILE... "\" ");
 
 	DynamicDetour hDetour = DynamicDetour.FromConf(gd, DETOUR_FUNCTION);
@@ -435,8 +412,9 @@ void IniGameData()
 	delete hDetour;
 	delete gd;
 }
+*/
 
-stock void LoadTranslation(const char[] translation)
+void LoadTranslation(const char[] translation)
 {
 	char sPath[PLATFORM_MAX_PATH], sName[64];
 
@@ -446,6 +424,20 @@ stock void LoadTranslation(const char[] translation)
 		SetFailState("Missing translation file %s.txt", translation);
 
 	LoadTranslations(translation);
+}
+
+void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	g_bEnable = g_hCvar_Enable.BoolValue;
+	g_bShouldDoDamage = g_hCvar_ShouldDoDamage.BoolValue;
+	g_bShouldPassToHook = g_hCvar_ShouldPassToHook.BoolValue;
+	g_bShouldChargerDieOnCarry = g_hCvar_ShouldChargerDieOnCarry.BoolValue;
+	g_bShouldTaunt = g_hCvar_ShouldTaunt.BoolValue;
+	g_bShouldQuickStandUp = g_hCvar_ShouldQuickStandUp.BoolValue;
+	g_bShouldQuickSwitchWeapon = g_hCvar_ShouldQuickSwitchWeapon.BoolValue;
+	g_bShouldBlockNormalAttack = g_hCvar_ShouldBlockNormalAttack.BoolValue;
+
+	g_flDmgDone = g_hCvar_DmgDone.FloatValue;
 }
 
 void LateHook()
