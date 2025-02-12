@@ -2,7 +2,7 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.0.1"
 
 public Plugin myinfo = 
 {
@@ -159,7 +159,6 @@ Action Command_DumpPluigns(int args)
 	hFile_off.WriteLine(" ");
 	hFile_off.WriteLine("confogl_resetclientcvars");
 	hFile_off.WriteLine("confogl_resetcvars");
-	hFile_off.WriteLine("pred_unload_plugins");
 	
 	PrintToServer("[Confogl] Config file generated: \"%s\".", szName);
 	delete hFile_off;

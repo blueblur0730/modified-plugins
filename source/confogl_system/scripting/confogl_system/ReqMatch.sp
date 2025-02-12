@@ -10,8 +10,8 @@
 
 static bool
 	// RM_bMatchRequest[2] = {false, ...},
-	RM_bIsAMatchActive	= false,
-	RM_bIsMapRestarted	= false;
+	RM_bIsAMatchActive	 = false,
+	RM_bIsMapRestarted	 = false;
 
 bool RM_bIsPluginsLoaded = false;
 
@@ -20,6 +20,7 @@ static GlobalForward
 	RM_hFwdMatchUnload = null;
 
 static ConVar
+	RM_hConfigName		   = null,
 	RM_hSbAllBotGame	   = null,
 	RM_hDoRestart		   = null,
 	RM_hChangeMap		   = null,
@@ -29,9 +30,9 @@ static ConVar
 	RM_hConfigFile_Plugins = null,
 	RM_hConfigFile_Off	   = null;
 
-ConVar RM_hReloaded	= null;
+ConVar RM_hReloaded		   = null;
 
-void RM_APL()
+void   RM_APL()
 {
 	RM_hFwdMatchLoad   = CreateGlobalForward("LGO_OnMatchModeLoaded", ET_Ignore, Param_String, Param_String);	 // LGO_OnMatchModeLoaded(const char[] config, const char[] maps)
 	RM_hFwdMatchUnload = CreateGlobalForward("LGO_OnMatchModeUnloaded", ET_Ignore, Param_String);				 // LGO_OnMatchModeUnloaded(const char[] config)
@@ -48,7 +49,7 @@ void RM_OnModuleStart()
 	RM_hConfigFile_Plugins = CreateConVarEx("match_execcfg_plugins", "confogl_plugins.cfg;sharedplugins.cfg", "Execute this config file upon match mode starts. This will only get executed once and meant for plugins that needs to be loaded.");	  // rework
 	RM_hConfigFile_Off	   = CreateConVarEx("match_execcfg_off", "confogl_off.cfg", "Execute this config file upon match mode ends.");
 
-	CreateConVarEx("match_name", "", "The name of the match mode, only used for presentation globally.");
+	RM_hConfigName = CreateConVarEx("match_name", "", "The name of the match mode, only used for presentation globally.");
 
 	RegAdminCmd("sm_forcematch", RM_Cmd_ForceMatch, ADMFLAG_CONFIG, "Forces the game to use match mode");
 	RegAdminCmd("sm_resetmatch", RM_Cmd_ResetMatch, ADMFLAG_CONFIG, "Forces match mode to turn off REGRADLESS for always on or forced match");
@@ -197,6 +198,8 @@ void RM_Match_Unload(bool bForced = false)
 	RM_bIsMapRestarted	= false;
 	RM_bIsPluginsLoaded = false;
 
+	RM_hConfigName.SetString("");
+
 	hCustomConfig.GetString(sBuffer, sizeof(sBuffer));
 	Call_StartForward(RM_hFwdMatchUnload);
 	Call_PushString(sBuffer);
@@ -204,10 +207,12 @@ void RM_Match_Unload(bool bForced = false)
 
 	CPrintToChatAll("%t %t", "Tag", "MatchModeUnloaded");
 
+	// we make unloading plugins internally and automatically here, but preserve confogl_off.cfg to setting some user defined behaviour.
 	RM_hConfigFile_Off.GetString(sBuffer, sizeof(sBuffer));
 	ExecuteCfg(sBuffer);
 
 	g_hLogger.InfoEx("[%s] Match mode unloaded!", RM_MODULE_NAME);
+	UnloadPlugins(1);	 // rework
 }
 
 static Action RM_Match_MapRestart_Timer(Handle hTimer, DataPack hDp)

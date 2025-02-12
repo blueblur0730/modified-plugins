@@ -5,10 +5,12 @@
 
 #define MODULE_PREDICTABLE_UNLOADER_NAME "PredictableUnloader"
 
+/*
 void PU_OnPluginStart()
 {
 	RegServerCmd("pred_unload_plugins", Command_UnloadPlugins, "Unload Plugins!");
 }
+*/
 
 void PU_OnPluginEnd()
 {
@@ -20,13 +22,15 @@ void PU_OnPluginEnd()
 	}
 }
 
+/*
 static Action Command_UnloadPlugins(int args)
 {
 	UnloadPlugins(args);
 	return Plugin_Handled;
 }
+*/
 
-static void UnloadPlugins(int args)
+void UnloadPlugins(int args)
 {
 	ArrayStack aReservedPlugins = new ArrayStack();
 	Handle	   mySelf			= GetMyHandle();

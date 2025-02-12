@@ -2,7 +2,7 @@
 #pragma newdecls required
 
 #define DEBUG_ALL	   0
-#define PLUGIN_VERSION "r1.8.3"	   // 2.4.5 rework
+#define PLUGIN_VERSION "r1.9"	   // 2.4.5 rework
 
 #include <sourcemod>
 #include <sdktools>
@@ -85,7 +85,6 @@ public void OnPluginStart()
 	Fns_OnModuleStart();		// functions
 	Configs_OnModuleStart();	// configs
 	CT_OnModuleStart();			// customtags
-	PU_OnPluginStart();			// Predictable Unloader
 	VT_OnPluginStart();			// Voting
 
 	// Modules
