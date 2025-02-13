@@ -1,4 +1,4 @@
-**[English](./source/confogl_system/README.md) | [中文](./source/confogl_system/README-cn.md)**
+**[English](./README.md) | [中文](./README-cn.md)**
 
 # [L4D2/Any?] Confogl System
 
@@ -56,24 +56,48 @@ Confogl System 通过指令 `sm_match` 来读取 `addons/sourcemod/configs/` 目
 Confogl System 使用内置的 nativevote 来管理投票, 不依赖builtinvote拓展和nativevote插件.
 
 ### 加载配置 (ReqMatch.sp)
+<hr>
 
 这一部分简要介绍加载配置的过程.  
 
-通过指令 `sm_match` 或 `sm_forcematch` 加载某个配置后, 插件会首先检查目录 `../cfg/cfgogl/<配置文件夹名称>/...`. 一个配置文件夹内通常由3个cfg文件组成: `confogl.cfg`, `confogl_off.cfg`, `confogl_plugins.cfg`. 首先, Confogl 会执行指令 `sm plugins load_unlock` 和 `sm plugins unload_all` 来卸载所有插件, 然后执行由 convar `confogl_match_execcfg_plugins` 提前设定的cfg文件. 该 convar 的值表示应该用来加载插件的cfg文件. 默认上, Confogl 会搜索该路径下 `../cfg/cfgogl/<config_name>/confogl_pluigns.cfg` 的文件, 如果失败, Confogl 会搜索默认路径 `../cfg/confogl_pluigns.cfg`. 确保 API 插件最先加载, 注意各个插件之间的依赖顺序, 并且总是让 `confogl_system.smx` 作为最后一个加载的插件, 否则配置将加载失败. 注意: 你不必要在文件里写入 `sm plugins load_lock`, Confogl 之后会自动处理.  
-随后，Confogl 会通过 convar `confogl_match_execcfg_on` 搜索该路径下的文件 `../cfg/cfgogl/<config_name>/confogl.cfg`, 如果失败, Confogl 会搜索默认路径 `../cfg/confogl.cfg`. 这个cfg文件存放着一系列你需要监视和限制的convar列表. 
+通过指令 `sm_match` 或 `sm_forcematch` 加载某个配置后, 插件会首先检查目录 `../cfg/cfgogl/<配置文件夹名称>/...`.  
+
+一个配置文件夹内通常由3个cfg文件组成: `confogl.cfg`, `confogl_off.cfg`, `confogl_plugins.cfg`.  
+
+首先, Confogl 会执行指令 `sm plugins load_unlock` 和 `sm plugins unload_all` 来卸载所有插件, 然后执行由 convar `confogl_match_execcfg_plugins` 提前设定的cfg文件.  
+
+该 convar 的值表示应该用来加载插件的cfg文件. 默认上, Confogl 会搜索该路径下 `../cfg/cfgogl/<config_name>/confogl_pluigns.cfg` 的文件, 如果失败, Confogl 会搜索默认路径 `../cfg/confogl_pluigns.cfg`.  
+
+确保 API 插件最先加载, 注意各个插件之间的依赖顺序, 并且总是让 `confogl_system.smx` 作为最后一个加载的插件, 否则配置将加载失败.  
+
+注意: 你不必要在文件里写入 `sm plugins load_lock`, Confogl 之后会自动处理.  
+
+随后，Confogl 会通过 convar `confogl_match_execcfg_on` 搜索该路径下的文件 `../cfg/cfgogl/<config_name>/confogl.cfg`, 如果失败, Confogl 会搜索默认路径 `../cfg/confogl.cfg`. 这个cfg文件存放着一系列你需要监视和限制的convar列表.  
+
 最后, Confogl 会重启当前地图或加载制定地图, 并使用 `sm plugins load_lock` 来锁住插件加载.
 
 ### 卸载配置 (ReqMatch.sp/MatchVote.sp/predictable_unloader.sp)
+<hr>
 
 使用指令 `sm_rmatch` 来发起投票以卸载当前加载的配置. 管理员可以使用指令`sm_resetmatch` 来强制卸载.  
-卸载时, Confogl 会搜索该路径下的文件 `../cfg/cfgogl/<config_name>/confogl_off.cfg`, 如果失败, Confogl 会搜索默认路径 `../cfg/confogl_off.cfg`. 该cfg文件提供给用户通过指令自行处理重置各项影响游戏或插件的改变. 然后 Confogl 会一个一个卸载除自身之外的所有插件, 最终卸载自身, 再执行 `sm plugins refresh` 来重新加载默认插件. 这里就是为什么我建议你把 `confogl_system.smx` 放在除 `optional` 或 `disabled` 目录下的地方.
+卸载时, Confogl 会搜索该路径下的文件 `../cfg/cfgogl/<config_name>/confogl_off.cfg`, 如果失败, Confogl 会搜索默认路径 `../cfg/confogl_off.cfg`.
+
+该cfg文件提供给用户通过指令自行处理重置各项影响游戏或插件的改变. 然后 Confogl 会一个一个卸载除自身之外的所有插件, 最终卸载自身, 再执行 `sm plugins refresh` 来重新加载默认插件.  
+
+这里就是为什么我建议你把 `confogl_system.smx` 放在除 `optional` 或 `disabled` 目录下的地方.
 
 ### ConVar 监视与限制 (CvarSetting.sp/ClientSettings.sp)
+<hr>
 
-你可以使用服务端指令 `confogl_addcvar <cvar> <值>` 将一个 convar 加入进监视列表. 你可以使用服务端指令 `confogl_trackclientcvar <客户端cvar> <hasMin> <min> [<hasMax> <max> [<action>]]` 来追踪和限制某些客户端 convar. 在所有列表完成加载后, 使用服务端指令 `confogl_setcvars` 来设置所有 convar 的设定值并启用监视, 使用服务端指令 `confogl_startclientchecking` 开始循环检查客户端 convar. 这些指令通常写在 `confogl.cfg`.  
+你可以使用服务端指令 `confogl_addcvar <cvar> <值>` 将一个 convar 加入进监视列表.  
+你可以使用服务端指令 `confogl_trackclientcvar <客户端cvar> <hasMin> <min> [<hasMax> <max> [<action>]]` 来追踪和限制某些客户端 convar.  
+
+在所有列表完成加载后, 使用服务端指令 `confogl_setcvars` 来设置所有 convar 的设定值并启用监视, 使用服务端指令 `confogl_startclientchecking` 开始循环检查客户端 convar. 这些指令通常写在 `confogl.cfg`.  
+
 要重置, 使用服务端指令 `confogl_resetcvars` 和 `confogl_resetclientcvars` 来清空列表并停止监视检查. 这些指令通常写在 `confogl_off.cfg`.
 
 ### 其他 (BotKick.sp/PasswordSystem.sp/UnreserveLobby.sp)
+<hr>
 
 1. Unreserve Lobby: 提供服务端指令 `sm_killlobbyers` 来手动移除大厅匹配. 提供 convar `confogl_match_killlobbyres` 来决定是否在加载配置后移除大厅匹配.
 
@@ -83,7 +107,13 @@ Confogl System 使用内置的 nativevote 来管理投票, 不依赖builtinvote�
 
 ## 什么是 Confogl?
 
-Confogl 是一个基于可供选择的配置文件框架，用于管理插件加载, 在游戏中监视并限制 convar 值变动的sourcemod插件. 它最初是由 [ProdigySim](https://github.com/ProdigySim) 领导的项目 [Confogl Team](https://github.com/ConfoglTeam) 所创建. Confogl 由两部分组成: 被称为 [LGOFNOC (League and Gaming Organization Framework for Normalized) (联赛组织标准系统框架)](https://github.com/ConfoglTeam/LGOFNOC) 的插件加载管理和convar监视限制框架和其他与L4D2相关的功能性插件. 该项目的历史已由超过14年的历史, 见证了许许多多来自L4D2社区贡献者们的无偿奉献. 该项目最初目的适用于构造一个公平化竞技化的L4D2对抗模式. 现在它更加广为人知的样貌是由 [L4D2 Competitive Rework 社区](https://github.com/SirPlease/L4D2-Competitive-Rework) 所维护的 [confoglcompmod (Confogl's Competitive Mod)](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/confoglcompmod.sp).  
+Confogl 是一个基于可供选择的配置文件框架，用于管理插件加载, 在游戏中监视并限制 convar 值变动的sourcemod插件. 该项目最初目的适用于构造一个公平化竞技化的L4D2对抗模式.  
+
+它最初是由 [ProdigySim](https://github.com/ProdigySim) 领导的项目 [Confogl Team](https://github.com/ConfoglTeam) 所创建.
+
+Confogl 由两部分组成: 被称为 [LGOFNOC (League and Gaming Organization Framework for Normalized) (联赛组织标准系统框架)](https://github.com/ConfoglTeam/LGOFNOC) 的插件加载管理和convar监视限制框架和其他与L4D2相关的功能性插件.  
+
+该项目的历史已由超过14年的历史, 见证了许许多多来自L4D2社区贡献者们的无偿奉献. 现在它更加广为人知的样貌是由 [L4D2 Competitive Rework 社区](https://github.com/SirPlease/L4D2-Competitive-Rework) 所维护的 [confoglcompmod (Confogl's Competitive Mod)](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/confoglcompmod.sp).  
 
 Confogl System 由 [confoglcompmod (Confogl's Competitive Mod)](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/confoglcompmod.sp) 的分支开发而来, 即只保留插件加载与convar管理的框架部分, 并加入了许多功能改进.  
 
