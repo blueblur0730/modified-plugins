@@ -1,0 +1,109 @@
+/*
+ * Plugin info:
+ * * Original plugin source and overhual map pool logic construction:
+ * 		- Name: Custom Map Transitions
+ * 		- Author: Stabby (2013)
+ * 		- Further work: czim (2020)
+ * 		- Url: https://github.com/Stabbath/L4D2-Stuff
+ * 		- Description: Makes games more fun and varied! Yay! By allowing players to select a custom map sequence, replacing the normal campaign map sequence.
+ * 		- Version: 15
+ *
+ * * New Syntax, translations and more feature support:
+ * 		- Name: l4d2_mixmap
+ * 		- Author: Bred (2023)
+ * 		- Url: https://gitee.com/honghl5/open-source-plug-in
+ * 		- Description: Randomly select five maps for versus. Adding for fun and reference from CMT
+ * 		- Version: 2.5
+ *
+ * * Extended feature support:
+ * 		- Name: [L4D2] Mixmap
+ * 		- Author: blueblur (2023)
+ * 		- Url: https://github.com/blueblur0730/modified-plugins
+ * 		- Description: Randomly select five maps to build a mixed campaign or match.
+ * 		- Version: r2.8
+ */
+
+/*
+ * changelog by Bred. 
+ *	# v2.5（2023/5/27）
+ *		- Support custom limit of same campaign missions, check cfg/sourcemod/l4d2_mixmap.cfg
+ *		- Optimize some grammar logic
+ *		- Continue mixmap after a mixmap campaign finishes
+ *		- Allow starting a mixmap when a mixmap is playing. No need to type !stopmixmap first.
+ *
+ *	# v2.4.2（2023/5/2）
+ *		- Alternative to show maplist and nextmap (create mystery). Thanks to sway's idear.
+ *
+ *	# v2.4.1（2023/4/26）
+ *		- Attempting to optimize random algorithms again
+ *		- Only allow two missions which are from the same campaign
+ *
+ *	# v2.4（2023/4/14）
+ *		- Fix some errors
+ *		- Optimize command'stopmixmap'
+ *		- Adjust 'disorder' mode. M1 stays m1. Finale stays finale. But m2,m3 and m4 will disorder.
+ *
+ *	# v2.3（2023/1/23）
+ *		- Adjust 'default' maps pool. Delete C13、C9/C14. And add a mapspool containing all official campaign.并增加一个所有官方地图的地图池
+ *		- Attempting to optimize random algorithms
+ *		- Cancel vote CDT. Allow starting a mixmap in midgame.
+ *
+ *	# v2.2（2023/1/09）
+ *		- Fix the team with lower scores will playing survivors first after changing map to c7m1/c14m1
+ *
+ *	# v2.1（2022/12/06）
+ *		- Delete some unused codes
+ *		- Fix a timer bug
+ */
+
+/*
+ * rework changelog.
+ *
+ * r2.5.1: 9/19/23 rework
+ * 		- syntax reformatted.
+ *
+ * r2.6: 9/20/23
+ * 		- structure reformed. now we use modules to place functions.
+ * 		- added include for forward api. (to do: more forwards, add natives.)
+ *
+ * r2.7: 9/22/23
+ * 		- added support for scavenge mode.
+ * 			* set scores every map start
+ * 			* independent map pool cfgs
+ * 		- optimized translations.
+ * 		- added a new forward OnCMTInterrupted()
+ * 
+ * r2.7.1: 9/24/23
+ *		- optimized scavenge scores setting logic.
+ *		- more chat phrases.
+ *		- (unfinished)team switch logic of scavenge mixmap.
+ *		- end mixmap when scavenge match finished ahead.
+ *
+ * r2.8: 9/27/23
+ * 		- added support for coop and realism mode.
+ * 			* save player infos, including: weapons, items, health, revive count, ammo.
+ * 			* added back coop level change logic by czim.
+ * 			* independent map pool cfgs. (wtf really?)
+ * 		- proper changelevel: introducing l4d2_changelevel to reduce director issues when using sourcemod internal method to change map. 
+ * 		  (ForceChangeLevel() was replaced by L4D2_ChangeLevel()).
+ * 		- updated scavenge team switching logic.
+ * 		- added 3 natives, changed forward names.
+ * 			* native void GetMixmapMapSequence(ArrayList hArray)
+ * 			* native int GetMixmapPlayedMapCount()
+ * 			* native bool IsInMixmap()
+ * 		- removed l4d2_playstats stuff.
+ * 		- removed nextmap stuff. this plugin is not loaded in l4d2 now.
+ * 
+ * 		@ to do: support AnneHappy (or any other gauntlet versus-liked modified coop modes).
+ * 		@ to do: special ammo type need to be test.
+ * 		@ to do: check in-saferoom gascans or gastanks.
+ * 
+ * r2.8.1: 9/30/23
+ * 		- added back sm_nextmap stuff (ok I dont know it is actually a sourcemod internal cvar...)
+ * 			* https://github.com/alliedmodders/sourcemod/blob/master/core/NextMap.cpp#L160
+ * 		- some logic fixed.
+ * 		- moved events to a specific module.
+ * 
+ * r2.8.2: 10/2/23
+ * 		- fixed scavenge_match_end check.
+ */
