@@ -3,6 +3,7 @@
 
 #include <sourcemod>
 #include <sdktools>
+#include <dhooks>
 #include <l4d2_nativevote>              // https://github.com/fdxx/l4d2_nativevote
 #include <l4d2_source_keyvalues>    	// https://github.com/fdxx/l4d2_source_keyvalues
 #include <left4dhooks>
@@ -17,6 +18,7 @@
 #define SDKCALL_GETALLMISSIONS "MatchExtL4D::GetAllMissions"
 #define SDKCALL_ONCHANGEMISSIONVOTE "CDirector::OnChangeMissionVote"
 #define SDKCALL_CLEARTEAMSCORES "CDirector::ClearTeamScores"
+#define DETOUR_FUNCTION "CDirector::FinishScenarioExit"
 #define TRANSLATION_FILE "l4d2_map_manager.phrases"
 
 #define TEAMFLAGS_SPEC	2
@@ -32,6 +34,8 @@ Handle
 	g_hSDKGetAllMissions,
 	g_hSDKChangeMission,
 	g_hSDKClearTeamScores;
+
+DynamicDetour g_hDTR_CDirector_OnFinishScenarioExit;
 
 StringMap
 	g_smTranslate,
@@ -86,7 +90,7 @@ static const char g_sValveMaps[][][] =
 	{"#L4D360UI_CampaignName_C14",	"C14 临死一搏"},
 };
 
-#define PLUGIN_VERSION "1.1.1"
+#define PLUGIN_VERSION "1.3"
 
 #include "l4d2_map_manager/map_loop.sp"
 #include "l4d2_map_manager/map_vote.sp"
@@ -132,12 +136,22 @@ public void OnPluginStart()
     g_hTimer = CreateTimer(300.0, Timer_PreserveAnnounce, _, TIMER_REPEAT);
 }
 
+public void OnClientPutInServer(int client)
+{
+	_map_loop_OnClientPutInServer(client);
+}
+
 public void OnPluginEnd()
 {
     if (g_smTranslate) delete g_smTranslate;
     if (g_smExcludeMissions) delete g_smExcludeMissions;
     if (g_smFirstMap) delete g_smFirstMap;
-    if (g_hTimer) delete g_hTimer;
+    if (g_hTimer) g_hTimer = null;
+	if (g_hDTR_CDirector_OnFinishScenarioExit)
+	{
+		g_hDTR_CDirector_OnFinishScenarioExit.Disable(Hook_Pre, DTR_CDirector_OnFinishScenarioExit);
+		delete g_hDTR_CDirector_OnFinishScenarioExit;
+	}
 }
 
 public void OnMapStart()
@@ -286,6 +300,8 @@ void Init()
 
     SDKCallParamsWrapper params1[] = {{ SDKType_Bool, SDKPass_Plain }};
     g_hSDKClearTeamScores = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_CLEARTEAMSCORES, params1, sizeof(params1));
+
+	g_hDTR_CDirector_OnFinishScenarioExit = gd.CreateDetourOrFail(DETOUR_FUNCTION, true, DTR_CDirector_OnFinishScenarioExit);
 
 	delete gd;
 

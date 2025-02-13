@@ -3,13 +3,17 @@
 #endif
 #define _map_loop_included
 
+bool g_bSwitched = false;
+
 void _map_loop_OnPluginStart()
 {
     RegConsoleCmdEx("sm_preservemap", Cmd_PreserveMap, "Preserve map.");
-    HookEntityOutput("trigger_finale", "FinaleWon", OnFinaleWon);
-    HookEntityOutput("trigger_finale", "OnFinalStart", OnFinalStart); 
+	//HookUserMessage(GetUserMessageId("DisconnectToLobby"), OnDisconnectToLobby);
+    //HookEntityOutput("trigger_finale", "FinaleWon", OnFinaleWon);
+    //HookEntityOutput("trigger_finale", "OnFinalStart", OnFinalStart); 
 }
 
+/*
 static void OnFinaleWon(const char[] output, int caller, int activator, float delay)
 {
     if (!g_bIsFinalMap)
@@ -23,22 +27,64 @@ static void OnFinaleWon(const char[] output, int caller, int activator, float de
 
     g_bPreserved = false;
 }
+*/
 
-static void OnFinalStart(const char[] output, int caller, int activator, float delay)
+MRESReturn DTR_CDirector_OnFinishScenarioExit()
 {
+	if (g_bSwitched)
+		return MRES_Supercede;
+
+	g_sPreservedMap[0] == '\0' ?  CPrintToChatAll("%t", "SwitchingMapRandom")
+	:  CPrintToChatAll("%t", "SwitchingMap", g_sPreservedMap);
+
+    !g_bPreserved ? CreateTimer(3.0, Timer_SwitchMap) :
+    (g_sPreservedMap[0] == '\0' ? CreateTimer(1.0, Timer_SwitchMap) : CreateTimer(1.0, Timer_SwitchPreservedMap))
+
+	if (!g_bSwitched)
+		g_bSwitched = true;
+
+    g_bPreserved = false;
+	return MRES_Supercede;
+}
+
+void _map_loop_OnClientPutInServer(int client)
+{
+	if (!IsClientInGame(client) || IsFakeClient(client))
+		return;
+
     if (!g_bIsFinalMap)
         return;
 
-    CreateTimer(3.0, Timer_NotifyPreserve);
+    CreateTimer(5.0, Timer_NotifyPreserve, client);
 }
 
-static void Timer_NotifyPreserve(Handle timer)
+/*
+static Action OnDisconnectToLobby(UserMsg msg_id, BfRead msg, const int[] players, int playersNum, bool reliable, bool init)
 {
-    CPrintToChatAll("%t", "NotifyPreserve");
+	g_sPreservedMap[0] == '\0' ?  CPrintToChatAll("%t", "SwitchingMapRandom")
+	:  CPrintToChatAll("%t", "SwitchingMap", g_sPreservedMap);
+
+    !g_bPreserved ? CreateTimer(3.0, Timer_SwitchMap) :
+    (g_sPreservedMap[0] == '\0' ? CreateTimer(3.0, Timer_SwitchMap) : CreateTimer(3.0, Timer_SwitchPreservedMap))
+
+    g_bPreserved = false;
+	return Plugin_Handled;
+}
+*/
+/*
+static void OnFinalStart(const char[] output, int caller, int activator, float delay)
+{
+
+}
+*/
+static void Timer_NotifyPreserve(Handle timer, int client)
+{
+    CPrintToChat(client, "%t", "NotifyPreserve");
 }
 
 static void Timer_SwitchMap(Handle timer)
 {
+	g_bSwitched = false;
     SwitchToOfficialMap();
 }
 
@@ -49,6 +95,8 @@ static void Timer_SwitchPreservedMap(Handle timer)
 		SDKCall(g_hSDKChangeMission, g_pTheDirector, sMissionName);
     else
         SwitchToOfficialMap();
+
+	g_bSwitched = false;
 
 	for (int i = 0; i < strlen(g_sPreservedMap); i++)
       g_sPreservedMap[i] = '\0' ; 

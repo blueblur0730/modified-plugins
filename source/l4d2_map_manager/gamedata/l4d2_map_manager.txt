@@ -3,6 +3,17 @@
     // all by fdxx from l4d2_map_vote.
 	"left4dead2"
 	{
+		"Functions"
+		{
+			"CDirector::FinishScenarioExit"
+			{
+				"signature"	"CDirector::FinishScenarioExit"
+                "callconv"  "thiscall"
+                "return"    "void"
+                "this"      "ignore"
+			}
+		}
+
 		"Addresses"
 		{
 			"g_pMatchExtL4D"
@@ -69,6 +80,16 @@
 				"linux"		"@_ZN9CDirector15ClearTeamScoresEb"
 				"windows"	"\x55\x8B\xEC\x56\x8B\x75\x08\x57\x8B\xF9\x8B\x0D\x2A\x2A\x2A\x2A\x85\xC9"
 				/* 55 8B EC 56 8B 75 08 57 8B F9 8B 0D ? ? ? ? 85 C9 */
+			}
+
+			// CDirector::FinishScenarioExit(CDirector *this)
+			// windows sig: search string is "Director::FinishScenarioExit\n"
+			"CDirector::FinishScenarioExit"
+			{
+				"library"	"server"
+				"linux"		"@_ZN9CDirector18FinishScenarioExitEv"
+				"windows"	"\x55\x8B\xEC\x83\xEC\x24\x56\x68\x2A\x2A\x2A\x2A\x8B\xF1"
+				/* 55 8B EC 83 EC 24 56 68 ? ? ? ? 8B F1 */
 			}
 		}
 	}
