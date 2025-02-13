@@ -59,18 +59,43 @@ Confogl System uses built-in nativevote method to manage voting, not depending o
 
 This part introduces the process of loading a configuration.  
 
-After choosing a config through `sm_match` or `sm_forcematch`, plugin will first check the folder `../cfg/cfgogl/<config_name>/...`. One config folder usually have 3 cfg files which is `confogl.cfg`, `confogl_off.cfg`, `confogl_plugins.cfg`. First, Confogl will execute command `sm plugins load_unlock` and `sm plugins unload_all` to remove all plugins, then execute the pre-set cfg file set by accessing convar `confogl_match_execcfg_plugins`. The value of the convar point to the cfg file that contains the list of plugins to load. By default, Confogl will search the file under the path `../cfg/cfgogl/<config_name>/confogl_pluigns.cfg`, if failed, Confogl will try searching default path `../cfg/confogl_pluigns.cfg`. Make sure all API plugins loaded first, respect the relation of loading dependence, and always make `confogl_system.smx` be the last one to be loaded, otherwise nothing will happen. Notice: you don't have to write `sm plugins load_lock` inside of the file, Confogl will do it automatically after.  
-Then Confogl will search the file under the path `../cfg/cfgogl/<config_name>/confogl.cfg` by accessing convar `confogl_match_execcfg_on`, if failed, Confogl will try searching default path `../cfg/confogl.cfg`. The cfg file contains the list of convars to monitor and restrict. 
+After choosing a config through `sm_match` or `sm_forcematch`,  
+
+Plugin will first check the folder `../cfg/cfgogl/<config_name>/...`.  
+
+One config folder usually have 3 cfg files which is `confogl.cfg`, `confogl_off.cfg`, `confogl_plugins.cfg`.  
+
+First, Confogl will execute command `sm plugins load_unlock` and `sm plugins unload_all`  
+
+to remove all plugins, then execute the pre-set cfg file set by accessing convar `confogl_match_execcfg_plugins`.  
+
+The value of the convar point to the cfg file that contains the list of plugins to load. By default, Confogl will search the file under the path `../cfg/cfgogl/<config_name>/confogl_pluigns.cfg`, if failed, Confogl will try searching default path `../cfg/confogl_pluigns.cfg`.  
+
+Make sure all API plugins loaded first, respect the relation of loading dependence, and always make `confogl_system.smx` be the last one to be loaded, otherwise nothing will happen.  
+
+Notice: you don't have to write `sm plugins load_lock` inside of the file, Confogl will do it automatically after.  
+
+Then Confogl will search the file under the path `../cfg/cfgogl/<config_name>/confogl.cfg` by accessing convar `confogl_match_execcfg_on`, if failed, Confogl will try searching default path `../cfg/confogl.cfg`. The cfg file contains the list of convars to monitor and restrict.  
+
 Finally, Confogl will restart the current map or load a specific map to complete loading, and uses `sm plugins load_lock` to lock loading.
 
 ### Unloading a configuration (ReqMatch.sp/MatchVote.sp/predictable_unloader.sp)
 
 Uses command `sm_rmatch` to call a vote to unload the current loaded configuration. Admins can use command `sm_resetmatch` to force unloading.  
-When unloading, Confogl will search the file under the path `../cfg/cfgogl/<config_name>/confogl_off.cfg`, if failed, Confogl will try searching default path `../cfg/confogl_off.cfg`. The cfg file provides a space for user defined commands used to reset the change to the game. Then Confogl will unload all current loaded plugins one by one except itself, and finally push itself to be the last one to unload, then execute the command `sm plugins refresh` to load the default plugins. Here that is why I recommend you put `confogl_system.smx` beyond the folder `optional` or `disabled`.
+
+When unloading, Confogl will search the file under the path `../cfg/cfgogl/<config_name>/confogl_off.cfg`, if failed, Confogl will try searching default path `../cfg/confogl_off.cfg`.  
+
+The cfg file provides a space for user defined commands used to reset the change to the game. Then Confogl will unload all current loaded plugins one by one except itself, and finally push itself to be the last one to unload, then execute the command `sm plugins refresh` to load the default plugins.  
+
+Here that is why I recommend you put `confogl_system.smx` beyond the folder `optional` or `disabled`.
 
 ### ConVar Monitoring and Restricting (CvarSetting.sp/ClientSettings.sp)
 
-You can use server command `confogl_addcvar <cvar> <value>` to add a convar into the list. You can use server command `confogl_trackclientcvar <client_cvar> <hasMin> <min> [<hasMax> <max> [<action>]]` to track and restrict some certain client convars. After all lists complete, use server command `confogl_setcvars` to activate the monitoring and set the value for the convars, use server command `confogl_startclientchecking` to start a checking loop for client convars. These commands are usaully writen in `confogl.cfg`.  
+You can use server command `confogl_addcvar <cvar> <value>` to add a convar into the list.  
+You can use server command `confogl_trackclientcvar <client_cvar> <hasMin> <min> [<hasMax> <max> [<action>]]` to track and restrict some certain client convars.  
+
+After all lists complete, use server command `confogl_setcvars` to activate the monitoring and set the value for the convars, use server command `confogl_startclientchecking` to start a checking loop for client convars. These commands are usaully writen in `confogl.cfg`.   
+
 To reset, uses server command `confogl_resetcvars` and `confogl_resetclientcvars` to clear the lists and stop tracking. These commands are usally writen in `confogl_off.cfg`.
 
 ### Other (BotKick.sp/PasswordSystem.sp/UnreserveLobby.sp)
@@ -83,7 +108,15 @@ To reset, uses server command `confogl_resetcvars` and `confogl_resetclientcvars
 
 ## What is Confogl?
 
-Confogl is a sourcemod plugin for managing plugin loading, monitoring and restrcting convar values during gameplay based on a configuration framework for choosing. It was first created by [Confogl Team](https://github.com/ConfoglTeam), which is a project mainly leading by [ProdigySim](https://github.com/ProdigySim). Confogl is composed with two parts: the framework of loading plugins and managing convars for specific configs which was called [LGOFNOC (League and Gaming Organization Framework for Normalized)](https://github.com/ConfoglTeam/LGOFNOC) and other functional plugins related to l4d2 the game itself. This project has gone through more than 14 years with many many contributors in L4D2 community to help fix and improve, enhance itself. This project was desinged to be used for l4d2 competitive versus game mode. It is now more wildly known as [confoglcompmod (Confogl's Competitive Mod)](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/confoglcompmod.sp) maintained and used by [L4D2 Competitive Rework community](https://github.com/SirPlease/L4D2-Competitive-Rework).  
+Confogl is a sourcemod plugin for managing plugin loading, monitoring and restrcting convar values during gameplay based on a configuration framework for choosing, desinged to be used for l4d2 competitive versus game mode.   
+
+It was first created by [Confogl Team](https://github.com/ConfoglTeam), which is a project mainly leading by [ProdigySim](https://github.com/ProdigySim).   
+
+Confogl is composed with two parts: the framework of loading plugins and managing convars for specific configs which was called [LGOFNOC (League and Gaming Organization Framework for Normalized)](https://github.com/ConfoglTeam/LGOFNOC) and other functional plugins related to l4d2 the game itself.  
+
+This project has gone through more than 14 years with many many contributors in L4D2 community to help fix and improve, enhance itself.  
+
+It is now more wildly known as [confoglcompmod (Confogl's Competitive Mod)](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/confoglcompmod.sp) maintained and used by [L4D2 Competitive Rework community](https://github.com/SirPlease/L4D2-Competitive-Rework).  
 
 Confogl System is a branch from [confoglcompmod (Confogl's Competitive Mod)](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/confoglcompmod.sp), the framework part that only keep the functionality to manage plugins and convars with configuration file with more enhancements and improvements.  
 
