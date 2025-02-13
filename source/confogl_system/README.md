@@ -1,4 +1,4 @@
-**[English](./source/confogl_system/README-en.md) | [中文](./source/confogl_system/README-cn.md)**
+**[English](./source/confogl_system/README.md) | [中文](./source/confogl_system/README-cn.md)**
 
 # [L4D2/Any?] Confogl System
 
