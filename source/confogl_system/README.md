@@ -13,7 +13,7 @@ This is a simple guide on what is, and how to use the Confogl system.
 
 1. Put things on the sourcemod folder.  
 
-2. Create your own configuration on `../cfg/cfgogl/<your_config>`, [See examples here](./source/confogl_system/cfg_template/).
+2. Create your own configuration on `../cfg/cfgogl/<your_config>`, [See examples here](./cfg_template).
 
 3. Edit `matchmode.txt` to match the names.
 

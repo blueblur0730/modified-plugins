@@ -13,7 +13,7 @@
 
 1. 将相对应的东西放入sourcemod文件夹.  
 
-2. 在目录 `../cfg/cfgogl/<你的配置>` 下创建你自己的配置, [可参考例子](./source/confogl_system/cfg_template/).
+2. 在目录 `../cfg/cfgogl/<你的配置>` 下创建你自己的配置, [可参考例子](./cfg_template).
 
 3. 编辑 `matchmode.txt` 以匹配你的配置文件夹名称.
 
@@ -113,7 +113,7 @@ Confogl 是一个基于可供选择的配置文件框架，用于管理插件加
 
 Confogl 由两部分组成: 被称为 [LGOFNOC (League and Gaming Organization Framework for Normalized) (联赛组织标准系统框架)](https://github.com/ConfoglTeam/LGOFNOC) 的插件加载管理和convar监视限制框架和其他与L4D2相关的功能性插件.  
 
-该项目的历史已由超过14年的历史, 见证了许许多多来自L4D2社区贡献者们的无偿奉献. 现在它更加广为人知的样貌是由 [L4D2 Competitive Rework 社区](https://github.com/SirPlease/L4D2-Competitive-Rework) 所维护的 [confoglcompmod (Confogl's Competitive Mod)](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/confoglcompmod.sp).  
+该项目已有超过14年的历史, 见证了许许多多来自L4D2社区贡献者们的无偿奉献. 现在它更加广为人知的样貌是由 [L4D2 Competitive Rework 社区](https://github.com/SirPlease/L4D2-Competitive-Rework) 所维护的 [confoglcompmod (Confogl's Competitive Mod)](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/confoglcompmod.sp).  
 
 Confogl System 由 [confoglcompmod (Confogl's Competitive Mod)](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/confoglcompmod.sp) 的分支开发而来, 即只保留插件加载与convar管理的框架部分, 并加入了许多功能改进.  
 
