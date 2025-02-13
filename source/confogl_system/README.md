@@ -1,3 +1,5 @@
+**[English](./source/confogl_system/README-en.md) | [中文](./source/confogl_system/README-cn.md)**
+
 # [L4D2/Any?] Confogl System
 
 This is a simple guide on what is, and how to use the Confogl system.  
