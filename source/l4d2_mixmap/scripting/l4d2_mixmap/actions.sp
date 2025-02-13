@@ -50,6 +50,7 @@ void GotoMap(const char[] sMapName, bool force = false)
 	CreateTimer(((L4D_IsVersusMode() || L4D2_IsScavengeMode()) ? 5.0 : 0.1), Timed_NextMapInfo);
 }
 
+/*
 // here we store the match or game info for the next map.
 Action Timed_NextMapInfo(Handle timer)
 {
@@ -87,24 +88,7 @@ Action Timed_NextMapInfo(Handle timer)
 
 	return Plugin_Handled;
 }
-
-//-----------------------------------------------------------
-//			Set Info
-//-----------------------------------------------------------
-void SetVersusScores()
-{
-	// If team B is winning, swap teams. Does not change how scores are set.
-	if (s_iPointsTeam_A < s_iPointsTeam_B)
-		L4D2_SwapTeams();
-
-	// Set scores on scoreboard.
-	SDKCall(g_hCMapSetCampaignScores, s_iPointsTeam_A, s_iPointsTeam_B);
-
-	// Set actual scores.
-	L4D2Direct_SetVSCampaignScore(0, s_iPointsTeam_A);
-	L4D2Direct_SetVSCampaignScore(1, s_iPointsTeam_B);
-}
-
+*/
 // 查找地图实体
 bool FindMapEntity() 
 {

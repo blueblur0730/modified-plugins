@@ -8,72 +8,8 @@
 // ----------------------------------------------------------
 
 // Loads a specified set of maps
-public Action ForceMixmap(int client, any args) 
+Action ForceMixmap(int client, any args) 
 {
-	if (!L4D2_IsScavengeMode())	// for coop/reliasm and versus only
-		Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT);
-	else
-		Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT_SCAV);
-
-	
-	if (args >=1)
-	{
-		char sBuffer[BUF_SZ], arg[BUF_SZ];
-
-		if (!L4D2_IsScavengeMode())
-		{
-			GetCmdArg(1, arg, BUF_SZ);
-			Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS, arg);
-			if (FileExists(sBuffer)) Format(cfg_exec, sizeof(cfg_exec), arg);
-			else
-			{
-				if (StrEqual(arg, CFG_DODEFAULT_ST))
-					Format(cfg_exec, sizeof(cfg_exec), CFG_DODEFAULT);
-				else if (StrEqual(arg, CFG_ALLOF_ST))
-					Format(cfg_exec, sizeof(cfg_exec), CFG_ALLOF);
-				else if (StrEqual(arg, CFG_DOALLOF_ST))
-					Format(cfg_exec, sizeof(cfg_exec), CFG_DOALLOF);
-				else if (StrEqual(arg, CFG_UNOF_ST))
-					Format(cfg_exec, sizeof(cfg_exec), CFG_UNOF);
-				else if (StrEqual(arg, CFG_DOUNOF_ST))
-					Format(cfg_exec, sizeof(cfg_exec), CFG_DOUNOF);
-				else
-				{
-					CReplyToCommand(client, "%t", "Invalid_Cfg");
-					return Plugin_Handled;
-				}
-			}
-		}
-		else
-		{
-			GetCmdArg(1, arg, BUF_SZ);
-			Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS_SCAV, arg);
-			if (FileExists(sBuffer)) Format(cfg_exec, sizeof(cfg_exec), arg);
-			else
-			{
-				if (StrEqual(arg, CFG_DODEFAULT_ST_SCAV))
-					Format(cfg_exec, sizeof(cfg_exec), CFG_DODEFAULT_SCAV);
-				else if (StrEqual(arg, CFG_UNOF_ST_SCAV))
-					Format(cfg_exec, sizeof(cfg_exec), CFG_UNOF_SCAV);
-				else if (StrEqual(arg, CFG_DOUNOF_ST_SCAV))
-					Format(cfg_exec, sizeof(cfg_exec), CFG_DOUNOF_SCAV);
-				else
-				{
-					CReplyToCommand(client, "%t", "Invalid_Cfg");
-					return Plugin_Handled;
-				}
-			}
-		}
-	}
-
-	if (client) CPrintToChatAllEx(client, "%t", "Force_Start", client, cfg_exec);
-	PluginStartInit();
-	if (client == 0) g_bServerForceStart = true;
-
-	if (!L4D2_IsScavengeMode())
-		ServerCommand("exec %s%s.cfg", DIR_CFGS, cfg_exec);
-	else
-		ServerCommand("exec %s%s.cfg", DIR_CFGS_SCAV, cfg_exec);
 
 	g_bMapsetInitialized = true;
 	CreateTimer(0.1, Timed_PostMapSet);
@@ -81,27 +17,7 @@ public Action ForceMixmap(int client, any args)
 	return Plugin_Handled;
 }
 
-// Load a specified set of maps
-public Action ManualMixmap(int client, any args) 
-{
-	if (args < 1) CPrintToChat(client, "%t", "Manualmixmap_Syntax");
-	
-	PluginStartInit();
-
-	char map[BUF_SZ];
-	for (int i = 1; i <= args; i++) 
-	{
-		GetCmdArg(i, map, BUF_SZ);
-		ServerCommand("sm_addmap %s %d", map, i);
-		ServerCommand("sm_tagrank %d %d", i, i-1);
-	}
-	g_bMapsetInitialized = true;
-	CreateTimer(0.1, Timed_PostMapSet);
-
-	return Plugin_Handled;
-}
-
-public Action ShowAllMaps(int client, any Args)
+Action Command_ShowAllMaps(int client, any Args)
 {
 	if (!L4D2_IsScavengeMode())
 	{
@@ -141,83 +57,15 @@ public Action ShowAllMaps(int client, any Args)
 	return Plugin_Handled;
 }
 
-
-// ----------------------------------------------------------
-// 		Commands: Client
-// ----------------------------------------------------------
-public Action Mixmap_Cmd(int client, any args) 
+Action Mixmap_Cmd(int client, any args) 
 {
-	if (IsClientAndInGame(client))
-	{
-		if (!IsBuiltinVoteInProgress())
-		{
-			if (!L4D2_IsScavengeMode())	// for coop/reliasm and versus only
-				Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT);
-			else
-				Format(cfg_exec, sizeof(cfg_exec), CFG_DEFAULT_SCAV);
-	
-			if (args >=1)
-			{
-				char sBuffer[BUF_SZ], arg[BUF_SZ];
-				if (!L4D2_IsScavengeMode())
-				{
-					GetCmdArg(1, arg, BUF_SZ);
-					Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS, arg);
-					if (FileExists(sBuffer)) Format(cfg_exec, sizeof(cfg_exec), arg);
-					else
-					{
-						if (StrEqual(arg, CFG_DODEFAULT_ST))
-							Format(cfg_exec, sizeof(cfg_exec), CFG_DODEFAULT);
-						else if (StrEqual(arg, CFG_ALLOF_ST))
-							Format(cfg_exec, sizeof(cfg_exec), CFG_ALLOF);
-						else if (StrEqual(arg, CFG_DOALLOF_ST))
-							Format(cfg_exec, sizeof(cfg_exec), CFG_DOALLOF);
-						else if (StrEqual(arg, CFG_UNOF_ST))
-							Format(cfg_exec, sizeof(cfg_exec), CFG_UNOF);
-						else if (StrEqual(arg, CFG_DOUNOF_ST))
-							Format(cfg_exec, sizeof(cfg_exec), CFG_DOUNOF);
-						else
-						{
-							CReplyToCommand(client, "%t", "Invalid_Cfg");
-							return Plugin_Handled;
-						}
-					}
-				}
-				else
-				{
-					GetCmdArg(1, arg, BUF_SZ);
-					Format(sBuffer, sizeof(sBuffer), "cfg/%s%s.cfg", DIR_CFGS_SCAV, arg);
-					if (FileExists(sBuffer)) Format(cfg_exec, sizeof(cfg_exec), arg);
-					else
-					{
-						if (StrEqual(arg, CFG_DODEFAULT_ST_SCAV))
-							Format(cfg_exec, sizeof(cfg_exec), CFG_DODEFAULT_SCAV);
-						else if (StrEqual(arg, CFG_UNOF_ST_SCAV))
-							Format(cfg_exec, sizeof(cfg_exec), CFG_UNOF_SCAV);
-						else if (StrEqual(arg, CFG_DOUNOF_ST_SCAV))
-							Format(cfg_exec, sizeof(cfg_exec), CFG_DOUNOF_SCAV);
-						else
-						{
-							CReplyToCommand(client, "%t", "Invalid_Cfg");
-							return Plugin_Handled;
-						}
-					}
-				}
-			}
-
-			CreateMixmapVote(client);
-		}
-		else
-			PrintToChat(client, "%t", "Vote_Progress");
-
-		return Plugin_Handled;
-	}
 
 	return Plugin_Continue;
 }
 
+/*
 // Display current map list
-public Action Maplist(int client, any args) 
+Action Command_Maplist(int client, any args) 
 {
 	if (!g_bMaplistFinalized) 
 	{
@@ -256,9 +104,10 @@ public Action Maplist(int client, any args)
 
 	return Plugin_Handled;
 }
+*/
 
 // Abort a currently loaded mapset
-public Action StopMixmap_Cmd(int client, any args) 
+Action StopMixmap_Cmd(int client, any args) 
 {
 	if (!g_bMapsetInitialized) 
 	{
@@ -278,7 +127,7 @@ public Action StopMixmap_Cmd(int client, any args)
 	return Plugin_Continue;
 }
 
-public Action StopMixmap(int client, any args) 
+Action StopMixmap(int client, any args) 
 {
 	if (!g_bMapsetInitialized) 
 	{
@@ -286,76 +135,7 @@ public Action StopMixmap(int client, any args)
 		return Plugin_Handled;
 	}
 
-	if (g_hCountDownTimer) 
-	{
-		// interrupt any upcoming transitions
-		KillTimer(g_hCountDownTimer);
-	}
-
 	PluginStartInit();
-
 	CPrintToChatAllEx(client, "%t", "Stop_Mixmap_Admin", client);
-	return Plugin_Handled;
-}
-
-// Specifiy a rank for a given tag
-public Action TagRank(any args) 
-{
-	if (args < 2) 
-	{
-		ReplyToCommand(0, "Syntax: sm_tagrank <tag> <map number>");
-		ReplyToCommand(0, "Sets tag <tag> as the tag to be used to fetch maps for map <map number> in the map list.");
-		ReplyToCommand(0, "Rank 0 is map 1, rank 1 is map 2, etc.");
-
-		return Plugin_Handled;
-	}
-
-	char buffer[BUF_SZ];
-	GetCmdArg(2, buffer, BUF_SZ);
-	int index = StringToInt(buffer);
-
-	GetCmdArg(1, buffer, BUF_SZ);
-
-	if (index >= g_hArrayTagOrder.Length) 
-		g_hArrayTagOrder.Resize(index + 1);
-
-	g_iMapCount++;
-	g_hArrayTagOrder.SetString(index, buffer);
-	if (g_hArrayTags.FindString(buffer) < 0) 
-		g_hArrayTags.PushString(buffer);
-
-	return Plugin_Handled;
-}
-
-// Add a map to the maplist under specified tags
-public Action AddMap(any args) 
-{
-	if (args < 2) 
-	{
-		ReplyToCommand(0, "Syntax: sm_addmap <mapname> <tag1> <tag2> <...>");
-		ReplyToCommand(0, "Adds <mapname> to the map selection and tags it with every mentioned tag.");
-
-		return Plugin_Handled;
-	}
-
-	char map[BUF_SZ];
-	GetCmdArg(1, map, BUF_SZ);
-
-	char tag[BUF_SZ];
-
-	//add the map under only one of the tags
-	//TODO - maybe we should add it under all tags, since it might be removed from 1+ or even all of them anyway
-	//also, if that ends up being implemented, remember to remove vetoed maps from ALL the pools it belongs to
-	if (args == 2) 
-		GetCmdArg(2, tag, BUF_SZ);
-	else 
-		GetCmdArg(GetRandomInt(2, args), tag, BUF_SZ);
-
-	ArrayList hArrayMapPool;
-	if (! g_hTriePools.GetValue(tag, hArrayMapPool)) 
-		g_hTriePools.SetValue(tag, (hArrayMapPool = new ArrayList(BUF_SZ/4)));
-
-	hArrayMapPool.PushString(map);
-
 	return Plugin_Handled;
 }

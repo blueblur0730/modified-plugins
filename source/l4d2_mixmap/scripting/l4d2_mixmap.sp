@@ -58,10 +58,6 @@ ArrayList
 	g_hArrayThirdPartyMissionsAndMaps,	// Stores all third party missions and their map names in order.
 	g_hArrayPools;						// Stores slected map names.
 
-Handle
-	g_hCountDownTimer,			// timer
-	g_hCMapSetCampaignScores;	// sdkcall
-
 bool
 	g_bMaplistFinalized,
 	g_bMapsetInitialized,
@@ -112,6 +108,8 @@ public void OnPluginStart()
 	SetupCommands();
 	HookEvents();
 	PluginStartInit();
+
+	VT_OnPluginStart();
 }
 
 // ----------------------------------------------------------
@@ -120,7 +118,7 @@ public void OnPluginStart()
 public void OnClientPutInServer(int client)
 {
 	if (g_bMapsetInitialized)
-		CreateTimer(10.0, Timer_ShowMaplist, client);//玩家加入服务器后，10s后提示正在使用mixmap插件。
+		CreateTimer(10.0, Timer_ShowMaplist, client);
 }
 
 void Timer_ShowMaplist(Handle timer, int client)
@@ -129,14 +127,15 @@ void Timer_ShowMaplist(Handle timer, int client)
 		CPrintToChat(client, "%t", "Auto_Show_Maplist");
 }
 
-// Otherwise nextmap would be stuck and people wouldn't be able to play normal campaigns without the plugin 结束后初始化sm_nextmap的值
 public void OnPluginEnd() 
 {
-	ServerCommand("sm_nextmap ''");
+
 }
 
 public void OnMapStart()
 {
+	VT_OnMapStart();
+	
 	// if current map dose not match the map set, stop mix map.
 	char sBuffer[64];
 	if (g_bMapsetInitialized)
@@ -164,6 +163,11 @@ public void OnMapStart()
 	Call_StartForward(g_hForwardNext);
 	Call_PushString(sBuffer);
 	Call_Finish();
+}
+
+public void OnMapEnd()
+{
+	VT_OnMapEnd();
 }
 
 void LoadTranslation(const char[] translation)

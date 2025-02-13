@@ -117,7 +117,6 @@ void SelectRandomMap()
 	}
 
 	CPrintToChatAll("%t", "Change_Map_First", g_bServerForceStart ? 5 : 15);	//Alternative for remixmap
-	g_hCountDownTimer = CreateTimer(g_bServerForceStart ? 5.0 : 15.0, Timed_GiveThemTimeToReadTheMapList);	//Alternative for remixmap
 }
 
 void Timed_GiveThemTimeToReadTheMapList(Handle timer)

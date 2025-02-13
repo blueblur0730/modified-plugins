@@ -24,6 +24,7 @@ void SetUpGameData()
 	g_hDetour_RestoreTransitionedEntities = gd.CreateDetourOrFail(DETOUR_RESTORETRANSITIONEDENTITIES, true, DTR_OnRestoreTransitionedEntities);
 	g_hDetour_TransitionRestore = gd.CreateDetourOrFail(DETOUR_TRANSITIONRESTORE, true, _, DTR_CTerrorPlayer_OnTransitionRestore_Post);
 
+	delete gd;
 }
 
 void SetupConVars()
@@ -40,35 +41,19 @@ void SetupConVars()
 
 void SetupCommands()
 {
-	// Servercmd 服务器指令（用于cfg文件）
-	RegServerCmd(   "sm_addmap",        AddMap);
-	RegServerCmd(   "sm_tagrank",       TagRank);
+	RegConsoleCmd("sm_mixmap", Mixmap_Cmd, "Vote to start a mixmap (arg1 empty for 'default' maps pool);通过投票启用Mixmap, 并可加载特定的地图池；无参数则启用官图顺序随机");
+	RegConsoleCmd("sm_stopmixmap", StopMixmap_Cmd, "Stop a mixmap;中止mixmap, 并初始化地图列表");
+	RegAdminCmd("sm_fmixmap", ForceMixmap, ADMFLAG_ROOT, "Force start mixmap (arg1 empty for 'default' maps pool) 强制启用mixmap (随机官方地图)");
+	RegAdminCmd("sm_fstopmixmap", StopMixmap, ADMFLAG_ROOT, "Force stop a mixmap ;强制中止mixmap, 并初始化地图列表");
 
-	// Start/Stop 启用/中止指令
-	RegConsoleCmd(  "sm_mixmap",        Mixmap_Cmd,                     "Vote to start a mixmap (arg1 empty for 'default' maps pool);通过投票启用Mixmap, 并可加载特定的地图池；无参数则启用官图顺序随机");
-	RegConsoleCmd(  "sm_stopmixmap",    StopMixmap_Cmd,                 "Stop a mixmap;中止mixmap, 并初始化地图列表");
-	RegAdminCmd(    "sm_manualmixmap",  ManualMixmap,   ADMFLAG_ROOT,   "Start mixmap with specified maps 启用mixmap加载特定地图顺序的地图组");
-	RegAdminCmd(    "sm_fmixmap",       ForceMixmap,    ADMFLAG_ROOT,   "Force start mixmap (arg1 empty for 'default' maps pool) 强制启用mixmap (随机官方地图)");
-	RegAdminCmd(    "sm_fstopmixmap",   StopMixmap,     ADMFLAG_ROOT,   "Force stop a mixmap ;强制中止mixmap, 并初始化地图列表");
-
-	// Midcommand 插件启用后可使用的指令
-	RegConsoleCmd(  "sm_maplist",       Maplist,                        "Show the map list; 展示mixmap最终抽取出的地图列表");
-	RegAdminCmd(    "sm_allmap",        ShowAllMaps,    ADMFLAG_ROOT,   "Show all official maps code; 展示所有官方地图的地图代码");
-	RegAdminCmd(    "sm_allmaps",       ShowAllMaps,   	ADMFLAG_ROOT,   "Show all official maps code; 展示所有官方地图的地图代码");
+	//RegConsoleCmd("sm_maplist", Command_Maplist, "Show the map list; 展示mixmap最终抽取出的地图列表");
+	RegConsoleCmd("sm_allmaps", Command_ShowAllMaps, ADMFLAG_ROOT, "Show all official maps code; 展示所有官方地图的地图代码");
 }
 
 void PluginStartInit()
 {
-	g_hTriePools		 = new StringMap();
-	g_hArrayTags		 = new ArrayList(64 / 4);	 // 1 block = 4 characters => X characters = X/4 blocks
-	g_hArrayTagOrder	 = new ArrayList(64 / 4);
-	g_hArrayMapOrder	 = new ArrayList(64 / 4);
-	g_hArrayMatchInfo	 = new ArrayList(sizeof(MatchInfo));
-
 	g_bMapsetInitialized = false;
 	g_bMaplistFinalized	 = false;
-
-	g_hCountDownTimer	 = null;
 
 	g_iMapsPlayed		 = 0;
 	g_iMapCount			 = 0;
@@ -99,11 +84,11 @@ int Native_GetMixmapMapSequence(Handle plugin, int numParams)
 	else
 	{
 		if (hArray == null)
-			return 0
+			return 0;
 
-		for (int i = 0; i < g_hArrayMapOrder.Length; i++) 
+		for (int i = 0; i < g_hArrayPools.Length; i++) 
 		{
-			g_hArrayMapOrder.GetString(i, sBuffer, 64);
+			g_hArrayPools.GetString(i, sBuffer, 64);
 			hArray.PushString(sBuffer);
 		}
 	}
