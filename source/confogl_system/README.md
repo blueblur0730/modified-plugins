@@ -1,4 +1,4 @@
-**[English](./source/confogl_system/README.md) | [中文](./source/confogl_system/README-cn.md)**
+**[English](./README.md) | [中文](./README-cn.md)**
 
 # [L4D2/Any?] Confogl System
 
@@ -20,6 +20,7 @@ This is a simple guide on what is, and how to use the Confogl system.
 ## Functionality
 
 ### Choosing a configuration (MatchVote.sp/ReqMatch.sp)
+<hr>
 
 Confogl System uses vote to choose a configuration using command `sm_match` from a text file called `matchmode.txt` on `addons/sourcemod/configs/`. The file is a KeyValues strcuture with a list of configurations. Normally, the strcuture is like this:  
 
@@ -56,6 +57,7 @@ Admins can use command `sm_forcematch <config_folder_name> <[optional] map_name>
 Confogl System uses built-in nativevote method to manage voting, not depending on builtinvote extension and nativevote plugin anymore.
 
 ### Loading a configuration (ReqMatch.sp)
+<hr>
 
 This part introduces the process of loading a configuration.  
 
@@ -80,6 +82,7 @@ Then Confogl will search the file under the path `../cfg/cfgogl/<config_name>/co
 Finally, Confogl will restart the current map or load a specific map to complete loading, and uses `sm plugins load_lock` to lock loading.
 
 ### Unloading a configuration (ReqMatch.sp/MatchVote.sp/predictable_unloader.sp)
+<hr>
 
 Uses command `sm_rmatch` to call a vote to unload the current loaded configuration. Admins can use command `sm_resetmatch` to force unloading.  
 
@@ -90,6 +93,7 @@ The cfg file provides a space for user defined commands used to reset the change
 Here that is why I recommend you put `confogl_system.smx` beyond the folder `optional` or `disabled`.
 
 ### ConVar Monitoring and Restricting (CvarSetting.sp/ClientSettings.sp)
+<hr>
 
 You can use server command `confogl_addcvar <cvar> <value>` to add a convar into the list.  
 You can use server command `confogl_trackclientcvar <client_cvar> <hasMin> <min> [<hasMax> <max> [<action>]]` to track and restrict some certain client convars.  
@@ -99,6 +103,7 @@ After all lists complete, use server command `confogl_setcvars` to activate the 
 To reset, uses server command `confogl_resetcvars` and `confogl_resetclientcvars` to clear the lists and stop tracking. These commands are usally writen in `confogl_off.cfg`.
 
 ### Other (BotKick.sp/PasswordSystem.sp/UnreserveLobby.sp)
+<hr>
 
 1. Unreserve Lobby: Provides server command `sm_killlobbyers` to remove lobby reservation manually. Provides convar `confogl_match_killlobbyres` to determine whether to remove lobby reservation automatically when loaded a configuration.
 
