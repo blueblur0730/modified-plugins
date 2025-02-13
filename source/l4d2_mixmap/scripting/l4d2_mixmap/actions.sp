@@ -2,15 +2,6 @@
  #endinput
 #endif
 #define _l4d2_mixmap_actions_included
-
-#define DEBUG 1
-
-static ArrayList
-	s_hArrayPlayerInfo = null;
-
-static int
-	s_iPointsTeam_A = 0,
-	s_iPointsTeam_B = 0;
 	
 // ----------------------------------------------------------
 // 		Map switching logic
@@ -38,8 +29,8 @@ Action PerformMapProgression()
 
 void GotoNextMap(bool force = false)
 {
-	char sMapName[BUF_SZ];
-	g_hArrayMapOrder.GetString(g_iMapsPlayed, sMapName, BUF_SZ);
+	char sMapName[64];
+	g_hArrayPools.GetString(g_iMapsPlayed, sMapName, 64);
 
 	GotoMap(sMapName, force);
 }
@@ -51,7 +42,6 @@ void GotoMap(const char[] sMapName, bool force = false)
 #if DEBUG
 		PrintToServer("[Mixmap] L4D2_ChangeLevel called. sMapName: %s", sMapName);
 #endif
-		L4D2_ChangeLevel(sMapName, false);		// set false to not reset the scores.
 		return;
 	}
 	ServerCommand("sm_nextmap %s", sMapName);
@@ -61,11 +51,11 @@ void GotoMap(const char[] sMapName, bool force = false)
 }
 
 // here we store the match or game info for the next map.
-public Action Timed_NextMapInfo(Handle timer)
+Action Timed_NextMapInfo(Handle timer)
 {
-	char sMapName_New[BUF_SZ], sMapName_Old[BUF_SZ];
-	g_hArrayMapOrder.GetString(g_iMapsPlayed, sMapName_New, BUF_SZ);
-	g_hArrayMapOrder.GetString(g_iMapsPlayed - 1, sMapName_Old, BUF_SZ);
+	char sMapName_New[64], sMapName_Old[64];
+	g_hArrayPools.GetString(g_iMapsPlayed, sMapName_New, 64);
+	g_hArrayPools.GetString(g_iMapsPlayed - 1, sMapName_Old, 64);
 
 	g_cvNextMapPrint.BoolValue ? CPrintToChatAll("%t", "Show_Next_Map",  sMapName_New) : CPrintToChatAll("%t%t", "Show_Next_Map",  "", "Secret");
 
@@ -94,120 +84,7 @@ public Action Timed_NextMapInfo(Handle timer)
 			CreateTimer(10.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
 		}
 	}
-	else if (L4D2_IsScavengeMode())
-	{
-		MatchInfo esMatchInfo;
 
-		// currently we are flipped.
-		esMatchInfo.rs_TeamA = GetScavengeTeamScore(2, GetScavengeRoundNumber());		// team index 1, score 2, match score 0
-		esMatchInfo.rs_TeamB = GetScavengeTeamScore(3, GetScavengeRoundNumber());		// team index 0, score 8, match score 1
-		esMatchInfo.ms_TeamA = GetScavengeMatchScore(2);
-		esMatchInfo.ms_TeamB = GetScavengeMatchScore(3);
-		esMatchInfo.winner	 = GetWinningTeamNumber(GetScavengeRoundNumber());
-
-		g_hArrayMatchInfo.PushArray(esMatchInfo);
-
-#if DEBUG
-		PrintToServer("[Mixmap] Survivor Round Score: %d", esMatchInfo.rs_TeamA);
-		PrintToServer("[Mixmap] Infected Round Score: %d", esMatchInfo.rs_TeamB);
-		PrintToServer("[Mixmap] Survivor Match Score: %d", esMatchInfo.ms_TeamA);
-		PrintToServer("[Mixmap] Infected Match Score: %d", esMatchInfo.ms_TeamB);
-		PrintToServer("[Mixmap] Winner Team Index: %d", esMatchInfo.winner);
-#endif
-		g_bCMapTransitioned = true;
-#if DEBUG
-		PrintToServer("[Mixmap] Timer_Gotomap creating.");
-#endif
-		CreateTimer(5.0, Timed_Gotomap);
-	}
-	else if (L4D2_IsGenericCooperativeMode())
-	{
-		if (g_cvSaveStatus.BoolValue)
-		{
-			PlayerInfo esPlayerInfo;
-			int ent1 = INVALID_ENT_REFERENCE; int ent2 = INVALID_ENT_REFERENCE;
-			int ent3 = INVALID_ENT_REFERENCE; int ent4 = INVALID_ENT_REFERENCE;
-			int ent5 = INVALID_ENT_REFERENCE;
-
-			if (s_hArrayPlayerInfo == null)
-				s_hArrayPlayerInfo = new ArrayList(sizeof(PlayerInfo));
-
-#if DEBUG
-			PrintToServer("[Mixmap] Coop info collecting");
-#endif
-			for (int i = 1; i < MaxClients; i++)
-			{
-				if (g_cvSaveStatusBot.BoolValue)
-				{
-					if(!IsClientOrBotAndInGame(i) && !IsSurvivorClient(i))
-						continue;
-				}
-				else if (!IsClientAndInGame(i) && !IsSurvivorClient(i))
-						continue;
-
-				if (!IsPlayerAlive(i))
-				{
-					esPlayerInfo.health 	 = 50;
-					esPlayerInfo.alive 		 = false;
-					continue;
-				}
-					
-				esPlayerInfo.health		 	 = GetClientHealth(i);
-				esPlayerInfo.temp_health 	 = L4D_GetTempHealth(i);
-				esPlayerInfo.revive_count 	 = GetEntProp(i, Prop_Send, "m_currentReviveCount");
-				esPlayerInfo.alive 			 = true;
-				esPlayerInfo.client_index	 = i;
-
-				ent1 = GetPlayerWeaponSlot(i, L4D2WeaponSlot_Primary);
-				ent2 = GetPlayerWeaponSlot(i, L4D2WeaponSlot_Secondary);
-				ent3 = GetPlayerWeaponSlot(i, L4D2WeaponSlot_Throwable);
-				ent4 = GetPlayerWeaponSlot(i, L4D2WeaponSlot_HeavyHealthItem);
-				ent5 = GetPlayerWeaponSlot(i, L4D2WeaponSlot_LightHealthItem);
-
-				esPlayerInfo.slot0 			 = IdentifyWeapon(ent1);
-				esPlayerInfo.ammo 			 = GetWeaponClipAmmo(ent1);
-				esPlayerInfo.ammo_reserved 	 = L4D_GetReserveAmmo(i, ent1);
-				esPlayerInfo.ammo_type		 = GetEntProp(ent1, Prop_Data, "m_iPrimaryAmmoType");
-
-				esPlayerInfo.slot1 			 = IdentifyWeapon(ent2);
-				if (esPlayerInfo.slot1 == WEPID_MELEE)
-				{
-					esPlayerInfo.slot1		 = IdentifyMeleeWeapon(ent2);
-					esPlayerInfo.IsMelee 	 = true;
-					esPlayerInfo.ammo_pistol = 0;
-				}
-				else if (esPlayerInfo.slot1 != WEPID_NONE)
-					esPlayerInfo.ammo_pistol = GetWeaponClipAmmo(ent2);
-					
-				esPlayerInfo.slot2 			 = IdentifyWeapon(ent3);
-				esPlayerInfo.slot3 			 = IdentifyWeapon(ent4);
-				esPlayerInfo.slot4 			 = IdentifyWeapon(ent5);
-
-				s_hArrayPlayerInfo.PushArray(esPlayerInfo);
-			}
-		}
-		g_bCMapTransitioned = true;
-#if DEBUG
-		PrintToServer("[Mixmap] Timer_Gotomap creating.");
-#endif
-		CreateTimer(0.2, Timed_Gotomap);
-	}
-
-	return Plugin_Handled;
-}
-
-public Action Timed_Gotomap(Handle timer)
-{
-	char sMapName_New[BUF_SZ];
-	g_hArrayMapOrder.GetString(g_iMapsPlayed, sMapName_New, BUF_SZ);
-
-	GotoMap(sMapName_New, true);
-	return Plugin_Handled;
-}
-
-public Action Timed_ContinueMixmap(Handle timer)
-{
-	ServerCommand("sm_fmixmap %s", cfg_exec);
 	return Plugin_Handled;
 }
 
@@ -228,128 +105,129 @@ void SetVersusScores()
 	L4D2Direct_SetVSCampaignScore(1, s_iPointsTeam_B);
 }
 
-void SetScavengeScores()
+// 查找地图实体
+bool FindMapEntity() 
 {
-	MatchInfo esMatchInfo;
-	for (int i = 0; i < g_iMapsPlayed; i++)
+	/**
+	 * 检查是否存在changelevel实体, 不存在则为终局地图, 插件不处理
+	 * !!地图可能可以存在多个终点安全屋, 所以changelevel实体也可以多个!! (插件只服务官方地图, 不考虑mod地图, 所以只会存在一个终点安全屋)
+	 * 但要支持上局地图过渡装备过来, 则肯定会有一个landmark实体没绑定changelevel实体, 该实体名字则为过渡数据到此章节用的实体名
+	 * 第一章节可以修改, 但不可以添加配置(换图会出海报). 终局不可以修改, 但可以添加配置
+	 */
+	int CId, LId, ModifyLId = INVALID_ENT_REFERENCE;
+	char LandMarkName[128], BindName[128];
+	bool HasChangeLevel = true;
+
+	// 如果找不到转换地图实体, 记录失败(因为终局图没此实体, 但有过渡到此地图的过渡实体, 下面会获取用于添加到配置, 然后再返回失败)
+	if ((CId = FindEntityByClassname(CId, "info_changelevel")) == INVALID_ENT_REFERENCE) 
 	{
-		g_hArrayMatchInfo.GetArray(i, esMatchInfo);
-
-		SetScavengeRoundNumber(g_iMapsPlayed + 1);
-		SetScavengeTeamScore(2, i + 1, esMatchInfo.rs_TeamA);
-		SetScavengeTeamScore(3, i + 1, esMatchInfo.rs_TeamB);
-
-		if (i == g_iMapsPlayed - 1)		// we only set the score at the end of array
-		{
-			SetScavengeMatchScore(2, esMatchInfo.ms_TeamA);			
-			SetScavengeMatchScore(3, esMatchInfo.ms_TeamB);
-		}
-	}
-}
-
-void SetWinningTeam()
-{
-	MatchInfo esMatchInfo;
-
-	for (int i = 0; i < GetScavengeRoundNumber(); i++)
+		HasChangeLevel = false;
+	} 
+	else 
 	{
-		if (i == GetScavengeRoundNumber() - 1)
-			break;
-
-		g_hArrayMatchInfo.GetArray(i, esMatchInfo);
-
-		SetWinningTeamNumber(i, esMatchInfo.winner);
-	}
-}
-
-void SetTeam()
-{
-	MatchInfo esMatchInfo;
-	g_hArrayMatchInfo.GetArray(GetScavengeRoundNumber() - 2, esMatchInfo);
-
-	// winner go ghost, loser grab guns.
-	if (esMatchInfo.rs_TeamA > esMatchInfo.rs_TeamB)
-		L4D2_SwapTeams();
-}
-
-void SetPlayerInfo()
-{
-	char slot0[64], slot1[64], slot2[64], slot3[64], slot4[64];
-	PlayerInfo esPlayerInfo;
-
-	for (int i = 1; i < MaxClients; i++)
-	{
-		if (g_cvSaveStatusBot.BoolValue)
-		{
-			if(!IsClientOrBotAndInGame(i) && !IsSurvivorClient(i))
-				continue;
-		}
-		else if (!IsClientAndInGame(i) && !IsSurvivorClient(i))
-				continue;
-
-		if (s_hArrayPlayerInfo == null)
-		{
-#if DEBUG
-			PrintToServer("[Mixmap] s_hArrayPlayerInfo is null !!");
-#endif
-			break;
-		}
-
-		s_hArrayPlayerInfo.GetArray(i, esPlayerInfo);
-
-		if (!esPlayerInfo.alive)
-		{
-			SetEntProp(esPlayerInfo.client_index, Prop_Send, "m_iHealth", esPlayerInfo.health);
-			continue;
-		}
-
-		SetEntProp(esPlayerInfo.client_index, Prop_Send, "m_iHealth", esPlayerInfo.health);
-		SetEntProp(esPlayerInfo.client_index, Prop_Send, "m_currentReviveCount", esPlayerInfo.revive_count);
-		L4D_SetTempHealth(esPlayerInfo.client_index, esPlayerInfo.temp_health);
-
-		if (esPlayerInfo.slot0 != WEPID_NONE)
-		{
-			int ent = INVALID_ENT_REFERENCE;
-			GetWeaponName(esPlayerInfo.slot0, slot0, sizeof(slot0));
-			GivePlayerItem(esPlayerInfo.client_index, slot0);
-			ent = GetPlayerWeaponSlot(esPlayerInfo.client_index, L4D2WeaponSlot_Primary);
-			SetWeaponClipAmmo(ent, esPlayerInfo.ammo);
-			L4D_SetReserveAmmo(esPlayerInfo.client_index, ent, esPlayerInfo.ammo_reserved);
-		}
-
-		if (esPlayerInfo.slot1 != WEPID_NONE)
-		{
-			int ent = INVALID_ENT_REFERENCE;
-			if (esPlayerInfo.IsMelee)
-				GetMeleeWeaponName(esPlayerInfo.slot1, slot1, sizeof(slot1));
-			else
-				GetWeaponName(esPlayerInfo.slot1, slot1, sizeof(slot1));
-
-			GivePlayerItem(esPlayerInfo.client_index, slot1);
-			ent = GetPlayerWeaponSlot(esPlayerInfo.client_index, L4D2WeaponSlot_Secondary);
-
-			if (!esPlayerInfo.IsMelee)
-				SetWeaponClipAmmo(ent, esPlayerInfo.ammo_pistol);
-		}
-
-		if (esPlayerInfo.slot2 != WEPID_NONE)
-		{
-			GetWeaponName(esPlayerInfo.slot2, slot2, sizeof(slot2));
-			GivePlayerItem(esPlayerInfo.client_index, slot2);
-		}
-
-		if (esPlayerInfo.slot3 != WEPID_NONE)
-		{
-			GetWeaponName(esPlayerInfo.slot3, slot3, sizeof(slot3));
-			GivePlayerItem(esPlayerInfo.client_index, slot3);
-		}
-
-		if (esPlayerInfo.slot4 != WEPID_NONE)
-		{
-			GetWeaponName(esPlayerInfo.slot4, slot4, sizeof(slot4));
-			GivePlayerItem(esPlayerInfo.client_index, slot4);
-		}		
+		// 获取实体所绑定的LankMark实体名
+		GetEntPropString(CId, Prop_Data, "m_landmarkName", BindName, sizeof BindName);
+		// 如果 没拿到绑定名字, 记录失败
+		if (BindName[0] == '\0') 
+			HasChangeLevel = false;
 	}
 
-	delete s_hArrayPlayerInfo;
+	// 遍历过渡实体, 找到没被绑定的实体名和可修改的实体ID
+	while ((LId = FindEntityByClassname(LId, "info_landmark")) != INVALID_ENT_REFERENCE) 
+	{
+		GetEntPropString(LId, Prop_Data, "m_iName", LandMarkName, sizeof LandMarkName);
+		// 如果与转换地图实体所绑的名字一样, 则为修改用的实体, 记录ID
+		if (StrEqual(LandMarkName, BindName, false)) 
+		{
+			ModifyLId = LId;
+		} 
+		else 
+		{
+			if (! g_bFirstMap) 
+			{
+				// 把用于过渡到此地图的过渡实体名回写全局变量
+				Format(g_sValidLandMarkName, sizeof g_sValidLandMarkName, "%s", LandMarkName); // 用于写配置项
+			}
+		}
+	}
+	// 如果 没找到可修改的实体 或 前面已经判定为失败, 返回失败
+	if (ModifyLId == INVALID_ENT_REFERENCE || ! HasChangeLevel) 
+		return false;
+	
+	// 把找到的信息回写全局变量
+	g_iEnt_ChangeLevelId = CId;
+	g_iEnt_LandMarkId = ModifyLId;
+
+	return true;
+}
+
+// 修改实体属性
+void ChangeEntityProp() 
+{
+	char MapName[64];
+	g_sTransitionMap[0] = '\0';
+
+	// 如果找不到转换地图实体, 返回失败
+	if (g_iEnt_ChangeLevelId == INVALID_ENT_REFERENCE || ! IsValidEntity(g_iEnt_ChangeLevelId)) 
+	{
+		g_bIsValid = false;
+		return;
+	}
+	// 如果找不到可修改的实体, 返回失败
+	if (g_iEnt_LandMarkId == INVALID_ENT_REFERENCE || ! IsValidEntity(g_iEnt_LandMarkId)) 
+	{
+		g_bIsValid = false;
+		return;
+	}
+
+	// 没到触发概率, 返回失败
+	if (! AllowModify()) 
+	{
+		PrintToChatAll("%s Currently space-time is stable, with no unusual fluctuations.", PREFIX);
+		g_bIsValid = false;
+		return;
+	}
+
+	// 获取要切换到的地图属性, 如果获取不到则返回信息并终止修改
+	if (! GetChangeLevelMap(MapName, sizeof MapName)) 
+	{
+		PrintToChatAll("%s Currently in a single timeline without any temporal fluctuations.", PREFIX);
+		//PrintToChatAll("%s 没找到符合要求的地图, 终止修改.", PREFIX);
+		g_bIsValid = false;
+		return;
+	}
+
+	char LandMarkName[128];
+	// 获取对应索引的地图名和过渡实体名
+	g_mMapLandMarkSet.GetString(MapName, LandMarkName, sizeof LandMarkName);
+	// 修改实体属性
+	SetEntPropString(g_iEnt_ChangeLevelId, Prop_Data, "m_mapName", MapName);
+	SetEntPropString(g_iEnt_ChangeLevelId, Prop_Data, "m_landmarkName", LandMarkName);
+	SetEntPropString(g_iEnt_LandMarkId, Prop_Data, "m_iName", LandMarkName);
+	g_sTransitionMap = MapName;
+	PrintToChatAll("%s An uncharted rift in space-time has appeared. After changeLevel, you will travel to %s ...", PREFIX, MapName);
+}
+
+// 获取触发概率
+bool AllowModify() 
+{
+	if (GetRandomFloat(0.0, 1.0) <= g_fChangeChance) 
+		return true;
+
+	return false;
+}
+
+MRESReturn DTR_OnRestoreTransitionedEntities()
+{
+	return MRES_Supercede;
+}
+
+MRESReturn DTR_CTerrorPlayer_OnTransitionRestore_Post(int pThis, DHookReturn hReturn) 
+{
+	if (GetClientTeam(pThis) > 2)
+		return MRES_Ignored;
+
+	// in case the size of the saferoom dose not match the size before the transition, we teleport them back.
+	//CheatCommand(pThis, "warp_to_start_area");
+	return MRES_Ignored;
 }

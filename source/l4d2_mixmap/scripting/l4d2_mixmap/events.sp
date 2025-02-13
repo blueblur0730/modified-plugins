@@ -12,27 +12,16 @@ static bool
 
 void HookEvents()
 {
-	// scavenge game check
+	// scavenge game
 	HookEvent("scavenge_round_finished", Event_ScavRoundFinished, EventHookMode_Post);
 	HookEvent("scavenge_match_finished", Event_ScavMatchFinished, EventHookMode_Post);
 
-	// coop game check
+	// coop game
 	HookEvent("mission_lost", Event_MissionLost, EventHookMode_Post);
 	HookEvent("map_transition", Event_MapTransition, EventHookMode_Pre);
 	HookEvent("door_close", Event_DoorClose, EventHookMode_Post);
 	HookEvent("door_open", Event_DoorOpen, EventHookMode_Post);
 	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
-}
-
-void ToggleEvents()
-{
-	if (L4D_IsVersusMode() || L4D2_IsScavengeMode())
-	{
-		UnhookEvent("map_transition", Event_MapTransition);
-		UnhookEvent("door_close", Event_DoorClose);
-		UnhookEvent("door_open", Event_DoorOpen);
-		UnhookEvent("player_death", Event_PlayerDeath);
-	}
 }
 
 public void Event_ScavRoundFinished(Event hEvent, char[] sName, bool dontBroadcast)

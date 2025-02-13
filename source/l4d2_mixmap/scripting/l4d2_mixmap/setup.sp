@@ -3,24 +3,35 @@
 #endif
 #define _l4d2_mixmap_setup_included
 
-void SetupForwards()
+void SetUpGameData()
 {
-	g_hForwardStart 		= new GlobalForward("OnMixmapStart", ET_Ignore, Param_Cell, Param_String);
-	g_hForwardNext			= new GlobalForward("OnMixmapNextKnown", ET_Ignore, Param_String);
-	g_hForwardInterrupt 	= new GlobalForward("OnMixmapInterrupted", ET_Ignore);
-	g_hForwardEnd			= new GlobalForward("OnMixmapEnd", ET_Ignore);
-}
+	GameDataWrapper gd = new GameDataWrapper(GAMEDATA_FILE);
+	g_pMatchExtL4D = gd.GetAddress(ADDRESS_MATCHEXTL4D);
 
-void SetupNatives()
-{
-	CreateNative("GetMixmapMapSequence", Native_GetMixmapMapSequence);
-	CreateNative("GetMixmapPlayedMapCount", Native_GetMixmapPlayedMapCount);
-	CreateNative("IsInMixmap", Native_IsInMixmap);
+	g_pTheDirector = L4D_GetPointer(POINTER_DIRECTOR);
+	if (g_pTheDirector == Address_Null)
+		SetFailState("[MixMap] Failed to get director pointer!");
+
+	SDKCallParamsWrapper ret = { SDKType_PlainOldData, SDKPass_Plain };
+	g_hSDKCall_GetAllMissions = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETALLMISSIONS, _, _, true, ret);
+
+	SDKCallParamsWrapper params[] = {{ SDKType_String, SDKPass_Pointer }};
+	g_hSDKCall_OnChangeMissionVote = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGEMISSIONVOTE, params, sizeof(params));
+
+	SDKCallParamsWrapper params1[] = {{ SDKType_Bool, SDKPass_Plain }};
+    g_hSDKCall_IsFirstMapInScenario = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ISFIRSTMAPINSCENARIO, params1, sizeof(params1));
+
+	g_hDetour_RestoreTransitionedEntities = gd.CreateDetourOrFail(DETOUR_RESTORETRANSITIONEDENTITIES, true, DTR_OnRestoreTransitionedEntities);
+	g_hDetour_TransitionRestore = gd.CreateDetourOrFail(DETOUR_TRANSITIONRESTORE, true, _, DTR_CTerrorPlayer_OnTransitionRestore_Post);
+
 }
 
 void SetupConVars()
 {
+	mp_gamemode = FindConVar("mp_gamemode");
+
 	g_cvNextMapPrint   = CreateConVar("l4d2mm_nextmap_print",       "1", "Determine whether to show what the next map will be", _, true, 0.0, true, 1.0);
+	g_cvMapPoolCapacity = CreateConVar("l4d2mm_map_pool_capacity",    "5", "Determine how many maps can be selected in one pool; 0 = no limits;", _, true, 0.0, true, 10.0);
 	g_cvMaxMapsNum	   = CreateConVar("l4d2mm_max_maps_num",        "2", "Determine how many maps of one campaign can be selected; 0 = no limits;", _, true, 0.0, true, 5.0);
 	g_cvSaveStatus     = CreateConVar("l4d2mm_save_status", 		"1", "Determine whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
 	g_cvSaveStatusBot  = CreateConVar("l4d2mm_save_status_bot", 	"1", "Determine whether to save bot satuts in coop or realism mode", _, true, 0.0, true, 1.0);
@@ -49,9 +60,9 @@ void SetupCommands()
 void PluginStartInit()
 {
 	g_hTriePools		 = new StringMap();
-	g_hArrayTags		 = new ArrayList(BUF_SZ / 4);	 // 1 block = 4 characters => X characters = X/4 blocks
-	g_hArrayTagOrder	 = new ArrayList(BUF_SZ / 4);
-	g_hArrayMapOrder	 = new ArrayList(BUF_SZ / 4);
+	g_hArrayTags		 = new ArrayList(64 / 4);	 // 1 block = 4 characters => X characters = X/4 blocks
+	g_hArrayTagOrder	 = new ArrayList(64 / 4);
+	g_hArrayMapOrder	 = new ArrayList(64 / 4);
 	g_hArrayMatchInfo	 = new ArrayList(sizeof(MatchInfo));
 
 	g_bMapsetInitialized = false;
@@ -63,30 +74,24 @@ void PluginStartInit()
 	g_iMapCount			 = 0;
 }
 
-void LoadSDK()
+void SetupForwards()
 {
-	GameData hGameData = new GameData(LEFT4FRAMEWORK_GAMEDATA);
-
-	if (hGameData == null)
-		SetFailState("Could not load gamedata/%s.txt", LEFT4FRAMEWORK_GAMEDATA);
-
-	StartPrepSDKCall(SDKCall_GameRules);
-	if (!PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, SECTION_NAME))
-		SetFailState("Function '%s' not found.", SECTION_NAME);
-
-	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-	g_hCMapSetCampaignScores = EndPrepSDKCall();
-
-	if (g_hCMapSetCampaignScores == null)
-		SetFailState("Function '%s' found, but something went wrong.", SECTION_NAME);
-
-	delete hGameData;
+	g_hForwardStart 		= new GlobalForward("OnMixmapStart", ET_Ignore, Param_Cell, Param_Cell);
+	g_hForwardNext			= new GlobalForward("OnMixmapNextKnown", ET_Ignore, Param_String);
+	g_hForwardInterrupt 	= new GlobalForward("OnMixmapInterrupted", ET_Ignore);
+	g_hForwardEnd			= new GlobalForward("OnMixmapEnd", ET_Ignore);
 }
 
-public int Native_GetMixmapMapSequence(Handle plugin, int numParams)
+void SetupNatives()
 {
-	char sBuffer[BUF_SZ];
+	CreateNative("GetMixmapMapSequence", Native_GetMixmapMapSequence);
+	CreateNative("GetMixmapPlayedMapCount", Native_GetMixmapPlayedMapCount);
+	CreateNative("IsInMixmap", Native_IsInMixmap);
+}
+
+int Native_GetMixmapMapSequence(Handle plugin, int numParams)
+{
+	char sBuffer[64];
 	ArrayList hArray = view_as<ArrayList>(GetNativeCell(1));
 
 	if (!g_bMaplistFinalized)
@@ -98,7 +103,7 @@ public int Native_GetMixmapMapSequence(Handle plugin, int numParams)
 
 		for (int i = 0; i < g_hArrayMapOrder.Length; i++) 
 		{
-			g_hArrayMapOrder.GetString(i, sBuffer, BUF_SZ);
+			g_hArrayMapOrder.GetString(i, sBuffer, 64);
 			hArray.PushString(sBuffer);
 		}
 	}
@@ -106,12 +111,12 @@ public int Native_GetMixmapMapSequence(Handle plugin, int numParams)
 	return 0;
 }
 
-public int Native_GetMixmapPlayedMapCount(Handle plugin, int numParams)
+int Native_GetMixmapPlayedMapCount(Handle plugin, int numParams)
 {
 	return g_iMapsPlayed;
 }
 
-public int Native_IsInMixmap(Handle plugin, int numParams)
+int Native_IsInMixmap(Handle plugin, int numParams)
 {
 	return g_bMapsetInitialized ? true : false;
 }
