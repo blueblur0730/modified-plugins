@@ -13,44 +13,12 @@
 
 #define TRANSLATION_FILE "l4d2_mixmap.phrases"
 #define GAMEDATA_FILE "l4d2_mixmap"
-
 #define ADDRESS_MATCHEXTL4D "g_pMatchExtL4D"
-
 #define SDKCALL_GETALLMISSIONS "MatchExtL4D::GetAllMissions"
 #define SDKCALL_ONCHANGEMISSIONVOTE "CDirector::OnChangeMissionVote"
 #define SDKCALL_ISFIRSTMAPINSCENARIO "CDirector::IsFirstMapInScenario"
-
 #define DETOUR_RESTORETRANSITIONEDENTITIES "RestoreTransitionedEntities"
 #define DETOUR_TRANSITIONRESTORE "CTerrorPlayer::TransitionRestore"
-
-Address 
-	g_pMatchExtL4D,
-	g_pTheDirector;
-
-Handle 
-	g_hSDKCall_GetAllMissions,
-	g_hSDKCall_OnChangeMissionVote,
-	g_hSDKCall_IsFirstMapInScenario;
-
-DynamicDetour
-	g_hDetour_RestoreTransitionedEntities,
-	g_hDetour_TransitionRestore;
-
-ConVar mp_gamemode;
-
-ConVar
-	g_cvNextMapPrint,
-	g_cvMapPoolCapacity,
-	g_cvMaxMapsNum,
-	g_cvSaveStatus,
-	g_cvSaveStatusBot,
-	g_cvFinaleEndStart;
-
-GlobalForward
-	g_hForwardStart,
-	g_hForwardNext,
-	g_hForwardInterrupt,
-	g_hForwardEnd;
 
 ArrayList
 	g_hArrayMissionsAndMaps,			// Stores all missions and their map names in order.
@@ -58,11 +26,7 @@ ArrayList
 	g_hArrayThirdPartyMissionsAndMaps,	// Stores all third party missions and their map names in order.
 	g_hArrayPools;						// Stores slected map names.
 
-bool
-	g_bMaplistFinalized,
-	g_bMapsetInitialized,
-	g_bCMapTransitioned = false,
-	g_bServerForceStart = false;
+bool g_bMapsetInitialized;
 
 int
 	g_iMapsPlayed,
@@ -168,6 +132,15 @@ public void OnMapStart()
 public void OnMapEnd()
 {
 	VT_OnMapEnd();
+}
+
+void PluginStartInit()
+{
+	g_bMapsetInitialized = false;
+	g_bMaplistFinalized	 = false;
+
+	g_iMapsPlayed		 = 0;
+	g_iMapCount			 = 0;
 }
 
 void LoadTranslation(const char[] translation)

@@ -3,21 +3,66 @@
 #endif
 #define _l4d2_mixmap_commands_included
 
-// ----------------------------------------------------------
-// 		Commands: Console/Admin
-// ----------------------------------------------------------
-
-// Loads a specified set of maps
-Action ForceMixmap(int client, any args) 
+Action Command_Mixmap(int client, int args) 
 {
+	if (g_bMapsetInitialized) 
+	{
+		CPrintToChat(client, "have started");
+		return Plugin_Handled;
+	}
 
-	g_bMapsetInitialized = true;
-	CreateTimer(0.1, Timed_PostMapSet);
+	if (IsClientAndInGame(client))
+	{
+		if (!ShouldAllowNewVote())
+            CreateMixmapVote(client);
+		else
+			CPrintToChat(client, "Vote In Progress");
+	}
 
 	return Plugin_Handled;
 }
 
-Action Command_ShowAllMaps(int client, any Args)
+// Abort a currently loaded mapset
+Action Command_StopMixmap(int client, int args) 
+{
+	if (!g_bMapsetInitialized) 
+	{
+		CPrintToChat(client, "Not started yet");
+		return Plugin_Handled;
+	}
+
+	if (IsClientAndInGame(client))
+	{
+		if (!ShouldAllowNewVote())
+            CreateStopMixmapVote(client);
+		else
+			CPrintToChat(client, "Vote In Progress");
+	}
+
+	return Plugin_Continue;
+}
+
+// Loads a specified set of maps
+Action Command_ForceMixmap(int client, int args) 
+{
+	g_bMapsetInitialized = true;
+	return Plugin_Handled;
+}
+
+Action Command_ForceStopMixmap(int client, int args) 
+{
+	if (!g_bMapsetInitialized) 
+	{
+		CPrintToChatAll("%t", "Not_Start");
+		return Plugin_Handled;
+	}
+
+	PluginStartInit();
+	CPrintToChatAllEx(client, "%t", "Stop_Mixmap_Admin", client);
+	return Plugin_Handled;
+}
+
+Action Command_ShowAllMaps(int client, int Args)
 {
 	if (!L4D2_IsScavengeMode())
 	{
@@ -57,15 +102,9 @@ Action Command_ShowAllMaps(int client, any Args)
 	return Plugin_Handled;
 }
 
-Action Mixmap_Cmd(int client, any args) 
-{
-
-	return Plugin_Continue;
-}
-
 /*
 // Display current map list
-Action Command_Maplist(int client, any args) 
+Action Command_Maplist(int client, int args) 
 {
 	if (!g_bMaplistFinalized) 
 	{
@@ -105,37 +144,3 @@ Action Command_Maplist(int client, any args)
 	return Plugin_Handled;
 }
 */
-
-// Abort a currently loaded mapset
-Action StopMixmap_Cmd(int client, any args) 
-{
-	if (!g_bMapsetInitialized) 
-	{
-		CPrintToChat(client, "%t", "Not_Start");
-		return Plugin_Handled;
-	}
-	if (IsClientAndInGame(client))
-	{
-		if (!IsBuiltinVoteInProgress())
-            CreateStopMixmapVote(client);
-		else
-			PrintToChat(client, "%t", "Vote_Progress");
-
-		return Plugin_Handled;
-	}
-
-	return Plugin_Continue;
-}
-
-Action StopMixmap(int client, any args) 
-{
-	if (!g_bMapsetInitialized) 
-	{
-		CPrintToChatAll("%t", "Not_Start");
-		return Plugin_Handled;
-	}
-
-	PluginStartInit();
-	CPrintToChatAllEx(client, "%t", "Stop_Mixmap_Admin", client);
-	return Plugin_Handled;
-}

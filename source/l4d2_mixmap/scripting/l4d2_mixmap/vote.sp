@@ -348,28 +348,134 @@ void SetVoteEntityStatus(int value)
 	SetEntProp(g_iVoteController, Prop_Send, "m_activeIssueIndex", value);
 }
 
-// creates the initial map list after a map set has been loaded
-public Action Timed_PostMapSet(Handle timer)
+//---------------------------------------------------------------------------
+
+void CreateMixmapVote(int client)
 {
-	int mapnum	 = g_hArrayTagOrder.Length;
-	int triesize = g_hTriePools.Size;
+	L4D2NativeVote vote = L4D2NativeVote(CreateMixMapVoteHandler);
+	vote.SetTitle("Start Mixmap Vote?");
+	vote.Initiator = client;
 
-	if (mapnum == 0)
+	int iPlayerCount = 0;
+	int[] iClients	 = new int[MaxClients];
+
+	for (int i = 1; i <= MaxClients; i++)
 	{
-		g_bMapsetInitialized = false;	 // failed to load it on the exec
-		CPrintToChatAll("%t", "Fail_Load_Preset");
-		return Plugin_Handled;
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			if (GetClientTeam(i) == 1)
+				continue;
+
+			iClients[iPlayerCount++] = i;
+		}
 	}
 
-	if (g_iMapCount < triesize)
+	if (!vote.DisplayVote(iClients, iPlayerCount, 20))
+		CPrintToChat(client, "Failed to display vote.");
+}
+
+void CreateMixMapVoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
+{
+	switch (action)
 	{
-		g_bMapsetInitialized = false;	 // bad preset format
-		CPrintToChatAll("%t", "Maps_Not_Match_Rank");
-		return Plugin_Handled;
+		case VoteAction_Start:
+			CPrintToChatAllEx(param1, "%N has initiated a vote.", param1);
+
+		case VoteAction_PlayerVoted:
+		{
+			CPrintToChatAllEx(param1, "%N voted", param1);
+
+			switch (param2)
+			{
+				case VOTE_YES: vote.YesCount++;
+				case VOTE_NO: vote.NoCount++;
+			}
+		}
+	
+		case VoteAction_End:
+		{
+			if (vote.YesCount > vote.PlayerCount / 2)
+			{
+				InitiateMixmap();
+			}
+		}
+	}
+}
+
+void InitiateMixmap()
+{
+	CollectAllMaps();
+	if (!SelectRandomMap())
+	{
+		CPrintToChatAll("Failed to select a random map. abort.");
+		g_bMapsetInitialized = false;
 	}
 
-	CPrintToChatAll("%t", "Select_Maps_Succeed");
+	g_bMapsetInitialized = true;
+	CPrintToChatAll("Starting Mixmap in 5 seconds...");
+	CreateTimer(5.0, Timer_StartFisrMixmap);
+}
 
-	SelectRandomMap();
-	return Plugin_Handled;
+void Timer_StartFisrMixmap(Handle timer)
+{
+	char sMap[64];
+	g_hArrayPools.GetString(0, sMap, sizeof(sMap));
+	SDKCall(g_hSDKCall_OnChangeMissionVote, g_pTheDirector, sMap);
+}
+
+void CreateStopMixmapVote(int client)
+{
+	L4D2NativeVote vote = L4D2NativeVote(CreateStopMixMapVoteHandler);
+	vote.SetTitle("Stop Mixmap?");
+	vote.Initiator = client;
+
+	int iPlayerCount = 0;
+	int[] iClients	 = new int[MaxClients];
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			if (GetClientTeam(i) == 1)
+				continue;
+
+			iClients[iPlayerCount++] = i;
+		}
+	}
+
+	if (!vote.DisplayVote(iClients, iPlayerCount, 20))
+		CPrintToChat(client, "Failed to display vote.");
+}
+
+void CreateStopMixMapVoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
+{
+	switch (action)
+	{
+		case VoteAction_Start:
+			CPrintToChatAllEx(param1, "%N has initiated a vote.", param1);
+
+		case VoteAction_PlayerVoted:
+		{
+			CPrintToChatAllEx(param1, "%N voted", param1);
+
+			switch (param2)
+			{
+				case VOTE_YES: vote.YesCount++;
+				case VOTE_NO: vote.NoCount++;
+			}
+		}
+	
+		case VoteAction_End:
+		{
+			if (vote.YesCount > vote.PlayerCount / 2)
+			{
+				StopMixmap();
+			}
+		}
+	}
+}
+
+void StopMixmap()
+{
+	PluginStartInit();
 }

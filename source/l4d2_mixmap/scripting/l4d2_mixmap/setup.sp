@@ -3,6 +3,33 @@
 #endif
 #define _l4d2_mixmap_setup_included
 
+GlobalForward
+	g_hForwardStart,
+	g_hForwardNext,
+	g_hForwardInterrupt,
+	g_hForwardEnd;
+
+Address 
+	g_pMatchExtL4D,
+	g_pTheDirector;
+
+Handle 
+	g_hSDKCall_GetAllMissions,
+	g_hSDKCall_OnChangeMissionVote,
+	g_hSDKCall_IsFirstMapInScenario;
+
+DynamicDetour
+	g_hDetour_RestoreTransitionedEntities,
+	g_hDetour_TransitionRestore;
+
+ConVar
+	g_cvNextMapPrint,
+	g_cvMapPoolCapacity,
+	g_cvMaxMapsNum,
+	g_cvSaveStatus,
+	g_cvSaveStatusBot,
+	g_cvFinaleEndStart;
+
 void SetUpGameData()
 {
 	GameDataWrapper gd = new GameDataWrapper(GAMEDATA_FILE);
@@ -29,8 +56,6 @@ void SetUpGameData()
 
 void SetupConVars()
 {
-	mp_gamemode = FindConVar("mp_gamemode");
-
 	g_cvNextMapPrint   = CreateConVar("l4d2mm_nextmap_print",       "1", "Determine whether to show what the next map will be", _, true, 0.0, true, 1.0);
 	g_cvMapPoolCapacity = CreateConVar("l4d2mm_map_pool_capacity",    "5", "Determine how many maps can be selected in one pool; 0 = no limits;", _, true, 0.0, true, 10.0);
 	g_cvMaxMapsNum	   = CreateConVar("l4d2mm_max_maps_num",        "2", "Determine how many maps of one campaign can be selected; 0 = no limits;", _, true, 0.0, true, 5.0);
@@ -41,22 +66,13 @@ void SetupConVars()
 
 void SetupCommands()
 {
-	RegConsoleCmd("sm_mixmap", Mixmap_Cmd, "Vote to start a mixmap (arg1 empty for 'default' maps pool);通过投票启用Mixmap, 并可加载特定的地图池；无参数则启用官图顺序随机");
-	RegConsoleCmd("sm_stopmixmap", StopMixmap_Cmd, "Stop a mixmap;中止mixmap, 并初始化地图列表");
-	RegAdminCmd("sm_fmixmap", ForceMixmap, ADMFLAG_ROOT, "Force start mixmap (arg1 empty for 'default' maps pool) 强制启用mixmap (随机官方地图)");
-	RegAdminCmd("sm_fstopmixmap", StopMixmap, ADMFLAG_ROOT, "Force stop a mixmap ;强制中止mixmap, 并初始化地图列表");
+	RegConsoleCmd("sm_mixmap", Command_Mixmap, "Vote to start a mixmap (arg1 empty for 'default' maps pool);通过投票启用Mixmap, 并可加载特定的地图池；无参数则启用官图顺序随机");
+	RegConsoleCmd("sm_stopmixmap", Command_StopMixmap, "Stop a mixmap;中止mixmap, 并初始化地图列表");
+	RegAdminCmd("sm_fmixmap", Command_ForceMixmap, ADMFLAG_ROOT, "Force start mixmap (arg1 empty for 'default' maps pool) 强制启用mixmap (随机官方地图)");
+	RegAdminCmd("sm_fstopmixmap", Command_ForceStopMixmap, ADMFLAG_ROOT, "Force stop a mixmap ;强制中止mixmap, 并初始化地图列表");
 
 	//RegConsoleCmd("sm_maplist", Command_Maplist, "Show the map list; 展示mixmap最终抽取出的地图列表");
 	RegConsoleCmd("sm_allmaps", Command_ShowAllMaps, ADMFLAG_ROOT, "Show all official maps code; 展示所有官方地图的地图代码");
-}
-
-void PluginStartInit()
-{
-	g_bMapsetInitialized = false;
-	g_bMaplistFinalized	 = false;
-
-	g_iMapsPlayed		 = 0;
-	g_iMapCount			 = 0;
 }
 
 void SetupForwards()

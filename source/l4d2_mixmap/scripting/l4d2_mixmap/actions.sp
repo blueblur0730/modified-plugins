@@ -6,88 +6,11 @@
 // ----------------------------------------------------------
 // 		Map switching logic
 // ----------------------------------------------------------
-Action PerformMapProgression()
+void PerformMapProgression()
 {
-	if (++g_iMapsPlayed < g_iMapCount)
-	{
-		GotoNextMap(false);
-		return Plugin_Handled;
-	}
-	else if (g_cvFinaleEndStart.IntValue)
-	{
-		CPrintToChatAll("%t", "Plugin_Continue");
-		CreateTimer(9.0, Timed_ContinueMixmap);
-	}
 
-	CPrintToChatAll("%t", "Plugin_End");
-
-	Call_StartForward(g_hForwardEnd);
-	Call_Finish();
-
-	return Plugin_Handled;
 }
 
-void GotoNextMap(bool force = false)
-{
-	char sMapName[64];
-	g_hArrayPools.GetString(g_iMapsPlayed, sMapName, 64);
-
-	GotoMap(sMapName, force);
-}
-
-void GotoMap(const char[] sMapName, bool force = false)
-{
-	if (force)
-	{
-#if DEBUG
-		PrintToServer("[Mixmap] L4D2_ChangeLevel called. sMapName: %s", sMapName);
-#endif
-		return;
-	}
-	ServerCommand("sm_nextmap %s", sMapName);
-
-	// go faster in coop mode. you know how speedy the game is.
-	CreateTimer(((L4D_IsVersusMode() || L4D2_IsScavengeMode()) ? 5.0 : 0.1), Timed_NextMapInfo);
-}
-
-/*
-// here we store the match or game info for the next map.
-Action Timed_NextMapInfo(Handle timer)
-{
-	char sMapName_New[64], sMapName_Old[64];
-	g_hArrayPools.GetString(g_iMapsPlayed, sMapName_New, 64);
-	g_hArrayPools.GetString(g_iMapsPlayed - 1, sMapName_Old, 64);
-
-	g_cvNextMapPrint.BoolValue ? CPrintToChatAll("%t", "Show_Next_Map",  sMapName_New) : CPrintToChatAll("%t%t", "Show_Next_Map",  "", "Secret");
-
-	if (L4D_IsVersusMode())
-	{
-		if ((StrEqual(sMapName_Old, "c6m2_bedlam") && !StrEqual(sMapName_New, "c7m1_docks"))
-		|| (StrEqual(sMapName_Old, "c9m2_lots") && !StrEqual(sMapName_New, "c14m1_junkyard")))
-		{
-			s_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
-			s_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
-			g_bCMapTransitioned = true;
-#if DEBUG
-			PrintToServer("[Mixmap] Timer_Gotomap creating.");
-#endif
-			CreateTimer(9.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
-		}
-		else if ((!StrEqual(sMapName_Old, "c6m2_bedlam") && StrEqual(sMapName_New, "c7m1_docks"))
-		|| (!StrEqual(sMapName_Old, "c9m2_lots") && StrEqual(sMapName_New, "c14m1_junkyard")))
-		{
-			s_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
-			s_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
-			g_bCMapTransitioned = true;
-#if DEBUG
-			PrintToServer("[Mixmap] Timer_Gotomap creating.");
-#endif
-			CreateTimer(10.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
-		}
-	}
-
-	return Plugin_Handled;
-}
 */
 // 查找地图实体
 bool FindMapEntity() 
@@ -214,4 +137,43 @@ MRESReturn DTR_CTerrorPlayer_OnTransitionRestore_Post(int pThis, DHookReturn hRe
 	// in case the size of the saferoom dose not match the size before the transition, we teleport them back.
 	//CheatCommand(pThis, "warp_to_start_area");
 	return MRES_Ignored;
+}
+
+/*
+// here we store the match or game info for the next map.
+Action Timed_NextMapInfo(Handle timer)
+{
+	char sMapName_New[64], sMapName_Old[64];
+	g_hArrayPools.GetString(g_iMapsPlayed, sMapName_New, 64);
+	g_hArrayPools.GetString(g_iMapsPlayed - 1, sMapName_Old, 64);
+
+	g_cvNextMapPrint.BoolValue ? CPrintToChatAll("%t", "Show_Next_Map",  sMapName_New) : CPrintToChatAll("%t%t", "Show_Next_Map",  "", "Secret");
+
+	if (L4D_IsVersusMode())
+	{
+		if ((StrEqual(sMapName_Old, "c6m2_bedlam") && !StrEqual(sMapName_New, "c7m1_docks"))
+		|| (StrEqual(sMapName_Old, "c9m2_lots") && !StrEqual(sMapName_New, "c14m1_junkyard")))
+		{
+			s_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
+			s_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
+			g_bCMapTransitioned = true;
+#if DEBUG
+			PrintToServer("[Mixmap] Timer_Gotomap creating.");
+#endif
+			CreateTimer(9.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
+		}
+		else if ((!StrEqual(sMapName_Old, "c6m2_bedlam") && StrEqual(sMapName_New, "c7m1_docks"))
+		|| (!StrEqual(sMapName_Old, "c9m2_lots") && StrEqual(sMapName_New, "c14m1_junkyard")))
+		{
+			s_iPointsTeam_A = L4D2Direct_GetVSCampaignScore(0);
+			s_iPointsTeam_B = L4D2Direct_GetVSCampaignScore(1);
+			g_bCMapTransitioned = true;
+#if DEBUG
+			PrintToServer("[Mixmap] Timer_Gotomap creating.");
+#endif
+			CreateTimer(10.0, Timed_Gotomap);	//this command must set ahead of the l4d2_map_transition plugin setting. Otherwise the map will be c7m1_docks/c14m1_junkyard after c6m2_bedlam/c9m2_lots
+		}
+	}
+
+	return Plugin_Handled;
 }
