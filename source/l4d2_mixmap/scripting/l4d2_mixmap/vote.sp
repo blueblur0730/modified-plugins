@@ -409,9 +409,9 @@ void InitiateMixmap()
 	{
 		CPrintToChatAll("Failed to select a random map. abort.");
 		g_bMapsetInitialized = false;
+		return;
 	}
 
-	g_bMapsetInitialized = true;
 	CPrintToChatAll("Starting Mixmap in 5 seconds...");
 	CreateTimer(5.0, Timer_StartFisrMixmap);
 }
@@ -421,6 +421,14 @@ void Timer_StartFisrMixmap(Handle timer)
 	char sMap[64];
 	g_hArrayPools.GetString(0, sMap, sizeof(sMap));
 	SDKCall(g_hSDKCall_OnChangeMissionVote, g_pTheDirector, sMap);
+
+
+
+	g_bMapsetInitialized = true;
+	Call_StartForward(g_hForwardStart);
+	Call_PushCell(g_cvMapPoolCapacity.IntValue);
+	Call_PushCell(g_hArrayPools);
+	Call_Finish();
 }
 
 void CreateStopMixmapVote(int client)

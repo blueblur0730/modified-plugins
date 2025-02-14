@@ -22,3 +22,14 @@ stock bool IsSurvivorClient(int client)
 {
     return (client > 0 && client <= MaxClients && IsClientConnected(client) && GetClientTeam(client) == 2);
 }
+
+stock void CheatCommand(int client, const char[] cmd) 
+{
+	int flags = GetCommandFlags(cmd);
+	int bits = GetUserFlagBits(client);
+	SetUserFlagBits(client, ADMFLAG_ROOT);
+	SetCommandFlags(cmd, flags & ~FCVAR_CHEAT);
+	FakeClientCommand(client, cmd);
+	SetCommandFlags(cmd, flags);
+	SetUserFlagBits(client, bits);
+}

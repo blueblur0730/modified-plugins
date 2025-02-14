@@ -39,9 +39,6 @@ void CollectAllMaps()
 			// on this case we are iterating "1", "2"... subkeys.
 			for (SourceKeyValues kvMapNumber = kvMode.GetFirstTrueSubKey(); !kvMapNumber.IsNull(); kvMapNumber = kvMapNumber.GetNextTrueSubKey())
 			{
-                char sTest[64];
-                kvMapNumber.GetName(sTest, sizeof(sTest));
-
 				// iterating sub-keyvalues.
 				for (SourceKeyValues kvMap = kvMapNumber.GetFirstValue(); !kvMap.IsNull(); kvMap = kvMap.GetNextValue())
 				{
@@ -67,7 +64,6 @@ void CollectAllMaps()
 
 bool SelectRandomMap()
 {
-	g_bMaplistFinalized = true;
 	SetRandomSeed(view_as<int>(GetEngineTime()));
 
 	if (!g_hArrayMissionsAndMaps || !g_hArrayMissionsAndMaps.Length)
@@ -138,20 +134,7 @@ bool SelectRandomMap()
 		CPrintToChatAll("{green}-> {olive}%s", sBuffer);
 	}
 
-	CPrintToChatAll("Prepare to change the map.");
-	CreateTimer(10.0, Timed_GiveThemTimeToReadTheMapList);
-
 	return true;
-}
-
-void Timed_GiveThemTimeToReadTheMapList(Handle timer)
-{
-	Call_StartForward(g_hForwardStart);
-	Call_PushCell(g_iMapCount);
-	Call_PushCell(g_hArrayPools);
-	Call_Finish();
-
-	GotoNextMap(true);
 }
 
 bool IsFakeMission(const char[] sMissionName)

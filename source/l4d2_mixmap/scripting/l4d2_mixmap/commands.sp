@@ -45,7 +45,7 @@ Action Command_StopMixmap(int client, int args)
 // Loads a specified set of maps
 Action Command_ForceMixmap(int client, int args) 
 {
-	g_bMapsetInitialized = true;
+	InitiateMixmap();
 	return Plugin_Handled;
 }
 
@@ -53,12 +53,12 @@ Action Command_ForceStopMixmap(int client, int args)
 {
 	if (!g_bMapsetInitialized) 
 	{
-		CPrintToChatAll("%t", "Not_Start");
+		//CPrintToChatAll("%t", "Not_Start");
 		return Plugin_Handled;
 	}
 
 	PluginStartInit();
-	CPrintToChatAllEx(client, "%t", "Stop_Mixmap_Admin", client);
+	//CPrintToChatAllEx(client, "%t", "Stop_Mixmap_Admin", client);
 	return Plugin_Handled;
 }
 

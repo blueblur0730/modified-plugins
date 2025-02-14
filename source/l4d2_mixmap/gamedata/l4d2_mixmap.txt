@@ -1,0 +1,148 @@
+"Games"
+{
+    "left4dead2"
+    {
+        "Functions"
+        {
+			"RestoreTransitionedEntities"
+			{
+				"signature"		"RestoreTransitionedEntities"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"ignore"
+			}
+
+			"CTerrorPlayer::TransitionRestore"
+			{
+				"signature"		"CTerrorPlayer::TransitionRestore"
+				"callconv"		"thiscall"
+				"return"		"int"
+				"this"			"entity"
+			}
+
+			"CDirector::DirectorChangeLevel"
+			{
+				"signature"		"CDirector::DirectorChangeLevel"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"ignore"
+				"arguments"
+				{
+					"sMapName"
+					{
+						"type"		"charptr"
+					}
+
+					"reason"
+					{
+						"type"		"charptr"
+					}
+				}
+			}
+        }
+
+        "Addresses"
+        {
+			"g_pMatchExtL4D"
+			{
+				"linux"
+				{
+					"signature"	"CTerrorGameRules::GetMissionInfo"
+					"read"		"44"
+				}
+				"windows"
+				{
+					"signature"	"CTerrorGameRules::GetMissionInfo"
+					"read"		"42"
+				}
+				"read"	"0"
+			}
+        }
+
+        "Offsets"
+        {
+			// windows sig is too short to be unique. use vtable. library: matchmaking.
+            "MatchExtL4D::GetAllMissions"
+            {
+                "linux" "0"
+				"windows" "0"
+            }
+        }
+
+        "Signatures"
+        {
+			/* CTerrorGameRules::GetMissionInfo(CTerrorGameRules *__hidden this) */
+			"CTerrorGameRules::GetMissionInfo"
+			{
+				"library"	"server"
+				"linux"		"@_ZN16CTerrorGameRules14GetMissionInfoEv"
+				"windows"	"\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x8B\x2A\x8B\x2A\x2A\x56\xFF\x2A\x8B\x2A\x8B\x2A\x8B\x2A\x2A\x6A\x2A\xFF\x2A\x8B\x2A\x85\x2A\x75\x2A\x5E"
+				/* ? ? ? ? ? ? ? ? ? ? 8B ? 8B ? ? 56 FF ? 8B ? 8B ? 8B ? ? 6A ? FF ? 8B ? 85 ? 75 ? 5E */
+			}
+
+			"CDirector::OnChangeMissionVote"
+			{
+				"library"	"server"
+				"linux"		"@_ZN9CDirector19OnChangeMissionVoteEPKc"
+				"windows"	"\x55\x8B\xEC\x53\x56\x8B\xF1\x8B\x0D\x2A\x2A\x2A\x2A\x8B\x01\x8B\x50\x28"
+				/* 55 8B EC 53 56 8B F1 8B 0D ? ? ? ? 8B 01 8B 50 28 */
+			}
+
+			/* search for string "Checkpoint bounds" */
+			"RestoreTransitionedEntities"
+			{
+				"library"	"server"
+				"linux"		"@_Z27RestoreTransitionedEntitiesv"
+				"windows"	"\x55\x8B\xEC\x81\xEC\x34\x02\x00\x00"
+				/* 55 8B EC 81 EC 34 02 00 00 */
+			}
+
+			/* find CDirector::OnEndScenario, search for string "vs_shutting_down", up to case 7 */
+			"CDirector::IsFirstMapInScenario"
+			{
+				"library"	"server"
+				"linux"		"@_ZNK9CDirector20IsFirstMapInScenarioEv"
+				"windows"	"\xA1\x2A\x2A\x2A\x2A\x8B\x40\x3C\x56\x8B\xF0"
+				/* A1 ? ? ? ? 8B 40 3C 56 8B F0 */
+			}
+
+			/* CTerrorPlayer::TransitionRestore(CTerrorPlayer *__hidden this) */
+			"CTerrorPlayer::TransitionRestore"
+			{
+				"library"	"server"
+				"linux"		"@_ZN13CTerrorPlayer17TransitionRestoreEv"
+				"windows"	"\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x80\xBE\x2A\x2A\x2A\x2A\x2A\x75\x2A\x33\x2A\x5E\x8B\x2A\x5D\xC3"
+				/* ? ? ? ? ? ? ? 80 BE ? ? ? ? ? 75 ? 33 ? 5E 8B ? 5D C3 */
+			}
+
+			// credit to Forgetest.
+			// Search string "VEngineServer::Changelevel with NULL s1"
+			"CVEngineServer::ChangeLevel"
+			{
+				"library"		"engine"
+				"linux"			"@_ZN14CVEngineServer11ChangeLevelEPKcS1_"
+				"windows"		"\x55\x8B\x2A\x2A\x2A\x2A\x2A\x2A\x2A\xA1\x2A\x2A\x2A\x2A\x2A\x2A\x89\x2A\x2A\xA1\x2A\x2A\x2A\x2A\x56\x8B\x2A\x2A\x57\x8B"
+								/* 55 8B ? ? ? ? ? ? ? A1 ? ? ? ? ? ? 89 ? ? A1 ? ? ? ? 56 8B ? ? 57 8B */
+			}
+
+			// windows sig: search for "change mission now vote" to find CCDirector::OnChangeMissionVote
+			// obviously you can find it.
+			"ClearTransitionedLandmarkName"
+			{
+				"library"	"server"
+				"linux"		"@_Z29ClearTransitionedLandmarkNamev"
+				"windows"	"\x0F\x57\xC0\xC6\x05\x2A\x2A\x2A\x2A\x00\xF3\x0F\x11\x05\x2A\x2A\x2A\x2A\xF3\x0F\x11\x05\x2A\x2A\x2A\x2A"
+				/* 0F 57 C0 C6 05 ? ? ? ? 00 F3 0F 11 05 ? ? ? ? F3 0F 11 05 ? ? ? ? */
+			}
+
+			// windows sig:
+			"CDirector::DirectorChangeLevel"
+			{
+				"library"	"server"
+				"linux"		"@_ZN9CDirector19DirectorChangelevelEPKcS1_"
+				"windows"	"\x55\x8B\xEC\x8B\x89\x48\x06\x00\x00\x56\x8B\x75\x08"
+				/* 55 8B EC 8B 89 48 06 00 00 56 8B 75 08 */
+			}
+        }
+    }
+}

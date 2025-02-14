@@ -17,8 +17,10 @@
 #define SDKCALL_GETALLMISSIONS "MatchExtL4D::GetAllMissions"
 #define SDKCALL_ONCHANGEMISSIONVOTE "CDirector::OnChangeMissionVote"
 #define SDKCALL_ISFIRSTMAPINSCENARIO "CDirector::IsFirstMapInScenario"
+#define SDKCALL_CLEARTRANSITIONEDLANDMARKNAME "ClearTransitionedLandmarkName"
 #define DETOUR_RESTORETRANSITIONEDENTITIES "RestoreTransitionedEntities"
 #define DETOUR_TRANSITIONRESTORE "CTerrorPlayer::TransitionRestore"
+#define DETOUR_DIRECTORCHANGELEVEL "CDirector::DirectorChangeLevel"
 
 ArrayList
 	g_hArrayMissionsAndMaps,			// Stores all missions and their map names in order.
@@ -27,10 +29,7 @@ ArrayList
 	g_hArrayPools;						// Stores slected map names.
 
 bool g_bMapsetInitialized;
-
-int
-	g_iMapsPlayed,
-	g_iMapCount;
+int g_iMapsPlayed;
 
 // Modules
 #include <l4d2_mixmap/setup.sp>
@@ -46,7 +45,7 @@ public Plugin myinfo =
 	name = "[L4D2] Mixmap",
 	author = "Stabby, Bred, Yuzumi, blueblur",
 	description = "Randomly select five maps to build a mixed campaign or match.",
-	version = "r3.0",
+	version = "rr1.0",
 	url = "https://github.com/blueblur0730/modified-plugins"
 };
 
@@ -65,7 +64,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-	LoadTranslation(TRANSLATION_FILE);
+	//LoadTranslation(TRANSLATION_FILE);
 	SetUpGameData();
 
 	SetupConVars();
@@ -87,8 +86,15 @@ public void OnClientPutInServer(int client)
 
 void Timer_ShowMaplist(Handle timer, int client)
 {
-	if (IsClientInGame(client))
-		CPrintToChat(client, "%t", "Auto_Show_Maplist");
+	//if (IsClientInGame(client))
+		//CPrintToChat(client, "%t", "Auto_Show_Maplist");
+}
+
+public void OnAllPluginsLoaded()
+{
+	g_pTheDirector = L4D_GetPointer(POINTER_DIRECTOR);
+	if (g_pTheDirector == Address_Null)
+		SetFailState("[MixMap] Failed to get director pointer!");
 }
 
 public void OnPluginEnd() 
@@ -108,7 +114,7 @@ public void OnMapStart()
 		GetCurrentMap(sBuffer, sizeof(sBuffer));
 		g_hArrayPools.GetString(g_iMapsPlayed, sPresetMap, sizeof(sPresetMap));
 
-		if (!StrEqual(sBuffer, sPresetMap) && g_bMaplistFinalized)
+		if (!StrEqual(sBuffer, sPresetMap))
 		{
 			PluginStartInit();
 			CPrintToChatAll("%t", "Differ_Abort");
@@ -119,11 +125,10 @@ public void OnMapStart()
 	}
 
 	// let other plugins know what the map *after* this one will be (unless it is the last map)
-	if (!g_bMaplistFinalized || g_iMapsPlayed >= g_iMapCount - 1)
+	if (!g_bMapsetInitialized || g_iMapsPlayed >= g_hArrayPools.Length)
 		return;
 
 	g_hArrayPools.GetString(g_iMapsPlayed + 1, sBuffer, sizeof(sBuffer));
-
 	Call_StartForward(g_hForwardNext);
 	Call_PushString(sBuffer);
 	Call_Finish();
@@ -137,10 +142,7 @@ public void OnMapEnd()
 void PluginStartInit()
 {
 	g_bMapsetInitialized = false;
-	g_bMaplistFinalized	 = false;
-
 	g_iMapsPlayed		 = 0;
-	g_iMapCount			 = 0;
 }
 
 void LoadTranslation(const char[] translation)
