@@ -6,34 +6,36 @@
 GlobalForward
 	g_hForwardStart,
 	g_hForwardNext,
-	g_hForwardInterrupt,
-	g_hForwardEnd;
+	g_hForwardInterrupt;
+	//g_hForwardEnd;
 
 Address
-	g_pMatchExtL4D,
-	g_pTheDirector;
+	g_pMatchExtL4D;
 
 Handle
 	g_hSDKCall_GetAllMissions,
 	g_hSDKCall_OnChangeMissionVote,
-	g_hSDKCall_IsFirstMapInScenario,
+	//g_hSDKCall_IsFirstMapInScenario,
 	g_hSDKCall_ClearTransitionedLandmarkName;
 
 DynamicDetour
 	g_hDetour_RestoreTransitionedEntities,
 	g_hDetour_TransitionRestore,
-	g_hDetour_DirectorChangeLevel;
+	g_hDetour_DirectorChangeLevel,
+	g_hDetour_CTerrorGameRules_OnBeginChangeLevel,
+	g_hDetour_SurvivorBot_OnBeginChangeLevel,
+	g_hDetour_CTerrorPlayer_OnBeginChangeLevel;
 
 ConVar
-	g_hCvar_NextMapPrint,
-	g_hCvar_MapPoolCapacity,
-	g_hCvar_MaxMapsNum,
-	g_hCvar_SaveStatus;
+	//g_hCvar_NextMapPrint,
+	g_hCvar_MapPoolCapacity;
+	//g_hCvar_MaxMapsNum,
+	//g_hCvar_SaveStatus;
 
 methodmap CDirector {
 	public CDirector() {
 	    Address pTheDirector = L4D_GetPointer(POINTER_DIRECTOR);
-		if (g_pTheDirector == Address_Null)
+		if (pTheDirector == Address_Null)
 			SetFailState("[MixMap] Failed to get director pointer!");
 
 		return view_as<CDirector>(pTheDirector);
@@ -43,52 +45,69 @@ methodmap CDirector {
 		SDKCall(g_hSDKCall_OnChangeMissionVote, view_as<Address>(this), sMissionName);
 	}
 
-	public bool IsFirstMapInScenario(const char[] sMapName) {
-		return SDKCall(g_hSDKCall_IsFirstMapInScenario, view_as<Address>(this), sMapName);
-	}
+	//public bool IsFirstMapInScenario(const char[] sMapName) {
+		//return SDKCall(g_hSDKCall_IsFirstMapInScenario, view_as<Address>(this), sMapName);
+	//}
 }
 CDirector TheDirector;
 
 void SetUpGameData()
 {
-	GameDataWrapper gd = new GameDataWrapper(GAMEDATA_FILE);
-	g_pMatchExtL4D	   = gd.GetAddress(ADDRESS_MATCHEXTL4D);
+	GameDataWrapper gd 								= new GameDataWrapper(GAMEDATA_FILE);
+	g_pMatchExtL4D	   								= gd.GetAddress(ADDRESS_MATCHEXTL4D);
 
-	SDKCallParamsWrapper ret	  = { SDKType_PlainOldData, SDKPass_Plain };
-	g_hSDKCall_GetAllMissions	  = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETALLMISSIONS, _, _, true, ret);
+	SDKCallParamsWrapper ret	  					= { SDKType_PlainOldData, SDKPass_Plain };
+	g_hSDKCall_GetAllMissions	  					= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETALLMISSIONS, _, _, true, ret);
 
 	// use this to change to the first map of a mission.
-	SDKCallParamsWrapper params[] = {{ SDKType_String, SDKPass_Pointer }};
-	g_hSDKCall_OnChangeMissionVote = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGEMISSIONVOTE, params, sizeof(params));
+	SDKCallParamsWrapper params[] 					= {{ SDKType_String, SDKPass_Pointer }};
+	g_hSDKCall_OnChangeMissionVote 					= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGEMISSIONVOTE, params, sizeof(params));
 
-	SDKCallParamsWrapper ret1 = { SDKType_Bool, SDKPass_Plain };
-	g_hSDKCall_IsFirstMapInScenario		  = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ISFIRSTMAPINSCENARIO, _, _, true, ret1);
+	//SDKCallParamsWrapper ret1 						= { SDKType_Bool, SDKPass_Plain };
+	//g_hSDKCall_IsFirstMapInScenario		  			= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ISFIRSTMAPINSCENARIO, _, _, true, ret1);
 
-	g_hSDKCall_ClearTransitionedLandmarkName = gd.CreateSDKCallOrFail(SDKCall_Static, SDKConf_Signature, SDKCALL_CLEARTRANSITIONEDLANDMARKNAME);
+	g_hSDKCall_ClearTransitionedLandmarkName 		= gd.CreateSDKCallOrFail(SDKCall_Static, SDKConf_Signature, SDKCALL_CLEARTRANSITIONEDLANDMARKNAME);
 
-	g_hDetour_RestoreTransitionedEntities = gd.CreateDetourOrFail(DETOUR_RESTORETRANSITIONEDENTITIES, true, DTR_OnRestoreTransitionedEntities);
-	g_hDetour_TransitionRestore			  = gd.CreateDetourOrFail(DETOUR_TRANSITIONRESTORE, true, _, DTR_CTerrorPlayer_OnTransitionRestore_Post);
-	g_hDetour_DirectorChangeLevel		  = gd.CreateDetourOrFail(DETOUR_DIRECTORCHANGELEVEL, true, DTR_CDirector_OnDirectorChangeLevel);
+	g_hDetour_RestoreTransitionedEntities 			= gd.CreateDetourOrFail(DETOUR_RESTORETRANSITIONEDENTITIES, true, DTR_OnRestoreTransitionedEntities);
+	g_hDetour_TransitionRestore			  			= gd.CreateDetourOrFail(DETOUR_TRANSITIONRESTORE, true, _, DTR_CTerrorPlayer_OnTransitionRestore_Post);
+	g_hDetour_DirectorChangeLevel		  			= gd.CreateDetourOrFail(DETOUR_DIRECTORCHANGELEVEL, true, DTR_CDirector_OnDirectorChangeLevel);
+	g_hDetour_CTerrorGameRules_OnBeginChangeLevel	= gd.CreateDetourOrFail(DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL, true, DTR_CTerrorGameRules_OnBeginChangeLevel);
+	g_hDetour_SurvivorBot_OnBeginChangeLevel		= gd.CreateDetourOrFail(DETOUR_SURVIVORBOT_ONBEGINCHANGELEVEL, true, DTR_SurvivorBots_OnBeginChangeLevel);
+	g_hDetour_CTerrorPlayer_OnBeginChangeLevel		= gd.CreateDetourOrFail(DETOUR_CTERRORPLAYER_ONBEGINCHANGELEVEL, true, DTR_CTerrorPlayer_OnBeginChangeLevel);
 
 	delete gd;
 }
 
 void SetupConVars()
 {
-	g_hCvar_NextMapPrint	= CreateConVar("l4d2mm_nextmap_print", "1", "Determine whether to show what the next map will be", _, true, 0.0, true, 1.0);
+	//g_hCvar_NextMapPrint	= CreateConVar("l4d2mm_nextmap_print", "1", "Determine whether to show what the next map will be", _, true, 0.0, true, 1.0);
 	g_hCvar_MapPoolCapacity = CreateConVar("l4d2mm_map_pool_capacity", "5", "Determine how many maps can be selected in one pool; 0 = no limits;", _, true, 0.0, true, 10.0);
-	g_hCvar_MaxMapsNum		= CreateConVar("l4d2mm_max_maps_num", "2", "Determine how many maps of one campaign can be selected; 0 = no limits;", _, true, 0.0, true, 5.0);
-	g_hCvar_SaveStatus		= CreateConVar("l4d2mm_save_status", "1", "Determine whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
+	//g_hCvar_MaxMapsNum		= CreateConVar("l4d2mm_max_maps_num", "2", "Determine how many maps of one campaign can be selected; 0 = no limits;", _, true, 0.0, true, 5.0);
+	//g_hCvar_SaveStatus		= CreateConVar("l4d2mm_save_status", "1", "Determine whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
 }
 
 void SetupCommands()
 {
-	RegConsoleCmd("sm_mixmap", Command_Mixmap, "Vote to start a mixmap (arg1 empty for 'default' maps pool);通过投票启用Mixmap, 并可加载特定的地图池；无参数则启用官图顺序随机");
+	RegConsoleCmd("sm_mixmap", Command_Mixmap, "Vote to start a mixmap");
 	RegConsoleCmd("sm_stopmixmap", Command_StopMixmap, "Stop a mixmap;中止mixmap, 并初始化地图列表");
-	RegAdminCmd("sm_fmixmap", Command_ForceMixmap, ADMFLAG_ROOT, "Force start mixmap (arg1 empty for 'default' maps pool) 强制启用mixmap (随机官方地图)");
-	RegAdminCmd("sm_fstopmixmap", Command_ForceStopMixmap, ADMFLAG_ROOT, "Force stop a mixmap ;强制中止mixmap, 并初始化地图列表");
+	RegAdminCmd("sm_fmixmap", Command_ForceMixmap, ADMFLAG_ROOT, "Force start mixmap");
+	RegAdminCmd("sm_fstopmixmap", Command_ForceStopMixmap, ADMFLAG_ROOT, "Force stop a mixmap");
 
-	RegConsoleCmd("sm_maplist", Command_Maplist, "Show the map list; 展示mixmap最终抽取出的地图列表");
+	RegConsoleCmd("sm_maplist", Command_Maplist, "Show the map list");
+}
+
+void SetupLogger()
+{
+	g_hLogger = Logger.Get(LOGGER_NAME);
+	if (!g_hLogger)
+	{
+		g_hLogger = ServerConsoleSink.CreateLogger(LOGGER_NAME);
+		if (!g_hLogger)
+			SetFailState("[Mixmap] Failed to create logger!")
+	}
+
+	g_hLogger.SetLevel(LogLevel_Trace);
+	g_hLogger.FlushOn(LogLevel_Info);
 }
 
 void SetupForwards()
@@ -96,7 +115,7 @@ void SetupForwards()
 	g_hForwardStart		= new GlobalForward("Mixmap_OnStart", ET_Ignore, Param_Cell, Param_Cell);
 	g_hForwardNext		= new GlobalForward("Mixmap_OnTransitioningNext", ET_Ignore, Param_String);
 	g_hForwardInterrupt = new GlobalForward("Mixmap_OnInterrupted", ET_Ignore);
-	g_hForwardEnd		= new GlobalForward("Mixmap_OnEnd", ET_Ignore);
+	//g_hForwardEnd		= new GlobalForward("Mixmap_OnEnd", ET_Ignore);
 }
 
 void SetupNatives()

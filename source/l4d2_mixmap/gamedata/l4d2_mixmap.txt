@@ -39,6 +39,51 @@
 					}
 				}
 			}
+
+			"CTerrorGameRules::OnBeginChangeLevel"
+			{
+				"signature"		"CTerrorGameRules::OnBeginChangeLevel"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"ignore"
+				"arguments"
+				{
+					"sMap"
+					{
+						"type"		"charptr"
+					}
+				}
+			}
+
+			"SurvivorBot::OnBeginChangeLevel"
+			{
+				"signature"		"SurvivorBot::OnBeginChangeLevel"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"entity"
+				"arguments"
+				{
+					"sMap"
+					{
+						"type"		"charptr"
+					}
+				}
+			}
+
+			"CTerrorPlayer::OnBeginChangeLevel"
+			{
+				"signature"		"CTerrorPlayer::OnBeginChangeLevel"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"entity"
+				"arguments"
+				{
+					"sMap"
+					{
+						"type"		"charptr"
+					}
+				}
+			}
         }
 
         "Addresses"
@@ -142,6 +187,30 @@
 				"linux"		"@_ZN9CDirector19DirectorChangelevelEPKcS1_"
 				"windows"	"\x55\x8B\xEC\x8B\x89\x48\x06\x00\x00\x56\x8B\x75\x08"
 				/* 55 8B EC 8B 89 48 06 00 00 56 8B 75 08 */
+			}
+
+			"CTerrorGameRules::OnBeginChangeLevel"
+			{
+				"library"	"server"
+				"linux"		"@_ZN16CTerrorGameRules18OnBeginChangeLevelEPKc"
+				"windows"	""
+				/*  */
+			}
+
+			"SurvivorBot::OnBeginChangeLevel"
+			{
+				"library"	"server"
+				"linux"		"@_ZN11SurvivorBot18OnBeginChangeLevelEPKc"
+				"windows"	""
+				/*  */
+			}
+
+			"CTerrorPlayer::OnBeginChangeLevel"
+			{
+				"library"	"server"
+				"linux"		"@_ZN13CTerrorPlayer18OnBeginChangeLevelEPKc"
+				"windows"	""
+				/*  */
 			}
         }
     }

@@ -3,12 +3,8 @@
 #endif
 #define _l4d2_mixmap_logic_included
 
-// ----------------------------------------------------------
-// 		Map pool logic
-// ----------------------------------------------------------
-
 // Get all missions and their map names.
-void CollectAllMaps()
+void CollectAllMaps(MapSetType type)
 {
 	if (!g_hArrayMissionsAndMaps)
 		g_hArrayMissionsAndMaps = new ArrayList();
@@ -24,8 +20,24 @@ void CollectAllMaps()
 		char sMissionName[128];
 		kvSub.GetName(sMissionName, sizeof(sMissionName));  // "Name"   "xxx"
 
+		// no fake compaign. these are not playable.
 		if (IsFakeMission(sMissionName))
 			continue;
+
+		switch (type)
+		{
+			case MapSet_Custom:
+			{
+				if (IsOfficialMap(sMissionName))
+					continue;
+			}
+				
+			case MapSet_Official:
+			{
+				if (!IsOfficialMap(sMissionName))
+					continue;
+			}
+		}
 
 		// we find the key modes/<mode> , continue the subkey iteration.
 		FormatEx(sKey, sizeof(sKey), "modes/%s", sMode);
@@ -71,7 +83,7 @@ bool SelectRandomMap()
 
 	if (g_hArrayMissionsAndMaps.Length < g_hCvar_MapPoolCapacity.IntValue)
 	{
-		CPrintToChatAll("%t", "Change_Map_NotEnoughMaps", g_hCvar_MapPoolCapacity.IntValue);
+		CPrintToChatAll("not enough maps in the pool, please add more maps to the pool.");
 		CleanMemory();
 		return false;
 	}
@@ -83,7 +95,6 @@ bool SelectRandomMap()
 	delete g_hMapChapterNames;
 	g_hMapChapterNames = new StringMap();
 
-	bool bReachedFinale = false;
 	for (int i = 0; i < g_hCvar_MapPoolCapacity.IntValue; i++)
 	{
 		char sMissionName[64], sMap[64];
@@ -96,34 +107,50 @@ bool SelectRandomMap()
 		// earse this one for next selection.
 		g_hArrayMissionsAndMaps.Erase(index);
 
-		// have reached the finale map.
-		if (i == g_hCvar_MapPoolCapacity.IntValue)
-			bReachedFinale = true;
-
 		dp.Reset();
 		dp.ReadString(sMissionName, sizeof(sMissionName));
 		ArrayList hArray = dp.ReadCell();
-		char sMapMission[128], sFirstMap[128];
+
+		char sFirstMap[128];
 		hArray.GetString(0, sFirstMap, sizeof(sFirstMap));
 		g_hMapChapterNames.SetString(sFirstMap, sMissionName);
+		
+		// hArray is only one time used.
 		if (hArray && hArray.Length)
 		{
-			// here we choose a map from the mission.
-			hArray.Sort(Sort_Random, Sort_String);
-			int random;
-
-			if (!bReachedFinale)
+			// the first map should be always the first one.
+			if (i == 0)
 			{
-				// do not let a finale map be selected beyong the end of map sequence. we earse the last map.
-				random = GetRandomInt(0, hArray.Length - 2);
+				hArray.GetString(0, sMap, sizeof(sMap));
+				g_hArrayPools.PushString(sMap);
+			}
+			else if (i == g_hCvar_MapPoolCapacity.IntValue)	// the last selection must be the finale.
+			{
+				hArray.GetString(hArray.Length - 1, sMap, sizeof(sMap));
+				g_hArrayPools.PushString(sMap);
 			}
 			else
 			{
-				random = GetRandomInt(0, hArray.Length - 1);
+				if (hArray.Length > 2)	// we need at least 2 maps to make a selection.
+				{
+					// erase the head and tail.
+					hArray.Erase(hArray.Length - 1);
+					hArray.Erase(0);
+
+					hArray.Sort(Sort_Random, Sort_String);	// randomlize the array
+					int random = GetRandomInt(0, hArray.Length - 1);
+					hArray.GetString(random, sMap, sizeof(sMap));
+					g_hArrayPools.PushString(sMap);
+				}
+				else if (hArray.Length == 2)
+				{
+					// else we use the first map, and make sure it is not a finale.
+					hArray.GetString(0, sMap, sizeof(sMap));
+					g_hArrayPools.PushString(sMap);
+				}
+				//else if (hArray.Length == 1)	// do not take any action, as this can be a finale map.
 			}
 
-			hArray.GetString(random, sMap, sizeof(sMap));
-			g_hArrayPools.PushString(sMap);
 			delete hArray;
 		}
 
@@ -144,34 +171,6 @@ bool SelectRandomMap()
 	return true;
 }
 
-bool IsFakeMission(const char[] sMissionName)
-{
-	return (StrEqual(sMissionName, "HoldoutChallenge", false)
-		||  StrEqual(sMissionName, "DeadCenterChallenge", false)
-		||  StrEqual(sMissionName, "HoldoutTraining", false)
-		||  StrEqual(sMissionName, "parishdash", false)
-		||  StrEqual(sMissionName, "shootzones", false)
-		||  StrEqual(sMissionName, "credits", false))
-}
-
-bool IsOfficialMap(const char[] map)
-{
-	return (StrEqual(map, "L4D2C1", false)
-		||  StrEqual(map, "L4D2C2", false)
-		||  StrEqual(map, "L4D2C3", false)
-		||  StrEqual(map, "L4D2C4", false)
-		||  StrEqual(map, "L4D2C5", false)
-		||  StrEqual(map, "L4D2C6", false)
-		||  StrEqual(map, "L4D2C7", false)
-		||  StrEqual(map, "L4D2C8", false)
-		||  StrEqual(map, "L4D2C9", false)
-		||  StrEqual(map, "L4D2C10", false)
-		||  StrEqual(map, "L4D2C11", false)
-		||  StrEqual(map, "L4D2C12", false)
-		||  StrEqual(map, "L4D2C13", false)
-		||  StrEqual(map, "L4D2C14", false))
-}
-
 void CleanMemory()
 {
 	if (g_hArrayMissionsAndMaps && g_hArrayMissionsAndMaps.Length)
@@ -188,6 +187,7 @@ void CleanMemory()
 		}
 	}
 }
+
 /*
 void SelectRandomMap() 
 {

@@ -3,6 +3,56 @@
 #endif
 #define _l4d2_mixmap_util_included
 
+static const char g_sFakeMissions[][] = {
+	"HoldoutChallenge",
+	"DeadCenterChallenge",
+	"HoldoutTraining",
+	"parishdash",
+	"shootzones",
+	"credits"
+};
+
+static const char g_sOfficialMaps[][] = {
+	"L4D2C1",
+	"L4D2C2",
+	"L4D2C3",
+	"L4D2C4",
+	"L4D2C5",
+	"L4D2C6",
+	"L4D2C7",
+	"L4D2C8",
+	"L4D2C9",
+	"L4D2C10",
+	"L4D2C11",
+	"L4D2C12",
+	"L4D2C13",
+	"L4D2C14"
+}
+
+stock bool IsFakeMission(const char[] sMissionName)
+{
+	for (int i = 0; i < sizeof(g_sFakeMissions); i++)
+	{
+		if (StrEqual(sMissionName, g_sFakeMissions[i], false))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+stock bool IsOfficialMap(const char[] sMapName)
+{
+	for (int i = 0; i < sizeof(g_sOfficialMaps); i++)
+	{
+		if (StrEqual(sMapName, g_sOfficialMaps[i], false))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 stock bool IsClientAndInGame(int client)
 {
 	return (client > 0 && client <= MaxClients && IsClientInGame(client) && !IsFakeClient(client) && GetClientTeam(client) != 1);
