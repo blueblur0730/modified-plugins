@@ -352,6 +352,12 @@ void SetVoteEntityStatus(int value)
 
 void CreateMixmapVote(int client)
 {
+	if (!ShouldAllowNewVote())
+	{
+		CPrintToChat(client, "Vote In Progress");
+		return;
+	}
+
 	L4D2NativeVote vote = L4D2NativeVote(CreateMixMapVoteHandler);
 	vote.SetTitle("Start Mixmap Vote?");
 	vote.Initiator = client;
@@ -370,7 +376,7 @@ void CreateMixmapVote(int client)
 		}
 	}
 
-	if (!vote.DisplayVote(iClients, iPlayerCount, 20))
+	if (!vote.DisplayVote(iClients, iPlayerCount, 20.0))
 		CPrintToChat(client, "Failed to display vote.");
 }
 
@@ -416,23 +422,29 @@ void InitiateMixmap()
 	CreateTimer(5.0, Timer_StartFisrMixmap);
 }
 
+// OnChangeMissionVote needs mission name.
 void Timer_StartFisrMixmap(Handle timer)
 {
-	char sMap[64];
+	char sMap[128], sMissionName[128];
 	g_hArrayPools.GetString(0, sMap, sizeof(sMap));
-	SDKCall(g_hSDKCall_OnChangeMissionVote, g_pTheDirector, sMap);
-
-
+	g_hMapChapterNames.GetString(sMap, sMissionName, sizeof(sMissionName));
+	TheDirector.OnChangeMissionVote(sMissionName);
 
 	g_bMapsetInitialized = true;
 	Call_StartForward(g_hForwardStart);
-	Call_PushCell(g_cvMapPoolCapacity.IntValue);
+	Call_PushCell(g_hCvar_MapPoolCapacity.IntValue);
 	Call_PushCell(g_hArrayPools);
 	Call_Finish();
 }
 
 void CreateStopMixmapVote(int client)
 {
+	if (!ShouldAllowNewVote())
+	{
+		CPrintToChat(client, "Vote In Progress");
+		return;
+	}
+
 	L4D2NativeVote vote = L4D2NativeVote(CreateStopMixMapVoteHandler);
 	vote.SetTitle("Stop Mixmap?");
 	vote.Initiator = client;
@@ -451,7 +463,7 @@ void CreateStopMixmapVote(int client)
 		}
 	}
 
-	if (!vote.DisplayVote(iClients, iPlayerCount, 20))
+	if (!vote.DisplayVote(iClients, iPlayerCount, 20.0))
 		CPrintToChat(client, "Failed to display vote.");
 }
 

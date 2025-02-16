@@ -69,9 +69,9 @@ bool SelectRandomMap()
 	if (!g_hArrayMissionsAndMaps || !g_hArrayMissionsAndMaps.Length)
 		return false;
 
-	if (g_hArrayMissionsAndMaps.Length < g_cvMapPoolCapacity.IntValue)
+	if (g_hArrayMissionsAndMaps.Length < g_hCvar_MapPoolCapacity.IntValue)
 	{
-		CPrintToChatAll("%t", "Change_Map_NotEnoughMaps", g_cvMapPoolCapacity.IntValue);
+		CPrintToChatAll("%t", "Change_Map_NotEnoughMaps", g_hCvar_MapPoolCapacity.IntValue);
 		CleanMemory();
 		return false;
 	}
@@ -79,8 +79,12 @@ bool SelectRandomMap()
 	DataPack dp;
 	delete g_hArrayPools;
 	g_hArrayPools = new ArrayList(ByteCountToCells(64));
+
+	delete g_hMapChapterNames;
+	g_hMapChapterNames = new StringMap();
+
 	bool bReachedFinale = false;
-	for (int i = 0; i < g_cvMapPoolCapacity.IntValue; i++)
+	for (int i = 0; i < g_hCvar_MapPoolCapacity.IntValue; i++)
 	{
 		char sMissionName[64], sMap[64];
 		// first random sort the main arraylist, meaning choosing a mission here randomly.
@@ -93,12 +97,15 @@ bool SelectRandomMap()
 		g_hArrayMissionsAndMaps.Erase(index);
 
 		// have reached the finale map.
-		if (i == g_cvMapPoolCapacity.IntValue)
+		if (i == g_hCvar_MapPoolCapacity.IntValue)
 			bReachedFinale = true;
 
 		dp.Reset();
 		dp.ReadString(sMissionName, sizeof(sMissionName));
 		ArrayList hArray = dp.ReadCell();
+		char sMapMission[128], sFirstMap[128];
+		hArray.GetString(0, sFirstMap, sizeof(sFirstMap));
+		g_hMapChapterNames.SetString(sFirstMap, sMissionName);
 		if (hArray && hArray.Length)
 		{
 			// here we choose a map from the mission.

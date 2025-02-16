@@ -6,6 +6,7 @@
 #include <dhooks>
 #include <left4dhooks>
 #include <l4d2_source_keyvalues>
+#include <log4sp>
 #include <colors>
 #include <gamedata_wrapper>
 
@@ -21,6 +22,8 @@
 #define DETOUR_RESTORETRANSITIONEDENTITIES "RestoreTransitionedEntities"
 #define DETOUR_TRANSITIONRESTORE "CTerrorPlayer::TransitionRestore"
 #define DETOUR_DIRECTORCHANGELEVEL "CDirector::DirectorChangeLevel"
+
+StringMap g_hMapChapterNames;
 
 ArrayList
 	g_hArrayMissionsAndMaps,			// Stores all missions and their map names in order.
@@ -92,9 +95,7 @@ void Timer_ShowMaplist(Handle timer, int client)
 
 public void OnAllPluginsLoaded()
 {
-	g_pTheDirector = L4D_GetPointer(POINTER_DIRECTOR);
-	if (g_pTheDirector == Address_Null)
-		SetFailState("[MixMap] Failed to get director pointer!");
+	TheDirector = CDirector();
 }
 
 public void OnPluginEnd() 

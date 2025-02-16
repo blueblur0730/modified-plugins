@@ -42,11 +42,14 @@ MRESReturn DTR_CDirector_OnDirectorChangeLevel(DHookParam hParams)
 		}
 
 		char sMap[128];
-		
 #if DEBUG
 		hParams.GetString(1, sMap, sizeof(sMap));
 		PrintToServer("### DTR_CDirector_OnDirectorChangeLevel: Original Map Name: %s.", sMap);
 #endif
+
+		// ignore the first map, as we have completed the first map change to first map.
+		if (TheDirector.IsFirstMapInScenario(sMap))
+			return MRES_Ignored;
 
 		g_hArrayPools.GetString(g_iMapsPlayed, sMap, sizeof(sMap));
 

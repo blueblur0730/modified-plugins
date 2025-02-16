@@ -17,7 +17,6 @@ Handle
 	g_hSDKCall_GetAllMissions,
 	g_hSDKCall_OnChangeMissionVote,
 	g_hSDKCall_IsFirstMapInScenario,
-	g_hSDKCall_DirectorChangeLevel,
 	g_hSDKCall_ClearTransitionedLandmarkName;
 
 DynamicDetour
@@ -26,10 +25,29 @@ DynamicDetour
 	g_hDetour_DirectorChangeLevel;
 
 ConVar
-	g_cvNextMapPrint,
-	g_cvMapPoolCapacity,
-	g_cvMaxMapsNum,
-	g_cvSaveStatus;
+	g_hCvar_NextMapPrint,
+	g_hCvar_MapPoolCapacity,
+	g_hCvar_MaxMapsNum,
+	g_hCvar_SaveStatus;
+
+methodmap CDirector {
+	public CDirector() {
+	    Address pTheDirector = L4D_GetPointer(POINTER_DIRECTOR);
+		if (g_pTheDirector == Address_Null)
+			SetFailState("[MixMap] Failed to get director pointer!");
+
+		return view_as<CDirector>(pTheDirector);
+	}
+
+	public void OnChangeMissionVote(const char[] sMissionName) {
+		SDKCall(g_hSDKCall_OnChangeMissionVote, view_as<Address>(this), sMissionName);
+	}
+
+	public bool IsFirstMapInScenario(const char[] sMapName) {
+		return SDKCall(g_hSDKCall_IsFirstMapInScenario, view_as<Address>(this), sMapName);
+	}
+}
+CDirector TheDirector;
 
 void SetUpGameData()
 {
@@ -57,10 +75,10 @@ void SetUpGameData()
 
 void SetupConVars()
 {
-	g_cvNextMapPrint	= CreateConVar("l4d2mm_nextmap_print", "1", "Determine whether to show what the next map will be", _, true, 0.0, true, 1.0);
-	g_cvMapPoolCapacity = CreateConVar("l4d2mm_map_pool_capacity", "5", "Determine how many maps can be selected in one pool; 0 = no limits;", _, true, 0.0, true, 10.0);
-	g_cvMaxMapsNum		= CreateConVar("l4d2mm_max_maps_num", "2", "Determine how many maps of one campaign can be selected; 0 = no limits;", _, true, 0.0, true, 5.0);
-	g_cvSaveStatus		= CreateConVar("l4d2mm_save_status", "1", "Determine whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
+	g_hCvar_NextMapPrint	= CreateConVar("l4d2mm_nextmap_print", "1", "Determine whether to show what the next map will be", _, true, 0.0, true, 1.0);
+	g_hCvar_MapPoolCapacity = CreateConVar("l4d2mm_map_pool_capacity", "5", "Determine how many maps can be selected in one pool; 0 = no limits;", _, true, 0.0, true, 10.0);
+	g_hCvar_MaxMapsNum		= CreateConVar("l4d2mm_max_maps_num", "2", "Determine how many maps of one campaign can be selected; 0 = no limits;", _, true, 0.0, true, 5.0);
+	g_hCvar_SaveStatus		= CreateConVar("l4d2mm_save_status", "1", "Determine whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
 }
 
 void SetupCommands()
@@ -70,8 +88,7 @@ void SetupCommands()
 	RegAdminCmd("sm_fmixmap", Command_ForceMixmap, ADMFLAG_ROOT, "Force start mixmap (arg1 empty for 'default' maps pool) 强制启用mixmap (随机官方地图)");
 	RegAdminCmd("sm_fstopmixmap", Command_ForceStopMixmap, ADMFLAG_ROOT, "Force stop a mixmap ;强制中止mixmap, 并初始化地图列表");
 
-	// RegConsoleCmd("sm_maplist", Command_Maplist, "Show the map list; 展示mixmap最终抽取出的地图列表");
-	RegConsoleCmd("sm_allmaps", Command_ShowAllMaps, "Show all official maps code; 展示所有官方地图的地图代码");
+	RegConsoleCmd("sm_maplist", Command_Maplist, "Show the map list; 展示mixmap最终抽取出的地图列表");
 }
 
 void SetupForwards()
