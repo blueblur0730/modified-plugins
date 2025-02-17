@@ -6,96 +6,70 @@
 GlobalForward
 	g_hForwardStart,
 	g_hForwardNext,
-	g_hForwardInterrupt;
-	//g_hForwardEnd;
+	g_hForwardInterrupt,
+	g_hForwardEnd;
 
 Address
 	g_pMatchExtL4D;
+	g_pTheDirector;
 
 Handle
 	g_hSDKCall_GetAllMissions,
 	g_hSDKCall_OnChangeMissionVote,
-	//g_hSDKCall_IsFirstMapInScenario,
 	g_hSDKCall_ClearTransitionedLandmarkName;
 
-DynamicDetour
-	g_hDetour_RestoreTransitionedEntities,
-	g_hDetour_TransitionRestore,
-	g_hDetour_DirectorChangeLevel,
-	g_hDetour_CTerrorGameRules_OnBeginChangeLevel,
-	g_hDetour_SurvivorBot_OnBeginChangeLevel,
-	g_hDetour_CTerrorPlayer_OnBeginChangeLevel;
-
 ConVar
-	//g_hCvar_NextMapPrint,
-	g_hCvar_MapPoolCapacity;
-	//g_hCvar_MaxMapsNum,
+	g_hCvar_Enable,
+	g_hCvar_NextMapPrint,
+	g_hCvar_MapPoolCapacity,
+	g_hCvar_SecondsToRead;
 	//g_hCvar_SaveStatus;
-
-methodmap CDirector {
-	public CDirector() {
-	    Address pTheDirector = L4D_GetPointer(POINTER_DIRECTOR);
-		if (pTheDirector == Address_Null)
-			SetFailState("[MixMap] Failed to get director pointer!");
-
-		return view_as<CDirector>(pTheDirector);
-	}
-
-	public void OnChangeMissionVote(const char[] sMissionName) {
-		SDKCall(g_hSDKCall_OnChangeMissionVote, view_as<Address>(this), sMissionName);
-	}
-
-	//public bool IsFirstMapInScenario(const char[] sMapName) {
-		//return SDKCall(g_hSDKCall_IsFirstMapInScenario, view_as<Address>(this), sMapName);
-	//}
-}
-CDirector TheDirector;
 
 void SetUpGameData()
 {
-	GameDataWrapper gd 								= new GameDataWrapper(GAMEDATA_FILE);
-	g_pMatchExtL4D	   								= gd.GetAddress(ADDRESS_MATCHEXTL4D);
+	GameDataWrapper gd 							= new GameDataWrapper(GAMEDATA_FILE);
+	g_pMatchExtL4D	   							= gd.GetAddress(ADDRESS_MATCHEXTL4D);
+	g_pTheDirector								= gd.GetAddress(ADDRESS_THEDIRECTOR);
 
-	SDKCallParamsWrapper ret	  					= { SDKType_PlainOldData, SDKPass_Plain };
-	g_hSDKCall_GetAllMissions	  					= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETALLMISSIONS, _, _, true, ret);
+	SDKCallParamsWrapper ret	  				= { SDKType_PlainOldData, SDKPass_Plain };
+	g_hSDKCall_GetAllMissions	  				= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETALLMISSIONS, _, _, true, ret);
 
 	// use this to change to the first map of a mission.
-	SDKCallParamsWrapper params[] 					= {{ SDKType_String, SDKPass_Pointer }};
-	g_hSDKCall_OnChangeMissionVote 					= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGEMISSIONVOTE, params, sizeof(params));
+	SDKCallParamsWrapper params[] 				= {{ SDKType_String, SDKPass_Pointer }};
+	g_hSDKCall_OnChangeMissionVote 				= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGEMISSIONVOTE, params, sizeof(params));
 
-	//SDKCallParamsWrapper ret1 						= { SDKType_Bool, SDKPass_Plain };
-	//g_hSDKCall_IsFirstMapInScenario		  			= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ISFIRSTMAPINSCENARIO, _, _, true, ret1);
+	g_hSDKCall_ClearTransitionedLandmarkName 	= gd.CreateSDKCallOrFail(SDKCall_Static, SDKConf_Signature, SDKCALL_CLEARTRANSITIONEDLANDMARKNAME);
 
-	g_hSDKCall_ClearTransitionedLandmarkName 		= gd.CreateSDKCallOrFail(SDKCall_Static, SDKConf_Signature, SDKCALL_CLEARTRANSITIONEDLANDMARKNAME);
-
-	g_hDetour_RestoreTransitionedEntities 			= gd.CreateDetourOrFail(DETOUR_RESTORETRANSITIONEDENTITIES, true, DTR_OnRestoreTransitionedEntities);
-	g_hDetour_TransitionRestore			  			= gd.CreateDetourOrFail(DETOUR_TRANSITIONRESTORE, true, _, DTR_CTerrorPlayer_OnTransitionRestore_Post);
-	g_hDetour_DirectorChangeLevel		  			= gd.CreateDetourOrFail(DETOUR_DIRECTORCHANGELEVEL, true, DTR_CDirector_OnDirectorChangeLevel);
-	g_hDetour_CTerrorGameRules_OnBeginChangeLevel	= gd.CreateDetourOrFail(DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL, true, DTR_CTerrorGameRules_OnBeginChangeLevel);
-	g_hDetour_SurvivorBot_OnBeginChangeLevel		= gd.CreateDetourOrFail(DETOUR_SURVIVORBOT_ONBEGINCHANGELEVEL, true, DTR_SurvivorBots_OnBeginChangeLevel);
-	g_hDetour_CTerrorPlayer_OnBeginChangeLevel		= gd.CreateDetourOrFail(DETOUR_CTERRORPLAYER_ONBEGINCHANGELEVEL, true, DTR_CTerrorPlayer_OnBeginChangeLevel);
+	gd.CreateDetourOrFailEx(DETOUR_RESTORETRANSITIONEDENTITIES, DTR_OnRestoreTransitionedEntities);
+	gd.CreateDetourOrFailEx(DETOUR_TRANSITIONRESTORE, _, DTR_CTerrorPlayer_OnTransitionRestore_Post);
+	gd.CreateDetourOrFailEx(DETOUR_DIRECTORCHANGELEVEL, DTR_CDirector_OnDirectorChangeLevel);
+	gd.CreateDetourOrFailEx(DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL, DTR_CTerrorGameRules_OnBeginChangeLevel);
 
 	delete gd;
 }
 
 void SetupConVars()
 {
-	//g_hCvar_NextMapPrint	= CreateConVar("l4d2mm_nextmap_print", "1", "Determine whether to show what the next map will be", _, true, 0.0, true, 1.0);
-	g_hCvar_MapPoolCapacity = CreateConVar("l4d2mm_map_pool_capacity", "5", "Determine how many maps can be selected in one pool; 0 = no limits;", _, true, 0.0, true, 10.0);
-	//g_hCvar_MaxMapsNum		= CreateConVar("l4d2mm_max_maps_num", "2", "Determine how many maps of one campaign can be selected; 0 = no limits;", _, true, 0.0, true, 5.0);
+	CreateConVar("l4d2mm_version", PLUGIN_VERSION, "Version of the plugin.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
+
+	g_hCvar_Enable			= CreateConVar("l4d2mm_enable", "1", "Determine whether to enable the plugin.", _, true, 0.0, true, 1.0);
+	g_hCvar_NextMapPrint	= CreateConVar("l4d2mm_nextmap_print", "1", "Determine whether to show what the next map will be.", _, true, 0.0, true, 1.0);
+	g_hCvar_MapPoolCapacity = CreateConVar("l4d2mm_map_pool_capacity", "5", "Determine how many maps can be selected in one pool.", _, true, 1.0, true, 10.0);
+	g_hCvar_SecondsToRead	= CreateConVar("l4d2mm_seconds_to_read", "5", "Determine how many seconds before change level to read maplist result.", _, true, 5.0, true, 30.0);
 	//g_hCvar_SaveStatus		= CreateConVar("l4d2mm_save_status", "1", "Determine whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
 }
 
 void SetupCommands()
 {
 	RegConsoleCmd("sm_mixmap", Command_Mixmap, "Vote to start a mixmap");
-	RegConsoleCmd("sm_stopmixmap", Command_StopMixmap, "Stop a mixmap;中止mixmap, 并初始化地图列表");
-	RegAdminCmd("sm_fmixmap", Command_ForceMixmap, ADMFLAG_ROOT, "Force start mixmap");
-	RegAdminCmd("sm_fstopmixmap", Command_ForceStopMixmap, ADMFLAG_ROOT, "Force stop a mixmap");
+	RegConsoleCmd("sm_stopmixmap", Command_StopMixmap, "Stop a mixmap.");
+	RegAdminCmd("sm_fmixmap", Command_ForceMixmap, ADMFLAG_BAN, "Force start mixmap");
+	RegAdminCmd("sm_fstopmixmap", Command_ForceStopMixmap, ADMFLAG_BAN, "Force stop a mixmap");
 
 	RegConsoleCmd("sm_maplist", Command_Maplist, "Show the map list");
 }
 
+/*
 void SetupLogger()
 {
 	g_hLogger = Logger.Get(LOGGER_NAME);
@@ -109,13 +83,13 @@ void SetupLogger()
 	g_hLogger.SetLevel(LogLevel_Trace);
 	g_hLogger.FlushOn(LogLevel_Info);
 }
-
+*/
 void SetupForwards()
 {
-	g_hForwardStart		= new GlobalForward("Mixmap_OnStart", ET_Ignore, Param_Cell, Param_Cell);
+	g_hForwardStart		= new GlobalForward("Mixmap_OnStart", ET_Ignore, Param_Cell);
 	g_hForwardNext		= new GlobalForward("Mixmap_OnTransitioningNext", ET_Ignore, Param_String);
 	g_hForwardInterrupt = new GlobalForward("Mixmap_OnInterrupted", ET_Ignore);
-	//g_hForwardEnd		= new GlobalForward("Mixmap_OnEnd", ET_Ignore);
+	g_hForwardEnd		= new GlobalForward("Mixmap_OnEnd", ET_Ignore);
 }
 
 void SetupNatives()
@@ -123,28 +97,17 @@ void SetupNatives()
 	CreateNative("Mixmap_GetMapSequence", Native_GetMapSequence);
 	CreateNative("Mixmap_GetPlayedMapCount", Native_GetPlayedMapCount);
 	CreateNative("Mixmap_HasStarted", Native_HasStarted);
+	CreateNative("Mixmap_GetMapSetType", Native_GetMapSetType);
 }
 
-int Native_GetMapSequence(Handle plugin, int numParams)
+any Native_GetMapSequence(Handle plugin, int numParams)
 {
-	char	  sBuffer[64];
-	ArrayList hArray = view_as<ArrayList>(GetNativeCell(1));
-
 	if (!g_bMapsetInitialized)
 		ThrowNativeError(SP_ERROR_NATIVE, "Mixmap hasn't started yet.");
-	else
-	{
-		if (hArray == null)
-			return 0;
 
-		for (int i = 0; i < g_hArrayPools.Length; i++)
-		{
-			g_hArrayPools.GetString(i, sBuffer, 64);
-			hArray.PushString(sBuffer);
-		}
-	}
+	if (!plugin) ThrowNativeError(SP_ERROR_PARAM, "Invalid plugin handle: %d", plugin)
 
-	return 0;
+	return CloneHandle(g_hArrayPools, plugin);
 }
 
 int Native_GetPlayedMapCount(Handle plugin, int numParams)
@@ -152,7 +115,12 @@ int Native_GetPlayedMapCount(Handle plugin, int numParams)
 	return g_iMapsPlayed;
 }
 
-int Native_HasStarted(Handle plugin, int numParams)
+any Native_HasStarted(Handle plugin, int numParams)
 {
-	return g_bMapsetInitialized ? true : false;
+	return g_bMapsetInitialized;
+}
+
+any Native_GetMapSetType(Handle plugin, int numParams)
+{
+	return g_iMapsetType;
 }

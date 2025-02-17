@@ -1,0 +1,107 @@
+"Phrases"
+{
+    "NotifyClients"
+    {
+        "chi"          "[{orange}!{default]}] 当前正在使用 {orange}Mixmap{default}. 输入 {lightgreen}/maplist{default} 来查看地图列表."
+    }
+
+    "MapProgress"
+    {
+        "#format"       "{1:s},{2:s}"
+        "chi"           "[{orange}!{default]}] 当前地图: {olive}{1}{default}, 下一张地图: {orange}{2}{default}"
+    }
+
+    "None"
+    {
+        "chi"           "无"
+    }
+
+    "MapList"
+    {
+        "chi"           ">---{green}地图列表{default}---<"
+    }
+
+    "FailedToGet"
+    {
+        "chi"           "[{orange}!{default]}] 尝试获取随机地图池失败. 进程中断."
+    }
+
+    "StartingIn"
+    {
+        "#format"       "{1:d}"
+        "chi"            "[{orange}!{default]}] 将在 {orange}{1}{default} 秒内开始 Mixmap..."
+    }
+
+    "PluginDisabled"
+    {
+        "chi"           "[{orange}!{default]}] Mixmap 插件已被禁用."
+    }
+
+    "HasStarted"
+    {
+        "chi"           "[{orange}!{default]}] Mixmap 已经开始. 请等待地图池循环结束或发起投票来停止 Mixmap."
+    }
+
+    "MenuTitle_SelectMapSetType"
+    {
+        "chi"           "图池配置菜单"
+    }
+
+    "MenuItem_OfficialMapSet"
+    {
+        "chi"           "官方图图池"
+    }
+
+    "MenuItem_CustomMapSet"
+    {
+        "chi"           "三方图图池"
+    }
+
+    "MenuItem_MixtapeMapSet"
+    {
+        "chi"           "混合图池"
+    }
+
+    "NotStartedYet"
+    {
+        "chi"           "[{orange}!{default]}] Mixmap 尚未开始. 请先发起投票来开始 Mixmap"
+    }
+
+    "AdminForceStop"
+    {
+        "#format"        "{1:N}"
+        "chi"            "[{orange}!{default]}] 管理员 {teamcolor}{1}{default} 强行停止了 Mixmap."
+    }
+
+    "VoteInProgress"
+    {
+        "chi"            "[{orange}!{default]}] 有一个投票正在进行中."
+    }
+
+    "FailedToDisplayVote"
+    {
+        "chi"            "[{orange}!{default]}] 投票发起失败."
+    }
+
+    "HasInitiatedVote"
+    {
+        "#format"       "{1:N}"
+        "chi"           "[{orange}!{default]}] {teamcolor}{1}{default} 发起了一个投票."
+    }
+
+    "Voted"
+    {
+        "#format"       "{1:N}"
+        "chi"           "[{orange}!{default}] {teamcolor}{1}{default} 已投票."
+    }
+
+    "NotEnoughMaps"
+    {
+        "chi"            "[{orange}!{default}] 地图数量不足以构建图池, 请在服务器内添加更多地图."
+    }
+
+    "HaveReachedTheEnd"
+    {
+        "en"            "[{orange}!{default}] 当前是图池中最后一站图. 要重新开始 Mixmap, 请使用 {orange}/mixmap{default}."
+    }
+}

@@ -54,40 +54,11 @@
 					}
 				}
 			}
-
-			"SurvivorBot::OnBeginChangeLevel"
-			{
-				"signature"		"SurvivorBot::OnBeginChangeLevel"
-				"callconv"		"thiscall"
-				"return"		"void"
-				"this"			"entity"
-				"arguments"
-				{
-					"sMap"
-					{
-						"type"		"charptr"
-					}
-				}
-			}
-
-			"CTerrorPlayer::OnBeginChangeLevel"
-			{
-				"signature"		"CTerrorPlayer::OnBeginChangeLevel"
-				"callconv"		"thiscall"
-				"return"		"void"
-				"this"			"entity"
-				"arguments"
-				{
-					"sMap"
-					{
-						"type"		"charptr"
-					}
-				}
-			}
         }
 
         "Addresses"
         {
+			// credits to fdxx.
 			"g_pMatchExtL4D"
 			{
 				"linux"
@@ -99,6 +70,21 @@
 				{
 					"signature"	"CTerrorGameRules::GetMissionInfo"
 					"read"		"42"
+				}
+				"read"	"0"
+			}
+
+			// from left4dhooks.
+			"TheDirector"
+			{
+				"linux"
+				{
+					"signature"	"TheDirector"
+				}
+				"windows"
+				{
+					"signature"	"CDirectorMusicBanks::OnRoundStart"
+					"read"		"12"
 				}
 				"read"	"0"
 			}
@@ -116,6 +102,20 @@
 
         "Signatures"
         {
+			"TheDirector"
+			{
+				"library"	"server"
+				"linux"		"@TheDirector"
+			}
+
+			/* CDirectorMusicBanks::OnRoundStart(CDirectorMusicBanks *__hidden this) */
+			"CDirectorMusicBanks::OnRoundStart"
+			{
+				"library"	"server"
+				"windows"	"\x2A\x2A\x2A\x2A\x2A\x2A\x56\x57\x8B\x2A\x8B\x0D\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x84\x2A\x0F"
+				/* ? ? ? ? ? ? 56 57 8B ? 8B 0D ? ? ? ? E8 ? ? ? ? 84 ? 0F */
+			}
+
 			/* CTerrorGameRules::GetMissionInfo(CTerrorGameRules *__hidden this) */
 			"CTerrorGameRules::GetMissionInfo"
 			{
@@ -142,15 +142,6 @@
 				/* 55 8B EC 81 EC 34 02 00 00 */
 			}
 
-			/* find CDirector::OnEndScenario, search for string "vs_shutting_down", up to case 7 */
-			"CDirector::IsFirstMapInScenario"
-			{
-				"library"	"server"
-				"linux"		"@_ZNK9CDirector20IsFirstMapInScenarioEv"
-				"windows"	"\xA1\x2A\x2A\x2A\x2A\x8B\x40\x3C\x56\x8B\xF0"
-				/* A1 ? ? ? ? 8B 40 3C 56 8B F0 */
-			}
-
 			/* CTerrorPlayer::TransitionRestore(CTerrorPlayer *__hidden this) */
 			"CTerrorPlayer::TransitionRestore"
 			{
@@ -158,16 +149,6 @@
 				"linux"		"@_ZN13CTerrorPlayer17TransitionRestoreEv"
 				"windows"	"\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x80\xBE\x2A\x2A\x2A\x2A\x2A\x75\x2A\x33\x2A\x5E\x8B\x2A\x5D\xC3"
 				/* ? ? ? ? ? ? ? 80 BE ? ? ? ? ? 75 ? 33 ? 5E 8B ? 5D C3 */
-			}
-
-			// credit to Forgetest.
-			// Search string "VEngineServer::Changelevel with NULL s1"
-			"CVEngineServer::ChangeLevel"
-			{
-				"library"		"engine"
-				"linux"			"@_ZN14CVEngineServer11ChangeLevelEPKcS1_"
-				"windows"		"\x55\x8B\x2A\x2A\x2A\x2A\x2A\x2A\x2A\xA1\x2A\x2A\x2A\x2A\x2A\x2A\x89\x2A\x2A\xA1\x2A\x2A\x2A\x2A\x56\x8B\x2A\x2A\x57\x8B"
-								/* 55 8B ? ? ? ? ? ? ? A1 ? ? ? ? ? ? 89 ? ? A1 ? ? ? ? 56 8B ? ? 57 8B */
 			}
 
 			// windows sig: search for "change mission now vote" to find CCDirector::OnChangeMissionVote
@@ -193,22 +174,6 @@
 			{
 				"library"	"server"
 				"linux"		"@_ZN16CTerrorGameRules18OnBeginChangeLevelEPKc"
-				"windows"	""
-				/*  */
-			}
-
-			"SurvivorBot::OnBeginChangeLevel"
-			{
-				"library"	"server"
-				"linux"		"@_ZN11SurvivorBot18OnBeginChangeLevelEPKc"
-				"windows"	""
-				/*  */
-			}
-
-			"CTerrorPlayer::OnBeginChangeLevel"
-			{
-				"library"	"server"
-				"linux"		"@_ZN13CTerrorPlayer18OnBeginChangeLevelEPKc"
 				"windows"	""
 				/*  */
 			}

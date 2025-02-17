@@ -7,7 +7,7 @@ void CreateMixmapVote(int client, MapSetType type)
 {
 	if (!L4D2NativeVote_IsAllowNewVote())
 	{
-		CPrintToChat(client, "Vote In Progress");
+		CPrintToChat(client, "%t", "VoteInProgress");
 		return;
 	}
 
@@ -33,7 +33,7 @@ void CreateMixmapVote(int client, MapSetType type)
 	}
 
 	if (!vote.DisplayVote(iClients, iPlayerCount, 20))
-		CPrintToChat(client, "Failed to display vote.");
+		CPrintToChat(client, "%t", "FailedToDisplayVote");
 }
 
 void CreateMixMapVoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
@@ -41,11 +41,11 @@ void CreateMixMapVoteHandler(L4D2NativeVote vote, VoteAction action, int param1,
 	switch (action)
 	{
 		case VoteAction_Start:
-			CPrintToChatAllEx(param1, "%N has initiated a vote.", param1);
+			CPrintToChatAllEx(param1, "%t", "HasInitiated", param1);
 
 		case VoteAction_PlayerVoted:
 		{
-			CPrintToChatAllEx(param1, "%N voted", param1);
+			CPrintToChatAllEx(param1, "%t", "Voted", param1);
 
 			switch (param2)
 			{
@@ -76,7 +76,7 @@ void CreateStopMixmapVote(int client)
 {
 	if (!L4D2NativeVote_IsAllowNewVote())
 	{
-		CPrintToChat(client, "Vote In Progress");
+		CPrintToChat(client, "%t", "VoteInProgress");
 		return;
 	}
 
@@ -99,7 +99,7 @@ void CreateStopMixmapVote(int client)
 	}
 
 	if (!vote.DisplayVote(iClients, iPlayerCount, 20))
-		CPrintToChat(client, "Failed to display vote.");
+		CPrintToChat(client, "%t", "FailedToDisplayVote");
 }
 
 void CreateStopMixMapVoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
@@ -107,11 +107,11 @@ void CreateStopMixMapVoteHandler(L4D2NativeVote vote, VoteAction action, int par
 	switch (action)
 	{
 		case VoteAction_Start:
-			CPrintToChatAllEx(param1, "%N has initiated a vote.", param1);
+			CPrintToChatAllEx(param1, "%t", "HasInitiated", param1);
 
 		case VoteAction_PlayerVoted:
 		{
-			CPrintToChatAllEx(param1, "%N voted", param1);
+			CPrintToChatAllEx(param1, "%t", "Voted", param1);
 
 			switch (param2)
 			{

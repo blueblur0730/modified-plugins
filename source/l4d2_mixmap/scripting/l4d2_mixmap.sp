@@ -4,27 +4,26 @@
 #include <sourcemod>
 #include <sdktools>
 #include <dhooks>
-#include <log4sp>
-#include <left4dhooks>
+//#include <log4sp>
 #include <l4d2_source_keyvalues>
 #include <l4d2_nativevote>
 #include <gamedata_wrapper>
 #include <colors>
 
+#define PLUGIN_VERSION "re1.0"
+
 #define LOGGER_NAME "Mixmap"
 #define TRANSLATION_FILE "l4d2_mixmap.phrases"
 #define GAMEDATA_FILE "l4d2_mixmap"
 #define ADDRESS_MATCHEXTL4D "g_pMatchExtL4D"
+#define ADDRESS_THEDIRECTOR "TheDirector"
 #define SDKCALL_GETALLMISSIONS "MatchExtL4D::GetAllMissions"
 #define SDKCALL_ONCHANGEMISSIONVOTE "CDirector::OnChangeMissionVote"
-#define SDKCALL_ISFIRSTMAPINSCENARIO "CDirector::IsFirstMapInScenario"
 #define SDKCALL_CLEARTRANSITIONEDLANDMARKNAME "ClearTransitionedLandmarkName"
 #define DETOUR_RESTORETRANSITIONEDENTITIES "RestoreTransitionedEntities"
 #define DETOUR_TRANSITIONRESTORE "CTerrorPlayer::TransitionRestore"
 #define DETOUR_DIRECTORCHANGELEVEL "CDirector::DirectorChangeLevel"
 #define DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL "CTerrorGameRules::OnBeginChangeLevel"
-#define DETOUR_SURVIVORBOT_ONBEGINCHANGELEVEL "SurvivorBot::OnBeginChangeLevel"
-#define DETOUR_CTERRORPLAYER_ONBEGINCHANGELEVEL "CTerrorPlayer::OnBeginChangeLevel"
 
 StringMap g_hMapChapterNames;
 
@@ -32,21 +31,23 @@ ArrayList
 	g_hArrayMissionsAndMaps,			// Stores all missions and their map names in order.
 	g_hArrayPools;						// Stores slected map names.
 
-Logger g_hLogger;
+//Logger g_hLogger;
 
 bool g_bMapsetInitialized;
 int g_iMapsPlayed;
 
 enum MapSetType {
+	MapSet_None = 0,
 	MapSet_Official = 1,
 	MapSet_Custom = 2,
 	MapSet_Mixtape = 3
 }
 
+MapSetType g_iMapsetType = MapSet_None;
+
 // Modules
 #include <l4d2_mixmap/setup.sp>
 #include <l4d2_mixmap/detour.sp>
-#include <l4d2_mixmap/events.sp>
 #include <l4d2_mixmap/actions.sp>
 #include <l4d2_mixmap/commands.sp>
 #include <l4d2_mixmap/mappool.sp>
@@ -56,9 +57,9 @@ enum MapSetType {
 public Plugin myinfo =
 {
 	name = "[L4D2] Mixmap",
-	author = "Stabby, Bred, blueblur",
-	description = "Randomly select five maps to build a mixed campaign or match.",
-	version = "re1.0",
+	author = "blueblur",
+	description = "Randomly selects limited maps to build a mixed campaign or match.",
+	version = PLUGIN_VERSION,
 	url = "https://github.com/blueblur0730/modified-plugins"
 };
 
@@ -73,97 +74,79 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-	//LoadTranslation(TRANSLATION_FILE);
+	LoadTranslation(TRANSLATION_FILE);
 	SetUpGameData();
 
 	SetupConVars();
 	SetupCommands();
-	SetupLogger();
-	HookEvents();
+	//SetupLogger();
 	PluginStartInit();
 }
 
 public void OnClientPutInServer(int client)
 {
 	if (g_bMapsetInitialized)
-		CreateTimer(10.0, Timer_ShowMaplist, client);
+		return;
+
+	if (!g_hCvar_NextMapPrint.BoolValue)
+		return;
+
+	int userid = GetClientUserId(client);
+	CreateTimer(10.0, Timer_Notify, userid);
+	CreateTimer(15.0, Timer_ShowMaplist, userid);
+	
 }
 
-void Timer_ShowMaplist(Handle timer, int client)
+void Timer_Notify(Handle timer, int userid)
 {
-	//if (IsClientInGame(client))
-		//CPrintToChat(client, "%t", "Auto_Show_Maplist");
+	int client = GetClientOfUserId(userid);
+	if (!IsClientInGame(client))
+		return;
+	
+	NotifyMixmap(client);
 }
 
-public void OnAllPluginsLoaded()
+void Timer_ShowMaplist(Handle timer, int userid)
 {
-	TheDirector = CDirector();
-}
+	int client = GetClientOfUserId(userid);
+	if (!IsClientInGame(client))
+		return;
 
-public void OnPluginEnd() 
-{
-	if (g_hDetour_RestoreTransitionedEntities)
-	{
-		g_hDetour_RestoreTransitionedEntities.Disable(Hook_Pre, DTR_OnRestoreTransitionedEntities);
-		delete g_hDetour_RestoreTransitionedEntities;
-	}
-		
-	if (g_hDetour_TransitionRestore)
-	{
-		g_hDetour_TransitionRestore.Disable(Hook_Post, DTR_CTerrorPlayer_OnTransitionRestore_Post);
-		delete g_hDetour_TransitionRestore;
-	}
-
-	if (g_hDetour_DirectorChangeLevel)
-	{
-		g_hDetour_DirectorChangeLevel.Disable(Hook_Pre, DTR_CDirector_OnDirectorChangeLevel);
-		delete g_hDetour_DirectorChangeLevel;
-	}
-
-	if (g_hDetour_CTerrorGameRules_OnBeginChangeLevel)
-	{
-		g_hDetour_CTerrorGameRules_OnBeginChangeLevel.Disable(Hook_Pre, DTR_CTerrorGameRules_OnBeginChangeLevel);
-		delete g_hDetour_CTerrorGameRules_OnBeginChangeLevel;
-	}
-
-	if (g_hDetour_SurvivorBot_OnBeginChangeLevel)
-	{
-		g_hDetour_SurvivorBot_OnBeginChangeLevel.Disable(Hook_Pre, DTR_SurvivorBots_OnBeginChangeLevel);
-		delete g_hDetour_SurvivorBot_OnBeginChangeLevel;
-	}
-
-	if (g_hDetour_CTerrorPlayer_OnBeginChangeLevel)
-	{
-		g_hDetour_CTerrorPlayer_OnBeginChangeLevel.Disable(Hook_Pre, DTR_CTerrorPlayer_OnBeginChangeLevel);
-		delete g_hDetour_CTerrorPlayer_OnBeginChangeLevel;
-	}
+	NotifyMapList(client);
 }
 
 public void OnMapStart()
 {
+	if (!g_bMapsetInitialized)
+		return;
+
 	// if current map dose not match the map set, stop mix map.
 	char sBuffer[64];
-	if (g_bMapsetInitialized)
+	char sPresetMap[64];
+	GetCurrentMap(sBuffer, sizeof(sBuffer));
+	g_hArrayPools.GetString(g_iMapsPlayed, sPresetMap, sizeof(sPresetMap));
+
+	if (!StrEqual(sBuffer, sPresetMap))
 	{
-		char sPresetMap[64];
-		GetCurrentMap(sBuffer, sizeof(sBuffer));
-		g_hArrayPools.GetString(g_iMapsPlayed, sPresetMap, sizeof(sPresetMap));
+		PluginStartInit();
+		//g_hLogger.WarnEx("Current map dose not match the map set. Stopping MixMap. Current map: %s, Map set: %s", sBuffer, sPresetMap);
+		Call_StartForward(g_hForwardInterrupt);
+		Call_Finish();
+		return;
+	}
+	
+	HookEntityOutput("info_director", "OnGameplayStart", OnGameplayStart);
 
-		if (!StrEqual(sBuffer, sPresetMap))
-		{
-			PluginStartInit();
-
-			g_hLogger.WarnEx("Current map dose not match the map set. Stopping MixMap. Current map: %s, Map set: %s", sBuffer, sPresetMap);
-			Call_StartForward(g_hForwardInterrupt);
-			Call_Finish();
-			return;
-		}
+	// finished playing. reset.
+	if (g_iMapsPlayed >= g_hArrayPools.Length)
+	{
+		PluginStartInit();
+		Call_StartForward(g_hForwardEnd);
+		Call_Finish();
+		return;
 	}
 
 	// let other plugins know what the map *after* this one will be (unless it is the last map)
-	if (!g_bMapsetInitialized || g_iMapsPlayed >= g_hArrayPools.Length)
-		return;
-
 	g_iMapsPlayed++;
 	g_hArrayPools.GetString(g_iMapsPlayed, sBuffer, sizeof(sBuffer));
 	Call_StartForward(g_hForwardNext);
@@ -175,6 +158,8 @@ void PluginStartInit()
 {
 	g_bMapsetInitialized = false;
 	g_iMapsPlayed		 = 0;
+	g_iMapsetType        = MapSet_None;
+	delete g_hArrayPools;
 }
 
 stock void LoadTranslation(const char[] translation)

@@ -5,18 +5,32 @@
 
 Action Command_Mixmap(int client, int args) 
 {
-	if (g_bMapsetInitialized) 
+	if (!g_hCvar_Enable.BoolValue)
 	{
-		CPrintToChat(client, "has started.");
+		CReplyToCommand(client, "%t", "PluginDisabled");
 		return Plugin_Handled;
 	}
 
-	Menu menu = new Menu(MenuHandler_Mixmap);
-	menu.SetTitle("Mapset Menu");
+	if (g_bMapsetInitialized) 
+	{
+		CReplyToCommand(client, "%t", "HasStarted");
+		return Plugin_Handled;
+	}
 
-	menu.AddItem("1", "Official Mapset");
-	menu.AddItem("2", "Custom Mapset");
-	menu.AddItem("3", "Mixtape Mapset");
+	char sBuffer[128];
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuTitle_SelectMapSetType", client);
+	Menu menu = new Menu(MenuHandler_Mixmap);
+	menu.SetTitle(sBuffer);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_OfficialMapSet", client)
+	menu.AddItem("1", sBuffer);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_CustomMapSet", client)
+	menu.AddItem("2", sBuffer);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_MixtapeMapSet", client)
+	menu.AddItem("3", sBuffer);
+
 	menu.Display(client, MENU_TIME_FOREVER);
 
 	return Plugin_Handled;
@@ -27,10 +41,10 @@ Action Command_StopMixmap(int client, int args)
 {
 	if (!g_bMapsetInitialized) 
 	{
-		CPrintToChat(client, "Not started yet");
+		CReplyToCommand(client, "%t", "NotStartedYet");
 		return Plugin_Handled;
 	}
-
+	
     CreateStopMixmapVote(client);
 	return Plugin_Continue;
 }
@@ -38,17 +52,28 @@ Action Command_StopMixmap(int client, int args)
 // Loads a specified set of maps
 Action Command_ForceMixmap(int client, int args) 
 {
-	char sArg[8];
-	GetCmdArg(1, sArg, sizeof(sArg));
-
-	int iMapSet = StringToInt(sArg);
-	if (iMapSet < 1 || iMapSet > 3)
+	if (GetCmdArgs() > 1)
 	{
-		CPrintToChat(client, "Invalid mapset type.");
+		CReplyToCommand(client, "Usage: sm_forcemixmap <1-3>");
 		return Plugin_Handled;
 	}
 
-	InitiateMixmap(view_as<MapSetType>(iMapSet));
+	if (GetCmdArgs() == 1)
+	{
+		char sArg[8];
+		GetCmdArg(1, sArg, sizeof(sArg));
+
+		int iMapSet = StringToInt(sArg);
+		if (iMapSet != 1 || iMapSet != 2 || iMapSet != 3)
+		{
+			CReplyToCommand(client, "Usage: sm_forcemixmap <1-3>");
+			return Plugin_Handled;
+		}
+
+		InitiateMixmap(view_as<MapSetType>(iMapSet));
+	}
+
+	InitiateMixmap(MapSet_Official);
 	return Plugin_Handled;
 }
 
@@ -56,12 +81,12 @@ Action Command_ForceStopMixmap(int client, int args)
 {
 	if (!g_bMapsetInitialized) 
 	{
-		CPrintToChat(client, "Has not started yet.");
+		CReplyToCommand(client, "%t", "NotStartedYet");
 		return Plugin_Handled;
 	}
 
 	PluginStartInit();
-	CPrintToChatAllEx(client, "Admin %N forces stopped.", client);
+	CPrintToChatAllEx(client, "%t", "AdminForceStop", client);
 	return Plugin_Handled;
 }
 
@@ -70,22 +95,14 @@ Action Command_Maplist(int client, int args)
 {
 	if (!g_bMapsetInitialized) 
 	{
-		CPrintToChat(client, "Has not started yet.");
+		CReplyToCommand(client, "%t", "NotStartedYet");
 		return Plugin_Handled;
 	}
 
 	if (!g_hArrayPools || !g_hArrayPools.Length)
 		return Plugin_Handled;
 
-	CPrintToChat(client, "Map List");
-	
-	char sMap[128];
-	for (int i = 0; i < g_hArrayPools.Length; i++)
-	{
-		g_hArrayPools.GetString(i, sMap, sizeof(sMap));
-		CPrintToChat(client, "> %s", sMap);
-	}
-
+	NotifyMapList(client);
 	return Plugin_Handled;
 }
 
