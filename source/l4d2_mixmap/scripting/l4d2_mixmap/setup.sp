@@ -18,12 +18,15 @@ Handle
 	g_hSDKCall_OnChangeMissionVote,
 	g_hSDKCall_ClearTransitionedLandmarkName;
 
+MemoryPatch g_hPatch_RestoreTransitionedSurvivorBots__BlockRestoring;
+
 ConVar
 	g_hCvar_Enable,
 	g_hCvar_NextMapPrint,
 	g_hCvar_MapPoolCapacity,
-	g_hCvar_SecondsToRead;
-	//g_hCvar_SaveStatus;
+	g_hCvar_SecondsToRead,
+	g_hCvar_SaveStatus,
+	g_hCvar_SaveStatus_Bot;
 
 void SetUpGameData()
 {
@@ -41,9 +44,11 @@ void SetUpGameData()
 	g_hSDKCall_ClearTransitionedLandmarkName 	= gd.CreateSDKCallOrFail(SDKCall_Static, SDKConf_Signature, SDKCALL_CLEARTRANSITIONEDLANDMARKNAME);
 
 	gd.CreateDetourOrFailEx(DETOUR_RESTORETRANSITIONEDENTITIES, DTR_OnRestoreTransitionedEntities);
-	gd.CreateDetourOrFailEx(DETOUR_TRANSITIONRESTORE, _, DTR_CTerrorPlayer_OnTransitionRestore_Post);
+	gd.CreateDetourOrFailEx(DETOUR_TRANSITIONRESTORE, DTR_CTerrorPlayer_OnTransitionRestore, /*DTR_CTerrorPlayer_OnTransitionRestore_Post*/_);
 	gd.CreateDetourOrFailEx(DETOUR_DIRECTORCHANGELEVEL, DTR_CDirector_OnDirectorChangeLevel);
 	gd.CreateDetourOrFailEx(DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL, DTR_CTerrorGameRules_OnBeginChangeLevel);
+
+	g_hPatch_RestoreTransitionedSurvivorBots__BlockRestoring = gd.CreateMemoryPatchOrFail(MEMPATCH_BLOCKRESTORING);
 
 	delete gd;
 }
@@ -54,9 +59,10 @@ void SetupConVars()
 
 	g_hCvar_Enable			= CreateConVar("l4d2mm_enable", "1", "Determine whether to enable the plugin.", _, true, 0.0, true, 1.0);
 	g_hCvar_NextMapPrint	= CreateConVar("l4d2mm_nextmap_print", "1", "Determine whether to show what the next map will be.", _, true, 0.0, true, 1.0);
-	g_hCvar_MapPoolCapacity = CreateConVar("l4d2mm_map_pool_capacity", "5", "Determine how many maps can be selected in one pool.", _, true, 1.0, true, 10.0);
-	g_hCvar_SecondsToRead	= CreateConVar("l4d2mm_seconds_to_read", "5", "Determine how many seconds before change level to read maplist result.", _, true, 5.0, true, 30.0);
-	//g_hCvar_SaveStatus		= CreateConVar("l4d2mm_save_status", "1", "Determine whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
+	g_hCvar_MapPoolCapacity = CreateConVar("l4d2mm_map_pool_capacity", "5", "Determine how many maps can be selected in one pool.", _, true, 1.0, false);
+	g_hCvar_SecondsToRead	= CreateConVar("l4d2mm_seconds_to_read", "5.0", "Determine how many seconds before change level to read maplist result.", _, true, 1.0, false);
+	g_hCvar_SaveStatus		= CreateConVar("l4d2mm_save_status", "1", "Determine whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
+	g_hCvar_SaveStatus_Bot	= CreateConVar("l4d2mm_save_status_bot", "1", "Determine whether to save bot status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
 }
 
 void SetupCommands()
@@ -69,7 +75,7 @@ void SetupCommands()
 	RegConsoleCmd("sm_maplist", Command_Maplist, "Show the map list");
 }
 
-/*
+
 void SetupLogger()
 {
 	g_hLogger = Logger.Get(LOGGER_NAME);
@@ -83,7 +89,7 @@ void SetupLogger()
 	g_hLogger.SetLevel(LogLevel_Trace);
 	g_hLogger.FlushOn(LogLevel_Info);
 }
-*/
+
 void SetupForwards()
 {
 	g_hForwardStart		= new GlobalForward("Mixmap_OnStart", ET_Ignore, Param_Cell);

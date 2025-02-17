@@ -14,8 +14,8 @@ void InitiateMixmap(MapSetType type)
 	}
 
 	g_iMapsetType = type;
-	CPrintToChatAll("%t", "StatingIn", g_hCvar_SecondsToRead.IntValue);
-	CreateTimer(5.0, Timer_StartFisrMixmap);
+	CPrintToChatAll("%t", "StartingIn", g_hCvar_SecondsToRead.IntValue);
+	CreateTimer(g_hCvar_SecondsToRead.FloatValue, Timer_StartFisrMixmap);
 }
 
 // OnChangeMissionVote needs mission name.
@@ -24,7 +24,7 @@ void Timer_StartFisrMixmap(Handle timer)
 	char sMap[128], sMissionName[128];
 	g_hArrayPools.GetString(0, sMap, sizeof(sMap));
 	g_hMapChapterNames.GetString(sMap, sMissionName, sizeof(sMissionName));
-	//g_hLogger.DebugEx("### Starting Mixmap with %s", sMissionName);
+	g_hLogger.DebugEx("### Starting Mixmap with %s", sMissionName);
 	SDKCall(g_hSDKCall_OnChangeMissionVote, g_pTheDirector, sMissionName);
 
 	g_bMapsetInitialized = true;
@@ -35,17 +35,42 @@ void Timer_StartFisrMixmap(Handle timer)
 
 void OnGameplayStart(const char[] output, int caller, int activator, float delay)
 {
-	for (int i = 1; i < MaxClients; i++)
-	{
-		if (IsClientInGame(i) && IsFakeClient(i) && GetClientTeam(i) == 2)
-			CheatCommand(i, "warp_to_start_area");
-	}
+	CreateTimer(0.1, Timer_OnGameplayStart);
 
 	char sBuffer[128], sMap[128];
 	GetCurrentMap(sBuffer, sizeof(sBuffer));
 	g_hArrayPools.GetString(g_hArrayPools.Length - 1, sMap, sizeof(sMap));
+
 	if (StrEqual(sBuffer, sMap))
 		CPrintToChatAll("%t", "HaveReachedTheEnd");
+}
+
+void Timer_OnGameplayStart(Handle timer)
+{
+	for (int i = 1; i < MaxClients; i++)
+	{
+		if (IsClientInGame(i) && GetClientTeam(i) == 2)
+			CheatCommand(i, "warp_to_start_area");
+	}
+
+	// if not to save all we have will be gone. give them a little pistol.
+	if (!g_hCvar_SaveStatus.BoolValue)
+	{
+		for (int i = 1; i < MaxClients; i++)
+		{
+			if (IsClientInGame(i) && GetClientTeam(i) == 2 && !IsFakeClient(i))
+				CheatCommand(i, "give", "pistol");
+		}
+	}
+
+	if (!g_hCvar_SaveStatus_Bot.BoolValue)
+	{
+		for (int i = 1; i < MaxClients; i++)
+		{
+			if (IsClientInGame(i) && GetClientTeam(i) == 2 && IsFakeClient(i))
+				CheatCommand(i, "give", "pistol");
+		}
+	}
 }
 
 void NotifyMixmap(int client)
@@ -74,6 +99,7 @@ void NotifyMapList(int client)
 		CPrintToChat(client, "{green}-> {olive}%s{default} %s", sBuffer, !strcmp(sCurrentMap, sBuffer) ? "({orange}Current{default})" : "");
 	}
 }
+
 /*
 // here we store the match or game info for the next map.
 Action Timed_NextMapInfo(Handle timer)

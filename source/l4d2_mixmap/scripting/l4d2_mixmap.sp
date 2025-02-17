@@ -4,13 +4,14 @@
 #include <sourcemod>
 #include <sdktools>
 #include <dhooks>
-//#include <log4sp>
+#include <log4sp>
+#include <sourcescramble>
 #include <l4d2_source_keyvalues>
 #include <l4d2_nativevote>
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re1.0"
+#define PLUGIN_VERSION "re1.1"
 
 #define LOGGER_NAME "Mixmap"
 #define TRANSLATION_FILE "l4d2_mixmap.phrases"
@@ -24,6 +25,7 @@
 #define DETOUR_TRANSITIONRESTORE "CTerrorPlayer::TransitionRestore"
 #define DETOUR_DIRECTORCHANGELEVEL "CDirector::DirectorChangeLevel"
 #define DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL "CTerrorGameRules::OnBeginChangeLevel"
+#define MEMPATCH_BLOCKRESTORING "RestoreTransitionedSurvivorBots__BlockRestoring"
 
 StringMap g_hMapChapterNames;
 
@@ -31,7 +33,7 @@ ArrayList
 	g_hArrayMissionsAndMaps,			// Stores all missions and their map names in order.
 	g_hArrayPools;						// Stores slected map names.
 
-//Logger g_hLogger;
+Logger g_hLogger;
 
 bool g_bMapsetInitialized;
 int g_iMapsPlayed;
@@ -79,13 +81,13 @@ public void OnPluginStart()
 
 	SetupConVars();
 	SetupCommands();
-	//SetupLogger();
+	SetupLogger();
 	PluginStartInit();
 }
 
 public void OnClientPutInServer(int client)
 {
-	if (g_bMapsetInitialized)
+	if (!g_bMapsetInitialized)
 		return;
 
 	if (!g_hCvar_NextMapPrint.BoolValue)
@@ -94,12 +96,15 @@ public void OnClientPutInServer(int client)
 	int userid = GetClientUserId(client);
 	CreateTimer(10.0, Timer_Notify, userid);
 	CreateTimer(15.0, Timer_ShowMaplist, userid);
-	
 }
 
 void Timer_Notify(Handle timer, int userid)
 {
 	int client = GetClientOfUserId(userid);
+
+	if (client <= 0 || client > MaxClients)
+		return;
+
 	if (!IsClientInGame(client))
 		return;
 	
@@ -109,6 +114,10 @@ void Timer_Notify(Handle timer, int userid)
 void Timer_ShowMaplist(Handle timer, int userid)
 {
 	int client = GetClientOfUserId(userid);
+
+	if (client <= 0 || client > MaxClients)
+		return;
+
 	if (!IsClientInGame(client))
 		return;
 
@@ -129,7 +138,7 @@ public void OnMapStart()
 	if (!StrEqual(sBuffer, sPresetMap))
 	{
 		PluginStartInit();
-		//g_hLogger.WarnEx("Current map dose not match the map set. Stopping MixMap. Current map: %s, Map set: %s", sBuffer, sPresetMap);
+		g_hLogger.WarnEx("Current map dose not match the map set. Stopping MixMap. Current map: %s, Map set: %s", sBuffer, sPresetMap);
 		Call_StartForward(g_hForwardInterrupt);
 		Call_Finish();
 		return;
@@ -137,21 +146,31 @@ public void OnMapStart()
 	
 	HookEntityOutput("info_director", "OnGameplayStart", OnGameplayStart);
 
+	if (g_iMapsPlayed > 0)
+		g_hCvar_SaveStatus_Bot.BoolValue ? Patch(false) : Patch(true);
+	
+	g_iMapsPlayed++;
+
 	// finished playing. reset.
 	if (g_iMapsPlayed >= g_hArrayPools.Length)
 	{
 		PluginStartInit();
+		Patch(false);
 		Call_StartForward(g_hForwardEnd);
 		Call_Finish();
 		return;
 	}
 
 	// let other plugins know what the map *after* this one will be (unless it is the last map)
-	g_iMapsPlayed++;
 	g_hArrayPools.GetString(g_iMapsPlayed, sBuffer, sizeof(sBuffer));
 	Call_StartForward(g_hForwardNext);
 	Call_PushString(sBuffer);
 	Call_Finish();
+}
+
+public void OnMapEnd()
+{
+	
 }
 
 void PluginStartInit()
@@ -171,4 +190,24 @@ stock void LoadTranslation(const char[] translation)
 		SetFailState("[MixMap] Missing translation file %s.txt", translation);
 
 	LoadTranslations(translation);
+}
+
+void Patch(bool bPatch)
+{
+	static bool bPatched = false;
+	if (bPatch && !bPatched)
+	{
+		g_hPatch_RestoreTransitionedSurvivorBots__BlockRestoring.Enable();
+		bPatched = true;
+	}
+	else if (!bPatch && bPatched)
+	{
+		g_hPatch_RestoreTransitionedSurvivorBots__BlockRestoring.Disable();
+		bPatched = false;
+	}
+}
+
+public void OnPluginEnd()
+{
+	g_hPatch_RestoreTransitionedSurvivorBots__BlockRestoring.Disable();
 }

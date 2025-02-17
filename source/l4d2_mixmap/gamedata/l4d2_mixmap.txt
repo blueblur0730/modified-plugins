@@ -56,6 +56,27 @@
 			}
         }
 
+		"MemPatches"
+		{
+			"RestoreTransitionedSurvivorBots__BlockRestoring"
+			{
+				"signature"		"RestoreTransitionedSurvivorBots"
+				"linux"
+				{
+					"offset"	"319"	// 0x13F
+					"verify"	"\x8B"	// MOV r32,r/m32
+					"patch"		"\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90"
+				}
+
+				"windows"
+				{
+					"offset"	"250"	// 0xFA
+					"verify"	"\x56"	// PUSH
+					"patch"		"\x90\x90\x90\x90\x90\x90\x90\x90"
+				}
+			}
+		}
+
         "Addresses"
         {
 			// credits to fdxx.
@@ -174,8 +195,16 @@
 			{
 				"library"	"server"
 				"linux"		"@_ZN16CTerrorGameRules18OnBeginChangeLevelEPKc"
-				"windows"	""
-				/*  */
+				"windows"	"\x55\x8B\xEC\x56\x8B\x35\x2A\x2A\x2A\x2A\x8B\x06\x8B\x50\x68\x8B\xCE"
+				/* 55 8B EC 56 8B 35 ? ? ? ? 8B 06 8B 50 68 8B CE */
+			}
+
+			"RestoreTransitionedSurvivorBots"
+			{
+				"library"	"server"
+				"linux"		"@_Z31RestoreTransitionedSurvivorBotsv"
+				"windows"	"\x55\x8B\xEC\xA1\x2A\x2A\x2A\x2A\x83\xEC\x08\x85\xC0"
+				/* 55 8B EC A1 ? ? ? ? 83 EC 08 85 C0 */
 			}
         }
     }

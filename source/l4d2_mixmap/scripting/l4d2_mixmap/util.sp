@@ -58,13 +58,15 @@ stock bool IsClientAndInGame(int client)
 	return (client > 0 && client <= MaxClients && IsClientInGame(client) && !IsFakeClient(client) && GetClientTeam(client) != 1);
 }
 
-stock void CheatCommand(int client, const char[] cmd) 
+stock void CheatCommand(int client, const char[] cmd, const char[] args = "") 
 {
+	char sBuffer[128];
 	int flags = GetCommandFlags(cmd);
 	int bits = GetUserFlagBits(client);
 	SetUserFlagBits(client, ADMFLAG_ROOT);
 	SetCommandFlags(cmd, flags & ~FCVAR_CHEAT);
-	FakeClientCommand(client, cmd);
+	Format(sBuffer, sizeof(sBuffer), "%s %s", cmd, args);
+	FakeClientCommand(client, sBuffer);
 	SetCommandFlags(cmd, flags);
 	SetUserFlagBits(client, bits);
 }

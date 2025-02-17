@@ -2,13 +2,13 @@
 {
     "NotifyClients"
     {
-        "chi"          "[{orange}!{default]}] 当前正在使用 {orange}Mixmap{default}. 输入 {lightgreen}/maplist{default} 来查看地图列表."
+        "chi"          "[{orange}!{default}] 当前正在使用 {orange}Mixmap{default}. 输入 {lightgreen}/maplist{default} 来查看地图列表."
     }
 
     "MapProgress"
     {
         "#format"       "{1:s},{2:s}"
-        "chi"           "[{orange}!{default]}] 当前地图: {olive}{1}{default}, 下一张地图: {orange}{2}{default}"
+        "chi"           "[{orange}!{default}] 当前地图: {olive}{1}{default}, 下一张地图: {orange}{2}{default}"
     }
 
     "None"
@@ -23,23 +23,23 @@
 
     "FailedToGet"
     {
-        "chi"           "[{orange}!{default]}] 尝试获取随机地图池失败. 进程中断."
+        "chi"           "[{orange}!{default}] 尝试获取随机地图池失败. 进程中断."
     }
 
     "StartingIn"
     {
         "#format"       "{1:d}"
-        "chi"            "[{orange}!{default]}] 将在 {orange}{1}{default} 秒内开始 Mixmap..."
+        "chi"            "[{orange}!{default}] 将在 {orange}{1}{default} 秒内开始 Mixmap..."
     }
 
     "PluginDisabled"
     {
-        "chi"           "[{orange}!{default]}] Mixmap 插件已被禁用."
+        "chi"           "[{orange}!{default}] Mixmap 插件已被禁用."
     }
 
     "HasStarted"
     {
-        "chi"           "[{orange}!{default]}] Mixmap 已经开始. 请等待地图池循环结束或发起投票来停止 Mixmap."
+        "chi"           "[{orange}!{default}] Mixmap 已经开始. 请等待地图池循环结束或发起投票来停止 Mixmap."
     }
 
     "MenuTitle_SelectMapSetType"
@@ -64,29 +64,29 @@
 
     "NotStartedYet"
     {
-        "chi"           "[{orange}!{default]}] Mixmap 尚未开始. 请先发起投票来开始 Mixmap"
+        "chi"           "[{orange}!{default}] Mixmap 尚未开始. 请先发起投票来开始 Mixmap"
     }
 
     "AdminForceStop"
     {
         "#format"        "{1:N}"
-        "chi"            "[{orange}!{default]}] 管理员 {teamcolor}{1}{default} 强行停止了 Mixmap."
+        "chi"            "[{orange}!{default}] 管理员 {teamcolor}{1}{default} 强行停止了 Mixmap."
     }
 
     "VoteInProgress"
     {
-        "chi"            "[{orange}!{default]}] 有一个投票正在进行中."
+        "chi"            "[{orange}!{default}] 有一个投票正在进行中."
     }
 
     "FailedToDisplayVote"
     {
-        "chi"            "[{orange}!{default]}] 投票发起失败."
+        "chi"            "[{orange}!{default}] 投票发起失败."
     }
 
-    "HasInitiatedVote"
+    "HasInitiated"
     {
         "#format"       "{1:N}"
-        "chi"           "[{orange}!{default]}] {teamcolor}{1}{default} 发起了一个投票."
+        "chi"           "[{orange}!{default}] {teamcolor}{1}{default} 发起了一个投票."
     }
 
     "Voted"
