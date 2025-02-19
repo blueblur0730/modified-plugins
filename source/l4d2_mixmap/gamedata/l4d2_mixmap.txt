@@ -210,7 +210,8 @@
 			{
 				"library"	"server"
 				"linux"		"@_ZNK13TerrorNavMesh20GetInitialCheckpointEv"
-				"windows"	""
+				"windows"	"\x55\x8B\xEC\x83\xEC\x1C\x89\x4D\xFC"
+				/* 55 8B EC 83 EC 1C 89 4D FC */
 			}
 
 			/* Checkpoint::GetLargestArea(Checkpoint *__hidden this) */
