@@ -9,6 +9,9 @@ void CollectAllMaps(MapSetType type)
 	if (!g_hArrayMissionsAndMaps)
 		g_hArrayMissionsAndMaps = new ArrayList();
 
+	delete g_hArraySurvivorSets;
+	g_hArraySurvivorSets = new ArrayList();
+
 	char sMode[32], sKey[256];
 	ConVar mp_gamemode = FindConVar("mp_gamemode");
 	mp_gamemode.GetString(sMode, sizeof(sMode));
@@ -38,6 +41,8 @@ void CollectAllMaps(MapSetType type)
 					continue;
 			}
 		}
+
+		int survivorSet = kvSub.GetInt("survivor_set", 2);	// L4D2 = 2, L4D1 = 1
 
 		// we find the key modes/<mode> , continue the subkey iteration.
 		FormatEx(sKey, sizeof(sKey), "modes/%s", sMode);
@@ -69,6 +74,7 @@ void CollectAllMaps(MapSetType type)
 			DataPack dp = new DataPack();
 			dp.WriteString(sMissionName);
 			dp.WriteCell(hArray);
+			dp.WriteCell(survivorSet);
 			g_hArrayMissionsAndMaps.Push(dp);
 		}
 	}
@@ -109,6 +115,7 @@ bool SelectRandomMap()
 		dp.Reset();
 		dp.ReadString(sMissionName, sizeof(sMissionName));
 		ArrayList hArray = dp.ReadCell();
+		int survivorSet = dp.ReadCell();
 
 		// set the mission's first map name, as we need the mission name to transfer to the first map.
 		char sFirstMap[128];
@@ -123,11 +130,13 @@ bool SelectRandomMap()
 			{
 				hArray.GetString(0, sMap, sizeof(sMap));
 				g_hArrayPools.PushString(sMap);
+				g_hArraySurvivorSets.Push(survivorSet);
 			}
 			else if (i == g_hCvar_MapPoolCapacity.IntValue - 1)	// the last selection must be the finale.
 			{
 				hArray.GetString(hArray.Length - 1, sMap, sizeof(sMap));
 				g_hArrayPools.PushString(sMap);
+				g_hArraySurvivorSets.Push(survivorSet);
 			}
 			else
 			{
@@ -141,14 +150,19 @@ bool SelectRandomMap()
 					int random = GetRandomInt(0, hArray.Length - 1);
 					hArray.GetString(random, sMap, sizeof(sMap));
 					g_hArrayPools.PushString(sMap);
+					g_hArraySurvivorSets.Push(survivorSet);
 				}
 				else if (hArray.Length == 2)
 				{
 					// else we use the first map, and make sure it is not a finale.
 					hArray.GetString(0, sMap, sizeof(sMap));
 					g_hArrayPools.PushString(sMap);
+					g_hArraySurvivorSets.Push(survivorSet);
 				}
-				//else if (hArray.Length == 1)	// do not take any action, as this can be a finale map.
+				else if (hArray.Length == 1)	// do not take any action, as this can be a finale map.
+				{
+					i--;	// we need to decrease the index, as we do not push any map into the arraylist.
+				}
 			}
 
 			delete hArray;

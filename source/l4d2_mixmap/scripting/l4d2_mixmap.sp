@@ -6,37 +6,26 @@
 #include <dhooks>
 #include <log4sp>
 #include <sourcescramble>
+#include <midhook>
 #include <l4d2_source_keyvalues>
 #include <l4d2_nativevote>
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re1.1"
-
-#define LOGGER_NAME "Mixmap"
-#define TRANSLATION_FILE "l4d2_mixmap.phrases"
-#define GAMEDATA_FILE "l4d2_mixmap"
-#define ADDRESS_MATCHEXTL4D "g_pMatchExtL4D"
-#define ADDRESS_THEDIRECTOR "TheDirector"
-#define SDKCALL_GETALLMISSIONS "MatchExtL4D::GetAllMissions"
-#define SDKCALL_ONCHANGEMISSIONVOTE "CDirector::OnChangeMissionVote"
-#define SDKCALL_CLEARTRANSITIONEDLANDMARKNAME "ClearTransitionedLandmarkName"
-#define DETOUR_RESTORETRANSITIONEDENTITIES "RestoreTransitionedEntities"
-#define DETOUR_TRANSITIONRESTORE "CTerrorPlayer::TransitionRestore"
-#define DETOUR_DIRECTORCHANGELEVEL "CDirector::DirectorChangeLevel"
-#define DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL "CTerrorGameRules::OnBeginChangeLevel"
-#define MEMPATCH_BLOCKRESTORING "RestoreTransitionedSurvivorBots__BlockRestoring"
+#define PLUGIN_VERSION "re1.2"
 
 StringMap g_hMapChapterNames;
 
 ArrayList
 	g_hArrayMissionsAndMaps,			// Stores all missions and their map names in order.
-	g_hArrayPools;						// Stores slected map names.
+	g_hArrayPools,						// Stores slected map names.
+	g_hArraySurvivorSets;				// Stores selected survivor sets.
 
 Logger g_hLogger;
 
 bool g_bMapsetInitialized;
 int g_iMapsPlayed;
+bool g_bHaveReachedTheEnd;
 
 enum MapSetType {
 	MapSet_None = 0,
@@ -49,11 +38,11 @@ MapSetType g_iMapsetType = MapSet_None;
 
 // Modules
 #include <l4d2_mixmap/setup.sp>
-#include <l4d2_mixmap/detour.sp>
+#include <l4d2_mixmap/util.sp>
+#include <l4d2_mixmap/hooks.sp>
 #include <l4d2_mixmap/actions.sp>
 #include <l4d2_mixmap/commands.sp>
 #include <l4d2_mixmap/mappool.sp>
-#include <l4d2_mixmap/util.sp>
 #include <l4d2_mixmap/vote.sp>
 
 public Plugin myinfo =
@@ -88,8 +77,13 @@ public void OnPluginStart()
 public void OnClientPutInServer(int client)
 {
 	if (!g_bMapsetInitialized)
-		return;
+	{
+		if (g_bHaveReachedTheEnd && g_hCvar_NextMapPrint.BoolValue)
+			CreateTimer(10.0, Timer_NotifyTheEnd, GetClientUserId(client));
 
+		return;
+	}
+		
 	if (!g_hCvar_NextMapPrint.BoolValue)
 		return;
 
@@ -98,36 +92,13 @@ public void OnClientPutInServer(int client)
 	CreateTimer(15.0, Timer_ShowMaplist, userid);
 }
 
-void Timer_Notify(Handle timer, int userid)
-{
-	int client = GetClientOfUserId(userid);
-
-	if (client <= 0 || client > MaxClients)
-		return;
-
-	if (!IsClientInGame(client))
-		return;
-	
-	NotifyMixmap(client);
-}
-
-void Timer_ShowMaplist(Handle timer, int userid)
-{
-	int client = GetClientOfUserId(userid);
-
-	if (client <= 0 || client > MaxClients)
-		return;
-
-	if (!IsClientInGame(client))
-		return;
-
-	NotifyMapList(client);
-}
-
 public void OnMapStart()
 {
 	if (!g_bMapsetInitialized)
 		return;
+
+	// just in case.
+	PrecacheAllModels();
 
 	// if current map dose not match the map set, stop mix map.
 	char sBuffer[64];
@@ -144,16 +115,14 @@ public void OnMapStart()
 		return;
 	}
 	
-	HookEntityOutput("info_director", "OnGameplayStart", OnGameplayStart);
-
-	if (g_iMapsPlayed > 0)
-		g_hCvar_SaveStatus_Bot.BoolValue ? Patch(false) : Patch(true);
+	//HookEntityOutput("info_director", "OnGameplayStart", OnGameplayStart);
 	
 	g_iMapsPlayed++;
 
 	// finished playing. reset.
 	if (g_iMapsPlayed >= g_hArrayPools.Length)
 	{
+		g_bHaveReachedTheEnd = true;
 		PluginStartInit();
 		Patch(false);
 		Call_StartForward(g_hForwardEnd);
@@ -170,7 +139,7 @@ public void OnMapStart()
 
 public void OnMapEnd()
 {
-	
+	g_bHaveReachedTheEnd = false;
 }
 
 void PluginStartInit()

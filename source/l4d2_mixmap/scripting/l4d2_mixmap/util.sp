@@ -29,6 +29,59 @@ static const char g_sOfficialMaps[][] = {
 	"L4D2C14"
 }
 
+enum /*SurvivorCharacterType*/
+{
+	SurvivorCharacter_Nick = 0,
+	SurvivorCharacter_Rochelle,
+	SurvivorCharacter_Coach,
+	SurvivorCharacter_Ellis,
+	SurvivorCharacter_Bill,
+	SurvivorCharacter_Zoey,
+	SurvivorCharacter_Francis,
+	SurvivorCharacter_Louis,
+	SurvivorCharacter_Invalid, // 8
+
+	SurvivorCharacter_Size // 9 size
+};
+
+static const char g_sSurvivorNames[][] = {
+	"Nick",
+	"Rochelle",
+	"Coach",
+	"Ellis",
+	"Bill",
+	"Zoey",
+	"Francis",
+	"Louis"
+}
+
+static const char g_sSurvivorModels[][] = {
+		"models/survivors/survivor_gambler.mdl",
+		"models/survivors/survivor_producer.mdl",
+		"models/survivors/survivor_coach.mdl",
+		"models/survivors/survivor_mechanic.mdl",
+		"models/survivors/survivor_namvet.mdl",
+		"models/survivors/survivor_teenangst.mdl",
+		"models/survivors/survivor_biker.mdl",
+		"models/survivors/survivor_manager.mdl"
+};
+
+stock void PrecacheAllModels()
+{
+	for (int i = 0; i < sizeof(g_sSurvivorModels); i++)
+		PrecacheModel(g_sSurvivorModels[i], true);
+}
+
+stock void GetCorrespondingModel(int character, char[] model, int size)
+{
+	strcopy(model, size, g_sSurvivorModels[character]);
+}
+
+stock void GetCorrespondingName(int character, char[] name, int size)
+{
+	strcopy(name, size, g_sSurvivorNames[character]);
+}
+
 stock bool IsFakeMission(const char[] sMissionName)
 {
 	for (int i = 0; i < sizeof(g_sFakeMissions); i++)

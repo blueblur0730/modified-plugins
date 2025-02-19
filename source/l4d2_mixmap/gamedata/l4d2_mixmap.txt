@@ -109,6 +109,20 @@
 				}
 				"read"	"0"
 			}
+
+			"RestoreTransitionedSurvivorBots__ChangeCharacter"
+			{
+				"linux"
+				{
+					"signature"	"RestoreTransitionedSurvivorBots"
+					"offset"	"0x94"
+				}
+				"windows"
+				{
+					"signature"	"RestoreTransitionedSurvivorBots"
+					"offset"	"0x7A"
+				}
+			}
         }
 
         "Offsets"
@@ -172,16 +186,6 @@
 				/* ? ? ? ? ? ? ? 80 BE ? ? ? ? ? 75 ? 33 ? 5E 8B ? 5D C3 */
 			}
 
-			// windows sig: search for "change mission now vote" to find CCDirector::OnChangeMissionVote
-			// obviously you can find it.
-			"ClearTransitionedLandmarkName"
-			{
-				"library"	"server"
-				"linux"		"@_Z29ClearTransitionedLandmarkNamev"
-				"windows"	"\x0F\x57\xC0\xC6\x05\x2A\x2A\x2A\x2A\x00\xF3\x0F\x11\x05\x2A\x2A\x2A\x2A\xF3\x0F\x11\x05\x2A\x2A\x2A\x2A"
-				/* 0F 57 C0 C6 05 ? ? ? ? 00 F3 0F 11 05 ? ? ? ? F3 0F 11 05 ? ? ? ? */
-			}
-
 			// windows sig:
 			"CDirector::DirectorChangeLevel"
 			{
@@ -199,12 +203,14 @@
 				/* 55 8B EC 56 8B 35 ? ? ? ? 8B 06 8B 50 68 8B CE */
 			}
 
+			// from transition_restore_fix by soralll.
+			/* RestoreTransitionedSurvivorBots(void) */
 			"RestoreTransitionedSurvivorBots"
 			{
 				"library"	"server"
 				"linux"		"@_Z31RestoreTransitionedSurvivorBotsv"
-				"windows"	"\x55\x8B\xEC\xA1\x2A\x2A\x2A\x2A\x83\xEC\x08\x85\xC0"
-				/* 55 8B EC A1 ? ? ? ? 83 EC 08 85 C0 */
+				"windows"	"\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x83\x2A\x2A\x85\x2A\x0F\x84\x2A\x2A\x2A\x2A\x53\x56\x57\x50\x68"
+				/* ? ? ? ? ? ? ? ? 83 ? ? 85 ? 0F 84 ? ? ? ? 53 56 57 50 68 */
 			}
         }
     }

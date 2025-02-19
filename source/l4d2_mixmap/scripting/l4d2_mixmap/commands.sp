@@ -52,6 +52,12 @@ Action Command_StopMixmap(int client, int args)
 // Loads a specified set of maps
 Action Command_ForceMixmap(int client, int args) 
 {
+	if (g_bMapsetInitialized) 
+	{
+		CReplyToCommand(client, "%t", "HasStarted");
+		return Plugin_Handled;
+	}
+
 	if (GetCmdArgs() > 1)
 	{
 		CReplyToCommand(client, "Usage: sm_forcemixmap <1-3>");

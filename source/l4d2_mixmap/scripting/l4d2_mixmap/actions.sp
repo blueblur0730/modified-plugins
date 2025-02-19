@@ -33,44 +33,43 @@ void Timer_StartFisrMixmap(Handle timer)
 	Call_Finish();
 }
 
-void OnGameplayStart(const char[] output, int caller, int activator, float delay)
+void Timer_Notify(Handle timer, int userid)
 {
-	CreateTimer(0.1, Timer_OnGameplayStart);
+	int client = GetClientOfUserId(userid);
 
-	char sBuffer[128], sMap[128];
-	GetCurrentMap(sBuffer, sizeof(sBuffer));
-	g_hArrayPools.GetString(g_hArrayPools.Length - 1, sMap, sizeof(sMap));
+	if (client <= 0 || client > MaxClients)
+		return;
 
-	if (StrEqual(sBuffer, sMap))
-		CPrintToChatAll("%t", "HaveReachedTheEnd");
+	if (!IsClientInGame(client))
+		return;
+	
+	NotifyMixmap(client);
 }
 
-void Timer_OnGameplayStart(Handle timer)
+void Timer_ShowMaplist(Handle timer, int userid)
 {
-	for (int i = 1; i < MaxClients; i++)
-	{
-		if (IsClientInGame(i) && GetClientTeam(i) == 2)
-			CheatCommand(i, "warp_to_start_area");
-	}
+	int client = GetClientOfUserId(userid);
 
-	// if not to save all we have will be gone. give them a little pistol.
-	if (!g_hCvar_SaveStatus.BoolValue)
-	{
-		for (int i = 1; i < MaxClients; i++)
-		{
-			if (IsClientInGame(i) && GetClientTeam(i) == 2 && !IsFakeClient(i))
-				CheatCommand(i, "give", "pistol");
-		}
-	}
+	if (client <= 0 || client > MaxClients)
+		return;
 
-	if (!g_hCvar_SaveStatus_Bot.BoolValue)
-	{
-		for (int i = 1; i < MaxClients; i++)
-		{
-			if (IsClientInGame(i) && GetClientTeam(i) == 2 && IsFakeClient(i))
-				CheatCommand(i, "give", "pistol");
-		}
-	}
+	if (!IsClientInGame(client))
+		return;
+
+	NotifyMapList(client);
+}
+
+void Timer_NotifyTheEnd(Handle timer, int userid)
+{
+	int client = GetClientOfUserId(userid);
+
+	if (client <= 0 || client > MaxClients)
+		return;
+
+	if (!IsClientInGame(client))
+		return;
+
+	NotifyTheEnd(client);
 }
 
 void NotifyMixmap(int client)
@@ -90,6 +89,19 @@ void NotifyMixmap(int client)
 void NotifyMapList(int client)
 {
 	CPrintToChat(client, "%t", "MapList");
+
+	char sBuffer[64], sCurrentMap[64];
+	GetCurrentMap(sCurrentMap, sizeof(sCurrentMap));
+	for (int i = 0; i < g_hArrayPools.Length; i++)
+	{
+		g_hArrayPools.GetString(i, sBuffer, sizeof(sBuffer));
+		CPrintToChat(client, "{green}-> {olive}%s{default} %s", sBuffer, !strcmp(sCurrentMap, sBuffer) ? "({orange}Current{default})" : "");
+	}
+}
+
+void NotifyTheEnd(int client)
+{
+	CPrintToChat(client, "%t", "HaveReachedTheEnd");
 
 	char sBuffer[64], sCurrentMap[64];
 	GetCurrentMap(sCurrentMap, sizeof(sCurrentMap));

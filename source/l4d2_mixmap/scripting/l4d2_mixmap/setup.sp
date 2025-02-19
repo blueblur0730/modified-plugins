@@ -3,6 +3,26 @@
 #endif
 #define _l4d2_mixmap_setup_included
 
+#define LOGGER_NAME								   "Mixmap"
+#define TRANSLATION_FILE						   "l4d2_mixmap.phrases"
+#define GAMEDATA_FILE							   "l4d2_mixmap"
+
+#define ADDRESS_MATCHEXTL4D						   "g_pMatchExtL4D"
+#define ADDRESS_THEDIRECTOR						   "TheDirector"
+
+#define SDKCALL_GETALLMISSIONS					   "MatchExtL4D::GetAllMissions"
+#define SDKCALL_ONCHANGEMISSIONVOTE				   "CDirector::OnChangeMissionVote"
+
+#define DETOUR_RESTORETRANSITIONEDENTITIES		   "RestoreTransitionedEntities"
+#define DETOUR_TRANSITIONRESTORE				   "CTerrorPlayer::TransitionRestore"
+#define DETOUR_DIRECTORCHANGELEVEL				   "CDirector::DirectorChangeLevel"
+#define DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL "CTerrorGameRules::OnBeginChangeLevel"
+
+#define MIDHOOK_PLAYERSAVEDATA_PLAYERSAVEDATA		"PlayerSaveData::PlayerSaveData"
+#define MIDHOOK_RESTORETRANSITIONEDSURVIVORBOTS		"RestoreTransitionedSurvivorBots__ChangeCharacter"
+
+#define MEMPATCH_BLOCKRESTORING					   "RestoreTransitionedSurvivorBots__BlockRestoring"
+
 GlobalForward
 	g_hForwardStart,
 	g_hForwardNext,
@@ -10,13 +30,12 @@ GlobalForward
 	g_hForwardEnd;
 
 Address
-	g_pMatchExtL4D;
+	g_pMatchExtL4D,
 	g_pTheDirector;
 
 Handle
 	g_hSDKCall_GetAllMissions,
-	g_hSDKCall_OnChangeMissionVote,
-	g_hSDKCall_ClearTransitionedLandmarkName;
+	g_hSDKCall_OnChangeMissionVote;
 
 MemoryPatch g_hPatch_RestoreTransitionedSurvivorBots__BlockRestoring;
 
@@ -30,23 +49,25 @@ ConVar
 
 void SetUpGameData()
 {
-	GameDataWrapper gd 							= new GameDataWrapper(GAMEDATA_FILE);
-	g_pMatchExtL4D	   							= gd.GetAddress(ADDRESS_MATCHEXTL4D);
-	g_pTheDirector								= gd.GetAddress(ADDRESS_THEDIRECTOR);
+	GameDataWrapper gd			  = new GameDataWrapper(GAMEDATA_FILE);
+	g_pMatchExtL4D				  = gd.GetAddress(ADDRESS_MATCHEXTL4D);
+	g_pTheDirector				  = gd.GetAddress(ADDRESS_THEDIRECTOR);
 
-	SDKCallParamsWrapper ret	  				= { SDKType_PlainOldData, SDKPass_Plain };
-	g_hSDKCall_GetAllMissions	  				= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETALLMISSIONS, _, _, true, ret);
+	SDKCallParamsWrapper ret	  = { SDKType_PlainOldData, SDKPass_Plain };
+	g_hSDKCall_GetAllMissions	  = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETALLMISSIONS, _, _, true, ret);
 
 	// use this to change to the first map of a mission.
-	SDKCallParamsWrapper params[] 				= {{ SDKType_String, SDKPass_Pointer }};
-	g_hSDKCall_OnChangeMissionVote 				= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGEMISSIONVOTE, params, sizeof(params));
-
-	g_hSDKCall_ClearTransitionedLandmarkName 	= gd.CreateSDKCallOrFail(SDKCall_Static, SDKConf_Signature, SDKCALL_CLEARTRANSITIONEDLANDMARKNAME);
+	SDKCallParamsWrapper params[] = {
+		{SDKType_String, SDKPass_Pointer}
+	};
+	g_hSDKCall_OnChangeMissionVote			 = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGEMISSIONVOTE, params, sizeof(params));
 
 	gd.CreateDetourOrFailEx(DETOUR_RESTORETRANSITIONEDENTITIES, DTR_OnRestoreTransitionedEntities);
-	gd.CreateDetourOrFailEx(DETOUR_TRANSITIONRESTORE, DTR_CTerrorPlayer_OnTransitionRestore, /*DTR_CTerrorPlayer_OnTransitionRestore_Post*/_);
+	gd.CreateDetourOrFailEx(DETOUR_TRANSITIONRESTORE, DTR_CTerrorPlayer_OnTransitionRestore, /*DTR_CTerrorPlayer_OnTransitionRestore_Post*/ _);
 	gd.CreateDetourOrFailEx(DETOUR_DIRECTORCHANGELEVEL, DTR_CDirector_OnDirectorChangeLevel);
 	gd.CreateDetourOrFailEx(DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL, DTR_CTerrorGameRules_OnBeginChangeLevel);
+
+	gd.CreateMidHookOrFail(MIDHOOK_RESTORETRANSITIONEDSURVIVORBOTS, MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter, true);
 
 	g_hPatch_RestoreTransitionedSurvivorBots__BlockRestoring = gd.CreateMemoryPatchOrFail(MEMPATCH_BLOCKRESTORING);
 
@@ -74,7 +95,6 @@ void SetupCommands()
 
 	RegConsoleCmd("sm_maplist", Command_Maplist, "Show the map list");
 }
-
 
 void SetupLogger()
 {
@@ -113,7 +133,7 @@ any Native_GetMapSequence(Handle plugin, int numParams)
 
 	if (!plugin) ThrowNativeError(SP_ERROR_PARAM, "Invalid plugin handle: %d", plugin)
 
-	return CloneHandle(g_hArrayPools, plugin);
+		return CloneHandle(g_hArrayPools, plugin);
 }
 
 int Native_GetPlayedMapCount(Handle plugin, int numParams)
