@@ -1,0 +1,107 @@
+"Phrases"
+{
+    "NotifyClients"
+    {
+        "en"          "[{orange}!{default}] Currently using {orange}Mixmap{default}. Type {lightgreen}/maplist{default} to see map set."
+    }
+
+    "MapProgress"
+    {
+        "#format"       "{1:s},{2:s}"
+        "en"            "[{orange}!{default}] Current map: {olive}{1}{default}, Next Map: {orange}{2}{default}"
+    }
+
+    "None"
+    {
+        "en"            "None"
+    }
+
+    "MapList"
+    {
+        "en"            ">---{green}Map List{default}---<"
+    }
+
+    "FailedToGet"
+    {
+        "en"            "[{orange}!{default}] Failed to select a random map. Abort."
+    }
+
+    "StartingIn"
+    {
+        "#format"       "{1:d}"
+        "en"            "[{orange}!{default}] Starting Mixmap in {orange}{1}{default} seconds..."
+    }
+
+    "PluginDisabled"
+    {
+        "en"            "[{orange}!{default}] This plugin is disabled."
+    }
+
+    "HasStarted"
+    {
+        "en"            "[{orange}!{default}] Mixmap has started, Please wait for the end or vote to stop."
+    }
+
+    "MenuTitle_SelectMapSetType"
+    {
+        "en"            "Mapset Menu"
+    }
+
+    "MenuItem_OfficialMapSet"
+    {
+        "en"            "Official Map Mapset"
+    }
+
+    "MenuItem_CustomMapSet"
+    {
+        "en"            "Custom Map Mapset"
+    }
+
+    "MenuItem_MixtapeMapSet"
+    {
+        "en"            "Mixtape Mapset"
+    }
+
+    "NotStartedYet"
+    {
+        "en"            "[{orange}!{default}] Mixmap has not started yet. Please call a vote to start Mixmap."
+    }
+
+    "AdminForceStop"
+    {
+        "#format"       "{1:N}"
+        "en"            "[{orange}!{default}] Admin {teamcolor}{1}{default} forced to stop Mixmap."
+    }
+
+    "VoteInProgress"
+    {
+        "en"            "[{orange}!{default}] A vote is in progress."
+    }
+
+    "FailedToDisplayVote"
+    {
+        "en"            "[{orange}!{default}] Failed to display vote."
+    }
+
+    "HasInitiated"
+    {
+        "#format"       "{1:N}"
+        "en"            "[{orange}!{default}] {teamcolor}{1}{default} has initiated a vote."
+    }
+
+    "Voted"
+    {
+        "#format"       "{1:N}"
+        "en"            "[{orange}!{default}] {teamcolor}{1}{default} voted."
+    }
+
+    "NotEnoughMaps"
+    {
+        "en"            "[{orange}!{default}] Not enough maps to build a pool, please add more maps to the server."
+    }
+
+    "HaveReachedTheEnd"
+    {
+        "en"            "[{orange}!{default}] You have reached the end of the map pool. To start again Mixmap, use {orange}/mixmap{default}."
+    }
+}
