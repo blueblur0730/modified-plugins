@@ -12,13 +12,15 @@
 
 #define SDKCALL_GETALLMISSIONS					   "MatchExtL4D::GetAllMissions"
 #define SDKCALL_ONCHANGEMISSIONVOTE				   "CDirector::OnChangeMissionVote"
+#define SDKCALL_GETLARGESTAREA						"Checkpoint::GetLargestArea"
+#define SDKCALL_GETINITIALCHECKPOINT				"TerrorNavMesh::GetInitialCheckpoint"
 
 #define DETOUR_RESTORETRANSITIONEDENTITIES		   "RestoreTransitionedEntities"
 #define DETOUR_TRANSITIONRESTORE				   "CTerrorPlayer::TransitionRestore"
 #define DETOUR_DIRECTORCHANGELEVEL				   "CDirector::DirectorChangeLevel"
 #define DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL "CTerrorGameRules::OnBeginChangeLevel"
+#define DETOUR_RESTORETRANSITIONEDSURVIVORBOTS 		"RestoreTransitionedSurvivorBots"
 
-#define MIDHOOK_PLAYERSAVEDATA_PLAYERSAVEDATA		"PlayerSaveData::PlayerSaveData"
 #define MIDHOOK_RESTORETRANSITIONEDSURVIVORBOTS		"RestoreTransitionedSurvivorBots__ChangeCharacter"
 
 #define MEMPATCH_BLOCKRESTORING					   "RestoreTransitionedSurvivorBots__BlockRestoring"
@@ -35,7 +37,9 @@ Address
 
 Handle
 	g_hSDKCall_GetAllMissions,
-	g_hSDKCall_OnChangeMissionVote;
+	g_hSDKCall_OnChangeMissionVote,
+	g_hSDKCall_GetLargestArea,
+	g_hSDKCall_GetInitialCheckPoint;
 
 MemoryPatch g_hPatch_RestoreTransitionedSurvivorBots__BlockRestoring;
 
@@ -51,21 +55,28 @@ void SetUpGameData()
 {
 	GameDataWrapper gd			  = new GameDataWrapper(GAMEDATA_FILE);
 	g_pMatchExtL4D				  = gd.GetAddress(ADDRESS_MATCHEXTL4D);
-	g_pTheDirector				  = gd.GetAddress(ADDRESS_THEDIRECTOR);
+	g_pTheDirector				  = L4D_GetPointer(POINTER_DIRECTOR);
+	if (!g_pTheDirector)
+		SetFailState("Failed to get address of TheDirector.");
 
-	SDKCallParamsWrapper ret	  = { SDKType_PlainOldData, SDKPass_Plain };
-	g_hSDKCall_GetAllMissions	  = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETALLMISSIONS, _, _, true, ret);
+	SDKCallParamsWrapper ret	  	= { SDKType_PlainOldData, SDKPass_Plain };
+	g_hSDKCall_GetAllMissions	  	= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETALLMISSIONS, _, _, true, ret);
 
 	// use this to change to the first map of a mission.
-	SDKCallParamsWrapper params[] = {
-		{SDKType_String, SDKPass_Pointer}
-	};
-	g_hSDKCall_OnChangeMissionVote			 = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGEMISSIONVOTE, params, sizeof(params));
+	SDKCallParamsWrapper params[] 	= {{SDKType_String, SDKPass_Pointer}};
+	g_hSDKCall_OnChangeMissionVote	= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGEMISSIONVOTE, params, sizeof(params));
+
+	SDKCallParamsWrapper ret1 		= {SDKType_PlainOldData, SDKPass_Plain};
+	g_hSDKCall_GetLargestArea		= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_GETLARGESTAREA, _, _, true, ret1);
+
+	SDKCallParamsWrapper ret2 		= {SDKType_PlainOldData, SDKPass_Plain};
+	g_hSDKCall_GetInitialCheckPoint = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_GETINITIALCHECKPOINT, _, _, true, ret2);
 
 	gd.CreateDetourOrFailEx(DETOUR_RESTORETRANSITIONEDENTITIES, DTR_OnRestoreTransitionedEntities);
 	gd.CreateDetourOrFailEx(DETOUR_TRANSITIONRESTORE, DTR_CTerrorPlayer_OnTransitionRestore, /*DTR_CTerrorPlayer_OnTransitionRestore_Post*/ _);
 	gd.CreateDetourOrFailEx(DETOUR_DIRECTORCHANGELEVEL, DTR_CDirector_OnDirectorChangeLevel);
 	gd.CreateDetourOrFailEx(DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL, DTR_CTerrorGameRules_OnBeginChangeLevel);
+	gd.CreateDetourOrFailEx(DETOUR_RESTORETRANSITIONEDSURVIVORBOTS, _, DTR_RestoreTransitionedSurvivorBots_Post)
 
 	gd.CreateMidHookOrFail(MIDHOOK_RESTORETRANSITIONEDSURVIVORBOTS, MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter, true);
 
@@ -106,7 +117,7 @@ void SetupLogger()
 			SetFailState("[Mixmap] Failed to create logger!")
 	}
 
-	g_hLogger.SetLevel(LogLevel_Trace);
+	g_hLogger.SetLevel(LogLevel_Info);
 	g_hLogger.FlushOn(LogLevel_Info);
 }
 

@@ -5,14 +5,15 @@
 #include <sdktools>
 #include <dhooks>
 #include <log4sp>
-#include <sourcescramble>
 #include <midhook>
+#include <sourcescramble>
 #include <l4d2_source_keyvalues>
 #include <l4d2_nativevote>
+#include <left4dhooks>
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re1.2"
+#define PLUGIN_VERSION "re2.0"
 
 StringMap g_hMapChapterNames;
 
@@ -25,7 +26,6 @@ Logger g_hLogger;
 
 bool g_bMapsetInitialized;
 int g_iMapsPlayed;
-bool g_bHaveReachedTheEnd;
 
 enum MapSetType {
 	MapSet_None = 0,
@@ -77,15 +77,13 @@ public void OnPluginStart()
 public void OnClientPutInServer(int client)
 {
 	if (!g_bMapsetInitialized)
-	{
-		if (g_bHaveReachedTheEnd && g_hCvar_NextMapPrint.BoolValue)
-			CreateTimer(10.0, Timer_NotifyTheEnd, GetClientUserId(client));
-
 		return;
-	}
 		
 	if (!g_hCvar_NextMapPrint.BoolValue)
 		return;
+
+	if (g_iMapsPlayed == g_hArrayPools.Length)
+		CreateTimer(10.0, Timer_NotifyTheEnd, GetClientUserId(client));
 
 	int userid = GetClientUserId(client);
 	CreateTimer(10.0, Timer_Notify, userid);
@@ -115,31 +113,26 @@ public void OnMapStart()
 		return;
 	}
 	
-	//HookEntityOutput("info_director", "OnGameplayStart", OnGameplayStart);
-	
 	g_iMapsPlayed++;
 
+	// let other plugins know what the map *after* this one will be (unless it is the last map)
+	Call_StartForward(g_hForwardNext);
+	Call_PushString(sPresetMap);
+	Call_Finish();
+}
+
+public void OnMapEnd()
+{
 	// finished playing. reset.
 	if (g_iMapsPlayed >= g_hArrayPools.Length)
 	{
-		g_bHaveReachedTheEnd = true;
+		g_hLogger.Info("### Stopping MixMap.");
 		PluginStartInit();
 		Patch(false);
 		Call_StartForward(g_hForwardEnd);
 		Call_Finish();
 		return;
 	}
-
-	// let other plugins know what the map *after* this one will be (unless it is the last map)
-	g_hArrayPools.GetString(g_iMapsPlayed, sBuffer, sizeof(sBuffer));
-	Call_StartForward(g_hForwardNext);
-	Call_PushString(sBuffer);
-	Call_Finish();
-}
-
-public void OnMapEnd()
-{
-	g_bHaveReachedTheEnd = false;
 }
 
 void PluginStartInit()

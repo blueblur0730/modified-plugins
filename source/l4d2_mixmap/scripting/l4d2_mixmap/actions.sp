@@ -24,7 +24,7 @@ void Timer_StartFisrMixmap(Handle timer)
 	char sMap[128], sMissionName[128];
 	g_hArrayPools.GetString(0, sMap, sizeof(sMap));
 	g_hMapChapterNames.GetString(sMap, sMissionName, sizeof(sMissionName));
-	g_hLogger.DebugEx("### Starting Mixmap with %s", sMissionName);
+	g_hLogger.InfoEx("### Starting Mixmap with %s", sMissionName);
 	SDKCall(g_hSDKCall_OnChangeMissionVote, g_pTheDirector, sMissionName);
 
 	g_bMapsetInitialized = true;

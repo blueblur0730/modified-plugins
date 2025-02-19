@@ -20,11 +20,8 @@ MRESReturn DTR_CTerrorPlayer_OnTransitionRestore(int pThis, DHookReturn hReturn)
 	if (!g_bMapsetInitialized)
 		return MRES_Ignored;
 
-	g_hLogger.TraceEx("### DTR_CTerrorPlayer_OnTransitionRestore Called for %d, %N.", pThis, pThis);
-	CheatCommand(pThis, "warp_to_start_area");
-
-	if (GetPlayerWeaponSlot(pThis, 1) == -1)
-		CheatCommand(pThis, "give", "pistol");
+	g_hLogger.DebugEx("### DTR_CTerrorPlayer_OnTransitionRestore Called for %d, %N.", pThis, pThis);
+	RequestFrame(OnNextFrame_ResetPlayers, pThis);	// bots have not created, only player. same as midhook callback.
 
 	// this only block human player's status.
 	if (!g_hCvar_SaveStatus.BoolValue)
@@ -102,8 +99,18 @@ MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
     return MRES_Ignored;
 }
 
+// bots have created.
+MRESReturn DTR_RestoreTransitionedSurvivorBots_Post()
+{
+	RequestFrame(OnNextFrame_ResetPlayers, 0);
+	return MRES_Ignored;
+}
+
 // prevent survivor bot disodering when map change using survivor set between l4d2 and l4d1.
 // https://github.com/blueblur0730/modified-plugins/pull/20#issuecomment-2665756873
+// why not read g_SavedSurvivorBots? it is probably a Keyvalues array, or a CultVector.
+// been tried to read it from memory but the thing we read from looks like not a KeyValues pointer, crashes server, no idea.
+// so we use midhook to read the KeyValues pointer from the register.
 void MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter(MidHookRegisters reg)
 {
 	if (!g_bMapsetInitialized)
@@ -178,12 +185,54 @@ void OnNextFrame_ChangeName(DataPack dp)
 	int userid = dp.ReadCell();
 	delete dp;
 
+	int client = GetClientOfUserId(userid);
+	if (client <= 0 || client > MaxClients)
+		return;
+
 	char sName[32];
 	GetCorrespondingName(index, sName, sizeof(sName));
-	int client = GetClientOfUserId(userid);
-	if (client > 0 && client <= MaxClients)
+
+    SetClientInfo(client, "name", sName);
+    SetEntPropString(client, Prop_Data, "m_szNetname", sName);
+}
+
+void OnNextFrame_ResetPlayers(int client)
+{
+	if (L4D_IsFirstMapInScenario())
+		return;
+
+	if (client > 0)
 	{
-    	SetClientInfo(client, "name", sName);
-    	SetEntPropString(client, Prop_Data, "m_szNetname", sName);
+		ResetPlayer(client);
 	}
+	else
+	{
+		for (int i = 1; i < MaxClients; i++)
+		{
+			if (i <= 0 || i > MaxClients)
+				continue;
+
+			if (!IsClientInGame(i) || GetClientTeam(i) != 2 || !IsFakeClient(i))
+				continue;
+
+			ResetPlayer(i);
+		}
+	}
+}
+
+void ResetPlayer(int client)
+{
+	if (!IsClientInSafeArea(client))
+	{
+		g_hLogger.DebugEx("### OnNextFrame_ResetPlayer: Client %N is not in saferoom.", client);
+
+		float vec[3];
+		GetSafeAreaOriginEx(vec);
+		g_hLogger.DebugEx("### OnNextFrame_ResetPlayer: Found teleport destination: %.2f, %.2f, %.2f.", vec[0], vec[1], vec[2]);
+		if (vec[0] != 0.0 && vec[1] != 0.0 && vec[2] != 0.0)
+			TeleportEntity(client, vec, NULL_VECTOR, NULL_VECTOR);
+	}
+
+	if (GetPlayerWeaponSlot(client, 1) == -1)
+		CheatCommand(client, "give", "pistol");
 }

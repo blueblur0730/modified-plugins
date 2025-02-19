@@ -54,6 +54,14 @@
 					}
 				}
 			}
+
+			"RestoreTransitionedSurvivorBots"
+			{
+				"signature"		"RestoreTransitionedSurvivorBots"
+				"callconv"		"cdecl"
+				"return"		"void"
+				"this"			"ignore"
+			}
         }
 
 		"MemPatches"
@@ -91,21 +99,6 @@
 				{
 					"signature"	"CTerrorGameRules::GetMissionInfo"
 					"read"		"42"
-				}
-				"read"	"0"
-			}
-
-			// from left4dhooks.
-			"TheDirector"
-			{
-				"linux"
-				{
-					"signature"	"TheDirector"
-				}
-				"windows"
-				{
-					"signature"	"CDirectorMusicBanks::OnRoundStart"
-					"read"		"12"
 				}
 				"read"	"0"
 			}
@@ -211,6 +204,22 @@
 				"linux"		"@_Z31RestoreTransitionedSurvivorBotsv"
 				"windows"	"\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x83\x2A\x2A\x85\x2A\x0F\x84\x2A\x2A\x2A\x2A\x53\x56\x57\x50\x68"
 				/* ? ? ? ? ? ? ? ? 83 ? ? 85 ? 0F 84 ? ? ? ? 53 56 57 50 68 */
+			}
+
+			"TerrorNavMesh::GetInitialCheckpoint"
+			{
+				"library"	"server"
+				"linux"		"@_ZNK13TerrorNavMesh20GetInitialCheckpointEv"
+				"windows"	""
+			}
+
+			/* Checkpoint::GetLargestArea(Checkpoint *__hidden this) */
+			"Checkpoint::GetLargestArea"
+			{
+				"library"	"server"
+				"linux"		"@_ZNK10Checkpoint14GetLargestAreaEv"
+				"windows"	"\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x8B\x2A\x53\x8B\x2A\x2A\x33\x2A\x33\x2A\x89\x2A\x2A\x83"
+				/* ? ? ? ? ? ? ? 8B ? 53 8B ? ? 33 ? 33 ? 89 ? ? 83 */
 			}
         }
     }
