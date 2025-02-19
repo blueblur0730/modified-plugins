@@ -103,6 +103,39 @@ bool SelectRandomMap()
 	delete g_hArraySurvivorSets;
 	g_hArraySurvivorSets = new ArrayList();
 
+	ArrayList hArrayBlackList = null;
+	if (g_hCvar_EnableBlackList.BoolValue)
+	{
+		char sPath[128];
+		BuildPath(Path_SM, sPath, sizeof(sPath), CONFIG_BLACKLIST);
+		KeyValues kv = new KeyValues("");
+		if (kv.ImportFromFile(sPath))
+		{
+			if (kv.GotoFirstSubKey())
+			{
+				hArrayBlackList = new ArrayList(ByteCountToCells(64));
+
+				do
+				{
+					char sMap[64];
+					kv.GetString(NULL_STRING, sMap, sizeof(sMap));
+					hArrayBlackList.PushString(sMap);
+				}
+				while (kv.GotoNextKey());
+			}
+			else
+			{
+				LogError("No keys found in \""...CONFIG_BLACKLIST..."\", black list disabled.");
+			}
+		}
+		else
+		{
+			LogError("Failed to load black list file from \""...CONFIG_BLACKLIST..."\", black list disabled.");
+		}
+
+		delete kv;
+	}
+
 	for (int i = 0; i < g_hCvar_MapPoolCapacity.IntValue; i++)
 	{
 		// first random sort the main arraylist, meaning choosing a mission here randomly.
@@ -111,9 +144,6 @@ bool SelectRandomMap()
 		g_hArrayMissionsAndMaps.Sort(Sort_Random, Sort_Integer);
 		int index = GetRandomInt(0, g_hArrayMissionsAndMaps.Length - 1);
 		DataPack dp = g_hArrayMissionsAndMaps.Get(index);
-
-		// earse this one for next selection. make sure no same compaign map.
-		g_hArrayMissionsAndMaps.Erase(index);
 
 		dp.Reset();
 		ArrayList hArray = dp.ReadCell();
@@ -132,12 +162,28 @@ bool SelectRandomMap()
 			if (i == 0)
 			{
 				hArray.GetString(0, sMap, sizeof(sMap));
+				if (CheckBlackList(hArrayBlackList, sMap))
+				{
+					i--;	// do not take this into count.
+					continue;
+				}
+
 				g_hArrayPools.PushString(sMap);
 				g_hArraySurvivorSets.Push(survivorSet);
 			}
 			else if (i == g_hCvar_MapPoolCapacity.IntValue - 1)	// the last selection must be the finale.
 			{
 				hArray.GetString(hArray.Length - 1, sMap, sizeof(sMap));
+				if (CheckBlackList(hArrayBlackList, sMap))
+				{
+					// dont need this, as it only have one map and it's on the blacklist.
+					if (hArray.Length == 1)
+						delete hArray;
+
+					i--;
+					continue;
+				}
+
 				g_hArrayPools.PushString(sMap);
 				g_hArraySurvivorSets.Push(survivorSet);
 			}
@@ -149,9 +195,37 @@ bool SelectRandomMap()
 					hArray.Erase(hArray.Length - 1);
 					hArray.Erase(0);
 
-					hArray.Sort(Sort_Random, Sort_String);	// randomlize the array
-					int random = GetRandomInt(0, hArray.Length - 1);
-					hArray.GetString(random, sMap, sizeof(sMap));
+					if (g_hCvar_EnableBlackList.BoolValue && hArrayBlackList)
+					{
+						do
+						{
+							// all the thing are removed so stop it.
+							if (!hArray.Length)
+								break;
+
+							hArray.Sort(Sort_Random, Sort_String);	// randomlize the array
+							int random = GetRandomInt(0, hArray.Length - 1);
+							hArray.GetString(random, sMap, sizeof(sMap));
+							if (CheckBlackList(hArrayBlackList, sMap))
+								hArray.Erase(random);	// in case all the array are the hater, we erase it.
+						}
+						while (CheckBlackList(hArrayBlackList, sMap));
+
+						// we got nothing from here, do not take this into count and remove this.
+						if (!hArray.Length)
+						{
+							i--;	// do not take this into count.
+							delete hArray;
+							continue;
+						}
+					}
+					else
+					{
+						hArray.Sort(Sort_Random, Sort_String);	// randomlize the array
+						int random = GetRandomInt(0, hArray.Length - 1);
+						hArray.GetString(random, sMap, sizeof(sMap));
+					}
+
 					g_hArrayPools.PushString(sMap);
 					g_hArraySurvivorSets.Push(survivorSet);
 				}
@@ -159,22 +233,34 @@ bool SelectRandomMap()
 				{
 					// else we use the first map, and make sure it is not a finale.
 					hArray.GetString(0, sMap, sizeof(sMap));
+					if (CheckBlackList(hArrayBlackList, sMap))
+					{
+						i--;
+						continue;
+					}
+
 					g_hArrayPools.PushString(sMap);
 					g_hArraySurvivorSets.Push(survivorSet);
 				}
 				else if (hArray.Length == 1)	// do not take any action, as this can be a finale map.
 				{
-					i--;	// we need to decrease the index, as we do not push any map into the arraylist.
+					// we need to decrease the index, as we do not push any map into the arraylist.
+					i--;
+					continue;	// save this if it is finale.
 				}
 			}
 
 			delete hArray;
 		}
 
+		// earse this one you've made this far for next selection. make sure no same compaign map.
+		g_hArrayMissionsAndMaps.Erase(index);
+
 		delete dp;
 	}
 
 	delete g_hArrayMissionsAndMaps;
+	delete hArrayBlackList;
 
 	for (int i = 1; i < MaxClients; i++)
 	{
@@ -185,6 +271,18 @@ bool SelectRandomMap()
 	}
 
 	return true;
+}
+
+bool CheckBlackList(ArrayList hArrayBlackList, const char[] sMap)
+{
+	if (g_hCvar_EnableBlackList.BoolValue && hArrayBlackList)
+	{
+		int found = hArrayBlackList.FindString(sMap);
+		if (found != -1)
+			return true;
+	}
+
+	return false;
 }
 
 void CleanMemory()
