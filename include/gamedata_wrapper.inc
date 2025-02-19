@@ -1,7 +1,7 @@
-#if defined _gamedata_wrapper_
+#if defined _gamedata_wrapper_included
     #endinput
 #endif
-#define _gamedata_wrapper_
+#define _gamedata_wrapper_included
 
 #include <sourcemod>
 
@@ -13,18 +13,18 @@ enum OperatingSystem
 }
 
 #if defined _sdktools_included
-enum struct SDKCallParamsWrapper
-{
+enum struct SDKCallParamsWrapper {
     SDKType          type;
     SDKPassMethod    pass;
     int              decflags;
     int              encflags;
 }
+
+static const char k_sSDKFuncConfSource[3][] = { "Offsets", "Signatures", "Addresses" };
 #endif
 
 // credits to Forgetest.
-methodmap GameDataWrapper < GameData
-{
+methodmap GameDataWrapper < GameData {
     public GameDataWrapper(const char[] file) {
         GameData gd = new GameData(file);
         if (!gd) SetFailState("[GameData] Missing gamedata of file \"%s\".", file);
@@ -63,6 +63,18 @@ methodmap GameDataWrapper < GameData
     }
 
 #if defined _sdktools_included
+    /**
+     * Creates a call from conf file.
+     * 
+     * @param type              The type of the call.
+     * @param src               The source section to retrieve from the gamedata config.
+     * @param name              The name of the call.
+     * @param params            The parameters of the call.
+     * @param numParams         The number of parameters.
+     * @param hasReturnValue    Whether the call has a return value.
+     * 
+     * @return Handle of the call.
+     **/ 
     public Handle CreateSDKCallOrFail(
         SDKCallType type,
         SDKFuncConfSource src,
@@ -72,7 +84,6 @@ methodmap GameDataWrapper < GameData
         bool hasReturnValue = false,
         const SDKCallParamsWrapper ret = {})
     {
-        static const char k_sSDKFuncConfSource[SDKFuncConfSource][] = { "Offsets", "Signatures", "Addresses" };
         Handle result;
         StartPrepSDKCall(type);
         if (!PrepSDKCall_SetFromConf(this, src, name))
@@ -90,8 +101,20 @@ methodmap GameDataWrapper < GameData
         return result;
     }
 
-    // use relative call address to setup call instead of setting from conf.
-    public Handle CreateSDKCallOrFailEx(
+    /**
+     * Use relative call address to setup call instead of setting from conf.
+     * 
+     * @param type              The type of the call.
+     * @param pFuncStart        The start address of the relative call function.
+     * @param offset            The offset to jump back from the relative call.
+     * @param params            The parameters of the call.
+     * @param numParams         The number of parameters.
+     * @param hasReturnValue    Whether the call has a return value.
+     * @param ret               The return value of the call.
+     * 
+     * @returns Handle          The handle of the call.
+    */
+    public static Handle CreateSDKCallOrFailEx(
         SDKCallType type,
         Address pFuncStart,
         int offset,
@@ -130,36 +153,44 @@ methodmap GameDataWrapper < GameData
         DynamicDetour hSetup = DynamicDetour.FromConf(this, name);
 
         if (!hSetup)
-            SetFailState("[DHooks] Missing detour setup section \"%s\".", name);
+            SetFailState("[Detour] Missing detour setup section \"%s\".", name);
 
         if (bNow)
         {
             if (preHook != INVALID_FUNCTION && !hSetup.Enable(Hook_Pre, preHook))
-                SetFailState("[DHooks] Failed to pre-detour of section \"%s\".", name);
+                SetFailState("[Detour] Failed to pre-detour of section \"%s\".", name);
 
             if (postHook != INVALID_FUNCTION && !hSetup.Enable(Hook_Post, postHook))
-                SetFailState("[DHooks] Failed to post-detour of section \"%s\".", name);
+                SetFailState("[Detour] Failed to post-detour of section \"%s\".", name);
         }
 
         return hSetup;
     }
 
-    // create a dynamic hook from conf, simply return its handle.
-    public DynamicHook CreateDynamicHookOrFail(const char[] name)
-    {
-        DynamicHook hSetup = DynamicHook.FromConf(this, name);
-
-        if (!hSetup)
-            SetFailState("[DHooks] Missing dynamic hook setup section \"%s\".", name);
-        return hSetup;
+    /**
+     * Creates a detour, and free its handle. (meaning the detour will never be disabled.)
+     * 
+     * @param name              The name of the detour setup section.
+     * @param bNow              Whether to enable the detour immediately.
+     * @param preHook           The pre-hook function.
+     * @param postHook          The post-hook function.
+     * 
+     * @noreturn
+    */
+    public void CreateDetourOrFailEx(
+            const char[] name,
+            DHookCallback preHook = INVALID_FUNCTION,
+            DHookCallback postHook = INVALID_FUNCTION) {
+        delete (this.CreateDetourOrFail(name, true, preHook, postHook));
     }
 
-    // create a dynamic hook from conf, specify the hook type and immediately hooks the target.
-    public DynamicHook CreateDynamicHookOrFailEx(
+    // create a dynamic hook from conf, specify the hook type and hooks the target.
+    public DynamicHook CreateDynamicHookOrFail(
             const char[] name,
             HookType type,
             int entity = -1,
             Address pAdr = Address_Null,
+            bool bNow = true,
             DHookCallback preHook = INVALID_FUNCTION,
             DHookCallback postHook = INVALID_FUNCTION,
             DHookRemovalCB removalHook = INVALID_FUNCTION)
@@ -169,14 +200,14 @@ methodmap GameDataWrapper < GameData
         if (!hSetup)
             SetFailState("[DHooks] Missing dynamic hook setup section \"%s\".", name);
 
+        if (!bNow)
+            return hSetup;
+
         switch (type)
         {
             case HookType_Entity:
             {
                 if (entity == -1) SetFailState("[DHooks] Invalid entity index for section \"%s\".", name);
-
-                if (preHook != INVALID_FUNCTION && postHook != INVALID_FUNCTION)
-                    SetFailState("[DHooks] Failed to create dynamic hook of an entity because no callback is specified for section \"%s\".", name);
 
                 if (preHook != INVALID_FUNCTION && !hSetup.HookEntity(Hook_Pre, entity, preHook, removalHook))
                     SetFailState("[DHooks] Failed to pre-dhook section \"%s\".", name);
@@ -187,9 +218,6 @@ methodmap GameDataWrapper < GameData
             
             case HookType_GameRules:
             {
-                if (preHook != INVALID_FUNCTION && postHook != INVALID_FUNCTION)
-                    SetFailState("[DHooks] Failed to create dynamic hook of a GameRules object because no callback is specified for section \"%s\".", name);
-
                 if (preHook != INVALID_FUNCTION && !hSetup.HookGamerules(Hook_Pre, preHook, removalHook))
                     SetFailState("[DHooks] Failed to pre-dhook section \"%s\".", name);
 
@@ -199,11 +227,8 @@ methodmap GameDataWrapper < GameData
 
             case HookType_Raw:
             {
-                if (pAdr == Address_Null) SetFailState("Invalid address for section \"%s\".", name);
+                if (pAdr == Address_Null) SetFailState("[DHooks] Invalid address for section \"%s\".", name);
                 
-                if (preHook != INVALID_FUNCTION && postHook != INVALID_FUNCTION)
-                    SetFailState("[DHooks] Failed to create dynamic hook of a GameRules object because no callback is specified for section \"%s\".", name);
-
                 if (preHook != INVALID_FUNCTION && !hSetup.HookRaw(Hook_Pre, pAdr, preHook))
                     SetFailState("[DHooks] Failed to pre-dhook section \"%s\".", name);
 
@@ -214,6 +239,18 @@ methodmap GameDataWrapper < GameData
 
         return hSetup;
     }
+
+    public DynamicHook CreateDynamicHookOrFailEx(
+            const char[] name,
+            HookType type,
+            int entity = -1,
+            Address pAdr = Address_Null,
+            DHookCallback preHook = INVALID_FUNCTION,
+            DHookCallback postHook = INVALID_FUNCTION,
+            DHookRemovalCB removalHook = INVALID_FUNCTION)
+    {
+        delete (this.CreateDynamicHookOrFail(name, type, entity, pAdr, true, preHook, postHook, removalHook));
+    }
 #endif
 
 #if defined __sourcescramble_ext_included
@@ -223,6 +260,10 @@ methodmap GameDataWrapper < GameData
             SetFailState("[MemoryPatch] Failed to patch section \"%s\" through source scramble.", name);
 
         return hPatch;
+    }
+
+    public void CreateMemoryPatchOrFailEx(const char[] name) {
+        delete (this.CreateMemoryPatchOrFail(name));
     }
 
     public MemoryBlock CreateMemoryBlockOrFail(const char[] name) {
@@ -239,6 +280,10 @@ methodmap GameDataWrapper < GameData
         if (!hHook) SetFailState("[MidHooks] Failed to create Midhook for section \"%s\".", name);
 
         return hHook;
+    }
+
+    public void CreateMidHookOrFailEx(const char[] name, MidHookCB callback) {
+        delete (this.CreateMidHookOrFail(name, callback, true));
     }
 #endif
 }
