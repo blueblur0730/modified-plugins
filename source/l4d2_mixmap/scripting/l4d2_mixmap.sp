@@ -13,7 +13,7 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re2.0.1"
+#define PLUGIN_VERSION "re2.0.3"
 
 StringMap g_hMapChapterNames;
 
@@ -141,6 +141,8 @@ void PluginStartInit()
 	g_iMapsPlayed		 = 0;
 	g_iMapsetType        = MapSet_None;
 	delete g_hArrayPools;
+	delete g_hMapChapterNames;
+	delete g_hArraySurvivorSets;
 }
 
 stock void LoadTranslation(const char[] translation)

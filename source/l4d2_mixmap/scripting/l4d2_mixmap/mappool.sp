@@ -72,9 +72,9 @@ void CollectAllMaps(MapSetType type)
 
 			// pack mission and map names up. into an arraylist so we can sort them.
 			DataPack dp = new DataPack();
-			dp.WriteString(sMissionName);
 			dp.WriteCell(hArray);
 			dp.WriteCell(survivorSet);
+			dp.WriteString(sMissionName);
 			g_hArrayMissionsAndMaps.Push(dp);
 		}
 	}
@@ -100,6 +100,9 @@ bool SelectRandomMap()
 	delete g_hMapChapterNames;
 	g_hMapChapterNames = new StringMap();
 
+	delete g_hArraySurvivorSets;
+	g_hArraySurvivorSets = new ArrayList();
+
 	for (int i = 0; i < g_hCvar_MapPoolCapacity.IntValue; i++)
 	{
 		// first random sort the main arraylist, meaning choosing a mission here randomly.
@@ -113,9 +116,9 @@ bool SelectRandomMap()
 		g_hArrayMissionsAndMaps.Erase(index);
 
 		dp.Reset();
-		dp.ReadString(sMissionName, sizeof(sMissionName));
 		ArrayList hArray = dp.ReadCell();
 		int survivorSet = dp.ReadCell();
+		dp.ReadString(sMissionName, sizeof(sMissionName));
 
 		// set the mission's first map name, as we need the mission name to transfer to the first map.
 		char sFirstMap[128];
@@ -191,6 +194,7 @@ void CleanMemory()
 		for (int i = 0; i < g_hArrayMissionsAndMaps.Length; i++)
 		{
 			DataPack dp = g_hArrayMissionsAndMaps.Get(i);
+			dp.Reset();
 			ArrayList hArray = dp.ReadCell();
 			delete hArray;
 			delete dp;

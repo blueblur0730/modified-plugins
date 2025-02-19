@@ -57,6 +57,9 @@ MRESReturn DTR_CDirector_OnDirectorChangeLevel(DHookParam hParams)
 			}
 		}
 
+		if (g_iMapsPlayed >= g_hArrayPools.Length)
+			return MRES_Ignored;
+
 		g_hArrayPools.GetString(g_iMapsPlayed, sMap, sizeof(sMap));
 		g_hLogger.DebugEx("### DTR_CDirector_OnDirectorChangeLevel: Transition Map Name: %s.", sMap);
 		hParams.SetString(1, sMap);
@@ -89,6 +92,9 @@ MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
 			}
 		}
 		
+		if (g_iMapsPlayed >= g_hArrayPools.Length)
+			return MRES_Ignored;
+
 		g_hArrayPools.GetString(g_iMapsPlayed, sMap, sizeof(sMap));
 		g_hLogger.DebugEx("### DTR_CTerrorGameRules_OnBeginChangeLevel: Transition Map Name: %s.", sMap);
 		hParams.SetString(1, sMap);
@@ -233,6 +239,6 @@ void ResetPlayer(int client)
 			TeleportEntity(client, vec, NULL_VECTOR, NULL_VECTOR);
 	}
 
-	if (GetPlayerWeaponSlot(client, 1) == -1)
+	if (GetPlayerWeaponSlot(client, 1) == -1 || (!g_hCvar_SaveStatus_Bot.BoolValue || !g_hCvar_SaveStatus.BoolValue))
 		CheatCommand(client, "give", "pistol");
 }

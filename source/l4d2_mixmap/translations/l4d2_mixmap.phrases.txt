@@ -21,7 +21,7 @@
         "en"            ">---{green}Map List{default}---<"
     }
 
-    "FailedToSelect"
+    "FailedToGet"
     {
         "en"            "[{orange}!{default}] Failed to select a random map. Abort."
     }
