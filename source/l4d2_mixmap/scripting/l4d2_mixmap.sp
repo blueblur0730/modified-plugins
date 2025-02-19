@@ -13,7 +13,7 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re2.0"
+#define PLUGIN_VERSION "re2.0.1"
 
 StringMap g_hMapChapterNames;
 

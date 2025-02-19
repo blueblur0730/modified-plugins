@@ -102,6 +102,6 @@
 
     "HaveReachedTheEnd"
     {
-        "en"            "[{orange}!{default}] 当前是图池中最后一站图. 要重新开始 Mixmap, 请使用 {orange}/mixmap{default}."
+        "chi"            "[{orange}!{default}] 当前是图池中最后一站图. 要重新开始 Mixmap, 请使用 {orange}/mixmap{default}."
     }
 }

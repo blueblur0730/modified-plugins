@@ -102,14 +102,6 @@ void NotifyMapList(int client)
 void NotifyTheEnd(int client)
 {
 	CPrintToChat(client, "%t", "HaveReachedTheEnd");
-
-	char sBuffer[64], sCurrentMap[64];
-	GetCurrentMap(sCurrentMap, sizeof(sCurrentMap));
-	for (int i = 0; i < g_hArrayPools.Length; i++)
-	{
-		g_hArrayPools.GetString(i, sBuffer, sizeof(sBuffer));
-		CPrintToChat(client, "{green}-> {olive}%s{default} %s", sBuffer, !strcmp(sCurrentMap, sBuffer) ? "({orange}Current{default})" : "");
-	}
 }
 
 /*
