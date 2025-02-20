@@ -67,6 +67,60 @@
         "chi"           "混合图池"
     }
 
+    "MenuItem_ManuallySelectMap"
+    {
+        "chi"           "手动选择地图"
+    }
+
+    "MenuTitle_ChooseMapSetType"
+    {
+        "chi"           "选择图池类型"
+    }
+
+    "SelectMapsIntoPool"
+    {
+        "chi"           "[{orange}!{default}] 请选择地图进入图池. 地图列表根据 {orange}当前游戏模式{default} 而定."
+    }
+
+    "CanOnlySelect"
+    {
+        "#format"       "{1:d}"
+        "chi"           "[{orange}!{default}] 你只能选择 {lightgreen}{1}{default} 张地图."
+    }
+
+    "MenuTitle_ChooseFrom"
+    {
+        "#format"       "{1:s}"
+        "chi"           "请从战役 {1} 中选择地图:"
+    }
+
+    "MenuTitle_NextMission"
+    {
+        "chi"           "下一战役"
+    }
+
+    "MenuTitle_LastMission"
+    {
+        "chi"           "上一战役"
+    }
+
+    "AddedInto"
+    {
+        "#format"       "{1:s}"
+        "chi"           "[{orange}!{default}] 已将 {olive}{1}{default} 加入图池."
+    }
+
+    "FullSelected"
+    {
+        "#format"       "{1:d}"
+        "chi"           "[{orange}!{default}] 图池已选满. 将在 {orange}{1}{default} 秒内发起投票..."
+    }
+
+    "AbortedSelection"
+    {
+        "chi"           "[{orange}!{default}] 已中断当前地图选择进程."
+    }
+
     "NotStartedYet"
     {
         "chi"           "[{orange}!{default}] Mixmap {orange}尚未开始{default}. 请先发起投票来开始 Mixmap"
@@ -108,5 +162,15 @@
     "HaveReachedTheEnd"
     {
         "chi"            "[{orange}!{default}] 当前已是图池中最后一张图. 在完成救援关后, 请使用 {orange}/mixmap{default} 重新开始 Mixmap."
+    }
+
+    "CannotSelectUntil"
+    {
+        "chi"            "[{orange}!{default}] 你不能在图池还未抵达最后时选择一张救援图."
+    }
+
+    "ShouldSelectLastMap"
+    {
+        "chi"            "[{orange}!{default}] 你应该为图池的最后一张图选择救援图."
     }
 }

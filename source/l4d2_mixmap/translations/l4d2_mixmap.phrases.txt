@@ -67,6 +67,60 @@
         "en"            "Mixtape Mapset"
     }
 
+    "MenuItem_ManuallySelectMap"
+    {
+        "en"            "Manually Select Map"
+    }
+
+    "MenuTitle_ChooseMapSetType"
+    {
+        "en"            "Choose map set type:"
+    }
+
+    "SelectMapsIntoPool"
+    {
+        "en"            "[{orange}!{default}] Select maps into the map pool. The map list is based on {orange}current gamemode{default}."
+    }
+
+    "CanOnlySelect"
+    {
+        "#format"       "{1:d}"
+        "en"            "[{orange}!{default}] You can only select {lightgreen}{1}{default} maps."
+    }
+
+    "MenuTitle_ChooseFrom"
+    {
+        "#format"       "{1:s}"
+        "en"            "Choose map from {1}"
+    }
+
+    "MenuTitle_NextMission"
+    {
+        "en"            "Next Mission"
+    }
+
+    "MenuTitle_LastMission"
+    {
+        "en"            "Last Mission"
+    }
+
+    "AddedInto"
+    {
+        "#format"       "{1:s}"
+        "en"            "[{orange}!{default}] Added {olive}{1}{default} to the map pool."
+    }
+
+    "FullSelected"
+    {
+        "#format"       "{1:d}"
+        "en"            "[{orange}!{default}] Map pool fully selected. Calling vote in {orange}{1}{default} seconds..."
+    }
+
+    "AbortedSelection"
+    {
+        "en"            "[{orange}!{default}] Aborted current map selection."
+    }
+
     "NotStartedYet"
     {
         "en"            "[{orange}!{default}] Mixmap has {orange}not started yet{default}. Please call a vote to start Mixmap."
@@ -108,5 +162,15 @@
     "HaveReachedTheEnd"
     {
         "en"            "[{orange}!{default}] You have reached the end of the map pool. After finishing the finale, you can use {orange}/mixmap{default} to start again."
+    }
+
+    "CannotSelectUntil"
+    {
+        "en"            "[{orange}!{default}] You cannot select finale maps when the current map pool has not reached the end."
+    }
+
+    "ShouldSelectLastMap"
+    {
+        "en"            "[{orange}!{default}] You should select the finale map as the last map of the ap pool."
     }
 }

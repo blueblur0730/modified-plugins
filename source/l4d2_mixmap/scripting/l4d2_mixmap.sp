@@ -13,7 +13,7 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re2.1.1"
+#define PLUGIN_VERSION "re2.2.0"
 
 StringMap g_hMapChapterNames;
 
@@ -26,14 +26,6 @@ Logger g_hLogger;
 
 bool g_bMapsetInitialized;
 int g_iMapsPlayed;
-
-enum MapSetType {
-	MapSet_None = 0,
-	MapSet_Official = 1,
-	MapSet_Custom = 2,
-	MapSet_Mixtape = 3
-}
-
 MapSetType g_iMapsetType = MapSet_None;
 
 // Modules

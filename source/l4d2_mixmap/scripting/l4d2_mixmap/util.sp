@@ -3,6 +3,14 @@
 #endif
 #define _l4d2_mixmap_util_included
 
+enum MapSetType {
+	MapSet_None = 0,
+	MapSet_Official = 1,
+	MapSet_Custom = 2,
+	MapSet_Mixtape = 3,
+	MapSet_Manual = 4
+}
+
 static const char g_sFakeMissions[][] = {
 	"HoldoutChallenge",
 	"DeadCenterChallenge",
@@ -321,4 +329,28 @@ stock void CheatCommand(int client, const char[] cmd, const char[] args = "")
 	FakeClientCommand(client, sBuffer);
 	SetCommandFlags(cmd, flags);
 	SetUserFlagBits(client, bits);
+}
+
+// get real gamemode. this is for mutation and community modes,
+// and even custom modes (need to set mp_gamemode to the value).
+// compatible for official modes.
+void GetBasedMode(char[] sMode, int size)
+{
+	// could actually use CMatchExtL4D::GetGameModeInfo... well whatever.
+	SourceKeyValues kvGameModes = SDKCall(g_hSDKCall_GetAllModes, g_pMatchExtL4D);
+
+	// HACKHACK: is "teamversus", "teamscavenge" valid?
+	char sBuffer[64];
+	Format(sBuffer, sizeof(sBuffer), "%s/base", sMode);
+	SourceKeyValues kvBase = kvGameModes.FindKey(sBuffer);
+
+	// found. get base.
+	if (kvBase && !kvBase.IsNull())
+	{
+		kvBase.GetString(NULL_STRING, sMode, size);
+
+		// except for realism mode. this is actualy coop since no mission uses "realism" as a key.
+		if (!strcmp(sMode, "realism"))
+			strcopy(sMode, size, "coop");
+	}
 }

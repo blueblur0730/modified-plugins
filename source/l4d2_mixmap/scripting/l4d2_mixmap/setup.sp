@@ -7,11 +7,14 @@
 #define TRANSLATION_FILE						   "l4d2_mixmap.phrases"
 #define GAMEDATA_FILE							   "l4d2_mixmap"
 #define CONFIG_BLACKLIST						   "configs/l4d2_mixmap_blacklist.cfg"
+#define GAMEMODE_FILE							   "scripts/gamemodes.txt"	// Left 4 Dead 2/update/scripts/gamemodes.txt (park01_dir.vpk)
 
 #define ADDRESS_MATCHEXTL4D						   "g_pMatchExtL4D"
 
-#define SDKCALL_GETALLMISSIONS					   "MatchExtL4D::GetAllMissions"
+#define SDKCALL_GETALLMISSIONS					   "CMatchExtL4D::GetAllMissions"
+#define SDKCALL_GETALLMODES						   "CMatchExtL4D::GetAllModes"
 #define SDKCALL_ONCHANGEMISSIONVOTE				   "CDirector::OnChangeMissionVote"
+#define SDKCALL_ONCHANGECHAPTERVOTE				   "CDirector::OnChangeChapterVote"
 
 #define DETOUR_RESTORETRANSITIONEDENTITIES		   "RestoreTransitionedEntities"
 #define DETOUR_TRANSITIONRESTORE				   "CTerrorPlayer::TransitionRestore"
@@ -35,21 +38,24 @@ Address
 
 Handle
 	g_hSDKCall_GetAllMissions,
-	g_hSDKCall_OnChangeMissionVote;
+	g_hSDKCall_GetAllModes,
+	g_hSDKCall_OnChangeMissionVote,
+	g_hSDKCall_OnChangeChapterVote;
 
 MemoryPatch g_hPatch_RestoreTransitionedSurvivorBots__BlockRestoring;
 
 ConVar
 	g_hCvar_Enable,
 	g_hCvar_NextMapPrint,
-	g_hCvar_MapPoolCapacity,
 	g_hCvar_SecondsToRead,
+	g_hCvar_ManualSelectDelay,
 	g_hCvar_SaveStatus,
 	g_hCvar_SaveStatus_Bot,
 	g_hCvar_CheckPointSearchCount,
-	g_hCvar_EnableBlackList,
 	g_hCvar_ShouldSearchAgain,
-	g_hCvar_SearchAgainCount;
+	g_hCvar_SearchAgainCount,
+	g_hCvar_MapPoolCapacity,
+	g_hCvar_EnableBlackList;
 
 void SetUpGameData()
 {
@@ -62,6 +68,13 @@ void SetUpGameData()
 	// use this to change to the first map of a mission.
 	SDKCallParamsWrapper params[] 	= {{ SDKType_String, SDKPass_Pointer }};
 	g_hSDKCall_OnChangeMissionVote	= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGEMISSIONVOTE, params, sizeof(params));
+
+	SDKCallParamsWrapper ret1	  	= { SDKType_PlainOldData, SDKPass_Plain };
+	g_hSDKCall_GetAllModes			= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETALLMODES, _, _, true, ret1);
+
+	// use this to change to a give map.
+	SDKCallParamsWrapper params1[] 	= {{ SDKType_String, SDKPass_Pointer }};
+	g_hSDKCall_OnChangeChapterVote	= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGECHAPTERVOTE, params1, sizeof(params1));
 
 	gd.CreateDetourOrFailEx(DETOUR_RESTORETRANSITIONEDENTITIES, DTR_OnRestoreTransitionedEntities);
 	gd.CreateDetourOrFailEx(DETOUR_TRANSITIONRESTORE, DTR_CTerrorPlayer_OnTransitionRestore, /*DTR_CTerrorPlayer_OnTransitionRestore_Post*/ _);
@@ -83,9 +96,10 @@ void SetupConVars()
 	// global
 	g_hCvar_Enable				  = CreateConVar("l4d2mm_enable", "1", "Whether to enable the plugin.", _, true, 0.0, true, 1.0);
 	g_hCvar_NextMapPrint		  = CreateConVar("l4d2mm_nextmap_print", "1", "Whether to show what the next map will be.", _, true, 0.0, true, 1.0);
+	g_hCvar_SecondsToRead		  = CreateConVar("l4d2mm_seconds_to_read", "5.0", "Determine how many seconds before change level to read maplist result.", _, true, 1.0);
+	g_hCvar_ManualSelectDelay     = CreateConVar("l4d2mm_manual_select_delay", "3.0", "Determine how many seconds before change level to manual select map.", _, true, 1.0)
 
 	// gameplay
-	g_hCvar_SecondsToRead		  = CreateConVar("l4d2mm_seconds_to_read", "5.0", "Determine how many seconds before change level to read maplist result.", _, true, 1.0);
 	g_hCvar_SaveStatus			  = CreateConVar("l4d2mm_save_status", "1", "Whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
 	g_hCvar_SaveStatus_Bot		  = CreateConVar("l4d2mm_save_status_bot", "1", "Whether to save bot status in coop or realism mode after changing map.", _, true, 1.0, false);
 	g_hCvar_CheckPointSearchCount = CreateConVar("l4d2mm_checkpoint_search_count", "50", "Determine how many times to search for the checkpoint.", _, true, 1.0);

@@ -120,12 +120,17 @@
 
         "Offsets"
         {
-			// windows sig is too short to be unique. use vtable. library: matchmaking.
-            "MatchExtL4D::GetAllMissions"
+            "CMatchExtL4D::GetAllMissions"
             {
                 "linux" "0"
 				"windows" "0"
             }
+
+			"CMatchExtL4D::GetAllModes"
+			{
+				"linux"		"1"
+				"windows"	"1"
+			}
         }
 
         "Signatures"
@@ -134,14 +139,6 @@
 			{
 				"library"	"server"
 				"linux"		"@TheDirector"
-			}
-
-			/* CDirectorMusicBanks::OnRoundStart(CDirectorMusicBanks *__hidden this) */
-			"CDirectorMusicBanks::OnRoundStart"
-			{
-				"library"	"server"
-				"windows"	"\x2A\x2A\x2A\x2A\x2A\x2A\x56\x57\x8B\x2A\x8B\x0D\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x84\x2A\x0F"
-				/* ? ? ? ? ? ? 56 57 8B ? 8B 0D ? ? ? ? E8 ? ? ? ? 84 ? 0F */
 			}
 
 			/* CTerrorGameRules::GetMissionInfo(CTerrorGameRules *__hidden this) */
@@ -179,7 +176,6 @@
 				/* ? ? ? ? ? ? ? 80 BE ? ? ? ? ? 75 ? 33 ? 5E 8B ? 5D C3 */
 			}
 
-			// windows sig:
 			"CDirector::DirectorChangeLevel"
 			{
 				"library"	"server"
@@ -206,21 +202,13 @@
 				/* ? ? ? ? ? ? ? ? 83 ? ? 85 ? 0F 84 ? ? ? ? 53 56 57 50 68 */
 			}
 
-			"TerrorNavMesh::GetInitialCheckpoint"
+			// from l4d2_changelevel by Lux.
+			"CDirector::OnChangeChapterVote"
 			{
-				"library"	"server"
-				"linux"		"@_ZNK13TerrorNavMesh20GetInitialCheckpointEv"
-				"windows"	"\x55\x8B\xEC\x83\xEC\x1C\x89\x4D\xFC"
-				/* 55 8B EC 83 EC 1C 89 4D FC */
-			}
-
-			/* Checkpoint::GetLargestArea(Checkpoint *__hidden this) */
-			"Checkpoint::GetLargestArea"
-			{
-				"library"	"server"
-				"linux"		"@_ZNK10Checkpoint14GetLargestAreaEv"
-				"windows"	"\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x8B\x2A\x53\x8B\x2A\x2A\x33\x2A\x33\x2A\x89\x2A\x2A\x83"
-				/* ? ? ? ? ? ? ? 8B ? 53 8B ? ? 33 ? 33 ? 89 ? ? 83 */
+				"library"		"server"
+				"linux"			"@_ZN9CDirector19OnChangeChapterVoteEPKc"
+				"windows"		"\x55\x8B\xEC\x56\x8B\xF1\x8B\x0D\x2A\x2A\x2A\x2A\x8B\x01\x8B\x50\x04"
+								/* 55 8B EC 56 8B F1 8B 0D ? ? ? ? 57 85 C9 */
 			}
         }
     }

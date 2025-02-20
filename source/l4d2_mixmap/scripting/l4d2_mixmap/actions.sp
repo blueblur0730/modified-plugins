@@ -5,27 +5,53 @@
 
 void InitiateMixmap(MapSetType type)
 {
-	CollectAllMaps(type);
-	if (!SelectRandomMap())
+	switch (type)
 	{
-		CPrintToChatAll("%t", "FailedToGet");
-		g_bMapsetInitialized = false;
-		return;
-	}
+		case MapSet_Official, MapSet_Custom, MapSet_Mixtape:
+		{
+			CollectAllMaps(type);
+			if (!SelectRandomMap())
+			{
+				CPrintToChatAll("%t", "FailedToGet");
+				g_bMapsetInitialized = false;
+				return;
+			}
 
-	g_iMapsetType = type;
-	CPrintToChatAll("%t", "StartingIn", g_hCvar_SecondsToRead.IntValue);
-	CreateTimer(g_hCvar_SecondsToRead.FloatValue, Timer_StartFisrMixmap);
+			g_iMapsetType = type;
+			CPrintToChatAll("%t", "StartingIn", g_hCvar_SecondsToRead.IntValue);
+			CreateTimer(g_hCvar_SecondsToRead.FloatValue, Timer_StartFirstMixmap);
+		}
+
+		case MapSet_Manual:
+		{
+			g_iMapsetType = type;
+			CPrintToChatAll("%t", "StartingIn", g_hCvar_SecondsToRead.IntValue);
+			CreateTimer(g_hCvar_SecondsToRead.FloatValue, Timer_StartFirstMixmapManully);
+		}
+	}
 }
 
 // OnChangeMissionVote needs mission name.
-void Timer_StartFisrMixmap(Handle timer)
+void Timer_StartFirstMixmap(Handle timer)
 {
 	char sMap[128], sMissionName[128];
 	g_hArrayPools.GetString(0, sMap, sizeof(sMap));
 	g_hMapChapterNames.GetString(sMap, sMissionName, sizeof(sMissionName));
 	g_hLogger.InfoEx("### Starting Mixmap with %s", sMissionName);
 	SDKCall(g_hSDKCall_OnChangeMissionVote, g_pTheDirector, sMissionName);
+
+	g_bMapsetInitialized = true;
+	Call_StartForward(g_hForwardStart);
+	Call_PushCell(g_hCvar_MapPoolCapacity.IntValue);
+	Call_Finish();
+}
+
+void Timer_StartFirstMixmapManully(Handle timer)
+{
+	char sMap[128];
+	g_hArrayPools.GetString(0, sMap, sizeof(sMap));
+	g_hLogger.InfoEx("### Starting Mixmap with %s", sMap);
+	SDKCall(g_hSDKCall_OnChangeChapterVote, g_pTheDirector, sMap);
 
 	g_bMapsetInitialized = true;
 	Call_StartForward(g_hForwardStart);
