@@ -117,8 +117,8 @@ void SetupLogger()
 			SetFailState("[Mixmap] Failed to create logger!")
 	}
 
-	// to not spam the console default info.
-	// you can set its level through log4sp_manager to real time debugging.
+	// to not spam the console, default info.
+	// you can set its level through log4sp_manager to real time debug.
 	g_hLogger.SetLevel(LogLevel_Info);
 	g_hLogger.FlushOn(LogLevel_Info);
 }

@@ -21,6 +21,11 @@
         "chi"           ">---{green}地图列表{default}---<"
     }
 
+    "Current"
+    {
+        "chi"           "({orange}当前{default})"
+    }
+
     "FailedToGet"
     {
         "chi"           "[{orange}!{default}] 尝试获取随机地图池失败. 进程中断."
@@ -34,12 +39,12 @@
 
     "PluginDisabled"
     {
-        "chi"           "[{orange}!{default}] Mixmap 插件已被禁用."
+        "chi"           "[{orange}!{default}] Mixmap 插件已被{red}禁用{default}."
     }
 
     "HasStarted"
     {
-        "chi"           "[{orange}!{default}] Mixmap 已经开始. 请等待地图池循环结束或发起投票来停止 Mixmap."
+        "chi"           "[{orange}!{default}] Mixmap {orange}已经开始{default}. 请等待{lightgreen}地图池循环结束{default}或{lightgreen}发起投票{default}来停止 Mixmap."
     }
 
     "MenuTitle_SelectMapSetType"
@@ -64,7 +69,7 @@
 
     "NotStartedYet"
     {
-        "chi"           "[{orange}!{default}] Mixmap 尚未开始. 请先发起投票来开始 Mixmap"
+        "chi"           "[{orange}!{default}] Mixmap {orange}尚未开始{default}. 请先发起投票来开始 Mixmap"
     }
 
     "AdminForceStop"
@@ -97,11 +102,11 @@
 
     "NotEnoughMaps"
     {
-        "chi"            "[{orange}!{default}] 地图数量不足以构建图池, 请在服务器内添加更多地图."
+        "chi"            "[{orange}!{default}] 总地图数量不足以构建图池, 请在服务器内添加更多地图."
     }
 
     "HaveReachedTheEnd"
     {
-        "chi"            "[{orange}!{default}] 当前是图池中最后一站图. 要重新开始 Mixmap, 请使用 {orange}/mixmap{default}."
+        "chi"            "[{orange}!{default}] 当前已是图池中最后一张图. 在完成救援关后, 请使用 {orange}/mixmap{default} 重新开始 Mixmap."
     }
 }

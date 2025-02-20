@@ -13,7 +13,7 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re2.1.0"
+#define PLUGIN_VERSION "re2.1.1"
 
 StringMap g_hMapChapterNames;
 
@@ -88,9 +88,6 @@ public void OnClientPutInServer(int client)
 		
 	if (!g_hCvar_NextMapPrint.BoolValue)
 		return;
-
-	if (g_iMapsPlayed == g_hArrayPools.Length)
-		CreateTimer(10.0, Timer_NotifyTheEnd, GetClientUserId(client));
 
 	int userid = GetClientUserId(client);
 	CreateTimer(10.0, Timer_Notify, userid);

@@ -21,6 +21,11 @@
         "en"            ">---{green}Map List{default}---<"
     }
 
+    "Current"
+    {
+        "en"            "({orange}Current{default})"
+    }
+
     "FailedToGet"
     {
         "en"            "[{orange}!{default}] Failed to select a random map. Abort."
@@ -34,12 +39,12 @@
 
     "PluginDisabled"
     {
-        "en"            "[{orange}!{default}] This plugin is disabled."
+        "en"            "[{orange}!{default}] This plugin is {red}disabled{default}."
     }
 
     "HasStarted"
     {
-        "en"            "[{orange}!{default}] Mixmap has started, Please wait for the end or vote to stop."
+        "en"            "[{orange}!{default}] Mixmap {orange}has started{default}, Please {lightgreen}wait for the end{default} or {lightgreen}vote{default} to stop."
     }
 
     "MenuTitle_SelectMapSetType"
@@ -64,7 +69,7 @@
 
     "NotStartedYet"
     {
-        "en"            "[{orange}!{default}] Mixmap has not started yet. Please call a vote to start Mixmap."
+        "en"            "[{orange}!{default}] Mixmap has {orange}not started yet{default}. Please call a vote to start Mixmap."
     }
 
     "AdminForceStop"
@@ -102,6 +107,6 @@
 
     "HaveReachedTheEnd"
     {
-        "en"            "[{orange}!{default}] You have reached the end of the map pool. To start again Mixmap, use {orange}/mixmap{default}."
+        "en"            "[{orange}!{default}] You have reached the end of the map pool. After finishing the finale, you can use {orange}/mixmap{default} to start again."
     }
 }

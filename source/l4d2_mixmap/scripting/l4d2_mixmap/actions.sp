@@ -59,19 +59,6 @@ void Timer_ShowMaplist(Handle timer, int userid)
 	NotifyMapList(client);
 }
 
-void Timer_NotifyTheEnd(Handle timer, int userid)
-{
-	int client = GetClientOfUserId(userid);
-
-	if (client <= 0 || client > MaxClients)
-		return;
-
-	if (!IsClientInGame(client))
-		return;
-
-	NotifyTheEnd(client);
-}
-
 void NotifyMixmap(int client)
 {
 	char sCurrentMap[64], sNextMap[64];
@@ -84,24 +71,23 @@ void NotifyMixmap(int client)
 
 	CPrintToChat(client, "%t", "NotifyClients");
 	CPrintToChat(client, "%t", "MapProgress", sCurrentMap, sNextMap);
+
+	if (g_iMapsPlayed == g_hArrayPools.Length)
+		CPrintToChat(client, "%t", "HaveReachedTheEnd");
 }
 
 void NotifyMapList(int client)
 {
 	CPrintToChat(client, "%t", "MapList");
 
-	char sBuffer[64], sCurrentMap[64];
+	char sBuffer[64], sCurrentMap[64], sCurrent[32];
 	GetCurrentMap(sCurrentMap, sizeof(sCurrentMap));
+	Format(sCurrent, sizeof(sCurrent), "%T", "Current", client);
 	for (int i = 0; i < g_hArrayPools.Length; i++)
 	{
 		g_hArrayPools.GetString(i, sBuffer, sizeof(sBuffer));
-		CPrintToChat(client, "{green}-> {olive}%s{default} %s", sBuffer, !strcmp(sCurrentMap, sBuffer) ? "({orange}Current{default})" : "");
+		CPrintToChat(client, "{green}-> {olive}%s{default} %s", sBuffer, (!strcmp(sCurrentMap, sBuffer) && g_iMapsPlayed == i + 1) ? sCurrent : "");
 	}
-}
-
-void NotifyTheEnd(int client)
-{
-	CPrintToChat(client, "%t", "HaveReachedTheEnd");
 }
 
 /*
