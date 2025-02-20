@@ -204,6 +204,7 @@ void OnNextFrame_ChangeName(DataPack dp)
 
 void OnNextFrame_ResetPlayers(int client)
 {
+	// this should be always safe.
 	if (L4D_IsFirstMapInScenario())
 		return;
 
@@ -233,7 +234,7 @@ void ResetPlayer(int client)
 		g_hLogger.DebugEx("### OnNextFrame_ResetPlayer: Client %N is not in saferoom.", client);
 
 		float vec[3];
-		GetSafeAreaOriginEx(vec);
+		GetSafeAreaOrigin(vec);
 		g_hLogger.DebugEx("### OnNextFrame_ResetPlayer: Found teleport destination: %.2f, %.2f, %.2f.", vec[0], vec[1], vec[2]);
 		if (vec[0] != 0.0 && vec[1] != 0.0 && vec[2] != 0.0)
 			TeleportEntity(client, vec, NULL_VECTOR, NULL_VECTOR);

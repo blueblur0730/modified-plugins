@@ -13,7 +13,7 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re2.0.3"
+#define PLUGIN_VERSION "re2.1.0"
 
 StringMap g_hMapChapterNames;
 
@@ -72,6 +72,13 @@ public void OnPluginStart()
 	SetupCommands();
 	SetupLogger();
 	PluginStartInit();
+}
+
+public void OnAllPluginsLoaded()
+{
+	g_pTheDirector	   = L4D_GetPointer(POINTER_DIRECTOR);
+	if (!g_pTheDirector)
+		SetFailState("[Mixmap] Failed to get address of TheDirector.");
 }
 
 public void OnClientPutInServer(int client)
