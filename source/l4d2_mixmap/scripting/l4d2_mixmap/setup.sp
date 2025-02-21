@@ -56,7 +56,8 @@ ConVar
 	g_hCvar_ShouldSearchAgain,
 	g_hCvar_SearchAgainCount,
 	g_hCvar_MapPoolCapacity,
-	g_hCvar_EnableBlackList;
+	g_hCvar_EnableBlackList,
+	g_hCvar_BlackListLimit;
 
 void SetUpGameData()
 {
@@ -99,7 +100,7 @@ void SetupConVars()
 	g_hCvar_SecondsToRead		  = CreateConVar("l4d2mm_seconds_to_read", "5.0", "Determine how many seconds before change level to read maplist result.", _, true, 1.0);
 	g_hCvar_ManualSelectDelay	  = CreateConVar("l4d2mm_manual_select_delay", "3.0", "Determine how many seconds before change level to manual select map.", _, true, 1.0)
 
-		// gameplay
+	// gameplay
 	g_hCvar_SaveStatus		      = CreateConVar("l4d2mm_save_status", "1", "Whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
 	g_hCvar_SaveStatus_Bot		  = CreateConVar("l4d2mm_save_status_bot", "1", "Whether to save bot status in coop or realism mode after changing map.", _, true, 1.0, false);
 	g_hCvar_CheckPointSearchCount = CreateConVar("l4d2mm_checkpoint_search_count", "50", "Determine how many times to search for the checkpoint.", _, true, 1.0);
@@ -109,6 +110,7 @@ void SetupConVars()
 	// map pool
 	g_hCvar_MapPoolCapacity		  = CreateConVar("l4d2mm_map_pool_capacity", "5", "Determine how many maps can be selected in one pool.", _, true, 1.0);
 	g_hCvar_EnableBlackList		  = CreateConVar("l4d2mm_enable_blacklist", "0", "Determine whether to enable blacklist.", _, true, 0.0, true, 1.0);
+	g_hCvar_BlackListLimit		  = CreateConVar("l4d2mm_blacklist_limit", "10", "Determine how many maps can be listed into blacklist.", _, true, 1.0);
 }
 
 void SetupCommands()

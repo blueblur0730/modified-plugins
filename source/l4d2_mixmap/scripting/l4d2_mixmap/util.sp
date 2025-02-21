@@ -382,6 +382,7 @@ stock void BuildBlackList(int client)
 		g_hArrayBlackList = new ArrayList(ByteCountToCells(64));
 
 		char sMap[64];
+		int count = 0;
 		SourceKeyValues kvSub = kv.FindKey("global_filter");
 		if (kvSub && !kvSub.IsNull())
 		{
@@ -389,6 +390,19 @@ stock void BuildBlackList(int client)
 			{
 				kvValue.GetString(NULL_STRING, sMap, sizeof(sMap));
 				g_hArrayBlackList.PushString(sMap);
+				count++;
+
+				// reached limit. return.
+				if (count >= g_hCvar_BlackListLimit.IntValue)
+				{
+					kv.deleteThis();
+					g_hLogger.WarnEx("Reached limit of %d blacklisted maps. Abort the rest.", g_hCvar_BlackListLimit.IntValue);
+
+					if (client != -1 && client > 0 && client <= MaxClients)
+						CPrintToChat(client, "%t", "BlackListLoaded");
+
+					return;
+				}
 			}
 		}
 
@@ -403,6 +417,19 @@ stock void BuildBlackList(int client)
 			{
 				kvValue.GetString(NULL_STRING, sMap, sizeof(sMap));
 				g_hArrayBlackList.PushString(sMap);
+				count++;
+
+				// reached limit. return.
+				if (count >= g_hCvar_BlackListLimit.IntValue)
+				{
+					kv.deleteThis();
+					g_hLogger.WarnEx("Reached limit of %d blacklisted maps. Abort the rest.", g_hCvar_BlackListLimit.IntValue);
+
+					if (client != -1 && client > 0 && client <= MaxClients)
+						CPrintToChat(client, "%t", "BlackListLoaded");
+
+					return;
+				}
 			}
 		}
 
