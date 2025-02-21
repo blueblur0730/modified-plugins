@@ -7,7 +7,7 @@
 
 enum OperatingSystem
 {
-    OS_Unknown_Copy = -1,
+    OS_UnknownPlatform = -1,
     OS_Windows = 0,
     OS_Linux = 1
 }
@@ -25,37 +25,95 @@ static const char k_sSDKFuncConfSource[3][] = { "Offsets", "Signatures", "Addres
 
 // credits to Forgetest.
 methodmap GameDataWrapper < GameData {
+    /**
+     * Loads a game config file.
+     * 
+     * @param file          File to load.  The path must be relative to the 'gamedata' folder under the config folder
+     *                      and the extension should be omitted.
+     * 
+     * @return              A handle to the game config file.
+     * 
+     * @error               Plugin failed if the file could not be loaded.
+    */
     public GameDataWrapper(const char[] file) {
         GameData gd = new GameData(file);
         if (!gd) SetFailState("[GameData] Missing gamedata of file \"%s\".", file);
         return view_as<GameDataWrapper>(gd);
     }
 
+    /**
+     * Get its original GameData handle.
+     * 
+     * @return The handle.
+    */
     property GameData Super {
         public get() { return view_as<GameData>(this); }
     }
 
+    /**
+     * Returns the operating system of the game from the pre-set gamedata file.
+     * Have to define the "OS" key in the "Offsets" section.
+     * 
+     * @return The enumeration to indicate the OS.
+    */
     property OperatingSystem OS {
         public get() { return view_as<OperatingSystem>(this.Super.GetOffset("OS")); }
     }
 
+	/**
+	 * Returns an offset value from the "Offsets" section.
+     * 
+	 * @param key           Key to retrieve from the offset section.
+     * 
+	 * @return              An offset.
+     * 
+     * @error               Plugin failed if the offset could not be found.
+    */
     public int GetOffset(const char[] key) {
         int offset = this.Super.GetOffset(key);
         if (offset == -1) SetFailState("[GameData] Missing offset of section \"%s\".", key);
         return offset;
     }
 
+    /**
+     * Retrives the value of a key from the "Keys" section.
+     * 
+     * @param key           Key to retrieve from the Keys section.
+     * @param buffer        Destination string buffer.
+     * @param maxlen        Maximum length of output string buffer.
+     * 
+     * @noreturn
+     * 
+     * @error               Plugin failed if the key could not be found.
+    */
     public void GetKeyValue(const char[] key, char[] buffer, int maxlen) {
         bool b = this.Super.GetKeyValue(key, buffer, maxlen);
         if (!b) SetFailState("[GameData] Missing key \"%s\" in gamedata file.", key);
     }
 
+    /**
+     * Finds an address calculation in a GameConfig file's "Addresses" section,
+     * performs LoadFromAddress on it as appropriate, then returns the final address.
+     * 
+     * @param name          Name of the property to find.
+     * @return              An address calculated on success.
+     * 
+     * @error               Plugin failed if the address could not be found.
+    */
     public Address GetAddress(const char[] key) {
         Address ptr = this.Super.GetAddress(key);
         if (ptr == Address_Null) SetFailState("[GameData] Missing address of section \"%s\".", key);
         return ptr;
     }
 
+    /**
+     * Returns a function address calculated from a signature.
+     * 
+     * @param name          Name of the property to find.
+     * @return              An address calculated on success.
+     * 
+     * @error               Plugin failed if the signature could not be found.
+    */
     public Address GetMemSig(const char[] key) {
         Address ptr = this.Super.GetMemSig(key);
         if (ptr == Address_Null) SetFailState("[GameData] Missing signature memory of section \"%s\".", key);
@@ -73,17 +131,17 @@ methodmap GameDataWrapper < GameData {
      * @param numParams         The number of parameters.
      * @param hasReturnValue    Whether the call has a return value.
      * 
-     * @return Handle of the call.
+     * @return                  Handle of the call.
+     * 
+     * @error                   Plugin failed if the defined section not found, or the call failed to set up.
      **/ 
-    public Handle CreateSDKCallOrFail(
-        SDKCallType type,
-        SDKFuncConfSource src,
-        const char[] name,
-        const SDKCallParamsWrapper[] params = {},
-        int numParams = 0,
-        bool hasReturnValue = false,
-        const SDKCallParamsWrapper ret = {})
-    {
+    public Handle CreateSDKCallOrFail(  SDKCallType type,
+                                        SDKFuncConfSource src,
+                                        const char[] name,
+                                        const SDKCallParamsWrapper[] params = {},
+                                        int numParams = 0,
+                                        bool hasReturnValue = false,
+                                        const SDKCallParamsWrapper ret = {}) {
         Handle result;
         StartPrepSDKCall(type);
         if (!PrepSDKCall_SetFromConf(this, src, name))
@@ -113,16 +171,19 @@ methodmap GameDataWrapper < GameData {
      * @param ret               The return value of the call.
      * 
      * @returns Handle          The handle of the call.
+     * 
+     * @error                   Plugin failed if the address of the start of the function is NULL, or failed to set up the call.
     */
-    public static Handle CreateSDKCallOrFailEx(
-        SDKCallType type,
-        Address pFuncStart,
-        int offset,
-        const SDKCallParamsWrapper[] params = {},
-        int numParams = 0,
-        bool hasReturnValue = false,
-        const SDKCallParamsWrapper ret = {})
-    {
+    public static Handle CreateSDKCallOrFailEx( SDKCallType type,
+                                                Address pFuncStart,
+                                                int offset,
+                                                const SDKCallParamsWrapper[] params = {},
+                                                int numParams = 0,
+                                                bool hasReturnValue = false,
+                                                const SDKCallParamsWrapper ret = {}) {
+        if (pFuncStart == Address_Null) 
+            SetFailState("[SDKCall] Missing address of the start of the function. pFuncStart is NULL.");
+
         int pOri = LoadFromAddress(pFuncStart, NumberType_Int32);
         pFuncStart += view_as<Address>(pOri + offset);
 
@@ -144,12 +205,22 @@ methodmap GameDataWrapper < GameData {
 #endif
 
 #if defined _dhooks_included
-    public DynamicDetour CreateDetourOrFail(
-            const char[] name,
-            bool bNow = true,
-            DHookCallback preHook = INVALID_FUNCTION,
-            DHookCallback postHook = INVALID_FUNCTION) 
-    {
+    /**
+     * Creates and sets up a detour.
+     * 
+     * @param name              The name of the detour setup section.
+     * @param bNow              Whether to enable the detour immediately.
+     * @param preHook           The pre-hook function.
+     * @param postHook          The post-hook function.
+     * 
+     * @return                  The handle of the detour.
+     * 
+     * @error                   Plugin failed if the detour setup section is missing, or failed to enable the detour.
+    */
+    public DynamicDetour CreateDetourOrFail(const char[] name,
+                                            bool bNow = true,
+                                            DHookCallback preHook = INVALID_FUNCTION,
+                                            DHookCallback postHook = INVALID_FUNCTION) {
         DynamicDetour hSetup = DynamicDetour.FromConf(this, name);
 
         if (!hSetup)
@@ -168,122 +239,211 @@ methodmap GameDataWrapper < GameData {
     }
 
     /**
-     * Creates a detour, and free its handle. (meaning the detour will never be disabled.)
+     * Creates a detour and enables it immediately, and finally frees its handle. 
+     * (meaning the detour will never be disabled.)
      * 
      * @param name              The name of the detour setup section.
-     * @param bNow              Whether to enable the detour immediately.
      * @param preHook           The pre-hook function.
      * @param postHook          The post-hook function.
      * 
      * @noreturn
+     * 
+     * @error                   Plugin failed if the detour setup section is missing, or failed to enable the detour.
     */
-    public void CreateDetourOrFailEx(
-            const char[] name,
-            DHookCallback preHook = INVALID_FUNCTION,
-            DHookCallback postHook = INVALID_FUNCTION) {
+    public void CreateDetourOrFailEx(   const char[] name,
+                                        DHookCallback preHook = INVALID_FUNCTION,
+                                        DHookCallback postHook = INVALID_FUNCTION) {
         delete (this.CreateDetourOrFail(name, true, preHook, postHook));
     }
 
-    // create a dynamic hook from conf, specify the hook type and hooks the target.
-    public DynamicHook CreateDynamicHookOrFail(
-            const char[] name,
-            HookType type,
-            int entity = -1,
-            Address pAdr = Address_Null,
-            bool bNow = true,
-            DHookCallback preHook = INVALID_FUNCTION,
-            DHookCallback postHook = INVALID_FUNCTION,
-            DHookRemovalCB removalHook = INVALID_FUNCTION)
-    {
+    /**
+     * Creates and sets up a dynamic hook.
+     * Need to specify the hook type and target.
+     * 
+     * @param name              The name of the dynamic hook setup section.
+     * @param type              The hook type.
+     * @param entity            The target entity index if choose to hook entities.
+     * @param pAdr              The target address if choose to hook raw addresses.
+     * @param bNow              Whether to enable the dynamic hook immediately.
+     * @param preHook           The pre-hook function. If choose to hook raw pointer addresses, only this parameter can be the callback.
+     * @param postHook          The post-hook function.
+     * @param removalHook       The removal hook function.
+     * 
+     * @return                  The handle of the dynamic hook.
+     * 
+     * @error                   Plugin failed if the dynamic hook setup section is missing, or failed to enable the dynamic hook.
+    */
+    public DynamicHook CreateDynamicHookOrFail( const char[] name,
+                                                HookType type,
+                                                int entity = -1,
+                                                Address pAdr = Address_Null,
+                                                bool bNow = true,
+                                                DHookCallback preHook = INVALID_FUNCTION,
+                                                DHookCallback postHook = INVALID_FUNCTION,
+                                                DHookRemovalCB removalHook = INVALID_FUNCTION) {
         DynamicHook hSetup = DynamicHook.FromConf(this, name);
 
-        if (!hSetup)
-            SetFailState("[DHooks] Missing dynamic hook setup section \"%s\".", name);
+        if (!hSetup) SetFailState("[DHooks] Missing dynamic hook setup section \"%s\".", name);
 
-        if (!bNow)
-            return hSetup;
+        if (!bNow) return hSetup;
 
         switch (type)
         {
             case HookType_Entity:
             {
-                if (entity == -1) SetFailState("[DHooks] Invalid entity index for section \"%s\".", name);
+                if (entity <= 0) SetFailState("[DHooks] Invalid entity index, index: %d.", entity);
 
                 if (preHook != INVALID_FUNCTION && !hSetup.HookEntity(Hook_Pre, entity, preHook, removalHook))
-                    SetFailState("[DHooks] Failed to pre-dhook section \"%s\".", name);
+                    SetFailState("[DHooks] Failed to pre-hook section \"%s\".", name);
 
                 if (postHook != INVALID_FUNCTION && !hSetup.HookEntity(Hook_Post, entity, postHook, removalHook))
-                    SetFailState("[DHooks] Failed to post-dhook section \"%s\".", name);
+                    SetFailState("[DHooks] Failed to post-hook section \"%s\".", name);
             }
             
             case HookType_GameRules:
             {
                 if (preHook != INVALID_FUNCTION && !hSetup.HookGamerules(Hook_Pre, preHook, removalHook))
-                    SetFailState("[DHooks] Failed to pre-dhook section \"%s\".", name);
+                    SetFailState("[DHooks] Failed to pre-hook section \"%s\".", name);
 
                 if (postHook != INVALID_FUNCTION && !hSetup.HookGamerules(Hook_Post, postHook, removalHook))
-                    SetFailState("[DHooks] Failed to post-dhook section \"%s\".", name);
+                    SetFailState("[DHooks] Failed to post-hook section \"%s\".", name);
             }
 
             case HookType_Raw:
             {
-                if (pAdr == Address_Null) SetFailState("[DHooks] Invalid address for section \"%s\".", name);
+                if (pAdr == Address_Null) SetFailState("[DHooks] Invalid address. The address is NULL.");
                 
                 if (preHook != INVALID_FUNCTION && !hSetup.HookRaw(Hook_Pre, pAdr, preHook))
-                    SetFailState("[DHooks] Failed to pre-dhook section \"%s\".", name);
-
-                if (postHook != INVALID_FUNCTION && !hSetup.HookRaw(Hook_Post, pAdr, postHook))
-                    SetFailState("[DHooks] Failed to post-dhook section \"%s\".", name);
+                    SetFailState("[DHooks] Failed to hook section \"%s\".", name);
             }
         }
 
         return hSetup;
     }
 
-    public DynamicHook CreateDynamicHookOrFailEx(
-            const char[] name,
-            HookType type,
-            int entity = -1,
-            Address pAdr = Address_Null,
-            DHookCallback preHook = INVALID_FUNCTION,
-            DHookCallback postHook = INVALID_FUNCTION,
-            DHookRemovalCB removalHook = INVALID_FUNCTION)
-    {
+    /**
+     * Creates and sets up a dynamic hook, enables it immediately and finally frees its handle.
+     * Need to specify the hook type and target.
+     * 
+     * @param name              The name of the dynamic hook setup section.
+     * @param type              The hook type.
+     * @param entity            The target entity index if choose to hook entities.
+     * @param pAdr              The target address if choose to hook raw addresses.
+     * @param bNow              Whether to enable the dynamic hook immediately.
+     * @param preHook           The pre-hook function. If choose to hook raw pointer addresses, only this parameter can be the callback.
+     * @param postHook          The post-hook function.
+     * @param removalHook       The removal hook function.
+     * 
+     * @return                  The handle of the dynamic hook.
+     * 
+     * @error                   Plugin failed if the dynamic hook setup section is missing, or failed to enable the dynamic hook.
+    */
+    public DynamicHook CreateDynamicHookOrFailEx(   const char[] name,
+                                                    HookType type,
+                                                    int entity = -1,
+                                                    Address pAdr = Address_Null,
+                                                    DHookCallback preHook = INVALID_FUNCTION,
+                                                    DHookCallback postHook = INVALID_FUNCTION,
+                                                    DHookRemovalCB removalHook = INVALID_FUNCTION) {
         delete (this.CreateDynamicHookOrFail(name, type, entity, pAdr, true, preHook, postHook, removalHook));
     }
 #endif
 
 #if defined __sourcescramble_ext_included
+    /**
+     * Creates a new memory patch for the given name of section "MemPatches".
+     * Handle must be freed and patch should be disabled if not use anymore.
+     * 
+     * @note Function returns the handle to the patch, once the handle gets freed, the patch is disabled.
+     * @note Unlike dhook, this is probably a safty consideration.
+     * 
+     * @param name              The name of the memory patch section.
+     * @param enable            Whether to enable the memory patch immediately.
+     * 
+     * @return                  The handle of the memory patch.
+     * 
+     * @error                   Plugin failed if the memory patch section is missing, or failed to enable patch or validate the target memory address.
+    */
     public MemoryPatch CreateMemoryPatchOrFail(const char[] name, bool enable = false) {
         MemoryPatch hPatch = MemoryPatch.CreateFromConf(this, name);
+        if (!hPatch) SetFailState("[MemoryPatch] Failed to create memory patch for section \"%s\".", name);
+
         if (!(enable ? hPatch.Enable() : hPatch.Validate()))
             SetFailState("[MemoryPatch] Failed to patch section \"%s\" through source scramble.", name);
 
         return hPatch;
     }
 
-    public void CreateMemoryPatchOrFailEx(const char[] name) {
-        delete (this.CreateMemoryPatchOrFail(name));
-    }
-
+    /**
+     * Allocates a fixed amount of memeory by reading the size from gamedata section "Offests".
+     * Size is in bytes, handle and its content must be freed manually.
+     * 
+     * @param name              The name of the "Offsets" section.
+     * 
+     * @return                  The handle to the allocated memory.
+     * 
+     * @error                   Plugin failed if the section is missing, or failed to allocate the memory.
+    */
     public MemoryBlock CreateMemoryBlockOrFail(const char[] name) {
         int iOff = this.Super.GetOffset(name);
         MemoryBlock hBlock = new MemoryBlock(iOff);
         if (!hBlock) SetFailState("[MemoryBlock] Failed to create memory block for section \"%s\".", name);
+        return hBlock;
+    }
+
+    public static MemoryBlock CreateMemoryBlockOrFailEx(int iOff) {
+        MemoryBlock hBlock = new MemoryBlock(iOff);
+        if (!hBlock) SetFailState("[MemoryBlock] Failed to create memory block for the given size: \"%d\".", iOff);
+        return hBlock;
     }
 #endif
 
 #if defined _midhook_included
+    /**
+     * Creates a new midhook for the given name of gamedata section "Addresses".
+     * Handle must be freed manually if not use.
+     * 
+     * @note Function returns the handle to the hook, once the handle gets freed, the hook is disabled.
+     * @note Unlike dhook, this is probably a safty consideration.
+     * 
+     * @param name              The name of the "Addresses" section.
+     * @param callback          The callback to be called when the hook is triggered.
+     * @param enable            Whether to enable the midhook immediately.
+     * 
+     * @return                  The handle of the midhook.
+     * 
+     * @error                   Plugin failed if the section is missing, or failed to create the midhook.
+    */
     public MidHook CreateMidHookOrFail(const char[] name, MidHookCB callback, bool enable = true) {
         Address pAdr = this.GetAddress(name);
+        if (pAdr == Address_Null) SetFailState("[MidHooks] Failed to find address for section \"%s\".", name);
+
         MidHook hHook = new MidHook(pAdr, callback, enable);
         if (!hHook) SetFailState("[MidHooks] Failed to create Midhook for section \"%s\".", name);
-
         return hHook;
     }
 
-    public void CreateMidHookOrFailEx(const char[] name, MidHookCB callback) {
-        delete (this.CreateMidHookOrFail(name, callback, true));
+    /**
+     * Creates a new midhook for the given address.
+     * Handle must be freed manually if not use.
+     * 
+     * @note Function returns the handle to the hook, once the handle gets freed, the hook is disabled.
+     * @note Unlike dhook, this is probably a safty consideration.
+     * 
+     * @param pAdr              The address to hook.
+     * @param callback          The callback to be called when the hook is triggered.
+     * @param enable            Whether to enable the midhook immediately.
+     * 
+     * @return                  The handle of the midhook.
+     * 
+     * @error                   Plugin failed if failed to create the midhook.
+    */
+    public static MidHook CreateMidHookOrFailEx(Address pAdr, MidHookCB callback, bool enable = true) {
+        if (pAdr == Address_Null) SetFailState("[MidHooks] The given address is NULL.");
+
+        MidHook hHook = new MidHook(pAdr, callback, enable);
+        if (!hHook) SetFailState("[MidHooks] Failed to create Midhook for the given address.");
+        return hHook;
     }
 #endif
 }

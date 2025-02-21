@@ -17,6 +17,12 @@ Action Command_Mixmap(int client, int args)
 		return Plugin_Handled;
 	}
 
+	CreateMixmapMenu(client);
+	return Plugin_Handled;
+}
+
+void CreateMixmapMenu(int client)
+{
 	char sBuffer[128];
 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuTitle_SelectMapSetType", client);
 	Menu menu = new Menu(MenuHandler_Mixmap);
@@ -31,9 +37,10 @@ Action Command_Mixmap(int client, int args)
 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_MixtapeMapSet", client)
 	menu.AddItem("3", sBuffer);
 
-	menu.Display(client, MENU_TIME_FOREVER);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_ManuallySelectMap", client);
+	menu.AddItem("4", sBuffer);
 
-	return Plugin_Handled;
+	menu.Display(client, MENU_TIME_FOREVER);
 }
 
 // Abort a currently loaded mapset
@@ -112,6 +119,32 @@ Action Command_Maplist(int client, int args)
 	return Plugin_Handled;
 }
 
+Action Command_ReloadBlackList(int client, int args)
+{
+	BuildBlackList(client);
+	return Plugin_Handled;
+}
+
+Action Commnad_ShowBlackList(int client, int args)
+{
+	if (!g_hArrayBlackList || !g_hArrayBlackList.Length)
+	{
+		CReplyToCommand(client, "%t", "BlackListIsEmpty");
+		return Plugin_Handled;
+	}
+
+	CPrintToChat(client, "%t", "SeeConsole");
+	PrintToConsole(client, ">----BlackList-----<");
+	for (int i = 0; i < g_hArrayBlackList.Length; i++)
+	{
+		char sMap[128];
+		g_hArrayBlackList.GetString(i, sMap, sizeof(sMap));
+		PrintToConsole(client, "- %s", sMap);
+	}
+
+	return Plugin_Handled;
+}
+
 void MenuHandler_Mixmap(Menu menu, MenuAction action, int client, int selection)
 {
 	switch (action)
@@ -123,10 +156,66 @@ void MenuHandler_Mixmap(Menu menu, MenuAction action, int client, int selection)
 				case 0: CreateMixmapVote(client, MapSet_Official);
 				case 1: CreateMixmapVote(client, MapSet_Custom);
 				case 2: CreateMixmapVote(client, MapSet_Mixtape);
+				case 3: ManullySelectMap_ChooseMapSetType(client);
 			}
 		}
 
 		case MenuAction_End:
 			delete menu;
+	}
+}
+
+void ManullySelectMap_ChooseMapSetType(int client)
+{
+	char sBuffer[128];
+	Menu menu = new Menu(MenuHandler_ChooseMapSetType);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuTitle_ChooseMapSetType", client);
+	menu.SetTitle(sBuffer);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_OfficialMapSet", client);
+	menu.AddItem("", sBuffer);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_CustomMapSet", client);
+	menu.AddItem("", sBuffer);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_MixtapeMapSet", client);
+	menu.AddItem("", sBuffer);
+
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+void MenuHandler_ChooseMapSetType(Menu menu, MenuAction action, int client, int param2)
+{
+	switch (action)
+	{
+		case MenuAction_Select:
+		{
+			if (g_bManullyChoosingMap)
+			{
+				CPrintToChat(client, "%t", "SomeoneIsChoosing");
+				return;
+			}
+
+			switch (param2)
+			{
+				case 0: CollectAllMapsEx(client, MapSet_Official);
+				case 1: CollectAllMapsEx(client, MapSet_Custom);
+				case 2: CollectAllMapsEx(client, MapSet_Mixtape);
+			}
+
+			CPrintToChat(client, "%t", "SelectMapsIntoPool");
+			CPrintToChat(client, "%t", "CanOnlySelect", g_hCvar_MapPoolCapacity.IntValue);
+		}
+
+		case MenuAction_End:
+			delete menu;
+
+		case MenuAction_Cancel:
+		{
+			if (param2 == MenuCancel_ExitBack)
+				CreateMixmapMenu(client);
+		}
 	}
 }
