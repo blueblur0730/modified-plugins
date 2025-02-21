@@ -21,6 +21,8 @@ MRESReturn DTR_CTerrorPlayer_OnTransitionRestore(int pThis, DHookReturn hReturn)
 		return MRES_Ignored;
 
 	g_hLogger.DebugEx("### DTR_CTerrorPlayer_OnTransitionRestore Called for %d, %N.", pThis, pThis);
+
+	SetGod(pThis, true);
 	RequestFrame(OnNextFrame_ResetPlayers, pThis);	// bots have not created, only player. same as midhook callback.
 
 	// this only block human player's status.
@@ -108,6 +110,18 @@ MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
 // bots have created.
 MRESReturn DTR_RestoreTransitionedSurvivorBots_Post()
 {
+	// rarely, bots died before we teleport them.
+	// need to set them god like.
+	for (int i = 1; i < MaxClients; i++)
+	{
+		if (i <= 0 || i > MaxClients)
+			continue;
+
+		if (!IsClientInGame(i) || GetClientTeam(i) != 2 || !IsFakeClient(i))
+			continue;
+
+		SetGod(i, true);
+	}
 	RequestFrame(OnNextFrame_ResetPlayers, 0);
 	return MRES_Ignored;
 }
@@ -206,7 +220,10 @@ void OnNextFrame_ResetPlayers(int client)
 {
 	// this should be always safe.
 	if (L4D_IsFirstMapInScenario())
+	{
+		SetGod(client, false);
 		return;
+	}
 
 	if (client > 0)
 	{
@@ -240,6 +257,7 @@ void ResetPlayer(int client)
 			TeleportEntity(client, vec, NULL_VECTOR, NULL_VECTOR);
 	}
 
+	SetGod(client, false);
 	if (GetPlayerWeaponSlot(client, 1) == -1 || (!g_hCvar_SaveStatus_Bot.BoolValue || !g_hCvar_SaveStatus.BoolValue))
 		CheatCommand(client, "give", "pistol");
 }

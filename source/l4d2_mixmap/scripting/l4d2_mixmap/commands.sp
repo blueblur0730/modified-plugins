@@ -119,6 +119,32 @@ Action Command_Maplist(int client, int args)
 	return Plugin_Handled;
 }
 
+Action Command_ReloadBlackList(int client, int args)
+{
+	BuildBlackList(client);
+	return Plugin_Handled;
+}
+
+Action Commnad_ShowBlackList(int client, int args)
+{
+	if (!g_hArrayBlackList || !g_hArrayBlackList.Length)
+	{
+		CReplyToCommand(client, "%t", "BlackListIsEmpty");
+		return Plugin_Handled;
+	}
+
+	CPrintToChat(client, "%t", "SeeConsole");
+	PrintToConsole(client, ">----BlackList-----<");
+	for (int i = 0; i < g_hArrayBlackList.Length; i++)
+	{
+		char sMap[128];
+		g_hArrayBlackList.GetString(i, sMap, sizeof(sMap));
+		PrintToConsole(client, "- %s", sMap);
+	}
+
+	return Plugin_Handled;
+}
+
 void MenuHandler_Mixmap(Menu menu, MenuAction action, int client, int selection)
 {
 	switch (action)
@@ -166,6 +192,12 @@ void MenuHandler_ChooseMapSetType(Menu menu, MenuAction action, int client, int 
 	{
 		case MenuAction_Select:
 		{
+			if (g_bManullyChoosingMap)
+			{
+				CPrintToChat(client, "%t", "SomeoneIsChoosing");
+				return;
+			}
+
 			switch (param2)
 			{
 				case 0: CollectAllMapsEx(client, MapSet_Official);

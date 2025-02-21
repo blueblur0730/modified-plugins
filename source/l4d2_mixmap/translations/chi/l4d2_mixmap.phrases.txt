@@ -2,7 +2,7 @@
 {
     "NotifyClients"
     {
-        "chi"          "[{orange}!{default}] 当前正在使用 {orange}Mixmap{default}. 输入 {lightgreen}/maplist{default} 来查看地图列表."
+        "chi"          "[{orange}!{default}] 当前正在使用 {orange}Mixmap{default}. 输入 {lightgreen}/mixmap_maplist{default} 来查看地图列表."
     }
 
     "MapProgress"
@@ -16,14 +16,24 @@
         "chi"           "无"
     }
 
+    "SeeConsole"
+    {
+        "chi"            "[{orange}!{default}] 请在控制台查看地图列表."
+    }
+
     "MapList"
     {
         "chi"           ">---{green}地图列表{default}---<"
     }
 
+    "MapList_NoColor"
+    {
+        "chi"            ">---地图列表---<"
+    }
+
     "Current"
     {
-        "chi"           "({orange}当前{default})"
+        "chi"           "(当前)"
     }
 
     "FailedToGet"
@@ -104,6 +114,11 @@
         "chi"           "上一战役"
     }
 
+    "BlackListed"
+    {
+        "chi"           "[{orange}!{default}] 这张地图已被加入{red}黑名单{default}, 不能被选择."
+    }
+
     "AddedInto"
     {
         "#format"       "{1:s}"
@@ -172,5 +187,30 @@
     "ShouldSelectLastMap"
     {
         "chi"            "[{orange}!{default}] 你应该为图池的最后一张图选择救援图."
+    }
+
+    "SomeoneIsChoosing"
+    {
+        "chi"            "[{orange}!{default}] 当前正有人在选择地图, 请等待他退出或完成选择."
+    }
+
+    "NoKeysFoundInBlackList"
+    {
+        "chi"            "[{orange}!{default}] 未能在黑名单中发现地图."
+    }
+
+    "FailedToLoadBlackList"
+    {
+        "chi"            "[{orange}!{default}] 尝试加载黑名单文件失败."
+    }
+
+    "BlackListLoaded"
+    {
+        "chi"            "[{orange}!{default}] 黑名单已重载."
+    }
+
+    "BlackListIsEmpty"
+    {
+        "en"            "[{orange}!{default}] Blacklist is empty."
     }
 }

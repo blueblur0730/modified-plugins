@@ -95,7 +95,6 @@ void NotifyMixmap(int client)
 	else
 		g_hArrayPools.GetString(g_iMapsPlayed, sNextMap, sizeof(sNextMap));
 
-	CPrintToChat(client, "%t", "NotifyClients");
 	CPrintToChat(client, "%t", "MapProgress", sCurrentMap, sNextMap);
 
 	if (g_iMapsPlayed == g_hArrayPools.Length)
@@ -104,16 +103,57 @@ void NotifyMixmap(int client)
 
 void NotifyMapList(int client)
 {
-	CPrintToChat(client, "%t", "MapList");
+	if (g_hArrayPools.Length > 6)
+		CPrintToChat(client, "%t", "SeeConsole");
 
+	g_hArrayPools.Length > 6 ?	// we have a small chat right?
+	PrintToConsole(client, "%t", "MapList_NoColor") :
+	CPrintToChat(client, "%t", "MapList");
+	
 	char sBuffer[64], sCurrentMap[64], sCurrent[32];
 	GetCurrentMap(sCurrentMap, sizeof(sCurrentMap));
 	Format(sCurrent, sizeof(sCurrent), "%T", "Current", client);
 	for (int i = 0; i < g_hArrayPools.Length; i++)
 	{
 		g_hArrayPools.GetString(i, sBuffer, sizeof(sBuffer));
-		CPrintToChat(client, "{green}-> {olive}%s{default} %s", sBuffer, (!strcmp(sCurrentMap, sBuffer) && g_iMapsPlayed == i + 1) ? sCurrent : "");
+		g_hArrayPools.Length > 6 ?
+		PrintToConsole(client, "-> %s %s", sBuffer, (!strcmp(sCurrentMap, sBuffer) && g_iMapsPlayed == i + 1) ? sCurrent : "") :
+		CPrintToChat(client, "{green}-> {olive}%s{default} {orange}%s{default}", sBuffer, (!strcmp(sCurrentMap, sBuffer) && g_iMapsPlayed == i + 1) ? sCurrent : "");
 	}
+}
+
+void Patch(bool bPatch)
+{
+	static bool bPatched = false;
+	if (bPatch && !bPatched)
+	{
+		g_hPatch_BlockRestoring.Enable();
+		bPatched = true;
+	}
+	else if (!bPatch && bPatched)
+	{
+		g_hPatch_BlockRestoring.Disable();
+		bPatched = false;
+	}
+}
+
+void PluginStartInit()
+{
+	g_bMapsetInitialized = false;
+	g_iMapsPlayed		 = 0;
+	g_iMapsetType        = MapSet_None;
+	delete g_hArrayPools;
+	delete g_hMapChapterNames;
+	delete g_hArraySurvivorSets;
+}
+
+void ErrorHandler_LogToFile(const char[] msg, const char[] name, const char[] file, int line, const char[] func)
+{
+	char sBuffer[256];
+	BuildPath(Path_SM, sBuffer, sizeof(sBuffer), LOGGER_ERROR_FILE);
+	LogToFile(sBuffer, "[Log4sp] Error occurs: (%s)", msg);
+	LogToFile(sBuffer, "[Log4sp] in function [%s]", func);
+	LogToFile(sBuffer, "[Log4sp] at [%s:line %d]", file, line);
 }
 
 /*

@@ -306,6 +306,20 @@ stock bool IsOfficialMap(const char[] sMapName)
 	return CheckMap(sMapName, g_sOfficialMaps, sizeof(g_sOfficialMaps));
 }
 
+stock void SetGod(int client, bool on)
+{
+	int flags = GetEntityFlags(client);
+
+	if (!on && (flags & FL_GODMODE))
+	{
+		SetEntityFlags(client, flags & ~FL_GODMODE)
+	}
+	else if (on && !(flags & FL_GODMODE))
+	{
+		SetEntityFlags(client, flags | FL_GODMODE);
+	}
+}
+
 bool CheckMap(const char[] sMapName, const char[][] sList, int listSize)
 {
 	for (int i = 0; i < listSize; i++)
@@ -334,7 +348,7 @@ stock void CheatCommand(int client, const char[] cmd, const char[] args = "")
 // get real gamemode. this is for mutation and community modes,
 // and even custom modes (need to set mp_gamemode to the value).
 // compatible for official modes.
-void GetBasedMode(char[] sMode, int size)
+stock void GetBasedMode(char[] sMode, int size)
 {
 	// could actually use CMatchExtL4D::GetGameModeInfo... well whatever.
 	SourceKeyValues kvGameModes = SDKCall(g_hSDKCall_GetAllModes, g_pMatchExtL4D);
@@ -353,4 +367,89 @@ void GetBasedMode(char[] sMode, int size)
 		if (!strcmp(sMode, "realism"))
 			strcopy(sMode, size, "coop");
 	}
+}
+
+// bye bye sourcemod keyvalues.
+stock void BuildBlackList(int client)
+{
+	char sPath[128];
+	BuildPath(Path_SM, sPath, sizeof(sPath), CONFIG_BLACKLIST);
+
+	SourceKeyValues kv = SourceKeyValues("BlackList");
+	if (kv.LoadFromFile(sPath))
+	{
+		delete g_hArrayBlackList;
+		g_hArrayBlackList = new ArrayList(ByteCountToCells(64));
+
+		char sMap[64];
+		SourceKeyValues kvSub = kv.FindKey("global_filter");
+		if (kvSub && !kvSub.IsNull())
+		{
+			for (SourceKeyValues kvValue = kvSub.GetFirstValue(); kvValue && !kvValue.IsNull(); kvValue = kvValue.GetNextValue())
+			{
+				kvValue.GetString(NULL_STRING, sMap, sizeof(sMap));
+				g_hArrayBlackList.PushString(sMap);
+			}
+		}
+
+		char sMode[32];
+		FindConVar("mp_gamemode").GetString(sMode, sizeof(sMode));
+		GetBasedMode(sMode, sizeof(sMode));
+
+		kvSub = kv.FindKey(sMode);
+		if (kvSub && !kvSub.IsNull())
+		{
+			for (SourceKeyValues kvValue = kvSub.GetFirstValue(); kvValue && !kvValue.IsNull(); kvValue = kvValue.GetNextValue())
+			{
+				kvValue.GetString(NULL_STRING, sMap, sizeof(sMap));
+				g_hArrayBlackList.PushString(sMap);
+			}
+		}
+
+		if (!g_hArrayBlackList || !g_hArrayBlackList.Length)
+		{
+			kv.deleteThis();
+			g_hLogger.ErrorEx("No keys found in \""...CONFIG_BLACKLIST..."\" on node %s and global filter.", sMode);
+
+			if (client != -1 && client > 0 && client <= MaxClients)
+				CPrintToChat(client, "%t", "NoKeysFoundInBlackList");
+
+			return;
+		}
+	}
+	else
+	{
+		kv.deleteThis();
+		g_hLogger.Error("Failed to load black list file from \""...CONFIG_BLACKLIST..."\".");
+
+		if (client != -1 && client > 0 && client <= MaxClients)
+			CPrintToChat(client, "%t", "FailedToLoadBlackList");
+
+		return;
+	}
+
+	if (client != -1 && client > 0 && client <= MaxClients)
+		CPrintToChat(client, "%t", "BlackListLoaded");
+
+	kv.deleteThis();
+}
+
+stock bool CheckBlackList(const char[] sMap)
+{
+	int found = g_hArrayBlackList.FindString(sMap);
+	if (found != -1)
+		return true;
+	
+	return false;
+}
+
+stock void LoadTranslation(const char[] translation)
+{
+	char sPath[PLATFORM_MAX_PATH], sName[64];
+	Format(sName, sizeof(sName), "translations/%s.txt", translation);
+	BuildPath(Path_SM, sPath, sizeof(sPath), sName);
+	if (!FileExists(sPath))
+		SetFailState("[MixMap] Missing translation file %s.txt", translation);
+
+	LoadTranslations(translation);
 }

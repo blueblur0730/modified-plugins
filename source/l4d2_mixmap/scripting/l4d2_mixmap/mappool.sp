@@ -109,39 +109,6 @@ bool SelectRandomMap()
 	delete g_hArraySurvivorSets;
 	g_hArraySurvivorSets = new ArrayList();
 
-	ArrayList hArrayBlackList = null;
-	if (g_hCvar_EnableBlackList.BoolValue)
-	{
-		char sPath[128];
-		BuildPath(Path_SM, sPath, sizeof(sPath), CONFIG_BLACKLIST);
-		KeyValues kv = new KeyValues("");
-		if (kv.ImportFromFile(sPath))
-		{
-			if (kv.GotoFirstSubKey())
-			{
-				hArrayBlackList = new ArrayList(ByteCountToCells(64));
-
-				do
-				{
-					char sMap[64];
-					kv.GetString(NULL_STRING, sMap, sizeof(sMap));
-					hArrayBlackList.PushString(sMap);
-				}
-				while (kv.GotoNextKey());
-			}
-			else
-			{
-				LogError("No keys found in \""...CONFIG_BLACKLIST..."\", black list disabled.");
-			}
-		}
-		else
-		{
-			LogError("Failed to load black list file from \""...CONFIG_BLACKLIST..."\", black list disabled.");
-		}
-
-		delete kv;
-	}
-
 	for (int i = 0; i < g_hCvar_MapPoolCapacity.IntValue; i++)
 	{
 		// first random sort the main arraylist, meaning choosing a mission here randomly.
@@ -168,7 +135,7 @@ bool SelectRandomMap()
 			if (i == 0)
 			{
 				hArray.GetString(0, sMap, sizeof(sMap));
-				if (CheckBlackList(hArrayBlackList, sMap))
+				if ((g_hCvar_EnableBlackList.BoolValue && g_hArrayBlackList) && CheckBlackList(sMap))
 				{
 					i--;	// do not take this into count.
 					continue;
@@ -177,10 +144,11 @@ bool SelectRandomMap()
 				g_hArrayPools.PushString(sMap);
 				g_hArraySurvivorSets.Push(survivorSet);
 			}
-			else if (i == g_hCvar_MapPoolCapacity.IntValue - 1)	// the last selection must be the finale.
+			// the last selection must be the finale.
+			else if (i == g_hCvar_MapPoolCapacity.IntValue - 1)
 			{
 				hArray.GetString(hArray.Length - 1, sMap, sizeof(sMap));
-				if (CheckBlackList(hArrayBlackList, sMap))
+				if ((g_hCvar_EnableBlackList.BoolValue && g_hArrayBlackList) && CheckBlackList(sMap))
 				{
 					// dont need this, as it only have one map and it's on the blacklist.
 					if (hArray.Length == 1)
@@ -195,13 +163,14 @@ bool SelectRandomMap()
 			}
 			else
 			{
-				if (hArray.Length > 2)	// we need at least 2 maps to make a selection.
+				// we need at least 2 maps to make a selection. we are in the middle of the pool.
+				if (hArray.Length > 2)
 				{
 					// erase the head and tail.
 					hArray.Erase(hArray.Length - 1);
 					hArray.Erase(0);
 
-					if (g_hCvar_EnableBlackList.BoolValue && hArrayBlackList)
+					if (g_hCvar_EnableBlackList.BoolValue && g_hArrayBlackList)
 					{
 						do
 						{
@@ -209,13 +178,16 @@ bool SelectRandomMap()
 							if (!hArray.Length)
 								break;
 
-							hArray.Sort(Sort_Random, Sort_String);	// randomlize the array
+							// randomlize the array
+							hArray.Sort(Sort_Random, Sort_String);
 							int random = GetRandomInt(0, hArray.Length - 1);
 							hArray.GetString(random, sMap, sizeof(sMap));
-							if (CheckBlackList(hArrayBlackList, sMap))
-								hArray.Erase(random);	// in case all the array are the hater, we erase it.
+
+							// in case all the array are the hater, we erase it.
+							if (CheckBlackList(sMap))
+								hArray.Erase(random);
 						}
-						while (CheckBlackList(hArrayBlackList, sMap));
+						while (CheckBlackList(sMap));
 
 						// we got nothing from here, do not take this into count and remove this.
 						if (!hArray.Length)
@@ -227,7 +199,8 @@ bool SelectRandomMap()
 					}
 					else
 					{
-						hArray.Sort(Sort_Random, Sort_String);	// randomlize the array
+						// randomlize the array
+						hArray.Sort(Sort_Random, Sort_String);
 						int random = GetRandomInt(0, hArray.Length - 1);
 						hArray.GetString(random, sMap, sizeof(sMap));
 					}
@@ -235,11 +208,11 @@ bool SelectRandomMap()
 					g_hArrayPools.PushString(sMap);
 					g_hArraySurvivorSets.Push(survivorSet);
 				}
+				// else we use the first map, and make sure it is not a finale.
 				else if (hArray.Length == 2)
 				{
-					// else we use the first map, and make sure it is not a finale.
 					hArray.GetString(0, sMap, sizeof(sMap));
-					if (CheckBlackList(hArrayBlackList, sMap))
+					if ((g_hCvar_EnableBlackList.BoolValue && g_hArrayBlackList) && CheckBlackList(sMap))
 					{
 						i--;
 						continue;
@@ -248,11 +221,12 @@ bool SelectRandomMap()
 					g_hArrayPools.PushString(sMap);
 					g_hArraySurvivorSets.Push(survivorSet);
 				}
-				else if (hArray.Length == 1)	// do not take any action, as this can be a finale map.
+				// do not take any action, as this can be a finale map.
+				else if (hArray.Length == 1)	
 				{
 					// we need to decrease the index, as we do not push any map into the arraylist.
 					i--;
-					continue;	// save this if it is finale.
+					continue;	// skip this, this is a finale map in the middle of pool.
 				}
 			}
 
@@ -266,8 +240,7 @@ bool SelectRandomMap()
 	}
 
 	delete g_hArrayMissionsAndMaps;
-	delete hArrayBlackList;
-
+	
 	for (int i = 1; i < MaxClients; i++)
 	{
 		if (!IsClientInGame(i) || IsFakeClient(i))
@@ -277,18 +250,6 @@ bool SelectRandomMap()
 	}
 
 	return true;
-}
-
-bool CheckBlackList(ArrayList hArrayBlackList, const char[] sMap)
-{
-	if (g_hCvar_EnableBlackList.BoolValue && hArrayBlackList)
-	{
-		int found = hArrayBlackList.FindString(sMap);
-		if (found != -1)
-			return true;
-	}
-
-	return false;
 }
 
 void CleanMemory()
@@ -312,18 +273,23 @@ void CleanMemory()
  * -----------------------------
 */
 
+// menu is BAAAAAAAAAAAAAAAAD.
 static int g_iSelectIndex = 0;
 static int g_iSelectedSet = 2;
 static int g_iParam = -1;
+static int g_iClientWhoIsSelecting = -1;
 
 void CollectAllMapsEx(int client, MapSetType type)
 {
 	if (!CollectMissionsToMenu(type))
 		return;
 
+	g_bManullyChoosingMap = true;
 	g_iSelectIndex = 0;
 	g_iSelectedSet = 2;
 	g_iParam = -1;
+	g_iClientWhoIsSelecting = client;
+
 	CreateManullySelectMapMenu(client);
 }
 
@@ -394,28 +360,32 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 				CreateManullySelectMapMenu(param1);
 				return;
 			}
-			// selected "Last Mission" on the last page of all mission.
-			else if (g_iSelectIndex == g_hArrayMissionsAndMaps.Length - 1 && !param2)
-			{
-				g_iSelectIndex--;
-				CreateManullySelectMapMenu(param1);
-				return;
-			}
+			// in the middle page of all missions.
 			else if (g_iSelectIndex > 0)
 			{
-				// selected "Last Mission" on the middle page of all mission.
-				if (!param2)
+				// selected "Last Mission" on the last page of all mission.
+				if (g_iSelectIndex == g_hArrayMissionsAndMaps.Length - 1 && !param2)
 				{
 					g_iSelectIndex--;
 					CreateManullySelectMapMenu(param1);
 					return;
 				}
-				// selected "Next Mission" on the middle page of all mission.
-				else if (param2 == 1)
+				else 
 				{
-					g_iSelectIndex++;
-					CreateManullySelectMapMenu(param1);
-					return;
+					// selected "Last Mission" on the middle page of all mission.
+					if (!param2)
+					{
+						g_iSelectIndex--;
+						CreateManullySelectMapMenu(param1);
+						return;
+					}
+					// selected "Next Mission" on the middle page of all mission.
+					else if (param2 == 1 && g_iSelectIndex != g_hArrayMissionsAndMaps.Length - 1)
+					{
+						g_iSelectIndex++;
+						CreateManullySelectMapMenu(param1);
+						return;
+					}
 				}
 			}
 
@@ -446,6 +416,17 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 			char sMap[64];
 			menu.GetItem(param2, sMap, sizeof(sMap));
 
+			// @blueblur: the original thought was to make this line where the map name is on the menu
+			// appears to be grey and add a word (In blacklist), which is a good way to show the notification.
+			// but soon I realized you can't handle this on the menu callback if them choose this grey line,
+			// which is a MenuAction_End with a MenuEnd_Selected passed, you can not know if them choose a normal item or a blacklisted item.
+			if ((g_hCvar_EnableBlackList.BoolValue && g_hArrayBlackList) && CheckBlackList(sMap))
+			{
+				CPrintToChat(param1, "%t", "BlackListed");
+				CreateManullySelectMapMenu(param1);
+				return;
+			}
+
 			g_hArrayPools.PushString(sMap);
 			g_hArraySurvivorSets.Push(g_iSelectedSet);
 			CPrintToChat(param1, "%t", "AddedInto", sMap);
@@ -458,8 +439,8 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 
 			if (g_hArrayPools.Length == g_hCvar_MapPoolCapacity.IntValue)
 			{
-				CPrintToChat(param1, "%t", "FullSelected", g_hCvar_ManualSelectDelay.IntValue);
 				CleanMemoryEx();
+				CPrintToChat(param1, "%t", "FullSelected", g_hCvar_ManualSelectDelay.IntValue);
 				CreateTimer(g_hCvar_ManualSelectDelay.FloatValue, Timer_PreparedToVote, param1);
 			}
 			else
@@ -474,41 +455,66 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 			{
 				case MenuEnd_Exit:
 				{
-					CPrintToChat(param1, "%t", "AbortedSelection");
-					CleanMemoryEx();
 					delete menu;
+					CleanMemoryEx();
+					CPrintToChat(g_iClientWhoIsSelecting, "%t", "AbortedSelection");
+					g_bManullyChoosingMap = false;
+					g_iClientWhoIsSelecting = -1;
 				}
 
 				case MenuEnd_Cancelled:
 				{
 					switch (param2)
 					{
-						case MenuCancel_Interrupted, MenuCancel_Disconnected, MenuCancel_Exit, MenuCancel_NoDisplay:
+						case MenuCancel_Disconnected, MenuCancel_Exit, MenuCancel_NoDisplay:
 						{
-							CPrintToChat(param1, "%t", "AbortedSelection");
-							CleanMemoryEx();
 							delete menu;
+							CleanMemoryEx();
+
+							if (IsClientInGame(g_iClientWhoIsSelecting))
+								CPrintToChat(g_iClientWhoIsSelecting, "%t", "AbortedSelection");
+
+							g_bManullyChoosingMap = false;
+							g_iClientWhoIsSelecting = -1;
 						}
 					}
 				}
 
 				case MenuEnd_Selected:
 					delete menu;
-
+				
 				case MenuEnd_ExitBack:
 				{
 					delete menu;
 					CleanMemoryEx();
-					ManullySelectMap_ChooseMapSetType(param1);
+					CPrintToChat(g_iClientWhoIsSelecting, "%t", "AbortedSelection");
+					ManullySelectMap_ChooseMapSetType(g_iClientWhoIsSelecting);
+					g_bManullyChoosingMap = false;
+					g_iClientWhoIsSelecting = -1;
 				}
 			}
+		}
 
+		case MenuAction_Cancel:
+		{
+			// cannot delete the menu here, it is just being taken over with another contents, not really ends,
+			// otherwise server crashes.
+			// as what it says this is just a cancel.
+			if (param2 == MenuCancel_Interrupted)
+			{
+				CleanMemoryEx();
+				CPrintToChat(g_iClientWhoIsSelecting, "%t", "AbortedSelection");
+				g_bManullyChoosingMap = false;
+				g_iClientWhoIsSelecting = -1;
+			}
 		}
 	}
 }
 
 void Timer_PreparedToVote(Handle timer, int client)
 {
+	g_bManullyChoosingMap = false;
+	g_iClientWhoIsSelecting = -1;
 	CreateMixmapVote(client, MapSet_Manual);
 }
 

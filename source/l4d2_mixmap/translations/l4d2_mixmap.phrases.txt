@@ -2,7 +2,7 @@
 {
     "NotifyClients"
     {
-        "en"          "[{orange}!{default}] Currently using {orange}Mixmap{default}. Type {lightgreen}/maplist{default} to see map set."
+        "en"          "[{orange}!{default}] Currently using {orange}Mixmap{default}. Type {lightgreen}/mixmap_maplist{default} to see map set."
     }
 
     "MapProgress"
@@ -16,14 +16,24 @@
         "en"            "None"
     }
 
+    "SeeConsole"
+    {
+        "en"            "[{orange}!{default}] See console for the maplist."
+    }
+
     "MapList"
     {
         "en"            ">---{green}Map List{default}---<"
     }
 
+    "MapList_NoColor"
+    {
+        "en"            ">---Map List---<"
+    }
+
     "Current"
     {
-        "en"            "({orange}Current{default})"
+        "en"            "(Current)"
     }
 
     "FailedToGet"
@@ -104,6 +114,11 @@
         "en"            "Last Mission"
     }
 
+    "BlackListed"
+    {
+        "en"            "[{orange}!{default}] This map has been added to {red}the blacklist{default}, cannot be choosen."
+    }
+
     "AddedInto"
     {
         "#format"       "{1:s}"
@@ -172,5 +187,30 @@
     "ShouldSelectLastMap"
     {
         "en"            "[{orange}!{default}] You should select the finale map as the last map of the ap pool."
+    }
+
+    "SomeoneIsChoosing"
+    {
+        "en"            "[{orange}!{default}] Someone is choosing a map, please wait for him to finish or exit."
+    }
+
+    "NoKeysFoundInBlackList"
+    {
+        "en"            "[{orange}!{default}] No maps found in blacklist."
+    }
+
+    "FailedToLoadBlackList"
+    {
+        "en"            "[{orange}!{default}] Failed to load blacklist file."
+    }
+
+    "BlackListLoaded"
+    {
+        "en"            "[{orange}!{default}] Blacklist Reloaded."
+    }
+
+    "BlackListIsEmpty"
+    {
+        "en"            "[{orange}!{default}] Blacklist is empty."
     }
 }
