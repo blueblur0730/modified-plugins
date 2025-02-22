@@ -82,6 +82,11 @@
         "chi"           "手动选择地图"
     }
 
+    "MenuItem_LoadPreset"
+    {
+        "chi"           "加载预设地图池"
+    }
+
     "MenuTitle_ChooseMapSetType"
     {
         "chi"           "选择图池类型"
@@ -211,6 +216,42 @@
 
     "BlackListIsEmpty"
     {
-        "en"            "[{orange}!{default}] Blacklist is empty."
+        "chi"            "[{orange}!{default}] 黑名单为空."
+    }
+
+    "NoPresetFileFound"
+    {
+        "chi"            "[{orange}!{default}] 未能在服务器内找到预设文件."
+    }
+
+    "MenuTitle_LoadPreset"
+    {
+        "chi"            "选择一个预设文件来加载地图池."
+    }
+
+    "PresetFileLoadFailed"
+    {
+        "chi"            "[{orange}!{default}] 加载预设文件失败."
+    }
+
+    "PresetFileLoaded"
+    {
+        "#format"       "{1:s},{2:d}"
+        "chi"           "[{orange}!{default}] 成功加载预设图池 \"{olive}{1}{default}\"! 准备在 {orange}{2}{default} 秒内发起投票..."
+    }
+
+    "PresetFileLoadFailed_GameModeNotMatched"
+    {
+        "chi"           "[{orange}!{default}] 加载预设文件失败, 当前游戏模式不允许加载."
+    }
+
+    "NoPresetFolderFound"
+    {
+        "chi"           "[{orange}!{default}] 未能在服务器内找到预设文件夹."
+    }
+
+    "PresetFileReLoaded"
+    {
+        "chi"           "[{orange}!{default}] 预设文件已重载."
     }
 }

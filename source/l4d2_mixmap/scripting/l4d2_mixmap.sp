@@ -20,7 +20,7 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re2.3.1"
+#define PLUGIN_VERSION "re3.0.0"
 
 StringMap g_hMapChapterNames;			// stores the mission name by its corresponding first map name.
 
@@ -28,7 +28,9 @@ ArrayList
 	g_hArrayMissionsAndMaps,			// Stores all missions and their map names in order.
 	g_hArrayPools,						// Stores slected map names.
 	g_hArraySurvivorSets,				// Stores selected survivor sets.
-	g_hArrayBlackList;					// Stores blacklisted map names.
+	g_hArrayBlackList,					// Stores blacklisted map names.
+	g_hArrayPresetList,					// Stores all preset file names.
+	g_hArrayPresetNames;				// Stores all preset names.
 
 Logger g_hLogger;						// for debugging.
 
@@ -36,6 +38,7 @@ bool g_bManullyChoosingMap = false;
 bool g_bMapsetInitialized = false;
 int g_iMapsPlayed = 0;
 MapSetType g_iMapsetType = MapSet_None;
+char g_sPresetName[512];
 
 // Modules
 #include <l4d2_mixmap/setup.sp>
@@ -79,6 +82,7 @@ public void OnPluginStart()
 	SetupCommands();
 	SetupLogger();
 	BuildBlackList(-1);
+	LoadFolderFiles(-1);
 	PluginStartInit();
 }
 
@@ -107,6 +111,10 @@ public void OnMapStart()
 {
 	if (!g_bMapsetInitialized)
 		return;
+
+	// turn off entitis transisition.
+	g_hLogger.Trace("### OnMapStart: Blocking restored entitis from transitioning.");
+	StoreToAddress(g_bNeedRestore, 0, NumberType_Int8);
 
 	// just in case.
 	PrecacheAllModels();
@@ -159,4 +167,7 @@ public void OnPluginEnd()
 	PluginStartInit();
 
 	delete g_hArrayBlackList;
+	delete g_hArrayPresetList;
+	delete g_hArrayPresetNames;
+	delete g_hLogger;
 }

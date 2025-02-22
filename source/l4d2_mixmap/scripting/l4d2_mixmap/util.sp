@@ -8,7 +8,8 @@ enum MapSetType {
 	MapSet_Official = 1,
 	MapSet_Custom = 2,
 	MapSet_Mixtape = 3,
-	MapSet_Manual = 4
+	MapSet_Manual = 4,
+	MapSet_Preset = 5
 }
 
 static const char g_sFakeMissions[][] = {
@@ -367,98 +368,6 @@ stock void GetBasedMode(char[] sMode, int size)
 		if (!strcmp(sMode, "realism"))
 			strcopy(sMode, size, "coop");
 	}
-}
-
-// bye bye sourcemod keyvalues.
-stock void BuildBlackList(int client)
-{
-	char sPath[128];
-	BuildPath(Path_SM, sPath, sizeof(sPath), CONFIG_BLACKLIST);
-
-	SourceKeyValues kv = SourceKeyValues("BlackList");
-	if (kv.LoadFromFile(sPath))
-	{
-		delete g_hArrayBlackList;
-		g_hArrayBlackList = new ArrayList(ByteCountToCells(64));
-
-		char sMap[64];
-		int count = 0;
-		SourceKeyValues kvSub = kv.FindKey("global_filter");
-		if (kvSub && !kvSub.IsNull())
-		{
-			for (SourceKeyValues kvValue = kvSub.GetFirstValue(); kvValue && !kvValue.IsNull(); kvValue = kvValue.GetNextValue())
-			{
-				kvValue.GetString(NULL_STRING, sMap, sizeof(sMap));
-				g_hArrayBlackList.PushString(sMap);
-				count++;
-
-				// reached limit. return.
-				if (count >= g_hCvar_BlackListLimit.IntValue)
-				{
-					kv.deleteThis();
-					g_hLogger.WarnEx("Reached limit of %d blacklisted maps. Abort the rest.", g_hCvar_BlackListLimit.IntValue);
-
-					if (client != -1 && client > 0 && client <= MaxClients)
-						CPrintToChat(client, "%t", "BlackListLoaded");
-
-					return;
-				}
-			}
-		}
-
-		char sMode[32];
-		FindConVar("mp_gamemode").GetString(sMode, sizeof(sMode));
-		GetBasedMode(sMode, sizeof(sMode));
-
-		kvSub = kv.FindKey(sMode);
-		if (kvSub && !kvSub.IsNull())
-		{
-			for (SourceKeyValues kvValue = kvSub.GetFirstValue(); kvValue && !kvValue.IsNull(); kvValue = kvValue.GetNextValue())
-			{
-				kvValue.GetString(NULL_STRING, sMap, sizeof(sMap));
-				g_hArrayBlackList.PushString(sMap);
-				count++;
-
-				// reached limit. return.
-				if (count >= g_hCvar_BlackListLimit.IntValue)
-				{
-					kv.deleteThis();
-					g_hLogger.WarnEx("Reached limit of %d blacklisted maps. Abort the rest.", g_hCvar_BlackListLimit.IntValue);
-
-					if (client != -1 && client > 0 && client <= MaxClients)
-						CPrintToChat(client, "%t", "BlackListLoaded");
-
-					return;
-				}
-			}
-		}
-
-		if (!g_hArrayBlackList || !g_hArrayBlackList.Length)
-		{
-			kv.deleteThis();
-			g_hLogger.ErrorEx("No keys found in \""...CONFIG_BLACKLIST..."\" on node %s and global filter.", sMode);
-
-			if (client != -1 && client > 0 && client <= MaxClients)
-				CPrintToChat(client, "%t", "NoKeysFoundInBlackList");
-
-			return;
-		}
-	}
-	else
-	{
-		kv.deleteThis();
-		g_hLogger.Error("Failed to load black list file from \""...CONFIG_BLACKLIST..."\".");
-
-		if (client != -1 && client > 0 && client <= MaxClients)
-			CPrintToChat(client, "%t", "FailedToLoadBlackList");
-
-		return;
-	}
-
-	if (client != -1 && client > 0 && client <= MaxClients)
-		CPrintToChat(client, "%t", "BlackListLoaded");
-
-	kv.deleteThis();
 }
 
 stock bool CheckBlackList(const char[] sMap)

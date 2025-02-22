@@ -3,18 +3,6 @@
 #endif
 #define _l4d2_mixmap_hooks_included
 
-// prevent weapons and items in the last saferoom spawned in this saferoom.
-MRESReturn DTR_OnRestoreTransitionedEntities()
-{
-    if (g_bMapsetInitialized)
-    {
-	    g_hLogger.Trace("### DTR_OnRestoreTransitionedEntities Called. Superceded.");
-	    return MRES_Supercede;
-    }
-
-    return MRES_Ignored;
-}
-
 MRESReturn DTR_CTerrorPlayer_OnTransitionRestore(int pThis, DHookReturn hReturn)
 {
 	if (!g_bMapsetInitialized)
@@ -55,7 +43,7 @@ MRESReturn DTR_CDirector_OnDirectorChangeLevel(DHookParam hParams)
 			else
 			{
 				hParams.GetString(1, sMap, sizeof(sMap));
-				g_hLogger.DebugEx("### DTR_CDirector_OnDirectorChangeLevel: Original Map Name: %s.", sMap);
+				g_hLogger.DebugEx("### DTR_CDirector_OnDirectorChangeLevel: Original Map Name: \"%s\".", sMap);
 			}
 		}
 
@@ -63,7 +51,7 @@ MRESReturn DTR_CDirector_OnDirectorChangeLevel(DHookParam hParams)
 			return MRES_Ignored;
 
 		g_hArrayPools.GetString(g_iMapsPlayed, sMap, sizeof(sMap));
-		g_hLogger.DebugEx("### DTR_CDirector_OnDirectorChangeLevel: Transition Map Name: %s.", sMap);
+		g_hLogger.DebugEx("### DTR_CDirector_OnDirectorChangeLevel: Transition Map Name: \"%s\".", sMap);
 		hParams.SetString(1, sMap);
 
 		return MRES_ChangedHandled;
@@ -90,7 +78,7 @@ MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
 			else
 			{
 				hParams.GetString(1, sMap, sizeof(sMap));
-				g_hLogger.DebugEx("### DTR_CTerrorGameRules_OnBeginChangeLevel: Original Map Name: %s.", sMap);
+				g_hLogger.DebugEx("### DTR_CTerrorGameRules_OnBeginChangeLevel: Original Map Name: \"%s\".", sMap);
 			}
 		}
 		
@@ -98,7 +86,7 @@ MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
 			return MRES_Ignored;
 
 		g_hArrayPools.GetString(g_iMapsPlayed, sMap, sizeof(sMap));
-		g_hLogger.DebugEx("### DTR_CTerrorGameRules_OnBeginChangeLevel: Transition Map Name: %s.", sMap);
+		g_hLogger.DebugEx("### DTR_CTerrorGameRules_OnBeginChangeLevel: Transition Map Name: \"%s\".", sMap);
 		hParams.SetString(1, sMap);
 
 		return MRES_ChangedHandled;

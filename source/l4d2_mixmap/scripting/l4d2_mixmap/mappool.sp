@@ -63,26 +63,26 @@ void CollectAllMaps(MapSetType type)
 		FormatEx(sKey, sizeof(sKey), "modes/%s", sMode);
 		SourceKeyValues kvMode = kvSub.FindKey(sKey);
 
-		if (!kvMode.IsNull())
+		if (!kvMode || kvMode.IsNull())
+			continue;
+
+        // should be free.
+		ArrayList hArray = new ArrayList(ByteCountToCells(64));
+
+		// on this case we are iterating "1", "2"... subkeys.
+		for (SourceKeyValues kvMapNumber = kvMode.GetFirstTrueSubKey(); !kvMapNumber.IsNull(); kvMapNumber = kvMapNumber.GetNextTrueSubKey())
 		{
-            // should be free.
-			ArrayList hArray = new ArrayList(ByteCountToCells(64));
-
-			// on this case we are iterating "1", "2"... subkeys.
-			for (SourceKeyValues kvMapNumber = kvMode.GetFirstTrueSubKey(); !kvMapNumber.IsNull(); kvMapNumber = kvMapNumber.GetNextTrueSubKey())
-			{
-				char sValue[64];
-				kvMapNumber.GetString("Map", sValue, sizeof(sValue));
-				hArray.PushString(sValue);
-			}
-
-			// pack mission and map names up. into an arraylist so we can sort them.
-			DataPack dp = new DataPack();
-			dp.WriteCell(hArray);
-			dp.WriteCell(survivorSet);
-			dp.WriteString(sMissionName);
-			g_hArrayMissionsAndMaps.Push(dp);
+			char sValue[64];
+			kvMapNumber.GetString("Map", sValue, sizeof(sValue));
+			hArray.PushString(sValue);
 		}
+
+		// pack mission and map names up. into an arraylist so we can sort them.
+		DataPack dp = new DataPack();
+		dp.WriteCell(hArray);
+		dp.WriteCell(survivorSet);
+		dp.WriteString(sMissionName);
+		g_hArrayMissionsAndMaps.Push(dp);
 	}
 }
 

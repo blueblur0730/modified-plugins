@@ -4,14 +4,6 @@
     {
         "Functions"
         {
-			"RestoreTransitionedEntities"
-			{
-				"signature"		"RestoreTransitionedEntities"
-				"callconv"		"thiscall"
-				"return"		"void"
-				"this"			"ignore"
-			}
-
 			"CTerrorPlayer::TransitionRestore"
 			{
 				"signature"		"CTerrorPlayer::TransitionRestore"
@@ -116,6 +108,19 @@
 					"offset"	"0x7A"
 				}
 			}
+
+			"g_bNeedRestore"
+			{
+				"linux"
+				{
+					"signature"	"g_bNeedRestore"
+				}
+				"windows"
+				{
+					"signature"	"RestoreTransitionedEntities"
+					"read"		"64"
+				}
+			}
         }
 
         "Offsets"
@@ -139,6 +144,12 @@
 			{
 				"library"	"server"
 				"linux"		"@TheDirector"
+			}
+
+			"g_bNeedRestore"
+			{
+				"library"	"server"
+				"linux"		"@g_bNeedRestore"
 			}
 
 			/* CTerrorGameRules::GetMissionInfo(CTerrorGameRules *__hidden this) */
@@ -213,3 +224,21 @@
         }
     }
 }
+
+			// KeyValues* CMatchExtL4D::GetMapInfoByBspName(KeyValues *pKvGameSettings, const char *szMapName, KeyValues **a4)
+			//"CMatchExtL4D::GetMapInfoByBspName"
+			//{
+				//"linux"		"3"
+				//"windows"	"3"
+			//}
+
+			// un used. probably only useful when lobby reservation is not removed.
+			// windows sig: 
+			// first find g_pMatchFramework, go xref it, the first static call is probably it.
+			//"GetCurrentMatchSessionSettings"
+			//{
+				//"library"	"matchmaking_ds"
+				//"linux"		"@_ZL30GetCurrentMatchSessionSettingsv"
+				//"windows"	"\x8B\x0D\x2A\x2A\x2A\x2A\x8B\x01\x8B\x50\x24\xFF\xD2\x85\xC0\x74\x2A\x8B\x10\x8B\xC8\x8B\x42\x04\xFF\xE0"
+				///* 8B 0D ? ? ? ? 8B 01 8B 50 24 FF D2 85 C0 74 ? 8B 10 8B C8 8B 42 04 FF E0 */
+			//}

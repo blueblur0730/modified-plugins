@@ -82,6 +82,11 @@
         "en"            "Manually Select Map"
     }
 
+    "MenuItem_LoadPreset"
+    {
+        "en"            "Load Preset Maplists"
+    }
+
     "MenuTitle_ChooseMapSetType"
     {
         "en"            "Choose map set type:"
@@ -212,5 +217,41 @@
     "BlackListIsEmpty"
     {
         "en"            "[{orange}!{default}] Blacklist is empty."
+    }
+
+    "NoPresetFileFound"
+    {
+        "en"            "[{orange}!{default}] No preset file found in the server."
+    }
+
+    "MenuTitle_LoadPreset"
+    {
+        "en"            "Choose a preset file to load the map pool."
+    }
+
+    "PresetFileLoadFailed"
+    {
+        "en"            "[{orange}!{default}] Failed to load preset file."
+    }
+
+    "PresetFileLoaded"
+    {
+        "#format"       "{1:s},{2:d}"
+        "en"            "[{orange}!{default}] Loaded preset map pool {olive}{1}{default} sucessfully! Preparing vote in {orange}{2}{default} seconds..."
+    }
+
+    "PresetFileLoadFailed_GameModeNotMatched"
+    {
+        "en"            "[{orange}!{default}] Failed to load preset file, current game mode is not allowed."
+    }
+
+    "NoPresetFolderFound"
+    {
+        "en"            "[{orange}!{default}] No preset folder found in the server."
+    }
+
+    "PresetFileReLoaded"
+    {
+        "en"            "[{orange}!{default}] Preset file reloaded."
     }
 }

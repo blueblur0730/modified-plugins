@@ -29,16 +29,19 @@ void CreateMixmapMenu(int client)
 	menu.SetTitle(sBuffer);
 
 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_OfficialMapSet", client)
-	menu.AddItem("1", sBuffer);
+	menu.AddItem("", sBuffer);
 
 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_CustomMapSet", client)
-	menu.AddItem("2", sBuffer);
+	menu.AddItem("", sBuffer);
 
 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_MixtapeMapSet", client)
-	menu.AddItem("3", sBuffer);
+	menu.AddItem("", sBuffer);
 
 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_ManuallySelectMap", client);
-	menu.AddItem("4", sBuffer);
+	menu.AddItem("", sBuffer);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_LoadPreset", client);
+	menu.AddItem("", sBuffer);
 
 	menu.Display(client, MENU_TIME_FOREVER);
 }
@@ -145,6 +148,32 @@ Action Commnad_ShowBlackList(int client, int args)
 	return Plugin_Handled;
 }
 
+Action Command_ReloadPresetList(int client, int args)
+{
+	LoadFolderFiles(client);
+	return Plugin_Handled;
+}
+
+Action Command_PresetList(int client, int args)
+{
+	if (!g_hArrayPresetNames || !g_hArrayPresetNames.Length)
+	{
+		CReplyToCommand(client, "%t", "NoPresetFileFound");
+		return Plugin_Handled;
+	}
+
+	CPrintToChat(client, "%t", "SeeConsole");
+	PrintToConsole(client, ">----PresetList-----<");
+	for (int i = 0; i < g_hArrayPresetNames.Length; i++)
+	{
+		char sPreset[128];
+		g_hArrayPresetNames.GetString(i, sPreset, sizeof(sPreset));
+		PrintToConsole(client, "- %s", sPreset);
+	}
+
+	return Plugin_Handled;
+}
+
 void MenuHandler_Mixmap(Menu menu, MenuAction action, int client, int selection)
 {
 	switch (action)
@@ -157,6 +186,7 @@ void MenuHandler_Mixmap(Menu menu, MenuAction action, int client, int selection)
 				case 1: CreateMixmapVote(client, MapSet_Custom);
 				case 2: CreateMixmapVote(client, MapSet_Mixtape);
 				case 3: ManullySelectMap_ChooseMapSetType(client);
+				case 4: LoadPreset_CreateFileMenu(client);
 			}
 		}
 
@@ -216,6 +246,52 @@ void MenuHandler_ChooseMapSetType(Menu menu, MenuAction action, int client, int 
 		{
 			if (param2 == MenuCancel_ExitBack)
 				CreateMixmapMenu(client);
+		}
+	}
+}
+
+void LoadPreset_CreateFileMenu(int client)
+{
+	if ((!g_hArrayPresetList || !g_hArrayPresetList.Length) || (!g_hArrayPresetNames || !g_hArrayPresetNames.Length))
+		CPrintToChat(client, "%t", "NoPresetFileFound");
+	
+	char sBuffer[128];
+	Menu menu = new Menu(MenuHandler_LoadPreset);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuTitle_LoadPreset", client);
+	menu.SetTitle(sBuffer);
+
+	for (int i = 0; i < g_hArrayPresetNames.Length; i++)
+	{
+		char sFile[128];
+		g_hArrayPresetNames.GetString(i, sBuffer, sizeof(sBuffer));
+		g_hArrayPresetList.GetString(i, sFile, sizeof(sFile));
+
+		menu.AddItem(sFile, sBuffer);
+	}
+
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+void MenuHandler_LoadPreset(Menu menu, MenuAction action, int param1, int param2)
+{
+	switch (action)
+	{
+		case MenuAction_Select:
+		{
+			char sBuffer[128];
+			menu.GetItem(param2, sBuffer, sizeof(sBuffer));
+			LoadPreset(sBuffer, param1);
+		}
+
+		case MenuAction_End:
+			delete menu;
+
+		case MenuAction_Cancel:
+		{
+			if (param2 == MenuCancel_ExitBack)
+				CreateMixmapMenu(param1);
 		}
 	}
 }
