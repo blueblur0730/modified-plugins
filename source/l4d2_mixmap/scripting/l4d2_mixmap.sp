@@ -4,7 +4,7 @@
 // for debugging. if not use, turn the 1 to 0 and recompile.
 #define USE_LOG4SP_EXT 1
 
-#if !defined USE_LOG4SP_EXT
+#if !USE_LOG4SP_EXT
 	#define LOG4SP_NO_EXT
 #endif
 
@@ -41,6 +41,7 @@ MapSetType g_iMapsetType = MapSet_None;
 char g_sPresetName[512];
 
 // Modules
+#include <l4d2_mixmap/tags.sp>
 #include <l4d2_mixmap/setup.sp>
 #include <l4d2_mixmap/util.sp>
 #include <l4d2_mixmap/hooks.sp>

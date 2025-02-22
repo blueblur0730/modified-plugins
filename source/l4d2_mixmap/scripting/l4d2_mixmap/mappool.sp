@@ -281,14 +281,18 @@ static int g_iClientWhoIsSelecting = -1;
 
 void CollectAllMapsEx(int client, MapSetType type)
 {
-	if (!CollectMissionsToMenu(type))
-		return;
-
+	g_iClientWhoIsSelecting = client;
 	g_bManullyChoosingMap = true;
 	g_iSelectIndex = 0;
 	g_iSelectedSet = 2;
 	g_iParam = -1;
-	g_iClientWhoIsSelecting = client;
+	
+	if (!CollectMissionsToMenu(type))
+	{
+		g_iClientWhoIsSelecting = -1;
+		g_bManullyChoosingMap = false;
+		return;
+	}
 
 	CreateManullySelectMapMenu(client);
 }
@@ -585,6 +589,11 @@ bool CollectMissionsToMenu(MapSetType type)
 		char sDisplayTitle[128];
 		kvSub.GetString("DisplayTitle", sDisplayTitle, sizeof(sDisplayTitle));
 
+		// official maps use tags to translate map names and other stuff.
+		// gotta turn this into your language.
+		if (IsOfficialMap(sMissionName))
+			ConvertOfficialMapTag(sDisplayTitle, sizeof(sDisplayTitle), sMode);
+
 		char sKey[64];
 		FormatEx(sKey, sizeof(sKey), "modes/%s", sMode);
 		SourceKeyValues kvMode = kvSub.FindKey(sKey);
@@ -599,6 +608,10 @@ bool CollectMissionsToMenu(MapSetType type)
 			char sValue[64], sDisplayName[64];
 			kvMapNumber.GetString("Map", sValue, sizeof(sValue));
 			kvMapNumber.GetString("DisplayName", sDisplayName, sizeof(sDisplayName));
+
+			if (IsOfficialMap(sMissionName))
+				ConvertOfficialMapTag(sDisplayName, sizeof(sDisplayName), sMode);
+			
 			hMap.SetString(sValue, sDisplayName);
 			hArray.PushString(sValue);
 		}

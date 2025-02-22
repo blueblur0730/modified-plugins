@@ -251,14 +251,14 @@ stock bool IsNavInSafeArea(Address nav)
 	return true;
 }
 
-bool IsOnValidMesh(float fReferencePos[3])
+stock bool IsOnValidMesh(float fReferencePos[3])
 {
 	Address pNavArea = L4D_GetNearestNavArea(fReferencePos, _, _, _, _, 3);
 	return (pNavArea != Address_Null && (L4D_GetNavArea_SpawnAttributes(pNavArea) & NAV_SPAWN_CHECKPOINT));
 }
 
 // credits to fdxx from L4D2 Special infected spawn control.
-bool WillStuck(const float fPos[3])
+stock bool WillStuck(const float fPos[3])
 {
 	// All clients seem to be the same size.
 	static const float fClientMinSize[3] = { -16.0, -16.0, 0.0 };
