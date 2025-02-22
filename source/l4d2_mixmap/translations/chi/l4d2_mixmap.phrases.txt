@@ -2,7 +2,7 @@
 {
     "NotifyClients"
     {
-        "chi"          "[{orange}!{default}] 当前正在使用 {orange}Mixmap{default}. 输入 {lightgreen}/maplist{default} 来查看地图列表."
+        "chi"          "[{orange}!{default}] 当前正在使用 {orange}Mixmap{default}. 输入 {lightgreen}/mixmap_maplist{default} 来查看地图列表."
     }
 
     "MapProgress"
@@ -16,9 +16,24 @@
         "chi"           "无"
     }
 
+    "SeeConsole"
+    {
+        "chi"            "[{orange}!{default}] 请在控制台查看地图列表."
+    }
+
     "MapList"
     {
         "chi"           ">---{green}地图列表{default}---<"
+    }
+
+    "MapList_NoColor"
+    {
+        "chi"            ">---地图列表---<"
+    }
+
+    "Current"
+    {
+        "chi"           "(当前)"
     }
 
     "FailedToGet"
@@ -34,12 +49,12 @@
 
     "PluginDisabled"
     {
-        "chi"           "[{orange}!{default}] Mixmap 插件已被禁用."
+        "chi"           "[{orange}!{default}] Mixmap 插件已被{red}禁用{default}."
     }
 
     "HasStarted"
     {
-        "chi"           "[{orange}!{default}] Mixmap 已经开始. 请等待地图池循环结束或发起投票来停止 Mixmap."
+        "chi"           "[{orange}!{default}] Mixmap {orange}已经开始{default}. 请等待{lightgreen}地图池循环结束{default}或{lightgreen}发起投票{default}来停止 Mixmap."
     }
 
     "MenuTitle_SelectMapSetType"
@@ -62,9 +77,73 @@
         "chi"           "混合图池"
     }
 
+    "MenuItem_ManuallySelectMap"
+    {
+        "chi"           "手动选择地图"
+    }
+
+    "MenuItem_LoadPreset"
+    {
+        "chi"           "加载预设地图池"
+    }
+
+    "MenuTitle_ChooseMapSetType"
+    {
+        "chi"           "选择图池类型"
+    }
+
+    "SelectMapsIntoPool"
+    {
+        "chi"           "[{orange}!{default}] 请选择地图进入图池. 地图列表根据 {orange}当前游戏模式{default} 而定."
+    }
+
+    "CanOnlySelect"
+    {
+        "#format"       "{1:d}"
+        "chi"           "[{orange}!{default}] 你只能选择 {lightgreen}{1}{default} 张地图."
+    }
+
+    "MenuTitle_ChooseFrom"
+    {
+        "#format"       "{1:s}"
+        "chi"           "请从战役 {1} 中选择地图:"
+    }
+
+    "MenuTitle_NextMission"
+    {
+        "chi"           "下一战役"
+    }
+
+    "MenuTitle_LastMission"
+    {
+        "chi"           "上一战役"
+    }
+
+    "BlackListed"
+    {
+        "chi"           "[{orange}!{default}] 这张地图已被加入{red}黑名单{default}, 不能被选择."
+    }
+
+    "AddedInto"
+    {
+        "#format"       "{1:s}"
+        "chi"           "[{orange}!{default}] 已将 {olive}{1}{default} 加入图池."
+    }
+
+    "FullSelected"
+    {
+        "#format"       "{1:d}"
+        "chi"           "[{orange}!{default}] 图池已选满. 将在 {orange}{1}{default} 秒内发起投票..."
+    }
+
+    "AbortedSelection"
+    {
+        "chi"           "[{orange}!{default}] 已中断当前地图选择进程."
+    }
+
     "NotStartedYet"
     {
-        "chi"           "[{orange}!{default}] Mixmap 尚未开始. 请先发起投票来开始 Mixmap"
+        "chi"           "[{orange}!{default}] Mixmap {orange}尚未开始{default}. 请先发起投票来开始 Mixmap"
     }
 
     "AdminForceStop"
@@ -97,11 +176,82 @@
 
     "NotEnoughMaps"
     {
-        "chi"            "[{orange}!{default}] 地图数量不足以构建图池, 请在服务器内添加更多地图."
+        "chi"            "[{orange}!{default}] 总地图数量不足以构建图池, 请在服务器内添加更多地图."
     }
 
     "HaveReachedTheEnd"
     {
-        "chi"            "[{orange}!{default}] 当前是图池中最后一站图. 要重新开始 Mixmap, 请使用 {orange}/mixmap{default}."
+        "chi"            "[{orange}!{default}] 当前已是图池中最后一张图. 在完成救援关后, 请使用 {orange}/mixmap{default} 重新开始 Mixmap."
+    }
+
+    "CannotSelectUntil"
+    {
+        "chi"            "[{orange}!{default}] 你不能在图池还未抵达最后时选择一张救援图."
+    }
+
+    "ShouldSelectLastMap"
+    {
+        "chi"            "[{orange}!{default}] 你应该为图池的最后一张图选择救援图."
+    }
+
+    "SomeoneIsChoosing"
+    {
+        "chi"            "[{orange}!{default}] 当前正有人在选择地图, 请等待他退出或完成选择."
+    }
+
+    "NoKeysFoundInBlackList"
+    {
+        "chi"            "[{orange}!{default}] 未能在黑名单中发现地图."
+    }
+
+    "FailedToLoadBlackList"
+    {
+        "chi"            "[{orange}!{default}] 尝试加载黑名单文件失败."
+    }
+
+    "BlackListLoaded"
+    {
+        "chi"            "[{orange}!{default}] 黑名单已重载."
+    }
+
+    "BlackListIsEmpty"
+    {
+        "chi"            "[{orange}!{default}] 黑名单为空."
+    }
+
+    "NoPresetFileFound"
+    {
+        "chi"            "[{orange}!{default}] 未能在服务器内找到预设文件."
+    }
+
+    "MenuTitle_LoadPreset"
+    {
+        "chi"            "选择一个预设文件来加载地图池."
+    }
+
+    "PresetFileLoadFailed"
+    {
+        "chi"            "[{orange}!{default}] 加载预设文件失败."
+    }
+
+    "PresetFileLoaded"
+    {
+        "#format"       "{1:s},{2:d}"
+        "chi"           "[{orange}!{default}] 成功加载预设图池 \"{olive}{1}{default}\"! 准备在 {orange}{2}{default} 秒内发起投票..."
+    }
+
+    "PresetFileLoadFailed_GameModeNotMatched"
+    {
+        "chi"           "[{orange}!{default}] 加载预设文件失败, 当前游戏模式不允许加载."
+    }
+
+    "NoPresetFolderFound"
+    {
+        "chi"           "[{orange}!{default}] 未能在服务器内找到预设文件夹."
+    }
+
+    "PresetFileReLoaded"
+    {
+        "chi"           "[{orange}!{default}] 预设文件已重载."
     }
 }

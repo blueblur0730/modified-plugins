@@ -2,7 +2,7 @@
 {
     "NotifyClients"
     {
-        "en"          "[{orange}!{default}] Currently using {orange}Mixmap{default}. Type {lightgreen}/maplist{default} to see map set."
+        "en"          "[{orange}!{default}] Currently using {orange}Mixmap{default}. Type {lightgreen}/mixmap_maplist{default} to see map set."
     }
 
     "MapProgress"
@@ -16,9 +16,24 @@
         "en"            "None"
     }
 
+    "SeeConsole"
+    {
+        "en"            "[{orange}!{default}] See console for the maplist."
+    }
+
     "MapList"
     {
         "en"            ">---{green}Map List{default}---<"
+    }
+
+    "MapList_NoColor"
+    {
+        "en"            ">---Map List---<"
+    }
+
+    "Current"
+    {
+        "en"            "(Current)"
     }
 
     "FailedToGet"
@@ -34,12 +49,12 @@
 
     "PluginDisabled"
     {
-        "en"            "[{orange}!{default}] This plugin is disabled."
+        "en"            "[{orange}!{default}] This plugin is {red}disabled{default}."
     }
 
     "HasStarted"
     {
-        "en"            "[{orange}!{default}] Mixmap has started, Please wait for the end or vote to stop."
+        "en"            "[{orange}!{default}] Mixmap {orange}has started{default}, Please {lightgreen}wait for the end{default} or {lightgreen}vote{default} to stop."
     }
 
     "MenuTitle_SelectMapSetType"
@@ -62,9 +77,73 @@
         "en"            "Mixtape Mapset"
     }
 
+    "MenuItem_ManuallySelectMap"
+    {
+        "en"            "Manually Select Map"
+    }
+
+    "MenuItem_LoadPreset"
+    {
+        "en"            "Load Preset Maplists"
+    }
+
+    "MenuTitle_ChooseMapSetType"
+    {
+        "en"            "Choose map set type:"
+    }
+
+    "SelectMapsIntoPool"
+    {
+        "en"            "[{orange}!{default}] Select maps into the map pool. The map list is based on {orange}current gamemode{default}."
+    }
+
+    "CanOnlySelect"
+    {
+        "#format"       "{1:d}"
+        "en"            "[{orange}!{default}] You can only select {lightgreen}{1}{default} maps."
+    }
+
+    "MenuTitle_ChooseFrom"
+    {
+        "#format"       "{1:s}"
+        "en"            "Choose map from {1}"
+    }
+
+    "MenuTitle_NextMission"
+    {
+        "en"            "Next Mission"
+    }
+
+    "MenuTitle_LastMission"
+    {
+        "en"            "Last Mission"
+    }
+
+    "BlackListed"
+    {
+        "en"            "[{orange}!{default}] This map has been added to {red}the blacklist{default}, cannot be choosen."
+    }
+
+    "AddedInto"
+    {
+        "#format"       "{1:s}"
+        "en"            "[{orange}!{default}] Added {olive}{1}{default} to the map pool."
+    }
+
+    "FullSelected"
+    {
+        "#format"       "{1:d}"
+        "en"            "[{orange}!{default}] Map pool fully selected. Calling vote in {orange}{1}{default} seconds..."
+    }
+
+    "AbortedSelection"
+    {
+        "en"            "[{orange}!{default}] Aborted current map selection."
+    }
+
     "NotStartedYet"
     {
-        "en"            "[{orange}!{default}] Mixmap has not started yet. Please call a vote to start Mixmap."
+        "en"            "[{orange}!{default}] Mixmap has {orange}not started yet{default}. Please call a vote to start Mixmap."
     }
 
     "AdminForceStop"
@@ -102,6 +181,77 @@
 
     "HaveReachedTheEnd"
     {
-        "en"            "[{orange}!{default}] You have reached the end of the map pool. To start again Mixmap, use {orange}/mixmap{default}."
+        "en"            "[{orange}!{default}] You have reached the end of the map pool. After finishing the finale, you can use {orange}/mixmap{default} to start again."
+    }
+
+    "CannotSelectUntil"
+    {
+        "en"            "[{orange}!{default}] You cannot select finale maps when the current map pool has not reached the end."
+    }
+
+    "ShouldSelectLastMap"
+    {
+        "en"            "[{orange}!{default}] You should select the finale map as the last map of the ap pool."
+    }
+
+    "SomeoneIsChoosing"
+    {
+        "en"            "[{orange}!{default}] Someone is choosing a map, please wait for him to finish or exit."
+    }
+
+    "NoKeysFoundInBlackList"
+    {
+        "en"            "[{orange}!{default}] No maps found in blacklist."
+    }
+
+    "FailedToLoadBlackList"
+    {
+        "en"            "[{orange}!{default}] Failed to load blacklist file."
+    }
+
+    "BlackListLoaded"
+    {
+        "en"            "[{orange}!{default}] Blacklist Reloaded."
+    }
+
+    "BlackListIsEmpty"
+    {
+        "en"            "[{orange}!{default}] Blacklist is empty."
+    }
+
+    "NoPresetFileFound"
+    {
+        "en"            "[{orange}!{default}] No preset file found in the server."
+    }
+
+    "MenuTitle_LoadPreset"
+    {
+        "en"            "Choose a preset file to load the map pool."
+    }
+
+    "PresetFileLoadFailed"
+    {
+        "en"            "[{orange}!{default}] Failed to load preset file."
+    }
+
+    "PresetFileLoaded"
+    {
+        "#format"       "{1:s},{2:d}"
+        "en"            "[{orange}!{default}] Loaded preset map pool {olive}{1}{default} sucessfully! Preparing vote in {orange}{2}{default} seconds..."
+    }
+
+    "PresetFileLoadFailed_GameModeNotMatched"
+    {
+        "en"            "[{orange}!{default}] Failed to load preset file, current game mode is not allowed."
+    }
+
+    "NoPresetFolderFound"
+    {
+        "en"            "[{orange}!{default}] No preset folder found in the server."
+    }
+
+    "PresetFileReLoaded"
+    {
+        "en"            "[{orange}!{default}] Preset file reloaded."
     }
 }
