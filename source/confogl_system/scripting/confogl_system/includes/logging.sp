@@ -55,9 +55,6 @@ void LG_OnMapStart()
 
 Logger CreateServerConsoleLoggerOrFailed(const char[] name)
 {
-#if defined LOG4SP_NO_EXT
-	return view_as<Logger>(INVALID_HANDLE);
-#else
 	Logger log = Logger.Get(name);
 
 	if (!log)
@@ -67,14 +64,10 @@ Logger CreateServerConsoleLoggerOrFailed(const char[] name)
 	}
 
 	return log;
-#endif
 }
 
 Logger CreateBaseFileLoggerOrFailed(const char[] name)
 {
-#if defined LOG4SP_NO_EXT
-	return view_as<Logger>(INVALID_HANDLE);
-#else
 	Logger log = Logger.Get(name);
 
 	if (!log)
@@ -82,12 +75,11 @@ Logger CreateBaseFileLoggerOrFailed(const char[] name)
 		char sChatFilePath[PLATFORM_MAX_PATH], sDate[32];
 		FormatTime(sDate, sizeof(sDate), "%d-%m-%y", -1);
 		BuildPath(Path_SM, sChatFilePath, sizeof(sChatFilePath), "" ... LOGFILE_PATH... "log-[%s]-port-[%i].log", sDate, FindConVar("hostport").IntValue);
-		log = BaseFileSink.CreateLogger(name, sChatFilePath);
+		log = BasicFileSink.CreateLogger(name, sChatFilePath);
 		if (!log) SetFailState("[Confogl] Failed to create logger.");
 	}
 
 	return log;
-#endif
 }
 
 static void OnDebugChange(ConVar hConVar, const char[] sOldValue, const char[] sNewValue)

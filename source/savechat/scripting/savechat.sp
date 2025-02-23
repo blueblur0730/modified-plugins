@@ -1,9 +1,10 @@
 #pragma semicolon 1
 #pragma newdecls required
+
 #include <sourcemod>
 #include <sdktools>
 #include <geoip>
-#include <log4sp>
+#include <log4sp>	// requires log4sp 1.8.0+
 
 #define TEAM_UNASSIGNED 0
 #define TEAM_SPECTATOR 1
@@ -17,7 +18,7 @@ ConVar g_hHostport = null;
 bool g_bIsIdling[MAXPLAYERS + 1] = { false, ... };
 Logger g_hLogger = null;
 
-#define PLUGIN_VERSION "r1.5"	// 1.3 reworked.
+#define PLUGIN_VERSION "r1.5.1"	// 1.3 reworked.
 
 public Plugin myinfo = 
 {
@@ -218,7 +219,7 @@ Logger CreateLoggerOrFailed(const char[] name)
 	{
 		FormatTime(sDate, sizeof(sDate), "%d-%m-%y", -1);
 		BuildPath(Path_SM, sChatFilePath, sizeof(sChatFilePath), "/logs/savechat/savechat[%s]-port[%i].log", sDate, g_hHostport.IntValue);
-		logger = BaseFileSink.CreateLogger(LOGGER_NAME, sChatFilePath);
+		logger = BasicFileSink.CreateLogger(LOGGER_NAME, sChatFilePath);
 		if (!logger) SetFailState("Failed to create log file.");
 	}
 

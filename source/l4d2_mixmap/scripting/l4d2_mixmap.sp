@@ -1,17 +1,10 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-// for debugging. if not use, turn the 1 to 0 and recompile.
-#define USE_LOG4SP_EXT 1
-
-#if !USE_LOG4SP_EXT
-	#define LOG4SP_NO_EXT
-#endif
-
 #include <sourcemod>
 #include <sdktools>
 #include <dhooks>
-#include <log4sp>	
+#include <log4sp>	// requires log4sp 1.8.0+
 #include <midhook>
 #include <sourcescramble>
 #include <l4d2_source_keyvalues>
@@ -20,7 +13,7 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re3.0.0"
+#define PLUGIN_VERSION "re3.0.1"
 
 StringMap g_hMapChapterNames;			// stores the mission name by its corresponding first map name.
 

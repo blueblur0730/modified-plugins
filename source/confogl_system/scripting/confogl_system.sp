@@ -1,32 +1,24 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define DEBUG_ALL	   0
-#define PLUGIN_VERSION "r1.9"	   // 2.4.5 rework
-
 #include <sourcemod>
 #include <sdktools>
 #include <colors>
-
-#undef REQUIRE_PLUGIN
-#include <l4d2_changelevel>
-
-// toggle this to use extension log4sp or not.
-#define USEEXT 1
-
-#if !USEEXT
-	#define LOG4SP_NO_EXT
-#endif
-
-#include <log4sp> // requires log4sp 1.7.0+
+#include <log4sp> // requires log4sp 1.8.0+
 
 bool
 	g_bIsChangeLevelAvailable = false,
 	RM_bIsMatchModeLoaded	  = false,
 	RM_bIsLoadingConfig		  = false;
 
+// Requires l4d2_changelevel by Lux.
+native void L4D2_ChangeLevel(const char[] sMapName, bool bShouldResetScores=true);
+
+// Requires left4dhooks by Silvers.
 native void L4D_LobbyUnreserve();
 native bool L4D_LobbyIsReserved();
+
+#define PLUGIN_VERSION "r1.9.1"	   // 2.4.5 rework
 
 // Basic helper here.
 #include "confogl_system/includes/constants.sp"
@@ -66,6 +58,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	UL_APL();		  // UnreserveLobby
 	CVS_APL();		  // CvarSettings
 
+	MarkNativeAsOptional("L4D2_ChangeLevel");
 	MarkNativeAsOptional("L4D_LobbyUnreserve");
 	MarkNativeAsOptional("L4D_LobbyIsReserved");
 

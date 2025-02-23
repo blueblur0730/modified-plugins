@@ -148,7 +148,7 @@ void SetupLogger()
 
 	char sBuffer[64];
 	BuildPath(Path_SM, sBuffer, sizeof(sBuffer), LOGGER_ERROR_FILE);
-	BaseFileSink sink = new BaseFileSink(sBuffer);
+	BasicFileSink sink = new BasicFileSink(sBuffer);
 	sink.SetLevel(LogLevel_Warn);
 	g_hLogger.AddSinkEx(sink);
 }

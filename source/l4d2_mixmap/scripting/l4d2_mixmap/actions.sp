@@ -377,8 +377,6 @@ void LoadPreset(const char[] sFile, int client)
 			if (IsFakeMission(sMissionName))
 				continue;
 
-			int survivorSet = kvSub.GetInt("survivor_set", 2);	// L4D2 = 2, L4D1 = 1
-
 			char sKey[64];
 			FormatEx(sKey, sizeof(sKey), "modes/%s", sMode);
 			SourceKeyValues kvMode = kvMissionSub.FindKey(sKey);
@@ -386,6 +384,8 @@ void LoadPreset(const char[] sFile, int client)
 			if (!kvMode || kvMode.IsNull())
 				continue;
 				
+			int survivorSet = kvSub.GetInt("survivor_set", 2);	// L4D2 = 2, L4D1 = 1
+
 			for (SourceKeyValues kvMapNumber = kvMode.GetFirstTrueSubKey(); !kvMapNumber.IsNull(); kvMapNumber = kvMapNumber.GetNextTrueSubKey())
 			{
 				char sValue[64];
