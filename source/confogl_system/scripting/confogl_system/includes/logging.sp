@@ -72,10 +72,9 @@ Logger CreateBaseFileLoggerOrFailed(const char[] name)
 
 	if (!log)
 	{
-		char sChatFilePath[PLATFORM_MAX_PATH], sDate[32];
-		FormatTime(sDate, sizeof(sDate), "%d-%m-%y", -1);
-		BuildPath(Path_SM, sChatFilePath, sizeof(sChatFilePath), "" ... LOGFILE_PATH... "log-[%s]-port-[%i].log", sDate, FindConVar("hostport").IntValue);
-		log = BasicFileSink.CreateLogger(name, sChatFilePath);
+		char path[PLATFORM_MAX_PATH];
+		BuildPath(Path_SM, path, sizeof(path), LOGFILE_PATH ... "log-[%%d-%%m-%%y].log");
+		log = DailyFileSink.CreateLogger(name, path, _, _, _, _, DailyFilePortCalculator);
 		if (!log) SetFailState("[Confogl] Failed to create logger.");
 	}
 
@@ -85,4 +84,34 @@ Logger CreateBaseFileLoggerOrFailed(const char[] name)
 static void OnDebugChange(ConVar hConVar, const char[] sOldValue, const char[] sNewValue)
 {
 	hConVar.BoolValue ? g_hLogger.SetLevel(LogLevel_Debug) : g_hLogger.SetLevel(LogLevel_Info);
+}
+
+void DailyFilePortCalculator(char[] filename, int maxlen, int sec)
+{
+	char buffer[PLATFORM_MAX_PATH];
+	int extIndex = FindCharInString(filename, '.', true);
+
+	// no valid extension found
+	if (extIndex <= 0 || extIndex == strlen(filename) - 1)
+	{
+		FormatEx(buffer, sizeof(buffer), "%s-port[%d]", filename, FindConVar("hostport").IntValue);
+		FormatTime(filename, maxlen, buffer, sec);
+		return;
+	}
+
+	// treat cases like "/etc/rc.d/somelogfile or "/abc/.hiddenfile"
+	int folderIndex = FindCharInString(filename, '/', true);
+	if (folderIndex == -1)
+		folderIndex = FindCharInString(filename, '\\', true);
+
+	if (folderIndex == -1 || folderIndex >= extIndex - 1)
+	{
+		FormatEx(buffer, sizeof(buffer), "%s-port[%d]", filename, FindConVar("hostport").IntValue);
+		FormatTime(filename, maxlen, buffer, sec);
+		return;
+	}
+
+	filename[extIndex] = '\0';
+	FormatEx(buffer, sizeof(buffer), "%s-port[%d].%s", filename, FindConVar("hostport").IntValue, filename[extIndex + 1]);
+	FormatTime(filename, maxlen, buffer, sec);
 }

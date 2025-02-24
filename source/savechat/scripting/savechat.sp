@@ -212,16 +212,45 @@ void GetTeamNameEx(int team, char[] szName, int iMaxLen)
 
 Logger CreateLoggerOrFailed(const char[] name)
 {
-	char sChatFilePath[PLATFORM_MAX_PATH], sDate[32];
 	Logger logger = Logger.Get(name);
 
 	if (!logger)	// if not exist, create new one.
 	{
-		FormatTime(sDate, sizeof(sDate), "%d-%m-%y", -1);
-		BuildPath(Path_SM, sChatFilePath, sizeof(sChatFilePath), "/logs/savechat/savechat[%s]-port[%i].log", sDate, g_hHostport.IntValue);
-		logger = BasicFileSink.CreateLogger(LOGGER_NAME, sChatFilePath);
+		char path[PLATFORM_MAX_PATH];
+		BuildPath(Path_SM, path, sizeof(path), "logs/savechat/savechat[%%d-%%m-%%y].log");
+		logger = DailyFileSink.CreateLogger(LOGGER_NAME, path, _, _, _, _, DailyFilePortCalculator);
 		if (!logger) SetFailState("Failed to create log file.");
 	}
 
 	return logger;
+}
+
+void DailyFilePortCalculator(char[] filename, int maxlen, int sec)
+{
+	char buffer[PLATFORM_MAX_PATH];
+	int extIndex = FindCharInString(filename, '.', true);
+
+	// no valid extension found
+	if (extIndex <= 0 || extIndex == strlen(filename) - 1)
+	{
+		FormatEx(buffer, sizeof(buffer), "%s-port[%d]", filename, g_hHostport.IntValue);
+		FormatTime(filename, maxlen, buffer, sec);
+		return;
+	}
+
+	// treat cases like "/etc/rc.d/somelogfile or "/abc/.hiddenfile"
+	int folderIndex = FindCharInString(filename, '/', true);
+	if (folderIndex == -1)
+		folderIndex = FindCharInString(filename, '\\', true);
+
+	if (folderIndex == -1 || folderIndex >= extIndex - 1)
+	{
+		FormatEx(buffer, sizeof(buffer), "%s-port[%d]", filename, g_hHostport.IntValue);
+		FormatTime(filename, maxlen, buffer, sec);
+		return;
+	}
+
+	filename[extIndex] = '\0';
+	FormatEx(buffer, sizeof(buffer), "%s-port[%d].%s", filename, g_hHostport.IntValue, filename[extIndex + 1]);
+	FormatTime(filename, maxlen, buffer, sec);
 }
