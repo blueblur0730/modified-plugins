@@ -75,6 +75,24 @@
 					"patch"		"\x90\x90\x90\x90\x90\x90\x90\x90"
 				}
 			}
+
+			"CTerrorPlayer::TransitionRestore__BlockRestoring"
+			{
+				"signature"		"CTerrorPlayer::TransitionRestore"
+				"linux"
+				{
+					"offset"	"346"	// 0x15A
+					"verify"	"\x89"
+					"patch"		"\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90"
+				}
+
+				"windows"
+				{
+					"offset"	"557"	// 0x22D
+					"verify"	"\x56"
+					"patch"		"\x90\x90\x90\x90\x90\x90\x90\x90"
+				}
+			}
 		}
 
         "Addresses"

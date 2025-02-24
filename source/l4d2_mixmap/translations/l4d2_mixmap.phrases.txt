@@ -57,9 +57,19 @@
         "en"            "[{orange}!{default}] Mixmap {orange}has started{default}, Please {lightgreen}wait for the end{default} or {lightgreen}vote{default} to stop."
     }
 
+    "MenuTitle_SelectMixmapType"
+    {
+        "en"            "Choose a way to build a mixmap:"
+    }
+
     "MenuTitle_SelectMapSetType"
     {
-        "en"            "Mapset Menu"
+        "en"            "Choose a mapset:"
+    }
+
+    "MenuItem_AutomaticallyChoose"
+    {
+        "en"            "Automatically Choose Maps"
     }
 
     "MenuItem_OfficialMapSet"
@@ -87,11 +97,6 @@
         "en"            "Load Preset Maplists"
     }
 
-    "MenuTitle_ChooseMapSetType"
-    {
-        "en"            "Choose map set type:"
-    }
-
     "SelectMapsIntoPool"
     {
         "en"            "[{orange}!{default}] Select maps into the map pool. The map list is based on {orange}current gamemode{default}."
@@ -106,7 +111,7 @@
     "MenuTitle_ChooseFrom"
     {
         "#format"       "{1:s}"
-        "en"            "Choose map from {1}"
+        "en"            "Choose map from {1}:"
     }
 
     "MenuTitle_NextMission"

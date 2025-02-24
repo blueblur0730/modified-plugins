@@ -10,17 +10,13 @@ MRESReturn DTR_CTerrorPlayer_OnTransitionRestore(int pThis, DHookReturn hReturn)
 
 	g_hLogger.DebugEx("### DTR_CTerrorPlayer_OnTransitionRestore Called for %d, %N.", pThis, pThis);
 
-	SetGod(pThis, true);
+	// not first map.
+	if (!L4D_IsFirstMapInScenario() && g_iMapsPlayed != 1)
+		SetGod(pThis, true);
+
 	RequestFrame(OnNextFrame_ResetPlayers, pThis);	// bots have not created, only player. same as midhook callback.
 
-	// this only block human player's status.
-	if (!g_hCvar_SaveStatus.BoolValue)
-	{
-		// returns a keyvalues pointer. it's ok to set 0.
-		hReturn.Value = 0;
-		g_hLogger.Trace("### DTR_CTerrorPlayer_OnTransitionRestore Superceded.");
-		return MRES_Supercede;
-	}
+	PatchPlayers(g_hCvar_SaveStatus.BoolValue ? false : true);
 
 	return MRES_Ignored;
 }
@@ -108,6 +104,8 @@ MRESReturn DTR_RestoreTransitionedSurvivorBots_Post()
 		if (!IsClientInGame(i) || GetClientTeam(i) != 2 || !IsFakeClient(i))
 			continue;
 
+	// not first map.
+	if (!L4D_IsFirstMapInScenario() && g_iMapsPlayed != 1)
 		SetGod(i, true);
 	}
 	RequestFrame(OnNextFrame_ResetPlayers, 0);
@@ -126,8 +124,8 @@ void MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter(MidHookRegisters r
 	
 	g_hLogger.Trace("### MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter: Called");
 
-	if (g_iMapsPlayed > 0)
-		g_hCvar_SaveStatus_Bot.BoolValue ? Patch(false) : Patch(true);
+	// patch bots from restoring gears.
+	PatchBots(g_hCvar_SaveStatus_Bot.BoolValue ? false : true);
 
 	SourceKeyValues kvPlayerData = reg.Load(DHookRegister_EDI, _, NumberType_Int32);
 	g_hLogger.DebugEx("### MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter: kvPlayerData: %d", kvPlayerData);
@@ -206,7 +204,7 @@ void OnNextFrame_ChangeName(DataPack dp)
 
 void OnNextFrame_ResetPlayers(int client)
 {
-	// this should be always safe.
+	// this should be always safe if a first map appears in the middle of the pool.
 	if (L4D_IsFirstMapInScenario())
 	{
 		SetGod(client, false);
@@ -242,10 +240,17 @@ void ResetPlayer(int client)
 		GetSafeAreaOrigin(vec);
 		g_hLogger.DebugEx("### OnNextFrame_ResetPlayer: Found teleport destination: %.2f, %.2f, %.2f.", vec[0], vec[1], vec[2]);
 		if (vec[0] != 0.0 && vec[1] != 0.0 && vec[2] != 0.0)
+		{
 			TeleportEntity(client, vec, NULL_VECTOR, NULL_VECTOR);
+
+			// only available when player is not inside the wall (have a valid nav.)
+			// so this is used to teleport player twice in case they were teleported outside the saferoom.
+			CheatCommand(client, "warp_to_start_area");		
+		}
 	}
 
-	SetGod(client, false);
-	if (GetPlayerWeaponSlot(client, 1) == -1 || (!g_hCvar_SaveStatus_Bot.BoolValue || !g_hCvar_SaveStatus.BoolValue))
+	if (GetPlayerWeaponSlot(client, 1) == -1 )
 		CheatCommand(client, "give", "pistol");
+
+	SetGod(client, false);
 }

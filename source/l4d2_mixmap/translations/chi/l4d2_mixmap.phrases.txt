@@ -57,9 +57,19 @@
         "chi"           "[{orange}!{default}] Mixmap {orange}已经开始{default}. 请等待{lightgreen}地图池循环结束{default}或{lightgreen}发起投票{default}来停止 Mixmap."
     }
 
+    "MenuTitle_SelectMixmapType"
+    {
+        "chi"           "选择 Mixmap 类型："
+    }
+
     "MenuTitle_SelectMapSetType"
     {
-        "chi"           "图池配置菜单"
+        "chi"           "选择一种图池配置:"
+    }
+
+    "MenuItem_AutomaticallyChoose"
+    {
+        "chi"           "自动选择地图"
     }
 
     "MenuItem_OfficialMapSet"
@@ -85,11 +95,6 @@
     "MenuItem_LoadPreset"
     {
         "chi"           "加载预设地图池"
-    }
-
-    "MenuTitle_ChooseMapSetType"
-    {
-        "chi"           "选择图池类型"
     }
 
     "SelectMapsIntoPool"
@@ -226,7 +231,7 @@
 
     "MenuTitle_LoadPreset"
     {
-        "chi"            "选择一个预设文件来加载地图池."
+        "chi"            "选择一个预设文件来加载地图池:"
     }
 
     "PresetFileLoadFailed"

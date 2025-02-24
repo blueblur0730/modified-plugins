@@ -24,17 +24,11 @@ Action Command_Mixmap(int client, int args)
 void CreateMixmapMenu(int client)
 {
 	char sBuffer[128];
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuTitle_SelectMapSetType", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuTitle_SelectMixmapType", client);
 	Menu menu = new Menu(MenuHandler_Mixmap);
 	menu.SetTitle(sBuffer);
 
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_OfficialMapSet", client)
-	menu.AddItem("", sBuffer);
-
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_CustomMapSet", client)
-	menu.AddItem("", sBuffer);
-
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_MixtapeMapSet", client)
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_AutomaticallyChoose", client)
 	menu.AddItem("", sBuffer);
 
 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_ManuallySelectMap", client);
@@ -182,11 +176,9 @@ void MenuHandler_Mixmap(Menu menu, MenuAction action, int client, int selection)
 		{
 			switch (selection)
 			{
-				case 0: CreateMixmapVote(client, MapSet_Official);
-				case 1: CreateMixmapVote(client, MapSet_Custom);
-				case 2: CreateMixmapVote(client, MapSet_Mixtape);
-				case 3: ManullySelectMap_ChooseMapSetType(client);
-				case 4: LoadPreset_CreateFileMenu(client);
+				case 0: CreateMapSetTypeMenu(client);
+				case 1: ManullySelectMap_ChooseMapSetType(client);
+				case 2: LoadPreset_CreateFileMenu(client);
 			}
 		}
 
@@ -195,12 +187,57 @@ void MenuHandler_Mixmap(Menu menu, MenuAction action, int client, int selection)
 	}
 }
 
+void CreateMapSetTypeMenu(int client)
+{
+	char sBuffer[128];
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuTitle_SelectMapSetType", client);
+	Menu menu = new Menu(MenuHandler_MapSetType);
+	menu.SetTitle(sBuffer);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_OfficialMapSet", client)
+	menu.AddItem("", sBuffer);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_CustomMapSet", client)
+	menu.AddItem("", sBuffer);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_MixtapeMapSet", client);
+	menu.AddItem("", sBuffer);
+
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+void MenuHandler_MapSetType(Menu menu, MenuAction action, int client, int selection)
+{
+	switch (action)
+	{
+		case MenuAction_Select:
+		{
+			switch (selection)
+			{
+				case 0: CreateMixmapVote(client, MapSet_Official);
+				case 1: CreateMixmapVote(client, MapSet_Custom);
+				case 2: CreateMixmapVote(client, MapSet_Mixtape);
+			}
+		}
+
+		case MenuAction_End:
+			delete menu;
+
+		case MenuAction_Cancel:
+		{
+			if (selection == MenuCancel_ExitBack)
+				CreateMixmapMenu(client);
+		}
+	}
+}
+
 void ManullySelectMap_ChooseMapSetType(int client)
 {
 	char sBuffer[128];
 	Menu menu = new Menu(MenuHandler_ChooseMapSetType);
 
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuTitle_ChooseMapSetType", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuTitle_SelectMapSetType", client);
 	menu.SetTitle(sBuffer);
 
 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_OfficialMapSet", client);

@@ -13,7 +13,7 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re3.0.1"
+#define PLUGIN_VERSION "re3.0.2"
 
 StringMap g_hMapChapterNames;			// stores the mission name by its corresponding first map name.
 
@@ -146,7 +146,8 @@ public void OnMapEnd()
 	{
 		g_hLogger.Info("### Stopping MixMap.");
 		PluginStartInit();
-		Patch(false);
+		PatchBots(false);
+		PatchPlayers(false);
 
 		Call_StartForward(g_hForwardEnd);
 		Call_Finish();
@@ -156,7 +157,8 @@ public void OnMapEnd()
 
 public void OnPluginEnd()
 {
-	delete g_hPatch_BlockRestoring;
+	delete g_hPatch_Bot_BlockRestoring;
+	delete g_hPatch_Player_BlockRestoring;
 	delete g_hMidhook_ChangeCharacter;
 	PluginStartInit();
 

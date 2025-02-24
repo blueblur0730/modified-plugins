@@ -25,7 +25,8 @@
 
 #define MIDHOOK_RESTORETRANSITIONEDSURVIVORBOTS	   "RestoreTransitionedSurvivorBots__ChangeCharacter"
 
-#define MEMPATCH_BLOCKRESTORING					   "RestoreTransitionedSurvivorBots__BlockRestoring"
+#define MEMPATCH_BLOCKRESTORING_BOT				   "RestoreTransitionedSurvivorBots__BlockRestoring"
+#define MEMPATCH_BLOCKRESTORING_PLAYER			   "CTerrorPlayer::TransitionRestore__BlockRestoring"
 
 GlobalForward
 	g_hForwardStart,
@@ -45,7 +46,9 @@ Handle
 	g_hSDKCall_OnChangeChapterVote;
 
 MidHook g_hMidhook_ChangeCharacter;
-MemoryPatch g_hPatch_BlockRestoring;
+MemoryPatch 
+	g_hPatch_Bot_BlockRestoring,
+	g_hPatch_Player_BlockRestoring
 
 ConVar
 	g_hCvar_Enable,
@@ -88,7 +91,8 @@ void SetUpGameData()
 	gd.CreateDetourOrFailEx(DETOUR_RESTORETRANSITIONEDSURVIVORBOTS, _, DTR_RestoreTransitionedSurvivorBots_Post)
 
 	g_hMidhook_ChangeCharacter 					= gd.CreateMidHookOrFail(MIDHOOK_RESTORETRANSITIONEDSURVIVORBOTS, MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter, true);
-	g_hPatch_BlockRestoring 					= gd.CreateMemoryPatchOrFail(MEMPATCH_BLOCKRESTORING);
+	g_hPatch_Bot_BlockRestoring 				= gd.CreateMemoryPatchOrFail(MEMPATCH_BLOCKRESTORING_BOT);
+	g_hPatch_Player_BlockRestoring				= gd.CreateMemoryPatchOrFail(MEMPATCH_BLOCKRESTORING_PLAYER);
 
 	delete gd;
 }
@@ -106,7 +110,7 @@ void SetupConVars()
 
 	// gameplay
 	g_hCvar_SaveStatus		      = CreateConVar("l4d2mm_save_status", "1", "Whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
-	g_hCvar_SaveStatus_Bot		  = CreateConVar("l4d2mm_save_status_bot", "1", "Whether to save bot status in coop or realism mode after changing map.", _, true, 1.0, false);
+	g_hCvar_SaveStatus_Bot		  = CreateConVar("l4d2mm_save_status_bot", "1", "Whether to save bot status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
 	g_hCvar_CheckPointSearchCount = CreateConVar("l4d2mm_checkpoint_search_count", "50", "Determine how many times to search for the checkpoint.", _, true, 1.0);
 	g_hCvar_ShouldSearchAgain	  = CreateConVar("l4d2mm_should_re_search", "1", "Whether to re-search for the checkpoint if it is not found.", _, true, 0.0, true, 1.0);
 	g_hCvar_SearchAgainCount	  = CreateConVar("l4d2mm_search_again_count", "3", "Determine how many times to re-search for the checkpoint.", _, true, 1.0);

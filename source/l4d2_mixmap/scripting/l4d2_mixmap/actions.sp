@@ -427,17 +427,32 @@ void Timer_LoadPresetFile(Handle hTimer, int client)
 	CreateMixmapVote(client, MapSet_Preset);
 }
 
-void Patch(bool bPatch)
+void PatchBots(bool bPatch)
 {
 	static bool bPatched = false;
 	if (bPatch && !bPatched)
 	{
-		g_hPatch_BlockRestoring.Enable();
+		g_hPatch_Bot_BlockRestoring.Enable();
 		bPatched = true;
 	}
 	else if (!bPatch && bPatched)
 	{
-		g_hPatch_BlockRestoring.Disable();
+		g_hPatch_Bot_BlockRestoring.Disable();
+		bPatched = false;
+	}
+}
+
+void PatchPlayers(bool bPatch)
+{
+	static bool bPatched = false;
+	if (bPatch && !bPatched)
+	{
+		g_hPatch_Player_BlockRestoring.Enable();
+		bPatched = true;
+	}
+	else if (!bPatch && bPatched)
+	{
+		g_hPatch_Player_BlockRestoring.Disable();
 		bPatched = false;
 	}
 }
