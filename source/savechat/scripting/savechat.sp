@@ -216,7 +216,9 @@ Logger CreateLoggerOrFailed(const char[] name)
 
 	if (!logger)	// if not exist, create new one.
 	{
-		logger = DailyFileSink.CreateLogger(LOGGER_NAME, "/logs/savechat/savechat[%d-%m-%y].log", _, _, _, _, DailyFilePortCalculator);
+		char path[PLATFORM_MAX_PATH];
+		BuildPath(Path_SM, path, sizeof(path), "logs/savechat/savechat[%%d-%%m-%%y].log");
+		logger = DailyFileSink.CreateLogger(LOGGER_NAME, path, _, _, _, _, DailyFilePortCalculator);
 		if (!logger) SetFailState("Failed to create log file.");
 	}
 

@@ -72,7 +72,9 @@ Logger CreateBaseFileLoggerOrFailed(const char[] name)
 
 	if (!log)
 	{
-		log = DailyFileSink.CreateLogger(name, LOGFILE_PATH ... "log-[%d-%m-%y].log", _, _, _, _, DailyFilePortCalculator);
+		char path[PLATFORM_MAX_PATH];
+		BuildPath(Path_SM, path, sizeof(path), LOGFILE_PATH ... "log-[%%d-%%m-%%y].log");
+		log = DailyFileSink.CreateLogger(name, path, _, _, _, _, DailyFilePortCalculator);
 		if (!log) SetFailState("[Confogl] Failed to create logger.");
 	}
 
