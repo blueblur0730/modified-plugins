@@ -28,22 +28,46 @@
 #define MEMPATCH_BLOCKRESTORING_BOT				   "RestoreTransitionedSurvivorBots__BlockRestoring"
 #define MEMPATCH_BLOCKRESTORING_PLAYER			   "CTerrorPlayer::TransitionRestore__BlockRestoring"
 
+Handle
+	g_hSDKCall_GetAllMissions,
+	g_hSDKCall_GetAllModes,
+	g_hSDKCall_OnChangeMissionVote,
+	g_hSDKCall_OnChangeChapterVote;
+
+methodmap CMatchExtL4D {
+	public CMatchExtL4D(GameDataWrapper gd) {return view_as<CMatchExtL4D>(gd.GetAddress(ADDRESS_MATCHEXTL4D));}
+
+	public SourceKeyValues GetAllMissions() {
+		return SDKCall(g_hSDKCall_GetAllMissions, view_as<Address>(this));
+	}
+
+	public SourceKeyValues GetAllModes() {
+		return SDKCall(g_hSDKCall_GetAllModes, view_as<Address>(this));
+	}
+}
+
+methodmap CDirector {
+    public CDirector() {return view_as<CDirector>(L4D_GetPointer(POINTER_DIRECTOR));}
+
+	public void OnChangeMissionVote(const char[] mission) {
+		SDKCall(g_hSDKCall_OnChangeMissionVote, view_as<Address>(this), mission);
+	}
+
+	public void OnChangeChapterVote(const char[] chapter) {
+		SDKCall(g_hSDKCall_OnChangeChapterVote, view_as<Address>(this), chapter);
+	}
+}
+
+CMatchExtL4D TheMatchExt;
+CDirector TheDirector;
+
 GlobalForward
 	g_hForwardStart,
 	g_hForwardNext,
 	g_hForwardInterrupt,
 	g_hForwardEnd;
 
-Address
-	g_pMatchExtL4D,
-	g_pTheDirector,
-	g_bNeedRestore;
-
-Handle
-	g_hSDKCall_GetAllMissions,
-	g_hSDKCall_GetAllModes,
-	g_hSDKCall_OnChangeMissionVote,
-	g_hSDKCall_OnChangeChapterVote;
+Address g_bNeedRestore;
 
 MidHook g_hMidhook_ChangeCharacter;
 MemoryPatch 
@@ -68,7 +92,7 @@ ConVar
 void SetUpGameData()
 {
 	GameDataWrapper gd			  				= new GameDataWrapper(GAMEDATA_FILE);
-	g_pMatchExtL4D				  				= gd.GetAddress(ADDRESS_MATCHEXTL4D);
+	TheMatchExt				  					= CMatchExtL4D(gd);
 	g_bNeedRestore								= gd.GetAddress(ADDRESS_NEEDTORESTORE);
 
 	SDKCallParamsWrapper ret	  				= { SDKType_PlainOldData, SDKPass_Plain };

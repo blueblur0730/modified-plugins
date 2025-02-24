@@ -352,7 +352,7 @@ stock void CheatCommand(int client, const char[] cmd, const char[] args = "")
 stock void GetBasedMode(char[] sMode, int size)
 {
 	// could actually use CMatchExtL4D::GetGameModeInfo... well whatever.
-	SourceKeyValues kvGameModes = SDKCall(g_hSDKCall_GetAllModes, g_pMatchExtL4D);
+	SourceKeyValues kvGameModes = TheMatchExt.GetAllModes();
 
 	// HACKHACK: is "teamversus", "teamscavenge" valid?
 	char sBuffer[64];

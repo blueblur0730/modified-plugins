@@ -46,7 +46,7 @@ void Timer_StartFirstMissionMixmap(Handle timer)
 	Call_PushString("");
 	Call_Finish();
 
-	SDKCall(g_hSDKCall_OnChangeMissionVote, g_pTheDirector, sMissionName);
+	TheDirector.OnChangeMissionVote(sMissionName);
 }
 
 void Timer_StartFirstMapMixmap(Handle timer)
@@ -62,7 +62,7 @@ void Timer_StartFirstMapMixmap(Handle timer)
 	Call_PushString(g_sPresetName);
 	Call_Finish();
 
-	SDKCall(g_hSDKCall_OnChangeChapterVote, g_pTheDirector, sMap);
+	TheDirector.OnChangeChapterVote(sMap);
 }
 
 void Timer_Notify(Handle timer, int userid)
@@ -365,7 +365,7 @@ void LoadPreset(const char[] sFile, int client)
 		// erase the invalid map name.
 		bool bMatched = false;
 		GetBasedMode(sMode, sizeof(sMode));
-		SourceKeyValues kvMissions = SDKCall(g_hSDKCall_GetAllMissions, g_pMatchExtL4D);
+		SourceKeyValues kvMissions = TheMatchExt.GetAllMissions();
 		for (SourceKeyValues kvMissionSub = kvMissions.GetFirstTrueSubKey(); !kvMissionSub.IsNull(); kvMissionSub = kvMissionSub.GetNextTrueSubKey())
 		{
 			if (bMatched)

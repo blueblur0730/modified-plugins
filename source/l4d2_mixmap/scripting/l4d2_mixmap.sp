@@ -13,7 +13,7 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re3.0.2"
+#define PLUGIN_VERSION "re3.0.3"
 
 StringMap g_hMapChapterNames;			// stores the mission name by its corresponding first map name.
 
@@ -82,9 +82,8 @@ public void OnPluginStart()
 
 public void OnAllPluginsLoaded()
 {
-	g_pTheDirector	   = L4D_GetPointer(POINTER_DIRECTOR);
-	if (!g_pTheDirector)
-		SetFailState("[Mixmap] Failed to get address of TheDirector.");
+	TheDirector = CDirector();
+	if (!TheDirector) SetFailState("[Mixmap] Failed to get address of TheDirector.");
 }
 
 public void OnClientPutInServer(int client)

@@ -22,7 +22,7 @@ void CollectAllMaps(MapSetType type)
 	FindConVar("mp_gamemode").GetString(sMode, sizeof(sMode));
 	GetBasedMode(sMode, sizeof(sMode));
 
-	SourceKeyValues kvMissions = SDKCall(g_hSDKCall_GetAllMissions, g_pMatchExtL4D);
+	SourceKeyValues kvMissions = TheMatchExt.GetAllMissions();
 	for (SourceKeyValues kvSub = kvMissions.GetFirstTrueSubKey(); !kvSub.IsNull(); kvSub = kvSub.GetNextTrueSubKey())
 	{
 		char sMissionName[128];
@@ -556,7 +556,7 @@ bool CollectMissionsToMenu(MapSetType type)
 	FindConVar("mp_gamemode").GetString(sMode, sizeof(sMode));
 	GetBasedMode(sMode, sizeof(sMode));	// note that this plugin won't consider survival/versus survival.
 
-	SourceKeyValues kvAllMissions = SDKCall(g_hSDKCall_GetAllMissions, g_pMatchExtL4D);
+	SourceKeyValues kvAllMissions = TheMatchExt.GetAllMissions();
 	for (SourceKeyValues kvSub = kvAllMissions.GetFirstTrueSubKey(); !kvSub.IsNull(); kvSub = kvSub.GetNextTrueSubKey())
 	{
 		if (kvSub.IsNull())
