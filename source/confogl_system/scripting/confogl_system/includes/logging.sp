@@ -104,7 +104,7 @@ void DailyFilePortCalculator(char[] filename, int maxlen, int sec)
 	if (folderIndex == -1)
 		folderIndex = FindCharInString(filename, '\\', true);
 
-	if (folderIndex == -1 || folderIndex >= extIndex - 1)
+	if (folderIndex != -1 && folderIndex >= extIndex - 1)
 	{
 		FormatEx(buffer, sizeof(buffer), "%s-port[%d]", filename, FindConVar("hostport").IntValue);
 		FormatTime(filename, maxlen, buffer, sec);
