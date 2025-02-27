@@ -16,7 +16,7 @@ MRESReturn DTR_CTerrorPlayer_OnTransitionRestore(int pThis, DHookReturn hReturn)
 
 	RequestFrame(OnNextFrame_ResetPlayers, pThis);	// bots have not created, only player. same as midhook callback.
 
-	PatchPlayers(g_hCvar_SaveStatus.BoolValue ? false : true);
+	Patch(g_hPatch_Player_BlockRestoring, g_hCvar_SaveStatus.BoolValue ? false : true);
 
 	return MRES_Ignored;
 }
@@ -26,6 +26,9 @@ MRESReturn DTR_CDirector_OnDirectorChangeLevel(DHookParam hParams)
 {
 	if (g_bMapsetInitialized)
 	{
+		if (L4D2_IsScavengeMode())
+			return MRES_Ignored;
+
 		g_hLogger.Trace("### DTR_CDirector_OnDirectorChangeLevel Called.");
 
 		char sMap[128];
@@ -61,6 +64,9 @@ MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
 {
 	if (g_bMapsetInitialized)
 	{
+		if (L4D2_IsScavengeMode())
+			return MRES_Ignored;
+			
 		g_hLogger.Trace("### DTR_CTerrorGameRules_OnBeginChangeLevel Called.");
 
 		char sMap[128];
@@ -94,6 +100,9 @@ MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
 // bots have created.
 MRESReturn DTR_RestoreTransitionedSurvivorBots_Post()
 {
+	if (!g_bMapsetInitialized)
+		return MRES_Ignored;
+
 	// rarely, bots died before we teleport them.
 	// need to set them god like.
 	for (int i = 1; i < MaxClients; i++)
@@ -125,7 +134,7 @@ void MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter(MidHookRegisters r
 	g_hLogger.Trace("### MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter: Called");
 
 	// patch bots from restoring gears.
-	PatchBots(g_hCvar_SaveStatus_Bot.BoolValue ? false : true);
+	Patch(g_hPatch_Bot_BlockRestoring, g_hCvar_SaveStatus_Bot.BoolValue ? false : true);
 
 	SourceKeyValues kvPlayerData = reg.Load(DHookRegister_EDI, _, NumberType_Int32);
 	g_hLogger.DebugEx("### MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter: kvPlayerData: %d", kvPlayerData);

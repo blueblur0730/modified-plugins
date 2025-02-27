@@ -222,51 +222,26 @@ stock void ConvertOfficialMapTag(char[] sTag, int size, const char[] sMode)
 	if (!strncmp(sTag[0], "#", false))
 		strcopy(sTag, size, sTag[1]);
 
-    for (int i = 0; i < sizeof(g_sTitles); i++)
-    {
-        if (!strcmp(sTag, g_sTitles[i][0]))
-        {
-            strcopy(sTag, size, g_sTitles[i][1]);
-            return;
-        }
-    }
+    LoopThroughTags(sTag, size, g_sTitles, sizeof(g_sTitles));
 
     switch (sMode[0])
     {
         case 'c':
-        {
-            for (int i = 0; i < sizeof(g_sCoopMaps); i++)
-            {
-                if (!strcmp(sTag, g_sCoopMaps[i][0]))
-                {
-                    strcopy(sTag, size, g_sCoopMaps[i][1]);
-                    return;
-                }
-            }
-        }
+            LoopThroughTags(sTag, size, g_sCoopMaps, sizeof(g_sCoopMaps));
 
         case 'v':
-        {
-            for (int i = 0; i < sizeof(g_sVersusMaps); i++)
-            {
-                if (!strcmp(sTag, g_sVersusMaps[i][0]))
-                {
-                    strcopy(sTag, size, g_sVersusMaps[i][1]);
-                    return;
-                }
-            }
-        }
+            LoopThroughTags(sTag, size, g_sVersusMaps, sizeof(g_sVersusMaps));
 
         case 's':
-        {
-            for (int i = 0; i < sizeof(g_sScavengeMaps); i++)
-            {
-                if (!strcmp(sTag, g_sScavengeMaps[i][0]))
-                {
-                    strcopy(sTag, size, g_sScavengeMaps[i][1]);
-                    return;
-                }
-            }
-        }
+            LoopThroughTags(sTag, size, g_sScavengeMaps, sizeof(g_sScavengeMaps));
+    }
+}
+
+static void LoopThroughTags(char[] sTag, int size, const char[][][] sTagPhrases, int maxlength)
+{
+    for (int i = 0; i < maxlength; i++)
+    {
+        if (!strcmp(sTag, sTagPhrases[i][0]))
+            strcopy(sTag, size, sTagPhrases[i][1]);
     }
 }

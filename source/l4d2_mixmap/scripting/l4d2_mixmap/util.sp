@@ -75,6 +75,41 @@ static const char g_sSurvivorModels[][] = {
 	"models/survivors/survivor_manager.mdl" 
 };
 
+stock bool CheckBlackList(const char[] sMap)
+{
+	int found = g_hArrayBlackList.FindString(sMap);
+	if (found != -1)
+		return true;
+	
+	return false;
+}
+
+stock void LoadTranslation(const char[] translation)
+{
+	char sPath[PLATFORM_MAX_PATH], sName[64];
+	Format(sName, sizeof(sName), "translations/%s.txt", translation);
+	BuildPath(Path_SM, sPath, sizeof(sPath), sName);
+	if (!FileExists(sPath))
+		SetFailState("[MixMap] Missing translation file %s.txt", translation);
+
+	LoadTranslations(translation);
+}
+
+stock void Patch(MemoryPatch hPatch, bool bPatch)
+{
+	static bool bPatched = false;
+	if (bPatch && !bPatched)
+	{
+		hPatch.Enable();
+		bPatched = true;
+	}
+	else if (!bPatch && bPatched)
+	{
+		hPatch.Disable();
+		bPatched = false;
+	}
+}
+
 stock void GetSafeAreaOrigin(float vec[3])
 {
 	// HACKHACK: Some third party map's first checkpoint door's classname may not be "prop_door_rotating_checkpoint",
@@ -346,46 +381,41 @@ stock void CheatCommand(int client, const char[] cmd, const char[] args = "")
 	SetUserFlagBits(client, bits);
 }
 
+stock bool IsInSecondHalfOfRound()
+{
+	return view_as<bool>(!!GameRules_GetProp("m_bInSecondHalfOfRound"));
+}
+
 // get real gamemode. this is for mutation and community modes,
 // and even custom modes (need to set mp_gamemode to the value).
-// compatible for official modes.
 stock void GetBasedMode(char[] sMode, int size)
 {
-	// could actually use CMatchExtL4D::GetGameModeInfo... well whatever.
-	SourceKeyValues kvGameModes = TheMatchExt.GetAllModes();
-
-	// HACKHACK: is "teamversus", "teamscavenge" valid?
-	char sBuffer[64];
-	Format(sBuffer, sizeof(sBuffer), "%s/base", sMode);
-	SourceKeyValues kvBase = kvGameModes.FindKey(sBuffer);
-
-	// found. get base.
-	if (kvBase && !kvBase.IsNull())
+	SourceKeyValues kvGameMode = TheMatchExt.GetGameModeInfo(sMode);
+	if (!kvGameMode || kvGameMode.IsNull())
 	{
-		kvBase.GetString(NULL_STRING, sMode, size);
-
-		// except for realism mode. this is actualy coop since no mission uses "realism" as a key.
-		if (!strcmp(sMode, "realism"))
-			strcopy(sMode, size, "coop");
+		g_hLogger.ErrorEx("Failed to get gamemode info for gamnemode \"%s\".", sMode);
+		return;
 	}
+
+	kvGameMode.GetString("base", sMode, size);
+
+	// except for realism mode. this is actualy coop since no mission uses "realism" as a key.
+	if (!strcmp(sMode, "realism"))
+		strcopy(sMode, size, "coop");
 }
 
-stock bool CheckBlackList(const char[] sMap)
+// credits to shqke: https://github.com/shqke/imatchext/blob/7cab051f435bf997fec9d088a0bd87be048b56ae/extension/natives.cpp#L30
+stock SourceKeyValues GetServerGameDetails(Address &pkvRequest = Address_Null)
 {
-	int found = g_hArrayBlackList.FindString(sMap);
-	if (found != -1)
-		return true;
-	
-	return false;
-}
+	Address pMatchNetworkMsgController = SDKCall(g_hSDKCall_GetMatchNetworkMsgController, g_MatchFramework);
+	g_hLogger.DebugEx("### pMatchNetworkMsgController: %d", pMatchNetworkMsgController);
 
-stock void LoadTranslation(const char[] translation)
-{
-	char sPath[PLATFORM_MAX_PATH], sName[64];
-	Format(sName, sizeof(sName), "translations/%s.txt", translation);
-	BuildPath(Path_SM, sPath, sizeof(sPath), sName);
-	if (!FileExists(sPath))
-		SetFailState("[MixMap] Missing translation file %s.txt", translation);
-
-	LoadTranslations(translation);
+	Address pkvDetails;
+	if (pMatchNetworkMsgController != Address_Null)
+	{
+		pkvDetails = SDKCall(g_hSDKCall_GetActiveServerGameDetails, pMatchNetworkMsgController, pkvRequest);
+		g_hLogger.DebugEx("### kvDetails: %d", pkvDetails);
+	}
+		
+	return view_as<SourceKeyValues>(pkvDetails);
 }

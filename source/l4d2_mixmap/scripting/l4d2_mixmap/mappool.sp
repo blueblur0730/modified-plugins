@@ -27,16 +27,6 @@ void CollectAllMaps(MapSetType type)
 	{
 		char sMissionName[128];
 		kvSub.GetName(sMissionName, sizeof(sMissionName));  
-		// will be something like this:
-		/**
-		 * "Missions"
-		 * {
-		 * 		"<MissionName>"		// the string from: "Name"	"<MissionName>" on the mission file.
-		 * 		{
-		 * 				...
-		 * 		}
-		 * }
-		*/
 
 		// no fake compaign. these are not playable.
 		if (IsFakeMission(sMissionName))
@@ -134,6 +124,10 @@ bool SelectRandomMap()
 			// the first map should be always the first one.
 			if (i == 0)
 			{
+				// ignore scavenge mode.
+				if (L4D2_IsScavengeMode())
+					continue;
+
 				hArray.GetString(0, sMap, sizeof(sMap));
 				if ((g_hCvar_EnableBlackList.BoolValue && g_hArrayBlackList) && CheckBlackList(sMap))
 				{
@@ -147,6 +141,10 @@ bool SelectRandomMap()
 			// the last selection must be the finale.
 			else if (i == g_hCvar_MapPoolCapacity.IntValue - 1)
 			{
+				// ignore scavenge mode.
+				if (L4D2_IsScavengeMode())
+					continue;
+
 				hArray.GetString(hArray.Length - 1, sMap, sizeof(sMap));
 				if ((g_hCvar_EnableBlackList.BoolValue && g_hArrayBlackList) && CheckBlackList(sMap))
 				{
@@ -167,8 +165,12 @@ bool SelectRandomMap()
 				if (hArray.Length > 2)
 				{
 					// erase the head and tail.
-					hArray.Erase(hArray.Length - 1);
-					hArray.Erase(0);
+					// ignore scavenge mode.
+					if (!L4D2_IsScavengeMode())
+					{
+						hArray.Erase(hArray.Length - 1);
+						hArray.Erase(0);
+					}
 
 					if (g_hCvar_EnableBlackList.BoolValue && g_hArrayBlackList)
 					{
@@ -211,11 +213,14 @@ bool SelectRandomMap()
 				// else we use the first map, and make sure it is not a finale.
 				else if (hArray.Length == 2)
 				{
-					hArray.GetString(0, sMap, sizeof(sMap));
-					if ((g_hCvar_EnableBlackList.BoolValue && g_hArrayBlackList) && CheckBlackList(sMap))
+					if (!L4D2_IsScavengeMode())
 					{
-						i--;
-						continue;
+						hArray.GetString(0, sMap, sizeof(sMap));
+						if ((g_hCvar_EnableBlackList.BoolValue && g_hArrayBlackList) && CheckBlackList(sMap))
+						{
+							i--;
+							continue;
+						}
 					}
 
 					g_hArrayPools.PushString(sMap);
@@ -224,9 +229,18 @@ bool SelectRandomMap()
 				// do not take any action, as this can be a finale map.
 				else if (hArray.Length == 1)	
 				{
-					// we need to decrease the index, as we do not push any map into the arraylist.
-					i--;
-					continue;	// skip this, this is a finale map in the middle of pool.
+					// ignore scavenge mode.
+					if (!L4D2_IsScavengeMode())
+					{
+						// we need to decrease the index, as we do not push any map into the arraylist.
+						i--;
+						continue;	// skip this, this is a finale map in the middle of pool.
+					}
+					else
+					{
+						g_hArrayPools.PushString(sMap);
+						g_hArraySurvivorSets.Push(survivorSet);
+					}
 				}
 			}
 
@@ -400,7 +414,7 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 
 			// you shouldn't select a finale when you have not reached finale.
 			if (g_hArrayPools.Length != g_hCvar_MapPoolCapacity.IntValue - 1 &&
-				param2 == menu.ItemCount - 1)
+				param2 == menu.ItemCount - 1 && !L4D2_IsScavengeMode())
 			{
 				CPrintToChat(param1, "%t", "CannotSelectUntil");
 				CreateManullySelectMapMenu(param1);
@@ -410,7 +424,7 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 			// here we wish that user always choose the last map as the finale map.
 			// so that this could be a consistent compaign. and also have a better gameplay experience.
 			if (g_hArrayPools.Length == g_hCvar_MapPoolCapacity.IntValue - 1 
-				&& param2 != menu.ItemCount - 1)
+				&& param2 != menu.ItemCount - 1 && !L4D2_IsScavengeMode())
 			{
 				CPrintToChat(param1, "%t", "ShouldSelectLastMap");
 				CreateManullySelectMapMenu(param1);

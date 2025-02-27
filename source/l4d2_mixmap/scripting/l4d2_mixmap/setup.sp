@@ -12,9 +12,13 @@
 
 #define ADDRESS_MATCHEXTL4D						   "g_pMatchExtL4D"
 #define ADDRESS_NEEDTORESTORE					   "g_bNeedRestore"
+#define ADDRESS_MATCHFRAMEWORK					   "g_MatchFramework"
 
 #define SDKCALL_GETALLMISSIONS					   "CMatchExtL4D::GetAllMissions"
-#define SDKCALL_GETALLMODES						   "CMatchExtL4D::GetAllModes"
+#define SDKCALL_GETMAPINFOBYBSPNAME			   	   "CMatchExtL4D::GetMapInfoByBspName"
+#define SDKCALL_GETGAMEMODEINFO					   "CMatchExtL4D::GetGameModeInfo"
+#define SDKCALL_GETMATCHNETWORKMSGCONTROLLER	   "CMatchFramework::GetMatchNetworkMsgController"
+#define SDKCALL_GETACTIVESERVERGAMEDETAILS		   "CMatchNetworkMsgControllerBase::GetActiveServerGameDetails"
 #define SDKCALL_ONCHANGEMISSIONVOTE				   "CDirector::OnChangeMissionVote"
 #define SDKCALL_ONCHANGECHAPTERVOTE				   "CDirector::OnChangeChapterVote"
 
@@ -30,7 +34,10 @@
 
 Handle
 	g_hSDKCall_GetAllMissions,
-	g_hSDKCall_GetAllModes,
+	g_hSDKCall_GetMapInfoByBspName,
+	g_hSDKCall_GetGameModeInfo,
+	g_hSDKCall_GetMatchNetworkMsgController,
+	g_hSDKCall_GetActiveServerGameDetails,
 	g_hSDKCall_OnChangeMissionVote,
 	g_hSDKCall_OnChangeChapterVote;
 
@@ -41,8 +48,18 @@ methodmap CMatchExtL4D {
 		return SDKCall(g_hSDKCall_GetAllMissions, view_as<Address>(this));
 	}
 
-	public SourceKeyValues GetAllModes() {
-		return SDKCall(g_hSDKCall_GetAllModes, view_as<Address>(this));
+	// credits to shqke: https://github.com/shqke/imatchext/blob/7cab051f435bf997fec9d088a0bd87be048b56ae/extension/natives.cpp#L318
+	public SourceKeyValues GetMapInfoByBspName(const char[] bspName, const char[] gamemode, Address &kvMissionInfo = Address_Null) {
+		SourceKeyValues kvServerGameDetails = GetServerGameDetails();
+		if (!kvServerGameDetails || kvServerGameDetails.IsNull())
+			return view_as<SourceKeyValues>(Address_Null);
+		
+		kvServerGameDetails.SetString("game/mode", gamemode);
+		return SDKCall(g_hSDKCall_GetMapInfoByBspName, view_as<Address>(this), view_as<Address>(kvServerGameDetails), bspName, kvMissionInfo);
+	}
+
+	public SourceKeyValues GetGameModeInfo(const char[] modeName) {
+		return SDKCall(g_hSDKCall_GetGameModeInfo, view_as<Address>(this), modeName);
 	}
 }
 
@@ -59,6 +76,7 @@ methodmap CDirector {
 }
 
 CMatchExtL4D TheMatchExt;
+
 CDirector TheDirector;
 
 GlobalForward
@@ -67,12 +85,15 @@ GlobalForward
 	g_hForwardInterrupt,
 	g_hForwardEnd;
 
-Address g_bNeedRestore;
+Address 
+	g_bNeedRestore,
+	g_MatchFramework;
 
 MidHook g_hMidhook_ChangeCharacter;
+
 MemoryPatch 
 	g_hPatch_Bot_BlockRestoring,
-	g_hPatch_Player_BlockRestoring
+	g_hPatch_Player_BlockRestoring;
 
 ConVar
 	g_hCvar_Enable,
@@ -94,6 +115,7 @@ void SetUpGameData()
 	GameDataWrapper gd			  				= new GameDataWrapper(GAMEDATA_FILE);
 	TheMatchExt				  					= CMatchExtL4D(gd);
 	g_bNeedRestore								= gd.GetAddress(ADDRESS_NEEDTORESTORE);
+	g_MatchFramework							= gd.GetAddress(ADDRESS_MATCHFRAMEWORK);	
 
 	SDKCallParamsWrapper ret	  				= { SDKType_PlainOldData, SDKPass_Plain };
 	g_hSDKCall_GetAllMissions	  				= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETALLMISSIONS, _, _, true, ret);
@@ -102,21 +124,35 @@ void SetUpGameData()
 	SDKCallParamsWrapper params[] 				= {{ SDKType_String, SDKPass_Pointer }};
 	g_hSDKCall_OnChangeMissionVote 				= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGEMISSIONVOTE, params, sizeof(params));
 
-	SDKCallParamsWrapper ret1	   				= { SDKType_PlainOldData, SDKPass_Plain };
-	g_hSDKCall_GetAllModes		   				= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETALLMODES, _, _, true, ret1);
-
 	// use this to change to a give map.
 	SDKCallParamsWrapper params1[] 				= {{ SDKType_String, SDKPass_Pointer }};
 	g_hSDKCall_OnChangeChapterVote 				= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, SDKCALL_ONCHANGECHAPTERVOTE, params1, sizeof(params1));
 
+	SDKCallParamsWrapper ret1	   				= { SDKType_PlainOldData, SDKPass_Plain };
+	g_hSDKCall_GetMatchNetworkMsgController		= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETMATCHNETWORKMSGCONTROLLER, _, _, true, ret1);
+
+	SDKCallParamsWrapper params2[] 				= {{ SDKType_PlainOldData, SDKPass_Plain, VDECODE_FLAG_ALLOWNULL, VENCODE_FLAG_COPYBACK }};
+	SDKCallParamsWrapper ret2					= { SDKType_PlainOldData, SDKPass_Plain, VDECODE_FLAG_ALLOWNULL };
+	g_hSDKCall_GetActiveServerGameDetails		= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETACTIVESERVERGAMEDETAILS, params2, sizeof(params2), true, ret2);
+
+	SDKCallParamsWrapper params3[] 				= {	{ SDKType_PlainOldData, SDKPass_Plain},
+													{ SDKType_String, SDKPass_Pointer },
+													{ SDKType_PlainOldData, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL, VENCODE_FLAG_COPYBACK}};
+	SDKCallParamsWrapper ret3					= { SDKType_PlainOldData, SDKPass_Plain };
+	g_hSDKCall_GetMapInfoByBspName				= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETMAPINFOBYBSPNAME, params3, sizeof(params3), true, ret3);
+
+	SDKCallParamsWrapper params4[] 				= {{ SDKType_String, SDKPass_Pointer }};
+	SDKCallParamsWrapper ret4					= { SDKType_PlainOldData, SDKPass_Plain };
+	g_hSDKCall_GetGameModeInfo					= gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETGAMEMODEINFO, params4, sizeof(params4), true, ret4);
+
+
 	gd.CreateDetourOrFailEx(DETOUR_TRANSITIONRESTORE, DTR_CTerrorPlayer_OnTransitionRestore);
 	gd.CreateDetourOrFailEx(DETOUR_DIRECTORCHANGELEVEL, DTR_CDirector_OnDirectorChangeLevel);
 	gd.CreateDetourOrFailEx(DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL, DTR_CTerrorGameRules_OnBeginChangeLevel);
-	gd.CreateDetourOrFailEx(DETOUR_RESTORETRANSITIONEDSURVIVORBOTS, _, DTR_RestoreTransitionedSurvivorBots_Post)
+	gd.CreateDetourOrFailEx(DETOUR_RESTORETRANSITIONEDSURVIVORBOTS, _, DTR_RestoreTransitionedSurvivorBots_Post);
 
 	g_hMidhook_ChangeCharacter 					= gd.CreateMidHookOrFail(MIDHOOK_RESTORETRANSITIONEDSURVIVORBOTS, MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter, true);
 	g_hPatch_Bot_BlockRestoring 				= gd.CreateMemoryPatchOrFail(MEMPATCH_BLOCKRESTORING_BOT);
-	g_hPatch_Player_BlockRestoring				= gd.CreateMemoryPatchOrFail(MEMPATCH_BLOCKRESTORING_PLAYER);
 
 	delete gd;
 }
@@ -129,7 +165,7 @@ void SetupConVars()
 	g_hCvar_Enable				  = CreateConVar("l4d2mm_enable", "1", "Whether to enable the plugin.", _, true, 0.0, true, 1.0);
 	g_hCvar_NextMapPrint		  = CreateConVar("l4d2mm_nextmap_print", "1", "Whether to show what the next map will be.", _, true, 0.0, true, 1.0);
 	g_hCvar_SecondsToRead		  = CreateConVar("l4d2mm_seconds_to_read", "5.0", "Determine how many seconds before change level to read maplist result.", _, true, 1.0);
-	g_hCvar_ManualSelectDelay	  = CreateConVar("l4d2mm_manual_select_delay", "3.0", "Determine how many seconds before change level to manual select map.", _, true, 1.0)
+	g_hCvar_ManualSelectDelay	  = CreateConVar("l4d2mm_manual_select_delay", "3.0", "Determine how many seconds before change level to manual select map.", _, true, 1.0);
 	g_hCvar_PresetLoadDelay		  = CreateConVar("l4d2mm_preset_load_delay", "3.0", "Determine how many seconds before change level to load preset.", _, true, 1.0);
 
 	// gameplay

@@ -359,51 +359,32 @@ void LoadPreset(const char[] sFile, int client)
 		if (g_hCvar_EnableBlackList.BoolValue && g_hArrayBlackList && g_hArrayBlackList.Length)
 		{
 			if (CheckBlackList(sBuffer))
-				continue;
-		}
-
-		// erase the invalid map name.
-		bool bMatched = false;
-		GetBasedMode(sMode, sizeof(sMode));
-		SourceKeyValues kvMissions = TheMatchExt.GetAllMissions();
-		for (SourceKeyValues kvMissionSub = kvMissions.GetFirstTrueSubKey(); !kvMissionSub.IsNull(); kvMissionSub = kvMissionSub.GetNextTrueSubKey())
-		{
-			if (bMatched)
-				break;
-
-			char sMissionName[128];
-			kvMissionSub.GetName(sMissionName, sizeof(sMissionName)); 
-
-			if (IsFakeMission(sMissionName))
-				continue;
-
-			char sKey[64];
-			FormatEx(sKey, sizeof(sKey), "modes/%s", sMode);
-			SourceKeyValues kvMode = kvMissionSub.FindKey(sKey);
-
-			if (!kvMode || kvMode.IsNull())
-				continue;
-				
-			int survivorSet = kvSub.GetInt("survivor_set", 2);	// L4D2 = 2, L4D1 = 1
-
-			for (SourceKeyValues kvMapNumber = kvMode.GetFirstTrueSubKey(); !kvMapNumber.IsNull(); kvMapNumber = kvMapNumber.GetNextTrueSubKey())
 			{
-				char sValue[64];
-				kvMapNumber.GetString("Map", sValue, sizeof(sValue));
-
-				if (!strcmp(sValue, sBuffer))
-				{
-					g_hArraySurvivorSets.Push(survivorSet);
-					bMatched = true;
-					break;
-				}
+				g_hLogger.WarnEx("Found map \"%s\" in blacklist.", sBuffer);
+				continue;
 			}
 		}
 
-		if (bMatched)
-			g_hArrayPools.PushString(sBuffer);
-		else
-			g_hLogger.WarnEx("Failed to find matched map \"%s\" in gamemode \"%s\".", sBuffer, sMode);
+		// erase the invalid map name.
+		Address pkvMissionInfo;
+		SourceKeyValues kvMapInfo = TheMatchExt.GetMapInfoByBspName(sBuffer, sMode, pkvMissionInfo);
+		if (!kvMapInfo || kvMapInfo.IsNull())
+		{
+			g_hLogger.WarnEx("Failed to find map \"%s\" in gamemode \"%s\".", sBuffer, sMode);
+			continue;
+		}
+
+		int survivorSet = 2;
+		SourceKeyValues kvMissionInfo = view_as<SourceKeyValues>(pkvMissionInfo);
+		if (!kvMissionInfo || kvMissionInfo.IsNull())
+		{
+			g_hLogger.WarnEx("Failed to find mission info for map \"%s\" in gamemode \"%s\". kvMissionInfo: %d", sBuffer, sMode, kvMissionInfo);
+			continue;
+		}
+
+		survivorSet = kvMissionInfo.GetInt("survivor_set", 2);	// L4D2 = 2, L4D1 = 1
+		g_hArraySurvivorSets.Push(survivorSet);
+		g_hArrayPools.PushString(sBuffer);
 	}
 
 	// ignore the map pool capacity cvar.
@@ -425,36 +406,6 @@ void LoadPreset(const char[] sFile, int client)
 void Timer_LoadPresetFile(Handle hTimer, int client)
 {
 	CreateMixmapVote(client, MapSet_Preset);
-}
-
-void PatchBots(bool bPatch)
-{
-	static bool bPatched = false;
-	if (bPatch && !bPatched)
-	{
-		g_hPatch_Bot_BlockRestoring.Enable();
-		bPatched = true;
-	}
-	else if (!bPatch && bPatched)
-	{
-		g_hPatch_Bot_BlockRestoring.Disable();
-		bPatched = false;
-	}
-}
-
-void PatchPlayers(bool bPatch)
-{
-	static bool bPatched = false;
-	if (bPatch && !bPatched)
-	{
-		g_hPatch_Player_BlockRestoring.Enable();
-		bPatched = true;
-	}
-	else if (!bPatch && bPatched)
-	{
-		g_hPatch_Player_BlockRestoring.Disable();
-		bPatched = false;
-	}
 }
 
 void PluginStartInit()
