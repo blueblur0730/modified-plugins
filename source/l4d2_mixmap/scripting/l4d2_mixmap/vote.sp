@@ -1,5 +1,5 @@
 #if defined _l4d2_mixmap_vote_included
- #endinput
+	#endinput
 #endif
 #define _l4d2_mixmap_vote_included
 
@@ -11,12 +11,12 @@ void CreateMixmapVote(int client, MapSetType type)
 		return;
 	}
 
-	char sInfo[8];
+	char		   sInfo[8];
 	L4D2NativeVote vote = L4D2NativeVote(CreateMixMapVoteHandler);
 	vote.SetTitle("Start Mixmap Vote?");
 	IntToString(view_as<int>(type), sInfo, sizeof(sInfo));
 	vote.SetInfo(sInfo);
-	vote.Initiator = client;
+	vote.Initiator	 = client;
 
 	int iPlayerCount = 0;
 	int[] iClients	 = new int[MaxClients];
@@ -53,7 +53,7 @@ void CreateMixMapVoteHandler(L4D2NativeVote vote, VoteAction action, int param1,
 				case VOTE_NO: vote.NoCount++;
 			}
 		}
-	
+
 		case VoteAction_End:
 		{
 			if (vote.YesCount > vote.PlayerCount / 2)
@@ -82,7 +82,7 @@ void CreateStopMixmapVote(int client)
 
 	L4D2NativeVote vote = L4D2NativeVote(CreateStopMixMapVoteHandler);
 	vote.SetTitle("Stop Mixmap?");
-	vote.Initiator = client;
+	vote.Initiator	 = client;
 
 	int iPlayerCount = 0;
 	int[] iClients	 = new int[MaxClients];
@@ -119,7 +119,7 @@ void CreateStopMixMapVoteHandler(L4D2NativeVote vote, VoteAction action, int par
 				case VOTE_NO: vote.NoCount++;
 			}
 		}
-	
+
 		case VoteAction_End:
 		{
 			if (vote.YesCount > vote.PlayerCount / 2)

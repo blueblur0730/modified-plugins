@@ -1,5 +1,5 @@
 #if defined _l4d2_mixmap_hooks_included
- #endinput
+	#endinput
 #endif
 #define _l4d2_mixmap_hooks_included
 
@@ -14,8 +14,7 @@ MRESReturn DTR_CTerrorPlayer_OnTransitionRestore(int pThis, DHookReturn hReturn)
 	if (!L4D_IsFirstMapInScenario() && g_iMapsPlayed != 1)
 		SetGod(pThis, true);
 
-	RequestFrame(OnNextFrame_ResetPlayers, pThis);	// bots have not created, only player. same as midhook callback.
-
+	RequestFrame(OnNextFrame_ResetPlayers, pThis);	  // bots have not created, only player. same as midhook callback.
 	Patch(g_hPatch_Player_BlockRestoring, g_hCvar_SaveStatus.BoolValue ? false : true);
 
 	return MRES_Ignored;
@@ -66,7 +65,7 @@ MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
 	{
 		if (L4D2_IsScavengeMode())
 			return MRES_Ignored;
-			
+
 		g_hLogger.Trace("### DTR_CTerrorGameRules_OnBeginChangeLevel Called.");
 
 		char sMap[128];
@@ -83,7 +82,7 @@ MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
 				g_hLogger.DebugEx("### DTR_CTerrorGameRules_OnBeginChangeLevel: Original Map Name: \"%s\".", sMap);
 			}
 		}
-		
+
 		if (g_iMapsPlayed >= g_hArrayPools.Length)
 			return MRES_Ignored;
 
@@ -92,9 +91,9 @@ MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
 		hParams.SetString(1, sMap);
 
 		return MRES_ChangedHandled;
-    }
+	}
 
-    return MRES_Ignored;
+	return MRES_Ignored;
 }
 
 // bots have created.
@@ -113,10 +112,11 @@ MRESReturn DTR_RestoreTransitionedSurvivorBots_Post()
 		if (!IsClientInGame(i) || GetClientTeam(i) != 2 || !IsFakeClient(i))
 			continue;
 
-	// not first map.
-	if (!L4D_IsFirstMapInScenario() && g_iMapsPlayed != 1)
-		SetGod(i, true);
+		// not first map.
+		if (!L4D_IsFirstMapInScenario() && g_iMapsPlayed != 1)
+			SetGod(i, true);
 	}
+
 	RequestFrame(OnNextFrame_ResetPlayers, 0);
 	return MRES_Ignored;
 }
@@ -130,7 +130,7 @@ void MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter(MidHookRegisters r
 {
 	if (!g_bMapsetInitialized)
 		return;
-	
+
 	g_hLogger.Trace("### MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter: Called");
 
 	// patch bots from restoring gears.
@@ -155,7 +155,7 @@ void MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter(MidHookRegisters r
 	if (oldSet == newSet)
 		return;
 
-	kvPlayerData.SetInt("SurvivorSet", newSet);	// next map's survivor set.
+	kvPlayerData.SetInt("SurvivorSet", newSet);	   // next map's survivor set.
 
 	int index = kvPlayerData.GetInt("character", 0);
 	g_hLogger.DebugEx("### MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter: index: %d", index);
@@ -183,12 +183,12 @@ void MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter(MidHookRegisters r
 	char idealName[32];
 	GetCorrespondingName(index, idealName, sizeof(idealName));
 	kvPlayerData.SetString("idealName", idealName);
-		
-	int userid = kvPlayerData.GetInt("userID", 0);
-	DataPack dp = new DataPack();
+
+	int		 userid = kvPlayerData.GetInt("userID", 0);
+	DataPack dp		= new DataPack();
 	dp.WriteCell(index);
 	dp.WriteCell(userid);
-		
+
 	// one frame after, as the hook is before the bot creation.
 	RequestFrame(OnNextFrame_ChangeName, dp);
 }
@@ -196,7 +196,7 @@ void MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter(MidHookRegisters r
 void OnNextFrame_ChangeName(DataPack dp)
 {
 	dp.Reset();
-	int index = dp.ReadCell();
+	int index  = dp.ReadCell();
 	int userid = dp.ReadCell();
 	delete dp;
 
@@ -207,8 +207,8 @@ void OnNextFrame_ChangeName(DataPack dp)
 	char sName[32];
 	GetCorrespondingName(index, sName, sizeof(sName));
 
-    SetClientInfo(client, "name", sName);
-    SetEntPropString(client, Prop_Data, "m_szNetname", sName);
+	SetClientInfo(client, "name", sName);
+	SetEntPropString(client, Prop_Data, "m_szNetname", sName);
 }
 
 void OnNextFrame_ResetPlayers(int client)
@@ -254,11 +254,11 @@ void ResetPlayer(int client)
 
 			// only available when player is not inside the wall (have a valid nav.)
 			// so this is used to teleport player twice in case they were teleported outside the saferoom.
-			CheatCommand(client, "warp_to_start_area");		
+			CheatCommand(client, "warp_to_start_area");
 		}
 	}
 
-	if (GetPlayerWeaponSlot(client, 1) == -1 )
+	if (GetPlayerWeaponSlot(client, 1) == -1)
 		CheatCommand(client, "give", "pistol");
 
 	SetGod(client, false);

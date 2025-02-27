@@ -1,5 +1,5 @@
 #if defined _l4d2_mixmap_mappool_included
- #endinput
+	#endinput
 #endif
 #define _l4d2_mixmap_mappool_included
 
@@ -7,7 +7,7 @@
  * -----------------------------
  * Randomly select map section.
  * -----------------------------
-*/
+ */
 
 // Get all missions and their map names.
 void CollectAllMaps(MapSetType type)
@@ -26,7 +26,7 @@ void CollectAllMaps(MapSetType type)
 	for (SourceKeyValues kvSub = kvMissions.GetFirstTrueSubKey(); !kvSub.IsNull(); kvSub = kvSub.GetNextTrueSubKey())
 	{
 		char sMissionName[128];
-		kvSub.GetName(sMissionName, sizeof(sMissionName));  
+		kvSub.GetName(sMissionName, sizeof(sMissionName));
 
 		// no fake compaign. these are not playable.
 		if (IsFakeMission(sMissionName))
@@ -39,15 +39,13 @@ void CollectAllMaps(MapSetType type)
 				if (IsOfficialMap(sMissionName))
 					continue;
 			}
-				
+
 			case MapSet_Official:
 			{
 				if (!IsOfficialMap(sMissionName))
 					continue;
 			}
 		}
-
-		int survivorSet = kvSub.GetInt("survivor_set", 2);	// L4D2 = 2, L4D1 = 1
 
 		// we find the key modes/<mode> , continue the subkey iteration.
 		FormatEx(sKey, sizeof(sKey), "modes/%s", sMode);
@@ -56,7 +54,7 @@ void CollectAllMaps(MapSetType type)
 		if (!kvMode || kvMode.IsNull())
 			continue;
 
-        // should be free.
+		// should be free.
 		ArrayList hArray = new ArrayList(ByteCountToCells(64));
 
 		// on this case we are iterating "1", "2"... subkeys.
@@ -70,7 +68,7 @@ void CollectAllMaps(MapSetType type)
 		// pack mission and map names up. into an arraylist so we can sort them.
 		DataPack dp = new DataPack();
 		dp.WriteCell(hArray);
-		dp.WriteCell(survivorSet);
+		dp.WriteCell(kvSub.GetInt("survivor_set", 2));
 		dp.WriteString(sMissionName);
 		g_hArrayMissionsAndMaps.Push(dp);
 	}
@@ -89,7 +87,7 @@ bool SelectRandomMap()
 		CleanMemory();
 		return false;
 	}
-	
+
 	delete g_hArrayPools;
 	g_hArrayPools = new ArrayList(ByteCountToCells(64));
 
@@ -105,19 +103,19 @@ bool SelectRandomMap()
 		// everytime we loop through the arraylist we sort again.
 		char sMissionName[64], sMap[64];
 		g_hArrayMissionsAndMaps.Sort(Sort_Random, Sort_Integer);
-		int index = GetRandomInt(0, g_hArrayMissionsAndMaps.Length - 1);
-		DataPack dp = g_hArrayMissionsAndMaps.Get(index);
+		int		 index = GetRandomInt(0, g_hArrayMissionsAndMaps.Length - 1);
+		DataPack dp	   = g_hArrayMissionsAndMaps.Get(index);
 
 		dp.Reset();
-		ArrayList hArray = dp.ReadCell();
-		int survivorSet = dp.ReadCell();
+		ArrayList hArray	  = dp.ReadCell();
+		int		  survivorSet = dp.ReadCell();
 		dp.ReadString(sMissionName, sizeof(sMissionName));
 
 		// set the mission's first map name, as we need the mission name to transfer to the first map.
 		char sFirstMap[128];
 		hArray.GetString(0, sFirstMap, sizeof(sFirstMap));
 		g_hMapChapterNames.SetString(sFirstMap, sMissionName);
-		
+
 		// hArray is only one time used.
 		if (hArray && hArray.Length)
 		{
@@ -227,14 +225,14 @@ bool SelectRandomMap()
 					g_hArraySurvivorSets.Push(survivorSet);
 				}
 				// do not take any action, as this can be a finale map.
-				else if (hArray.Length == 1)	
+				else if (hArray.Length == 1)
 				{
 					// ignore scavenge mode.
 					if (!L4D2_IsScavengeMode())
 					{
 						// we need to decrease the index, as we do not push any map into the arraylist.
 						i--;
-						continue;	// skip this, this is a finale map in the middle of pool.
+						continue;	 // skip this, this is a finale map in the middle of pool.
 					}
 					else
 					{
@@ -254,7 +252,7 @@ bool SelectRandomMap()
 	}
 
 	delete g_hArrayMissionsAndMaps;
-	
+
 	for (int i = 1; i < MaxClients; i++)
 	{
 		if (!IsClientInGame(i) || IsFakeClient(i))
@@ -285,26 +283,26 @@ void CleanMemory()
  * -----------------------------
  * Manully select map section.
  * -----------------------------
-*/
+ */
 
 // menu is BAAAAAAAAAAAAAAAAD.
-static int g_iSelectIndex = 0;
-static int g_iSelectedSet = 2;
-static int g_iParam = -1;
+static int g_iSelectIndex		   = 0;
+static int g_iSelectedSet		   = 2;
+static int g_iParam				   = -1;
 static int g_iClientWhoIsSelecting = -1;
 
 void CollectAllMapsEx(int client, MapSetType type)
 {
 	g_iClientWhoIsSelecting = client;
-	g_bManullyChoosingMap = true;
-	g_iSelectIndex = 0;
-	g_iSelectedSet = 2;
-	g_iParam = -1;
-	
+	g_bManullyChoosingMap	= true;
+	g_iSelectIndex			= 0;
+	g_iSelectedSet			= 2;
+	g_iParam				= -1;
+
 	if (!CollectMissionsToMenu(type))
 	{
 		g_iClientWhoIsSelecting = -1;
-		g_bManullyChoosingMap = false;
+		g_bManullyChoosingMap	= false;
 		return;
 	}
 
@@ -316,10 +314,10 @@ void CreateManullySelectMapMenu(int client)
 	DataPack dp = g_hArrayMissionsAndMaps.Get(g_iSelectIndex);
 	dp.Reset();
 
-	char sDisplayTitle[128];
+	char	  sDisplayTitle[128];
 	ArrayList hArray = dp.ReadCell();
-	StringMap hMap = dp.ReadCell();
-	g_iSelectedSet = dp.ReadCell();
+	StringMap hMap	 = dp.ReadCell();
+	g_iSelectedSet	 = dp.ReadCell();
 	dp.ReadString(sDisplayTitle, sizeof(sDisplayTitle))
 
 	char sBuffer[128];
@@ -360,7 +358,7 @@ void CreateManullySelectMapMenu(int client)
 	}
 
 	// after adding items, immediately set this to -1.
-	g_iParam = -1;
+	g_iParam			= -1;
 	menu.ExitBackButton = true;
 	menu.Display(client, MENU_TIME_FOREVER);
 }
@@ -388,7 +386,7 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 					CreateManullySelectMapMenu(param1);
 					return;
 				}
-				else 
+				else
 				{
 					// selected "Last Mission" on the middle page of all mission.
 					if (!param2)
@@ -413,8 +411,7 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 			// so go select freely.
 
 			// you shouldn't select a finale when you have not reached finale.
-			if (g_hArrayPools.Length != g_hCvar_MapPoolCapacity.IntValue - 1 &&
-				param2 == menu.ItemCount - 1 && !L4D2_IsScavengeMode())
+			if (g_hArrayPools.Length != g_hCvar_MapPoolCapacity.IntValue - 1 && param2 == menu.ItemCount - 1 && !L4D2_IsScavengeMode())
 			{
 				CPrintToChat(param1, "%t", "CannotSelectUntil");
 				CreateManullySelectMapMenu(param1);
@@ -423,7 +420,7 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 
 			// here we wish that user always choose the last map as the finale map.
 			// so that this could be a consistent compaign. and also have a better gameplay experience.
-			if (g_hArrayPools.Length == g_hCvar_MapPoolCapacity.IntValue - 1 
+			if (g_hArrayPools.Length == g_hCvar_MapPoolCapacity.IntValue - 1
 				&& param2 != menu.ItemCount - 1 && !L4D2_IsScavengeMode())
 			{
 				CPrintToChat(param1, "%t", "ShouldSelectLastMap");
@@ -476,7 +473,7 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 					delete menu;
 					CleanMemoryEx();
 					CPrintToChat(g_iClientWhoIsSelecting, "%t", "AbortedSelection");
-					g_bManullyChoosingMap = false;
+					g_bManullyChoosingMap	= false;
 					g_iClientWhoIsSelecting = -1;
 				}
 
@@ -492,7 +489,7 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 							if (IsClientInGame(g_iClientWhoIsSelecting))
 								CPrintToChat(g_iClientWhoIsSelecting, "%t", "AbortedSelection");
 
-							g_bManullyChoosingMap = false;
+							g_bManullyChoosingMap	= false;
 							g_iClientWhoIsSelecting = -1;
 						}
 					}
@@ -500,14 +497,14 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 
 				case MenuEnd_Selected:
 					delete menu;
-				
+
 				case MenuEnd_ExitBack:
 				{
 					delete menu;
 					CleanMemoryEx();
 					CPrintToChat(g_iClientWhoIsSelecting, "%t", "AbortedSelection");
 					ManullySelectMap_ChooseMapSetType(g_iClientWhoIsSelecting);
-					g_bManullyChoosingMap = false;
+					g_bManullyChoosingMap	= false;
 					g_iClientWhoIsSelecting = -1;
 				}
 			}
@@ -522,7 +519,7 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 			{
 				CleanMemoryEx();
 				CPrintToChat(g_iClientWhoIsSelecting, "%t", "AbortedSelection");
-				g_bManullyChoosingMap = false;
+				g_bManullyChoosingMap	= false;
 				g_iClientWhoIsSelecting = -1;
 			}
 		}
@@ -531,7 +528,7 @@ void MenuHandler_ChooseMap(Menu menu, MenuAction action, int param1, int param2)
 
 void Timer_PreparedToVote(Handle timer, int client)
 {
-	g_bManullyChoosingMap = false;
+	g_bManullyChoosingMap	= false;
 	g_iClientWhoIsSelecting = -1;
 	CreateMixmapVote(client, MapSet_Manual);
 }
@@ -546,7 +543,7 @@ void CleanMemoryEx()
 			dp.Reset();
 
 			ArrayList hArray = dp.ReadCell();
-			StringMap hMap = dp.ReadCell();
+			StringMap hMap	 = dp.ReadCell();
 
 			delete hArray;
 			delete hMap;
@@ -568,7 +565,7 @@ bool CollectMissionsToMenu(MapSetType type)
 
 	char sMode[64];
 	FindConVar("mp_gamemode").GetString(sMode, sizeof(sMode));
-	GetBasedMode(sMode, sizeof(sMode));	// note that this plugin won't consider survival/versus survival.
+	GetBasedMode(sMode, sizeof(sMode));	   // note that this plugin won't consider survival/versus survival.
 
 	SourceKeyValues kvAllMissions = TheMatchExt.GetAllMissions();
 	for (SourceKeyValues kvSub = kvAllMissions.GetFirstTrueSubKey(); !kvSub.IsNull(); kvSub = kvSub.GetNextTrueSubKey())
@@ -577,7 +574,7 @@ bool CollectMissionsToMenu(MapSetType type)
 			continue;
 
 		char sMissionName[128];
-		kvSub.GetName(sMissionName, sizeof(sMissionName));  
+		kvSub.GetName(sMissionName, sizeof(sMissionName));
 
 		// no fake compaign. these are not playable.
 		if (IsFakeMission(sMissionName))
@@ -590,7 +587,7 @@ bool CollectMissionsToMenu(MapSetType type)
 				if (IsOfficialMap(sMissionName))
 					continue;
 			}
-				
+
 			case MapSet_Official:
 			{
 				if (!IsOfficialMap(sMissionName))
@@ -598,7 +595,7 @@ bool CollectMissionsToMenu(MapSetType type)
 			}
 		}
 
-		int survivorSet = kvSub.GetInt("survivor_set", 2);	// L4D2 = 2, L4D1 = 1
+		int	 survivorSet = kvSub.GetInt("survivor_set", 2);	   // L4D2 = 2, L4D1 = 1
 
 		char sDisplayTitle[128];
 		kvSub.GetString("DisplayTitle", sDisplayTitle, sizeof(sDisplayTitle));
@@ -616,7 +613,7 @@ bool CollectMissionsToMenu(MapSetType type)
 			continue;
 
 		ArrayList hArray = new ArrayList(ByteCountToCells(64));
-		StringMap hMap = new StringMap();
+		StringMap hMap	 = new StringMap();
 		for (SourceKeyValues kvMapNumber = kvMode.GetFirstTrueSubKey(); !kvMapNumber.IsNull(); kvMapNumber = kvMapNumber.GetNextTrueSubKey())
 		{
 			char sValue[64], sDisplayName[64];
@@ -625,7 +622,7 @@ bool CollectMissionsToMenu(MapSetType type)
 
 			if (IsOfficialMap(sMissionName))
 				ConvertOfficialMapTag(sDisplayName, sizeof(sDisplayName), sMode);
-			
+
 			hMap.SetString(sValue, sDisplayName);
 			hArray.PushString(sValue);
 		}

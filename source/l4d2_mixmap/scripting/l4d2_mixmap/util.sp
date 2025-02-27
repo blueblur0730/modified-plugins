@@ -3,13 +3,14 @@
 #endif
 #define _l4d2_mixmap_util_included
 
-enum MapSetType {
-	MapSet_None = 0,
+enum MapSetType
+{
+	MapSet_None		= 0,
 	MapSet_Official = 1,
-	MapSet_Custom = 2,
-	MapSet_Mixtape = 3,
-	MapSet_Manual = 4,
-	MapSet_Preset = 5
+	MapSet_Custom	= 2,
+	MapSet_Mixtape	= 3,
+	MapSet_Manual	= 4,
+	MapSet_Preset	= 5
 }
 
 static const char g_sFakeMissions[][] = {
@@ -66,13 +67,13 @@ static const char g_sSurvivorNames[][] = {
 
 static const char g_sSurvivorModels[][] = { 
 	"models/survivors/survivor_gambler.mdl",
- 	"models/survivors/survivor_producer.mdl",
-  	"models/survivors/survivor_coach.mdl",
-   	"models/survivors/survivor_mechanic.mdl",
-    "models/survivors/survivor_namvet.mdl",
+	"models/survivors/survivor_producer.mdl",
+	"models/survivors/survivor_coach.mdl",
+	"models/survivors/survivor_mechanic.mdl",
+	"models/survivors/survivor_namvet.mdl",
 	"models/survivors/survivor_teenangst.mdl",
 	"models/survivors/survivor_biker.mdl",
-	"models/survivors/survivor_manager.mdl" 
+	"models/survivors/survivor_manager.mdl"
 };
 
 stock bool CheckBlackList(const char[] sMap)
@@ -80,7 +81,7 @@ stock bool CheckBlackList(const char[] sMap)
 	int found = g_hArrayBlackList.FindString(sMap);
 	if (found != -1)
 		return true;
-	
+
 	return false;
 }
 
@@ -119,15 +120,15 @@ stock void GetSafeAreaOrigin(float vec[3])
 	if (checkPoint != -1)
 	{
 		bool bFound = false;
-		int count   = 0;
+		int	 count	= 0;
 		do
 		{
 			bFound = SearchForValidPoint(checkPoint, vec);
 			count++;
 		}
 		while (!bFound && g_hCvar_ShouldSearchAgain.BoolValue && count < g_hCvar_SearchAgainCount.IntValue)
-		
-		if (count > g_hCvar_CheckPointSearchCount.IntValue)
+
+			if (count > g_hCvar_CheckPointSearchCount.IntValue)
 		{
 			g_hLogger.Debug("### GetSafeAreaOriginEx: Failed to find valid point. Trying Default");
 			GetSafeAreaOriginEx(checkPoint, vec);
@@ -141,33 +142,33 @@ stock void GetSafeAreaOrigin(float vec[3])
 
 stock void GetSafeAreaOriginEx(int checkPoint, float vec[3])
 {
-// TerrorNavMesh::GetInitialCheckPoint get the first checkpoint door by finding info_landmark through s_landmarkname.
-// since we have meesed up with the landmark driving around in different compaigns, this is probably not work,
-// at least everytime I call this function it just throws me a pretty 0. Nice.
-// Let's just use the old way.
-/*
-	Address pCheckPoint = SDKCall(g_hSDKCall_GetInitialCheckPoint, L4D_GetPointer(POINTER_NAVMESH));
-	g_hLogger.DebugEx("### GetSafeAreaOrigin: pCheckPoint: %d.", pCheckPoint);
-	if (pCheckPoint != Address_Null)
-	{
-		Address pLargest = SDKCall(g_hSDKCall_GetLargestArea, pCheckPoint);
-		g_hLogger.DebugEx("### GetSafeAreaOrigin: pLargest: %d.", pLargest);
-		if (pLargest != Address_Null && IsNavInSafeArea(pLargest))
+	// TerrorNavMesh::GetInitialCheckPoint get the first checkpoint door by finding info_landmark through s_landmarkname.
+	// since we have meesed up with the landmark driving around in different compaigns, this is probably not work,
+	// at least everytime I call this function it just throws me a pretty 0. Nice.
+	// Let's just use the old way.
+	/*
+		Address pCheckPoint = SDKCall(g_hSDKCall_GetInitialCheckPoint, L4D_GetPointer(POINTER_NAVMESH));
+		g_hLogger.DebugEx("### GetSafeAreaOrigin: pCheckPoint: %d.", pCheckPoint);
+		if (pCheckPoint != Address_Null)
 		{
-			do
+			Address pLargest = SDKCall(g_hSDKCall_GetLargestArea, pCheckPoint);
+			g_hLogger.DebugEx("### GetSafeAreaOrigin: pLargest: %d.", pLargest);
+			if (pLargest != Address_Null && IsNavInSafeArea(pLargest))
 			{
-				L4D_FindRandomSpot(pLargest, vec);
+				do
+				{
+					L4D_FindRandomSpot(pLargest, vec);
+				}
+				while (WillStuck(vec))
 			}
-			while (WillStuck(vec))
 		}
-	}
-*/
+	*/
 	if (checkPoint != -1)
 	{
-		int i = 0;
-		int count = 0;
-		Address pNav = Address_Null;
-		bool bFound = false;
+		int		i	   = 0;
+		int		count  = 0;
+		Address pNav   = Address_Null;
+		bool	bFound = false;
 		GetAbsOrigin(checkPoint, vec);
 
 		while (!bFound)
@@ -257,8 +258,7 @@ stock bool IsClientInSafeArea(int client)
 	if (client <= 0 || client > MaxClients)
 		return false
 
-	if (!IsClientInGame(client))
-		return false;
+			if (!IsClientInGame(client)) return false;
 
 	if (!IsPlayerAlive(client))
 		return false;
@@ -416,6 +416,6 @@ stock SourceKeyValues GetServerGameDetails(Address &pkvRequest = Address_Null)
 		pkvDetails = SDKCall(g_hSDKCall_GetActiveServerGameDetails, pMatchNetworkMsgController, pkvRequest);
 		g_hLogger.DebugEx("### kvDetails: %d", pkvDetails);
 	}
-		
+
 	return view_as<SourceKeyValues>(pkvDetails);
 }
