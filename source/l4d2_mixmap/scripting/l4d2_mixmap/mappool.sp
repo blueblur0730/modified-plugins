@@ -602,10 +602,7 @@ bool CollectMissionsToMenu(MapSetType type, int client)
 
 		// official maps use tags to translate map names and other stuff.
 		// gotta turn this into your language.
-		if (IsOfficialMap(sMissionName))
-			ConvertOfficialMapTag(sDisplayTitle, sizeof(sDisplayTitle), client);
-		else if ((type == MapSet_Custom || type == MapSet_Mixtape) && !IsOfficialMap(sMissionName))
-			ConvertThirdPartMapPhrases(sDisplayTitle, sizeof(sDisplayTitle), client);
+		ConvertTagAndTranslate(sDisplayTitle, sizeof(sDisplayTitle), client, IsOfficialMap(sMissionName));
 
 		char sKey[64];
 		FormatEx(sKey, sizeof(sKey), "modes/%s", sMode);
@@ -621,11 +618,7 @@ bool CollectMissionsToMenu(MapSetType type, int client)
 			char sValue[64], sDisplayName[64];
 			kvMapNumber.GetString("Map", sValue, sizeof(sValue));
 			kvMapNumber.GetString("DisplayName", sDisplayName, sizeof(sDisplayName));
-
-			if (IsOfficialMap(sMissionName))
-				ConvertOfficialMapTag(sDisplayName, sizeof(sDisplayName), client);
-			else if ((type == MapSet_Custom || type == MapSet_Mixtape) && !IsOfficialMap(sMissionName))
-				ConvertThirdPartMapPhrases(sDisplayName, sizeof(sDisplayName), client);
+			ConvertTagAndTranslate(sDisplayName, sizeof(sDisplayName), client, IsOfficialMap(sMissionName));
 
 			hMap.SetString(sValue, sDisplayName);
 			hArray.PushString(sValue);

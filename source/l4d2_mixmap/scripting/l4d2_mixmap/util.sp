@@ -420,15 +420,29 @@ stock SourceKeyValues GetServerGameDetails(Address &pkvRequest = Address_Null)
 	return view_as<SourceKeyValues>(pkvDetails);
 }
 
-// Thanks valve I love you.
-stock void ConvertOfficialMapTag(char[] sTag, int size, int client)
+stock void ConvertTagAndTranslate(char[] sTag, int size, int client, bool bIsOfficial)
 {
-	// strip "#"
-	if (!strncmp(sTag[0], "#", false))
-		strcopy(sTag, size, sTag[1]);
+	if (bIsOfficial)
+	{
+		// strip "#"
+		if (!strncmp(sTag[0], "#", false))
+			strcopy(sTag, size, sTag[1]);
 
-    StrToLowerCase(sTag, sTag, size);
-    Format(sTag, size, "%T", sTag, client);
+    	StrToLowerCase(sTag, sTag, size);
+    	Format(sTag, size, "%T", sTag, client);
+	}
+	else
+	{
+		// else use file's default.
+		if (TranslationPhraseExists(sTag) && IsTranslatedForLanguage(sTag, GetClientLanguage(client)))
+		{
+			Format(sTag, size, "%T", sTag, client);
+		}
+		else
+		{
+			g_hLogger.DebugEx("Failed to translate phrase \"%s\" for language \"%s\".", sTag, GetClientLanguage(client));
+		}
+	}
 }
 
 // from attachment_api by Silvers.
@@ -442,10 +456,4 @@ void StrToLowerCase(const char[] input, char[] output, int maxlength)
 	}
 
 	output[pos] = 0;
-}
-
-stock void ConvertThirdPartMapPhrases(char[] sTag, int size, int client)
-{
-	if (TranslationPhraseExists(sTag) && IsTranslatedForLanguage(sTag, GetClientLanguage(client)))
-		Format(sTag, size, "%T", sTag, client);
 }

@@ -13,7 +13,7 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re3.1.0"
+#define PLUGIN_VERSION "re3.1.1"
 
 StringMap g_hMapChapterNames;	 // stores the mission name by its corresponding first map name.
 

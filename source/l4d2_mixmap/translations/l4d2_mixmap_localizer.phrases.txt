@@ -984,4 +984,19 @@
 	//
 	// The key is in map's mission file. Matched key is "DisplayTitle" and "DisplayName".
 	// Add the transalation below if you like, otherwise use file's default.
+	
+	//"Questionable Ethics Remake (v1.1)"
+	//{
+		//"en"	"Questionable Ethics Remake (v1.1) Testing translation"
+	//}
+
+	//"Remember me (1)"
+	//{
+		//"en"	"Remember Me Testing translation"
+	//}
+
+	//"Ultimate Test"
+	//{
+		//"en"	"Ultimate Test Testing translation"
+	//}
 }
