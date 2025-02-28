@@ -5,6 +5,11 @@
 
 #include <sourcemod>
 
+/**
+ * This include file was inspired by @Forgetest.
+ * https://github.com/jensewe
+*/
+
 enum OperatingSystem
 {
     OS_UnknownPlatform = -1,
@@ -23,7 +28,6 @@ enum struct SDKCallParamsWrapper {
 static const char k_sSDKFuncConfSource[3][] = { "Offsets", "Signatures", "Addresses" };
 #endif
 
-// credits to Forgetest.
 methodmap GameDataWrapper < GameData {
     /**
      * Loads a game config file.
@@ -174,13 +178,13 @@ methodmap GameDataWrapper < GameData {
      * 
      * @error                   Plugin failed if the address of the start of the function is NULL, or failed to set up the call.
     */
-    public static Handle CreateSDKCallOrFailEx( SDKCallType type,
-                                                Address pFuncStart,
-                                                int offset,
-                                                const SDKCallParamsWrapper[] params = {},
-                                                int numParams = 0,
-                                                bool hasReturnValue = false,
-                                                const SDKCallParamsWrapper ret = {}) {
+    public static Handle CreateRelativeSDKCallOrFail(   SDKCallType type,
+                                                        Address pFuncStart,
+                                                        int offset,
+                                                        const SDKCallParamsWrapper[] params = {},
+                                                        int numParams = 0,
+                                                        bool hasReturnValue = false,
+                                                        const SDKCallParamsWrapper ret = {}) {
         if (pFuncStart == Address_Null) 
             SetFailState("[SDKCall] Missing address of the start of the function. pFuncStart is NULL.");
 
@@ -190,6 +194,45 @@ methodmap GameDataWrapper < GameData {
         Handle result;
         StartPrepSDKCall(type);
         PrepSDKCall_SetAddress(pFuncStart);
+
+        for (int i = 0; i < numParams; ++i)
+            PrepSDKCall_AddParameter(params[i].type, params[i].pass, params[i].decflags, params[i].encflags);
+
+        if (hasReturnValue)
+            PrepSDKCall_SetReturnInfo(ret.type, ret.pass, ret.decflags, ret.encflags);
+
+        if (!(result = EndPrepSDKCall()))
+            SetFailState("[SDKCall] Failed to Prepare SDKCall for a raw address call.");
+
+        return result;
+    }
+
+    /**
+     * Use call address to setup call instead of setting from conf.
+     * 
+     * @param type              The type of the call.
+     * @param pFuncStart        The address of the call function.
+     * @param params            The parameters of the call.
+     * @param numParams         The number of parameters.
+     * @param hasReturnValue    Whether the call has a return value.
+     * @param ret               The return value of the call.
+     * 
+     * @returns Handle          The handle of the call.
+     * 
+     * @error                   Plugin failed if the address of the start of the function is NULL, or failed to set up the call.
+    */
+    public static Handle CreateAddressSDKCallOrFail(    SDKCallType type,
+                                                        Address pFunc,
+                                                        const SDKCallParamsWrapper[] params = {},
+                                                        int numParams = 0,
+                                                        bool hasReturnValue = false,
+                                                        const SDKCallParamsWrapper ret = {}) {
+        if (pFunc == Address_Null) 
+            SetFailState("[SDKCall] Missing address of the start of the function. pFuncStart is NULL.");
+
+        Handle result;
+        StartPrepSDKCall(type);
+        PrepSDKCall_SetAddress(pFunc);
 
         for (int i = 0; i < numParams; ++i)
             PrepSDKCall_AddParameter(params[i].type, params[i].pass, params[i].decflags, params[i].encflags);
@@ -252,9 +295,8 @@ methodmap GameDataWrapper < GameData {
     */
     public void CreateDetourOrFailEx(   const char[] name,
                                         DHookCallback preHook = INVALID_FUNCTION,
-                                        DHookCallback postHook = INVALID_FUNCTION) {
-        delete (this.CreateDetourOrFail(name, true, preHook, postHook));
-    }
+                                        DHookCallback postHook = INVALID_FUNCTION) 
+    { delete (this.CreateDetourOrFail(name, true, preHook, postHook)); }
 
     /**
      * Creates and sets up a dynamic hook.
@@ -344,9 +386,8 @@ methodmap GameDataWrapper < GameData {
                                                     Address pAdr = Address_Null,
                                                     DHookCallback preHook = INVALID_FUNCTION,
                                                     DHookCallback postHook = INVALID_FUNCTION,
-                                                    DHookRemovalCB removalHook = INVALID_FUNCTION) {
-        delete (this.CreateDynamicHookOrFail(name, type, entity, pAdr, true, preHook, postHook, removalHook));
-    }
+                                                    DHookRemovalCB removalHook = INVALID_FUNCTION) 
+    { delete (this.CreateDynamicHookOrFail(name, type, entity, pAdr, true, preHook, postHook, removalHook)); }
 #endif
 
 #if defined __sourcescramble_ext_included

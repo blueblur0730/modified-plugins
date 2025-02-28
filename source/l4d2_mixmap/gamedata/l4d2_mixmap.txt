@@ -139,6 +139,22 @@
 					"read"		"64"
 				}
 			}
+
+			"g_MatchFramework"
+			{
+				"linux"
+				{
+					"signature"	"g_MatchFramework"
+				}
+
+				// may not correct.
+				"windows"
+				{
+					"signature"	"CMatchExtensions::GetRegisteredExtensionInterface"
+					"offset"	"128"	// 0x80, 0x10007770 – 0x100076F0 = 0x80, appoximately crossed 2 functions.
+					"read"		"2"	
+				}
+			}
         }
 
         "Offsets"
@@ -149,7 +165,25 @@
 				"windows" "0"
             }
 
-			"CMatchExtL4D::GetAllModes"
+			"CMatchExtL4D::GetMapInfoByBspName"
+			{
+				"linux"		"3"
+				"windows"	"3"
+			}
+
+			"CMatchExtL4D::GetGameModeInfo"
+			{
+				"linux"		"4"
+				"windows"	"4"
+			}
+
+			"CMatchFramework::GetMatchNetworkMsgController"
+			{
+				"linux"		"10"
+				"windows"	"10"
+			}
+
+			"CMatchNetworkMsgControllerBase::GetActiveServerGameDetails"
 			{
 				"linux"		"1"
 				"windows"	"1"
@@ -168,6 +202,21 @@
 			{
 				"library"	"server"
 				"linux"		"@g_bNeedRestore"
+			}
+
+			"g_MatchFramework"
+			{
+				"library"	"matchmaking_ds"
+				"linux"		"@_ZL16g_MatchFramework"
+			}
+
+			// may not correct. bytes are not wildcarded and is easy to be broken.
+			// windows sig: search for CMatchExtensions's vtable, the 3rd one on the table is it.
+			"CMatchExtensions::GetRegisteredExtensionInterface"
+			{
+				"library"	"matchmaking_ds"
+				"windows"	"\x55\x8B\xEC\x8B\x45\x08\x56\x57\x8D\x71\x04"
+				/* 55 8B EC 8B 45 08 56 57 8D 71 04 */
 			}
 
 			/* CTerrorGameRules::GetMissionInfo(CTerrorGameRules *__hidden this) */
@@ -242,21 +291,3 @@
         }
     }
 }
-
-			// KeyValues* CMatchExtL4D::GetMapInfoByBspName(KeyValues *pKvGameSettings, const char *szMapName, KeyValues **a4)
-			//"CMatchExtL4D::GetMapInfoByBspName"
-			//{
-				//"linux"		"3"
-				//"windows"	"3"
-			//}
-
-			// un used. probably only useful when lobby reservation is not removed.
-			// windows sig: 
-			// first find g_pMatchFramework, go xref it, the first static call is probably it.
-			//"GetCurrentMatchSessionSettings"
-			//{
-				//"library"	"matchmaking_ds"
-				//"linux"		"@_ZL30GetCurrentMatchSessionSettingsv"
-				//"windows"	"\x8B\x0D\x2A\x2A\x2A\x2A\x8B\x01\x8B\x50\x24\xFF\xD2\x85\xC0\x74\x2A\x8B\x10\x8B\xC8\x8B\x42\x04\xFF\xE0"
-				///* 8B 0D ? ? ? ? 8B 01 8B 50 24 FF D2 85 C0 74 ? 8B 10 8B C8 8B 42 04 FF E0 */
-			//}

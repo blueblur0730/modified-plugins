@@ -1,5 +1,5 @@
 #if defined _l4d2_mixmap_actions_included
- #endinput
+	#endinput
 #endif
 #define _l4d2_mixmap_actions_included
 
@@ -38,7 +38,7 @@ void Timer_StartFirstMissionMixmap(Handle timer)
 	g_hArrayPools.GetString(0, sMap, sizeof(sMap));
 	g_hMapChapterNames.GetString(sMap, sMissionName, sizeof(sMissionName));
 	g_hLogger.InfoEx("### Starting Mixmap with %s", sMissionName);
-	
+
 	g_bMapsetInitialized = true;
 	Call_StartForward(g_hForwardStart);
 	Call_PushCell(g_hArrayPools.Length);
@@ -54,7 +54,7 @@ void Timer_StartFirstMapMixmap(Handle timer)
 	char sMap[128];
 	g_hArrayPools.GetString(0, sMap, sizeof(sMap));
 	g_hLogger.InfoEx("### Starting Mixmap with %s", sMap);
-	
+
 	g_bMapsetInitialized = true;
 	Call_StartForward(g_hForwardStart);
 	Call_PushCell(g_hArrayPools.Length);
@@ -74,7 +74,7 @@ void Timer_Notify(Handle timer, int userid)
 
 	if (!IsClientInGame(client))
 		return;
-	
+
 	NotifyMixmap(client);
 }
 
@@ -112,19 +112,17 @@ void NotifyMapList(int client)
 	if (g_hArrayPools.Length > 6)
 		CPrintToChat(client, "%t", "SeeConsole");
 
-	g_hArrayPools.Length > 6 ?	// we have a small chat right?
-	PrintToConsole(client, "%t", "MapList_NoColor") :
+	g_hArrayPools.Length > 6 ?	  // we have a small chat right?
+	PrintToConsole(client, "%t", "MapList_NoColor") : 
 	CPrintToChat(client, "%t", "MapList");
-	
+
 	char sBuffer[64], sCurrentMap[64], sCurrent[32];
 	GetCurrentMap(sCurrentMap, sizeof(sCurrentMap));
 	Format(sCurrent, sizeof(sCurrent), "%T", "Current", client);
 	for (int i = 0; i < g_hArrayPools.Length; i++)
 	{
 		g_hArrayPools.GetString(i, sBuffer, sizeof(sBuffer));
-		g_hArrayPools.Length > 6 ?
-		PrintToConsole(client, "-> %s %s", sBuffer, (!strcmp(sCurrentMap, sBuffer) && g_iMapsPlayed == i + 1) ? sCurrent : "") :
-		CPrintToChat(client, "{green}-> {olive}%s{default} {orange}%s{default}", sBuffer, (!strcmp(sCurrentMap, sBuffer) && g_iMapsPlayed == i + 1) ? sCurrent : "");
+		g_hArrayPools.Length > 6 ? PrintToConsole(client, "-> %s %s", sBuffer, (!strcmp(sCurrentMap, sBuffer) && g_iMapsPlayed == i + 1) ? sCurrent : "") : CPrintToChat(client, "{green}-> {olive}%s{default} {orange}%s{default}", sBuffer, (!strcmp(sCurrentMap, sBuffer) && g_iMapsPlayed == i + 1) ? sCurrent : "");
 	}
 }
 
@@ -141,8 +139,8 @@ void BuildBlackList(int client)
 		delete g_hArrayBlackList;
 		g_hArrayBlackList = new ArrayList(ByteCountToCells(64));
 
-		char sMap[64];
-		int count = 0;
+		char			sMap[64];
+		int				count = 0;
 		SourceKeyValues kvSub = kv.FindKey("global_filter");
 		if (kvSub && !kvSub.IsNull())
 		{
@@ -196,7 +194,7 @@ void BuildBlackList(int client)
 		if (!g_hArrayBlackList || !g_hArrayBlackList.Length)
 		{
 			kv.deleteThis();
-			g_hLogger.ErrorEx("No keys found in \""...CONFIG_BLACKLIST..."\" on node %s and global filter.", sMode);
+			g_hLogger.ErrorEx("No keys found in \"" ... CONFIG_BLACKLIST... "\" on node %s and global filter.", sMode);
 
 			if (client != -1 && client > 0 && client <= MaxClients)
 				CPrintToChat(client, "%t", "NoKeysFoundInBlackList");
@@ -207,7 +205,7 @@ void BuildBlackList(int client)
 	else
 	{
 		kv.deleteThis();
-		g_hLogger.Error("Failed to load black list file from \""...CONFIG_BLACKLIST..."\".");
+		g_hLogger.Error("Failed to load black list file from \"" ... CONFIG_BLACKLIST... "\".");
 
 		if (client != -1 && client > 0 && client <= MaxClients)
 			CPrintToChat(client, "%t", "FailedToLoadBlackList");
@@ -243,22 +241,22 @@ void LoadFolderFiles(int client)
 		delete g_hArrayPresetNames;
 		delete g_hArrayPresetList;
 		g_hLogger.ErrorEx("Failed to open directory \"%s\".", sPath);
-		return; 
+		return;
 	}
 
 	FileType type;
-	char sFile[128];
+	char	 sFile[128];
 	while (hDir.GetNext(sFile, sizeof(sFile), type))
 	{
-		if (StrEqual(sFile, ".") || StrEqual(sFile, "..")) 
+		if (StrEqual(sFile, ".") || StrEqual(sFile, ".."))
 			continue;
 
-		if (type != FileType_File) 
+		if (type != FileType_File)
 			continue;
 
 		char sFilePath[128];
 		Format(sFilePath, sizeof(sFilePath), "%s/%s", sPath, sFile);
-		
+
 		SourceKeyValues kv = SourceKeyValues("Presets");
 		if (!kv.LoadFromFile(sFilePath))
 		{
@@ -289,7 +287,7 @@ void LoadPreset(const char[] sFile, int client)
 	delete g_hArraySurvivorSets;
 	g_hArraySurvivorSets = new ArrayList();
 
-	SourceKeyValues kv = SourceKeyValues("Presets");
+	SourceKeyValues kv	 = SourceKeyValues("Presets");
 	if (!kv.LoadFromFile(sFile))
 	{
 		kv.deleteThis();
@@ -301,7 +299,7 @@ void LoadPreset(const char[] sFile, int client)
 
 	kv.GetString("presetName", g_sPresetName, sizeof(g_sPresetName), "untitled_preset");
 
-	int iUseBased = kv.GetInt("useBased", 1);
+	int				iUseBased  = kv.GetInt("useBased", 1);
 	SourceKeyValues kvGameMode = kv.FindKey("gamemode");
 
 	if (!kvGameMode || kvGameMode.IsNull())
@@ -312,14 +310,14 @@ void LoadPreset(const char[] sFile, int client)
 		CPrintToChat(client, "%t", "PresetFileLoadFailed");
 		return;
 	}
-	
+
 	char sMode[32];
 	FindConVar("mp_gamemode").GetString(sMode, sizeof(sMode));
 
 	bool bFound = false;
 	if (iUseBased)
 		GetBasedMode(sMode, sizeof(sMode));
-	
+
 	for (SourceKeyValues kvSub = kvGameMode.GetFirstValue(); !kvSub.IsNull(); kvSub = kvGameMode.GetNextValue())
 	{
 		char sBuffer[32];
@@ -335,7 +333,7 @@ void LoadPreset(const char[] sFile, int client)
 	{
 		kv.deleteThis();
 		delete g_hArrayPools;
-		g_hLogger.ErrorEx("Failed to find matched gamemode \"%s\" in preset file: \"%s\", useBased: \"%d\"", sMode, sFile, iUseBased);
+		g_hLogger.ErrorEx("Failed to find gamemode \"%s\" in preset file: \"%s\", useBased: \"%d\"", sMode, sFile, iUseBased);
 		CPrintToChat(client, "%t", "PresetFileLoadFailed_GameModeNotMatched");
 		return;
 	}
@@ -359,51 +357,29 @@ void LoadPreset(const char[] sFile, int client)
 		if (g_hCvar_EnableBlackList.BoolValue && g_hArrayBlackList && g_hArrayBlackList.Length)
 		{
 			if (CheckBlackList(sBuffer))
-				continue;
-		}
-
-		// erase the invalid map name.
-		bool bMatched = false;
-		GetBasedMode(sMode, sizeof(sMode));
-		SourceKeyValues kvMissions = TheMatchExt.GetAllMissions();
-		for (SourceKeyValues kvMissionSub = kvMissions.GetFirstTrueSubKey(); !kvMissionSub.IsNull(); kvMissionSub = kvMissionSub.GetNextTrueSubKey())
-		{
-			if (bMatched)
-				break;
-
-			char sMissionName[128];
-			kvMissionSub.GetName(sMissionName, sizeof(sMissionName)); 
-
-			if (IsFakeMission(sMissionName))
-				continue;
-
-			char sKey[64];
-			FormatEx(sKey, sizeof(sKey), "modes/%s", sMode);
-			SourceKeyValues kvMode = kvMissionSub.FindKey(sKey);
-
-			if (!kvMode || kvMode.IsNull())
-				continue;
-				
-			int survivorSet = kvSub.GetInt("survivor_set", 2);	// L4D2 = 2, L4D1 = 1
-
-			for (SourceKeyValues kvMapNumber = kvMode.GetFirstTrueSubKey(); !kvMapNumber.IsNull(); kvMapNumber = kvMapNumber.GetNextTrueSubKey())
 			{
-				char sValue[64];
-				kvMapNumber.GetString("Map", sValue, sizeof(sValue));
-
-				if (!strcmp(sValue, sBuffer))
-				{
-					g_hArraySurvivorSets.Push(survivorSet);
-					bMatched = true;
-					break;
-				}
+				g_hLogger.WarnEx("Found map \"%s\" in blacklist.", sBuffer);
+				continue;
 			}
 		}
 
-		if (bMatched)
-			g_hArrayPools.PushString(sBuffer);
-		else
-			g_hLogger.WarnEx("Failed to find matched map \"%s\" in gamemode \"%s\".", sBuffer, sMode);
+		// erase the invalid map name.
+		SourceKeyValues kvMissionInfo;
+		SourceKeyValues kvMapInfo = TheMatchExt.GetMapInfoByBspName(sBuffer, sMode, view_as<Address>(kvMissionInfo));
+		if (!kvMapInfo || kvMapInfo.IsNull())
+		{
+			g_hLogger.WarnEx("Failed to find map \"%s\" in gamemode \"%s\".", sBuffer, sMode);
+			continue;
+		}
+
+		if (!kvMissionInfo || kvMissionInfo.IsNull())
+		{
+			g_hLogger.WarnEx("Failed to find mission info for map \"%s\" in gamemode \"%s\". kvMissionInfo: %d", sBuffer, sMode, kvMissionInfo);
+			continue;
+		}
+
+		g_hArraySurvivorSets.Push(kvMissionInfo.GetInt("survivor_set", 2));
+		g_hArrayPools.PushString(sBuffer);
 	}
 
 	// ignore the map pool capacity cvar.
@@ -427,41 +403,11 @@ void Timer_LoadPresetFile(Handle hTimer, int client)
 	CreateMixmapVote(client, MapSet_Preset);
 }
 
-void PatchBots(bool bPatch)
-{
-	static bool bPatched = false;
-	if (bPatch && !bPatched)
-	{
-		g_hPatch_Bot_BlockRestoring.Enable();
-		bPatched = true;
-	}
-	else if (!bPatch && bPatched)
-	{
-		g_hPatch_Bot_BlockRestoring.Disable();
-		bPatched = false;
-	}
-}
-
-void PatchPlayers(bool bPatch)
-{
-	static bool bPatched = false;
-	if (bPatch && !bPatched)
-	{
-		g_hPatch_Player_BlockRestoring.Enable();
-		bPatched = true;
-	}
-	else if (!bPatch && bPatched)
-	{
-		g_hPatch_Player_BlockRestoring.Disable();
-		bPatched = false;
-	}
-}
-
 void PluginStartInit()
 {
 	g_bMapsetInitialized = false;
 	g_iMapsPlayed		 = 0;
-	g_iMapsetType        = MapSet_None;
+	g_iMapsetType		 = MapSet_None;
 	delete g_hArrayPools;
 	delete g_hMapChapterNames;
 	delete g_hArraySurvivorSets;

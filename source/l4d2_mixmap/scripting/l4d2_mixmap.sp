@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <dhooks>
-#include <log4sp>	// requires log4sp 1.8.0+
+#include <log4sp>	 // requires log4sp 1.8.0+
 #include <midhook>
 #include <sourcescramble>
 #include <l4d2_source_keyvalues>
@@ -13,28 +13,27 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re3.0.3"
+#define PLUGIN_VERSION "re3.1.1"
 
-StringMap g_hMapChapterNames;			// stores the mission name by its corresponding first map name.
+StringMap g_hMapChapterNames;	 // stores the mission name by its corresponding first map name.
 
 ArrayList
-	g_hArrayMissionsAndMaps,			// Stores all missions and their map names in order.
-	g_hArrayPools,						// Stores slected map names.
-	g_hArraySurvivorSets,				// Stores selected survivor sets.
-	g_hArrayBlackList,					// Stores blacklisted map names.
-	g_hArrayPresetList,					// Stores all preset file names.
-	g_hArrayPresetNames;				// Stores all preset names.
+	g_hArrayMissionsAndMaps,	// Stores all missions and their map names in order.
+	g_hArrayPools,				// Stores slected map names.
+	g_hArraySurvivorSets,		// Stores selected survivor sets.
+	g_hArrayBlackList,			// Stores blacklisted map names.
+	g_hArrayPresetList,			// Stores all preset file names.
+	g_hArrayPresetNames;		// Stores all preset names.
 
-Logger g_hLogger;						// for debugging.
+Logger	   g_hLogger;	 // for debugging.
 
-bool g_bManullyChoosingMap = false;
-bool g_bMapsetInitialized = false;
-int g_iMapsPlayed = 0;
-MapSetType g_iMapsetType = MapSet_None;
-char g_sPresetName[512];
+bool	   g_bManullyChoosingMap = false;
+bool	   g_bMapsetInitialized	 = false;
+int		   g_iMapsPlayed		 = 0;
+MapSetType g_iMapsetType		 = MapSet_None;
+char	   g_sPresetName[512];
 
 // Modules
-#include <l4d2_mixmap/tags.sp>
 #include <l4d2_mixmap/setup.sp>
 #include <l4d2_mixmap/util.sp>
 #include <l4d2_mixmap/hooks.sp>
@@ -48,8 +47,8 @@ public Plugin myinfo =
 	name = "[L4D2] Mixmap",
 	author = "blueblur",
 	description = "Randomly selects limited maps to build a mixed campaign or match.",
-	version = PLUGIN_VERSION,
-	url = "https://github.com/blueblur0730/modified-plugins"
+	version	= PLUGIN_VERSION,
+	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -70,6 +69,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
 	LoadTranslation(TRANSLATION_FILE);
+	LoadTranslation(TRANSLATION_FILE_LOCALIZATION);
 	SetUpGameData();
 
 	SetupConVars();
@@ -90,7 +90,7 @@ public void OnClientPutInServer(int client)
 {
 	if (!g_bMapsetInitialized)
 		return;
-		
+
 	if (!g_hCvar_NextMapPrint.BoolValue)
 		return;
 
@@ -126,7 +126,7 @@ public void OnMapStart()
 		Call_Finish();
 		return;
 	}
-	
+
 	g_iMapsPlayed++;
 
 	// let other plugins know what the map *after* this one will be (unless it is the last map)
@@ -145,8 +145,8 @@ public void OnMapEnd()
 	{
 		g_hLogger.Info("### Stopping MixMap.");
 		PluginStartInit();
-		PatchBots(false);
-		PatchPlayers(false);
+		Patch(g_hPatch_Bot_BlockRestoring, false);
+		Patch(g_hPatch_Player_BlockRestoring, false);
 
 		Call_StartForward(g_hForwardEnd);
 		Call_Finish();
