@@ -290,7 +290,10 @@ void MenuHandler_ChooseMapSetType(Menu menu, MenuAction action, int client, int 
 void LoadPreset_CreateFileMenu(int client)
 {
 	if ((!g_hArrayPresetList || !g_hArrayPresetList.Length) || (!g_hArrayPresetNames || !g_hArrayPresetNames.Length))
+	{
 		CPrintToChat(client, "%t", "NoPresetFileFound");
+		return;
+	}
 
 	char sBuffer[128];
 	Menu menu = new Menu(MenuHandler_LoadPreset);

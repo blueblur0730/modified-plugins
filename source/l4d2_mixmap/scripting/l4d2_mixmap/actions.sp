@@ -292,6 +292,7 @@ void LoadPreset(const char[] sFile, int client)
 	{
 		kv.deleteThis();
 		delete g_hArrayPools;
+		delete g_hArraySurvivorSets;
 		g_hLogger.ErrorEx("Failed to load preset file: \"%s\"", sFile);
 		CPrintToChat(client, "%t", "PresetFileLoadFailed");
 		return;
@@ -306,6 +307,7 @@ void LoadPreset(const char[] sFile, int client)
 	{
 		kv.deleteThis();
 		delete g_hArrayPools;
+		delete g_hArraySurvivorSets;
 		g_hLogger.ErrorEx("Failed to find subkey \"gamemode\" in preset file: \"%s\"", sFile);
 		CPrintToChat(client, "%t", "PresetFileLoadFailed");
 		return;
@@ -333,6 +335,7 @@ void LoadPreset(const char[] sFile, int client)
 	{
 		kv.deleteThis();
 		delete g_hArrayPools;
+		delete g_hArraySurvivorSets;
 		g_hLogger.ErrorEx("Failed to find gamemode \"%s\" in preset file: \"%s\", useBased: \"%d\"", sMode, sFile, iUseBased);
 		CPrintToChat(client, "%t", "PresetFileLoadFailed_GameModeNotMatched");
 		return;
@@ -343,6 +346,7 @@ void LoadPreset(const char[] sFile, int client)
 	{
 		kv.deleteThis();
 		delete g_hArrayPools;
+		delete g_hArraySurvivorSets;
 		g_hLogger.ErrorEx("Failed to find subkey \"MapPool\" in preset file: \"%s\"", sFile);
 		CPrintToChat(client, "%t", "PresetFileLoadFailed");
 		return;
@@ -387,9 +391,9 @@ void LoadPreset(const char[] sFile, int client)
 	{
 		kv.deleteThis();
 		delete g_hArrayPools;
+		delete g_hArraySurvivorSets;
 		g_hLogger.ErrorEx("Preset file \"%s\" is empty because all map name is invalid.", sFile);
 		CPrintToChat(client, "%t", "PresetFileLoadFailed");
-		delete g_hArrayPools;
 		return;
 	}
 

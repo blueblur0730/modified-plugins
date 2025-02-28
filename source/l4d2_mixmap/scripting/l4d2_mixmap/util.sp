@@ -381,11 +381,6 @@ stock void CheatCommand(int client, const char[] cmd, const char[] args = "")
 	SetUserFlagBits(client, bits);
 }
 
-stock bool IsInSecondHalfOfRound()
-{
-	return view_as<bool>(!!GameRules_GetProp("m_bInSecondHalfOfRound"));
-}
-
 // get real gamemode. this is for mutation and community modes,
 // and even custom modes (need to set mp_gamemode to the value).
 stock void GetBasedMode(char[] sMode, int size)

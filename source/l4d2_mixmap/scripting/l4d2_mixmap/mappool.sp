@@ -277,6 +277,8 @@ void CleanMemory()
 			delete dp;
 		}
 	}
+
+	delete g_hArrayMissionsAndMaps;
 }
 
 /**
@@ -550,6 +552,8 @@ void CleanMemoryEx()
 			delete dp;
 		}
 	}
+
+	delete g_hArrayMissionsAndMaps;
 }
 
 bool CollectMissionsToMenu(MapSetType type, int client)
