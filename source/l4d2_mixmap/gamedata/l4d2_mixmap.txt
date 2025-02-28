@@ -165,12 +165,6 @@
 				"windows" "0"
             }
 
-			//"CMatchExtL4D::GetAllModes"
-			//{
-				//"linux"		"1"
-				//"windows"	"1"
-			//}
-
 			"CMatchExtL4D::GetMapInfoByBspName"
 			{
 				"linux"		"3"

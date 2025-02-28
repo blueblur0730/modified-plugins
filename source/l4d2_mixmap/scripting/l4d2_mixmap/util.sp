@@ -419,3 +419,27 @@ stock SourceKeyValues GetServerGameDetails(Address &pkvRequest = Address_Null)
 
 	return view_as<SourceKeyValues>(pkvDetails);
 }
+
+// Thanks valve I love you.
+stock void ConvertOfficialMapTag(char[] sTag, int size, int client)
+{
+	// strip "#"
+	if (!strncmp(sTag[0], "#", false))
+		strcopy(sTag, size, sTag[1]);
+
+    StrToLowerCase(sTag, sTag, size);
+    Format(sTag, size, "%T", sTag, client);
+}
+
+// from attachment_api by Silvers.
+void StrToLowerCase(const char[] input, char[] output, int maxlength)
+{
+	int pos;
+	while( input[pos] != 0 && pos < maxlength )
+	{
+		output[pos] = CharToLower(input[pos]);
+		pos++;
+	}
+
+	output[pos] = 0;
+}

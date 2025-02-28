@@ -6,6 +6,7 @@
 #define LOGGER_NAME	                               "Mixmap"
 #define LOGGER_ERROR_FILE                          "logs/l4d2_mixmap_errors.log"
 #define TRANSLATION_FILE                           "l4d2_mixmap.phrases"
+#define TRANSLATION_FILE_LOCALIZATION              "l4d2_mixmap_localizer.phrases"
 #define GAMEDATA_FILE                              "l4d2_mixmap"
 #define CONFIG_BLACKLIST                           "configs/l4d2_mixmap_blacklist.cfg"
 #define CONFIG_PRESET_FOLDER                       "configs/mixmap_presets"

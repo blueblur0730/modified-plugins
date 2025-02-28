@@ -13,7 +13,7 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re3.0.4"
+#define PLUGIN_VERSION "re3.1.0"
 
 StringMap g_hMapChapterNames;	 // stores the mission name by its corresponding first map name.
 
@@ -34,7 +34,6 @@ MapSetType g_iMapsetType		 = MapSet_None;
 char	   g_sPresetName[512];
 
 // Modules
-#include <l4d2_mixmap/tags.sp>
 #include <l4d2_mixmap/setup.sp>
 #include <l4d2_mixmap/util.sp>
 #include <l4d2_mixmap/hooks.sp>
@@ -70,6 +69,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
 	LoadTranslation(TRANSLATION_FILE);
+	LoadTranslation(TRANSLATION_FILE_LOCALIZATION);
 	SetUpGameData();
 
 	SetupConVars();

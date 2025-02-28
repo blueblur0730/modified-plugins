@@ -299,7 +299,7 @@ void CollectAllMapsEx(int client, MapSetType type)
 	g_iSelectedSet			= 2;
 	g_iParam				= -1;
 
-	if (!CollectMissionsToMenu(type))
+	if (!CollectMissionsToMenu(type, client))
 	{
 		g_iClientWhoIsSelecting = -1;
 		g_bManullyChoosingMap	= false;
@@ -552,7 +552,7 @@ void CleanMemoryEx()
 	}
 }
 
-bool CollectMissionsToMenu(MapSetType type)
+bool CollectMissionsToMenu(MapSetType type, int client)
 {
 	delete g_hArrayPools;
 	g_hArrayPools = new ArrayList(ByteCountToCells(64));
@@ -603,7 +603,7 @@ bool CollectMissionsToMenu(MapSetType type)
 		// official maps use tags to translate map names and other stuff.
 		// gotta turn this into your language.
 		if (IsOfficialMap(sMissionName))
-			ConvertOfficialMapTag(sDisplayTitle, sizeof(sDisplayTitle), sMode);
+			ConvertOfficialMapTag(sDisplayTitle, sizeof(sDisplayTitle), client);
 
 		char sKey[64];
 		FormatEx(sKey, sizeof(sKey), "modes/%s", sMode);
@@ -621,7 +621,7 @@ bool CollectMissionsToMenu(MapSetType type)
 			kvMapNumber.GetString("DisplayName", sDisplayName, sizeof(sDisplayName));
 
 			if (IsOfficialMap(sMissionName))
-				ConvertOfficialMapTag(sDisplayName, sizeof(sDisplayName), sMode);
+				ConvertOfficialMapTag(sDisplayName, sizeof(sDisplayName), client);
 
 			hMap.SetString(sValue, sDisplayName);
 			hArray.PushString(sValue);
