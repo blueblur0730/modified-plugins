@@ -44,6 +44,19 @@
 		}
 	}
 	
+	"insurgency"
+	{
+		"Offsets"
+		{
+			"CBaseEntity::AcceptInput"
+			{
+				"windows"	"40"
+				"windows64"	"40"
+				"linux"		"41"
+			}
+		}
+	}
+
 	"cstrike"
 	{
 		"Offsets"
