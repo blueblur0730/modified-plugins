@@ -443,3 +443,9 @@ void StrToLowerCase(const char[] input, char[] output, int maxlength)
 
 	output[pos] = 0;
 }
+
+stock void ConvertThirdPartMapPhrases(char[] sTag, int size, int client)
+{
+	if (TranslationPhraseExists(sTag) && IsTranslatedForLanguage(sTag, GetClientLanguage(client)))
+		Format(sTag, size, "%T", sTag, client);
+}

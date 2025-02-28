@@ -604,6 +604,8 @@ bool CollectMissionsToMenu(MapSetType type, int client)
 		// gotta turn this into your language.
 		if (IsOfficialMap(sMissionName))
 			ConvertOfficialMapTag(sDisplayTitle, sizeof(sDisplayTitle), client);
+		else if ((type == MapSet_Custom || type == MapSet_Mixtape) && !IsOfficialMap(sMissionName))
+			ConvertThirdPartMapPhrases(sDisplayTitle, sizeof(sDisplayTitle), client);
 
 		char sKey[64];
 		FormatEx(sKey, sizeof(sKey), "modes/%s", sMode);
@@ -622,6 +624,8 @@ bool CollectMissionsToMenu(MapSetType type, int client)
 
 			if (IsOfficialMap(sMissionName))
 				ConvertOfficialMapTag(sDisplayName, sizeof(sDisplayName), client);
+			else if ((type == MapSet_Custom || type == MapSet_Mixtape) && !IsOfficialMap(sMissionName))
+				ConvertThirdPartMapPhrases(sDisplayName, sizeof(sDisplayName), client);
 
 			hMap.SetString(sValue, sDisplayName);
 			hArray.PushString(sValue);
