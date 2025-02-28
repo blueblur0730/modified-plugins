@@ -41,7 +41,7 @@ This plugin reads map list from the game internally, and forms map pool in muilt
 - [Left 4 DHooks Direct Plugin](https://forums.alliedmods.net/showthread.php?t=321696) by Silvers and others.
 
 - [colors.inc](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/include/colors.inc) to compile.
-- [gamedata_wrapper.inc](.../include/gamedata_wrapper.inc) to compile.
+- [gamedata_wrapper.inc](https://github.com/blueblur0730/modified-plugins/blob/main/include/gamedata_wrapper.inc) to compile.
 
 <hr>
 
@@ -179,4 +179,4 @@ See [file](./scripting/l4d2_mixmap/setup.sp).
 
 ## API
 
-See [file](.../include/l4d2_mixmap.inc).
+See [file](https://github.com/blueblur0730/modified-plugins/blob/main/include/l4d2_mixmap.inc).

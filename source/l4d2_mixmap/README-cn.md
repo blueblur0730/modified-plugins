@@ -41,7 +41,7 @@
 - [Left 4 DHooks Direct 插件](https://forums.alliedmods.net/showthread.php?t=321696) by Silvers 以及其他贡献者.
 
 - [colors.inc](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/include/colors.inc) 用于编译.
-- [gamedata_wrapper.inc](.../include/gamedata_wrapper.inc) 用于编译.
+- [gamedata_wrapper.inc](https://github.com/blueblur0730/modified-plugins/blob/main/include/gamedata_wrapper.inc) 用于编译.
 
 <hr>
 
@@ -179,4 +179,4 @@
 
 ## API
 
-见 [文件](.../include/l4d2_mixmap.inc).
+见 [文件](https://github.com/blueblur0730/modified-plugins/blob/main/include/l4d2_mixmap.inc).
