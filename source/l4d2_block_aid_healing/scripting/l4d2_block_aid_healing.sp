@@ -5,7 +5,7 @@
 #include <left4dhooks>
 #include <colors>
 
-#define PLUGIN_VERSION	   "1.4"
+#define PLUGIN_VERSION	   "1.4.1"
 
 #define BLOCKTYPE_WALKING  (1 << 0)
 #define BLOCKTYPE_ONLADDER (1 << 1)
@@ -72,7 +72,7 @@ public void OnPluginStart()
 													0 = disable the plugin,\
 													1 = by rules set below (default),\
 													2 = by use counts.",
-													_, true, 2.0, true, 0.0, OnConVarChanged);
+													_, true, 0.0, true, 2.0, OnConVarChanged);
 
 	g_hCvar_BlockedType		   = CreateConVarHook(	"aid_healing_blocked_type",
 												  	"7",
@@ -82,7 +82,7 @@ public void OnPluginStart()
 													2 = on a ladder,\
 													4 = decided by health.\
 													Add numbers together.",
-												  	_, true, 7.0, true, 0.0, OnConVarChanged);
+												  	_, true, 0.0, true, 7.0, OnConVarChanged);
 
 	g_hCvar_AllowedClientType  = CreateConVarHook(	"aid_healing_not_allowed_client_type",
 												  	"3",
@@ -91,7 +91,7 @@ public void OnPluginStart()
 													1 = bots,\
 													2 = players,\
 													3 = all disabled.",
-												  	_, true, 3.0, true, 0.0, OnConVarChanged);
+												  	_, true, 0.0, true, 3.0, OnConVarChanged);
 
 	g_hCvar_CoolDown		   = CreateConVarHook("aid_healing_cooldown", "3", "Limit of how many times a client try to aid-heal to enter a cooldown state.", _, true, 0.0, _, _, OnConVarChanged);
 	g_hCvar_CoolDownTime	   = CreateConVarHook("aid_healing_cooldown_time", "10.0", "Time in seconds for the cooldown state to last.", _, true, 0.0, _, _, OnConVarChanged);
@@ -100,6 +100,8 @@ public void OnPluginStart()
 	g_hCvar_HealthThreshold	   = CreateConVarHook("aid_healing_health_threshold", "40", "Max health threshold for target who had reached to have aid-healing blocked (when decided by health).", _, _, _, _, _, OnConVarChanged);
 	g_hCvar_ShouldPrintMessage = CreateConVarHook("aid_healing_should_print_message", "1", "Print a message to the chat when a client trys aid-healing.", _, true, 0.0, true, 1.0, OnConVarChanged);
 	g_hCvar_InSaferoom		   = CreateConVarHook("aid_healing_in_saferoom", "1", "Enable/Disable aid-healing in saferoom.", _, true, 0.0, true, 1.0, OnConVarChanged);
+
+	HookEvent("round_start", Event_OnRoundStart, EventHookMode_PostNoCopy);
 
 	GetValues();
 	LoadTranslation("l4d2_block_aid_healing.phrases");
@@ -117,6 +119,17 @@ void GetValues()
 	g_bShouldPrintMessage = g_hCvar_ShouldPrintMessage.BoolValue;
 	g_flVelMax			  = g_hCvar_VelMax.FloatValue;
 	g_bInSaferoom		  = g_hCvar_InSaferoom.BoolValue;
+}
+
+void Event_OnRoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		g_flLastUseTime[i] = 0.0;
+		g_iUseCount[i] = 0;
+		g_bHasInitialized[i] = false;
+		g_bInBlocked[i] = false;
+	}
 }
 
 public Action L4D2_BackpackItem_StartAction(int client, int entity, any type)
