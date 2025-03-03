@@ -1,9 +1,9 @@
 "Games"
 {
-    "left4dead2"
-    {
-        "Functions"
-        {
+	"left4dead2"
+	{
+		"Functions"
+		{
 			"CTerrorPlayer::TransitionRestore"
 			{
 				"signature"		"CTerrorPlayer::TransitionRestore"
@@ -54,7 +54,7 @@
 				"return"		"void"
 				"this"			"ignore"
 			}
-        }
+		}
 
 		"MemPatches"
 		{
@@ -95,8 +95,8 @@
 			}
 		}
 
-        "Addresses"
-        {
+		"Addresses"
+		{
 			// credits to fdxx.
 			"g_pMatchExtL4D"
 			{
@@ -155,15 +155,15 @@
 					"read"		"2"	
 				}
 			}
-        }
+		}
 
-        "Offsets"
-        {
-            "CMatchExtL4D::GetAllMissions"
-            {
-                "linux" "0"
-				"windows" "0"
-            }
+		"Offsets"
+		{
+			"CMatchExtL4D::GetAllMissions"
+			{
+				"linux" 	"0"
+				"windows" 	"0"
+			}
 
 			"CMatchExtL4D::GetMapInfoByBspName"
 			{
@@ -215,8 +215,8 @@
 			"CMatchExtensions::GetRegisteredExtensionInterface"
 			{
 				"library"	"matchmaking_ds"
-				"windows"	"\x55\x8B\xEC\x8B\x45\x08\x56\x57\x8D\x71\x04"
-				/* 55 8B EC 8B 45 08 56 57 8D 71 04 */
+				"windows"	"\x55\x8B\xEC\x8B\x45\x2A\x56\x57\x8D\x71\x2A\x50\x8D\x4D\x2A\x51\x8D\x4E\x2A\xE8"
+				/* 55 8B EC 8B 45 ? 56 57 8D 71 ? 50 8D 4D ? 51 8D 4E ? E8 */
 			}
 
 			/* CTerrorGameRules::GetMissionInfo(CTerrorGameRules *__hidden this) */
@@ -232,8 +232,8 @@
 			{
 				"library"	"server"
 				"linux"		"@_ZN9CDirector19OnChangeMissionVoteEPKc"
-				"windows"	"\x55\x8B\xEC\x53\x56\x8B\xF1\x8B\x0D\x2A\x2A\x2A\x2A\x8B\x01\x8B\x50\x28"
-				/* 55 8B EC 53 56 8B F1 8B 0D ? ? ? ? 8B 01 8B 50 28 */
+				"windows"	"\x55\x8B\xEC\x53\x56\x8B\xF1\x8B\x0D\x2A\x2A\x2A\x2A\x8B\x01\x8B\x50\x2A\xFF\xD2"
+				/* 55 8B EC 53 56 8B F1 8B 0D ? ? ? ? 8B 01 8B 50 ? FF D2 */
 			}
 
 			/* search for string "Checkpoint bounds" */
@@ -241,8 +241,8 @@
 			{
 				"library"	"server"
 				"linux"		"@_Z27RestoreTransitionedEntitiesv"
-				"windows"	"\x55\x8B\xEC\x81\xEC\x34\x02\x00\x00"
-				/* 55 8B EC 81 EC 34 02 00 00 */
+				"windows"	"\x55\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\x80\x3D\x2A\x2A\x2A\x2A\x2A\x0F\x84\x2A\x2A\x2A\x2A\x83\x3D\x2A\x2A\x2A\x2A\x2A\x75\x2A\x83\x3D\x2A\x2A\x2A\x2A\x2A\x75\x2A\x83\x3D\x2A\x2A\x2A\x2A\x2A\x0F\x84\x2A\x2A\x2A\x2A\x8B\x0D\x2A\x2A\x2A\x2A\x53\x56\x57\xC6\x05"
+				/* 55 8B EC 81 EC ? ? ? ? 80 3D ? ? ? ? ? 0F 84 ? ? ? ? 83 3D ? ? ? ? ? 75 ? 83 3D ? ? ? ? ? 75 ? 83 3D ? ? ? ? ? 0F 84 ? ? ? ? 8B 0D ? ? ? ? 53 56 57 C6 05 */
 			}
 
 			/* CTerrorPlayer::TransitionRestore(CTerrorPlayer *__hidden this) */
@@ -258,16 +258,16 @@
 			{
 				"library"	"server"
 				"linux"		"@_ZN9CDirector19DirectorChangelevelEPKcS1_"
-				"windows"	"\x55\x8B\xEC\x8B\x89\x48\x06\x00\x00\x56\x8B\x75\x08"
-				/* 55 8B EC 8B 89 48 06 00 00 56 8B 75 08 */
+				"windows"	"\x55\x8B\xEC\x8B\x89\x2A\x2A\x2A\x2A\x56\x8B\x75\x2A\x56\x6A\x2A\xE8\x2A\x2A\x2A\x2A\x8B\x0D\x2A\x2A\x2A\x2A\x8B\x55\x2A\x8B\x01\x8B\x00\x52\x56\xFF\xD0\x5E\x5D\xC2"
+				/* 55 8B EC 8B 89 ? ? ? ? 56 8B 75 ? 56 6A ? E8 ? ? ? ? 8B 0D ? ? ? ? 8B 55 ? 8B 01 8B 00 52 56 FF D0 5E 5D C2 */
 			}
 
 			"CTerrorGameRules::OnBeginChangeLevel"
 			{
 				"library"	"server"
 				"linux"		"@_ZN16CTerrorGameRules18OnBeginChangeLevelEPKc"
-				"windows"	"\x55\x8B\xEC\x56\x8B\x35\x2A\x2A\x2A\x2A\x8B\x06\x8B\x50\x68\x8B\xCE"
-				/* 55 8B EC 56 8B 35 ? ? ? ? 8B 06 8B 50 68 8B CE */
+				"windows"	"\x55\x8B\xEC\x56\x8B\x35\x2A\x2A\x2A\x2A\x8B\x06\x8B\x50\x2A\x8B\xCE"
+				/* 55 8B EC 56 8B 35 ? ? ? ? 8B 06 8B 50 ? 8B CE */
 			}
 
 			// from transition_restore_fix by soralll.
@@ -285,8 +285,8 @@
 			{
 				"library"		"server"
 				"linux"			"@_ZN9CDirector19OnChangeChapterVoteEPKc"
-				"windows"		"\x55\x8B\xEC\x56\x8B\xF1\x8B\x0D\x2A\x2A\x2A\x2A\x8B\x01\x8B\x50\x04"
-								/* 55 8B EC 56 8B F1 8B 0D ? ? ? ? 57 85 C9 */
+				"windows"		"\x55\x8B\xEC\x56\x8B\xF1\x8B\x0D\x2A\x2A\x2A\x2A\x57\x85\xC9\x74\x2A\x6A\x2A\xE8\x2A\x2A\x2A\x2A\x8B\x0D\x2A\x2A\x2A\x2A\x85\xC9\x74\x2A\x6A"
+				/* 55 8B EC 56 8B F1 8B 0D ? ? ? ? 57 85 C9 74 ? 6A ? E8 ? ? ? ? 8B 0D ? ? ? ? 85 C9 74 ? 6A */
 			}
         }
     }

@@ -166,8 +166,8 @@
             {
                 "library"   "server"
                 "linux"     "@_ZN10TankAttack6UpdateEP4Tankf"
-                "windows"   "\x55\x8B\xEC\x81\xEC\x9C\x00\x00\x00\x53\x56\x57"
-                /* 55 8B EC 81 EC 9C 00 00 00 53 56 57 */
+                "windows"   "\x55\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\x53\x56\x57\x8B\x7D\x2A\x8B\x87"
+                /* 55 8B EC 81 EC ? ? ? ? 53 56 57 8B 7D ? 8B 87 */
             }
         }
     }

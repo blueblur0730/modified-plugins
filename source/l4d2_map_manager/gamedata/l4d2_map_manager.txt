@@ -70,8 +70,8 @@
 			{
 				"library"	"server"
 				"linux"		"@_ZN9CDirector19OnChangeMissionVoteEPKc"
-				"windows"	"\x55\x8B\xEC\x53\x56\x8B\xF1\x8B\x0D\x2A\x2A\x2A\x2A\x8B\x01\x8B\x50\x28"
-				/* 55 8B EC 53 56 8B F1 8B 0D ? ? ? ? 8B 01 8B 50 28 */
+				"windows"	"\x55\x8B\xEC\x53\x56\x8B\xF1\x8B\x0D\x2A\x2A\x2A\x2A\x8B\x01\x8B\x50\x2A\xFF\xD2"
+				/* 55 8B EC 53 56 8B F1 8B 0D ? ? ? ? 8B 01 8B 50 ? FF D2 */
 			}
 
 			"CDirector::ClearTeamScores"
@@ -88,8 +88,8 @@
 			{
 				"library"	"server"
 				"linux"		"@_ZN9CDirector18FinishScenarioExitEv"
-				"windows"	"\x55\x8B\xEC\x83\xEC\x24\x56\x68\x2A\x2A\x2A\x2A\x8B\xF1"
-				/* 55 8B EC 83 EC 24 56 68 ? ? ? ? 8B F1 */
+				"windows"	"\x55\x8B\xEC\x83\xEC\x2A\x56\x68\x2A\x2A\x2A\x2A\x8B\xF1\xFF\x15"
+				/* 55 8B EC 83 EC ? 56 68 ? ? ? ? 8B F1 FF 15 */
 			}
 		}
 	}

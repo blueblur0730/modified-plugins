@@ -72,8 +72,8 @@
             {
                 "library"   "engine"
                 "linux"     "@_ZN13CSteam3Server34OnValidateAuthTicketResponseHelperEP11CBaseClient20EAuthSessionResponse"
-                "windows"   "\x55\x8B\xEC\x53\x56\x8B\x75\x08\x8B\x46\x04\x8B\x50\x44"
-                /* 55 8B EC 53 56 8B 75 08 8B 46 04 8B 50 44 */
+                "windows"   "\x55\x8B\xEC\x53\x56\x8B\x75\x2A\x8B\x46\x2A\x8B\x50\x2A\x57\x8B\x7D\x2A\x83\xC6\x2A\x8B\xD9\x57\x8B\xCE\xFF\xD2\x50\x68\x2A\x2A\x2A\x2A\xFF\x15\x2A\x2A\x2A\x2A\x8B\x06\x8B\x50\x2A\x83\xC4\x2A\x57\x8B\xCE\xFF\xD2"
+                /* 55 8B EC 53 56 8B 75 ? 8B 46 ? 8B 50 ? 57 8B 7D ? 83 C6 ? 8B D9 57 8B CE FF D2 50 68 ? ? ? ? FF 15 ? ? ? ? 8B 06 8B 50 ? 83 C4 ? 57 8B CE FF D2 */
             }
 
             // vtable linux: 7, win: 6.
@@ -83,8 +83,8 @@
             {
                 "library"   "engine"
                 "linux"     "@_ZN11CBaseServer9GetClientEi"
-                "windows"   "\x55\x8B\xEC\x8B\x81\x14\x01\x00\x00"
-                /* 55 8B EC 8B 81 14 01 00 00 */
+                "windows"   "\x55\x8B\xEC\x8B\x81\x2A\x2A\x2A\x2A\x8B\x4D\x2A\x8B\x04\x88\x85\xC0\x74\x2A\x83\xC0\x2A\x5D\xC2\x2A\x2A\x33\xC0\x5D\xC2"
+                /* 55 8B EC 8B 81 ? ? ? ? 8B 4D ? 8B 04 88 85 C0 74 ? 83 C0 ? 5D C2 ? ? 33 C0 5D C2 */
             }
 
             /* CBaseClient::Disconnect(CBaseClient *this, char *src, ...) */
@@ -93,8 +93,8 @@
             {
                 "library"   "engine"
                 "linux"     "@_ZN11CBaseClient10DisconnectEPKcz"
-                "windows"   "\x55\x8B\xEC\x81\xEC\x5C\x08\x00\x00"
-                /* 55 8B EC 81 EC 5C 08 00 00 */
+                "windows"   "\x55\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\xA1\x2A\x2A\x2A\x2A\x33\xC5\x89\x45\x2A\x57\x8B\x7D\x2A\x83\xBF"
+                /* 55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 ? 57 8B 7D ? 83 BF */
             }
 
             // unknown for windows.
