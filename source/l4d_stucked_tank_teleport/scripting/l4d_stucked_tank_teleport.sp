@@ -639,7 +639,7 @@ void InitGameData()
 				Address pFunc				= gd.GetAddress(ADDRESS_NAVAREABUILDPATH);
 				// int offset = LoadFromAddress(pFunc + view_as<Address>(4), NumberType_Int32);	// skip E8, points to the start of function offset '33'.
 				// pFunc += view_as<Address>(offset + 12); // // to jump back to the original function. this is the offset to the functional relative to current position.
-				g_hSDKCall_NavAreaBuildPath = gd.CreateSDKCallOrFailEx(SDKCall_Static, pFunc + view_as<Address>(4), 12, params2, sizeof(params2), true, ret3);
+				g_hSDKCall_NavAreaBuildPath = GameDataWrapper.CreateRelativeSDKCallOrFail(SDKCall_Static, pFunc + view_as<Address>(4), 12, params2, sizeof(params2), true, ret3);
 			}
 		}
 	}
