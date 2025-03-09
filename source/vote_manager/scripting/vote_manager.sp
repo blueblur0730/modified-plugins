@@ -2,14 +2,13 @@
 #pragma newdecls required
 
 #include <sourcemod>
+#include <sdktools>
 #include <colors>
 
-// thses two are just for l4d2. for general use, use nativevotes.
+// just for l4d2. for general use, use nativevotes.
 #include <l4d2_nativevote>
 
-// restores l4d2 players health.
-#include <left4dhooks>	  
-#include <sdktools>
+native void L4D_ReviveSurvivor(int client);
 
 #define CONFIG_PATH "configs/vote_manager.cfg"
 #define DEBUG		0
@@ -19,16 +18,22 @@ ConVar	 	g_hCvar_Balancer	= null;
 int		 	g_iBalancer			= 0;
 char		g_sConfigPath[PLATFORM_MAX_PATH];
 
-#define PLUGIN_VERSION "1.1"
+#define PLUGIN_VERSION "1.2"
 
 public Plugin myinfo =
 {
-	name = "[Any/L4D2] Vote Manager",
+	name = "[ANY/L4D2] Vote Manager",
 	author = "blueblur",
 	description = "Vote Manager 3000 with whatever tou want config.",
 	version	= PLUGIN_VERSION,
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
+
+public APLRes AskPluginLoad2()
+{
+	MarkNativeAsOptional("L4D_ReviveSurvivor");
+	return APLRes_Success;
+}
 
 public void OnPluginStart()
 {
@@ -38,6 +43,7 @@ public void OnPluginStart()
 	LoadTranslation("vote_manager.phrases");
 	g_hCvar_Balancer = CreateConVar("vote_manager_balancer", "2", "Yes vote count required to pass a vote. 1=1/3, 2=1/2, 3=2/3, 4=1/1", _, true, 1.0, true, 4.0);
 	g_hCvar_Balancer.AddChangeHook(OnCvarChange);
+
 	OnCvarChange(null, "", "");
 	RegConsoleCmd("sm_vote", Cmd_Vote, "Open Vote Menu");
 	RegAdminCmd("sm_restoreallhealth", Cmd_RestoreHealth, ADMFLAG_ROOT, "Restore Health");
@@ -254,7 +260,6 @@ void VoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
 				char sInfo[256];
 				vote.GetInfo(sInfo, sizeof(sInfo));
 				ServerCommand(sInfo);
-				ServerExecute();
 			}
 			else
 			{

@@ -1,0 +1,29 @@
+"Phrases"
+{
+	"RestartingMap"
+	{
+        "#format"   "{1:.02f}"
+		"en"		"[{orange}!{default}] Map will restart in {olive}{1}{default}s!"
+		"chi"		"[{orange}!{default}] 地图将会在 {olive}{1}{default} 秒内重启!"
+	}
+
+    "ServerRestarting"
+    {
+        "en"        "Server is restarting."
+        "chi"       "服务器正在重启."
+    }
+
+    "ManuallyRestartServer"
+    {
+        "#format"   "{1:N},{2:.02f}"
+        "en"        "[{orange}!{default}] Manually restarting server in {olive}{2}{default} seconds later... by Admin {olive}{1}{default}"
+        "chi"       "[{orange}!{default}] 管理员 {olive}{1}{default} 重启服务器, {olive}{2}{default} 秒后执行..."
+    }
+
+    "ManuallyRestartServer_NoName"
+    {
+        "#format"   "{1:.02f}"
+        "en"        "[{orange}!{default}] Manually restarting server in {olive}{1}{default} seconds later..."
+        "chi"       "[{orange}!{default}] 服务器将在 {olive}{1}{default} 秒后重启..."
+    }
+}

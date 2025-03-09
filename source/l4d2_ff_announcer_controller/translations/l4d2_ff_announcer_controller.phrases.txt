@@ -1,0 +1,39 @@
+﻿"Phrases"
+{
+	"KILL"
+	{
+		"#format"	"{1:N},{2:N}"
+		"en"		"{default}[{green}!{default}] {olive}{1} {default}Killed {olive}{2}{default}."
+		"chi"		"{default}[{green}!{default}] {olive}{1} {default}杀死了 {olive}{2}{default}."
+	}
+	"FF_dealt_coloured"
+	{
+		"#format"	"{1:d},{2:s}"
+		"en"		"{default}[{green}!{default}] You did {olive}{1}{default} friendly fire damage to {blue}{2}{default}."
+		"chi"		"{default}[{green}!{default}] 你对 {blue}{2}{default} 造成了 {olive}{1}{default} 点伤害."
+	}
+	"FF_dealt"
+	{
+		"#format"	"{1:d},{2:s}"
+		"en"		"You did {1} friendly fire damage to {2}."
+		"chi"		"你对 {2} 造成了 {1} 点伤害."
+	}
+	"FF_receive_coloured"
+	{
+		"#format"	"{1:s},{2:d}"
+		"en"		"{default}[{green}!{default}] {blue}{1}{default} did {green}{2}{default} friendly fire damage to you"
+		"chi"		"{default}[{green}!{default}] {blue}{1}{default} 对你造成了 {green}{2}{default} 点伤害."
+	}
+	"FF_receive"
+	{
+		"#format"	"{1:s},{2:d}"
+		"en"		"{1} did {2} friendly fire damage to you"
+		"chi"		"{1} 对你造成了 {2} 点伤害."
+	}
+
+	"Disconnected_Player"
+	{
+		"en"	"Disconnected Player"
+		"chi"	"已断开连接的玩家"
+	}
+}

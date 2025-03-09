@@ -1,0 +1,26 @@
+"Phrases"
+{
+    "TryCheckPlayerHours"
+    {
+        "en"    "Kicked because reached the limit of game hours check."
+        "chi"   "因超过时长检查次数被踢出."
+    }
+
+    "KickHiddenHours"
+    {
+        "en"    "Kicked because hidden game hours."
+        "chi"   "因隐藏时长被踢出."
+    }
+
+    "KickUnDesiredHoursMin"
+    {
+        "en"    "Kicked because not enough game hours."
+        "chi"   "因时长不足被踢出."
+    }
+
+    "KickUnDesiredHoursMax"
+    {
+        "en"    "Kicked because game hours is too long."
+        "chi"   "因时长过多被踢出."
+    }
+}
