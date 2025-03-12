@@ -21,56 +21,58 @@ Handle
 	g_hSDKCall_GetNetChannel;
 
 GlobalForward	g_hFWD_OnValidateAuthTicketResponseHelper = null;
-ConVar			g_hCvar_DropOrNot = null;
-ConVar			g_hCvar_CheckTimeOut = null;
-bool			g_bDropOrNot = false;
-bool			g_bCheckTimeOut = false;
+ConVar			g_hCvar_DropOrNot						  = null;
+ConVar			g_hCvar_CheckTimeOut					  = null;
+bool			g_bDropOrNot							  = false;
+bool			g_bCheckTimeOut							  = false;
 
-OperatingSystem g_iOS                       = OS_UnknownPlatform;
-int				g_iOff_CBaseClient_m_Name   = -1;
+OperatingSystem g_iOS									  = OS_UnknownPlatform;
+int				g_iOff_CBaseClient_m_Name				  = -1;
 
 enum EAuthSessionResponse
 {
-	Response_OK				   = 0,	   // everything is fine.
-	Response_UnknownError	   = 1,	   // also steam no logon?
-	Response_NotOwnThisGame	   = 2,
-	Response_VACBanned		   = 3,
-	Response_InAnotherLocation = 4,
-	Response_TimedOut		   = 5,
-	Response_UnknownError2	   = 6,	   // also steam no logon? maybe timeout.
-	Response_UnknownError3	   = 7,	   // also steam no logon?
-	Response_NoSteamLogon	   = 8,
+	k_EAuthSessionResponseOK						   = 0,	   // Steam has verified the user is online, the ticket is valid and ticket has not been reused.
+	k_EAuthSessionResponseUserNotConnectedToSteam	   = 1,	   // The user in question is not connected to steam
+	k_EAuthSessionResponseNoLicenseOrExpired		   = 2,	   // The license has expired.
+	k_EAuthSessionResponseVACBanned					   = 3,	   // The user is VAC banned for this game.
+	k_EAuthSessionResponseLoggedInElseWhere			   = 4,	   // The user account has logged in elsewhere and the session containing the game instance has been disconnected.
+	k_EAuthSessionResponseVACCheckTimedOut			   = 5,	   // VAC has been unable to perform anti-cheat checks on this user
+	k_EAuthSessionResponseAuthTicketCanceled		   = 6,	   // The ticket has been canceled by the issuer
+	k_EAuthSessionResponseAuthTicketInvalidAlreadyUsed = 7,	   // This ticket has already been used, it is not valid.
+	k_EAuthSessionResponseAuthTicketInvalid			   = 8,	   // This ticket is not from a user instance currently connected to steam.
+															   // k_EAuthSessionResponsePublisherIssuedBan = 9,			// The user is banned for this game. The ban came via the web api and not VAC (not in l4d engine)
 }
 
-methodmap INetChannel {
-    public bool IsTimingOut() {
+methodmap INetChannel{
+	public bool IsTimingOut(){
 		return SDKCall(g_hSDKCall_IsTimingOut, view_as<Address>(this));
 	}
 }
 
-methodmap CBaseClient{
-    public INetChannel GetNetChannel() {
+methodmap CBaseClient
+{
+	public INetChannel GetNetChannel(){
 		return view_as<INetChannel>(SDKCall(g_hSDKCall_GetNetChannel, view_as<Address>(this)));
 	}
 
-    public void Disconnect(const char[] reason) {
+	public void Disconnect(const char[] reason){
 		SDKCall(g_hSDKCall_Disconnect, view_as<Address>(this), reason);
 	}
 
-    public void GetClientName(char[] name, int maxlen) {
+	public void GetClientName(char[] name, int maxlen){
 		SDKCall(g_hSDKCall_GetClientName, view_as<Address>(this), name, maxlen);
 	}
 }
 
-#define PLUGIN_VERSION "1.2.2"
+#define PLUGIN_VERSION "1.2.3"
 
 public Plugin myinfo =
 {
-	name = "[L4D2] Block No Steam Logon",
-	author = "blueblur",
+	name		= "[L4D2] Block No Steam Logon",
+	author		= "blueblur",
 	description = "Attempts to bypass server's 'no steam logon' disconnection.",
-	version	= PLUGIN_VERSION,
-	url	= "https://github.com/blueblur0730/modified-plugins"
+	version		= PLUGIN_VERSION,
+	url			= "https://github.com/blueblur0730/modified-plugins"
 };
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -94,7 +96,7 @@ public void OnPluginStart()
 	g_hCvar_DropOrNot = CreateConVar("l4d2_block_no_steam_logon_enable", "1", "Enable to prevent no steam logon disconnection.", _, true, 0.0, true, 1.0);
 	g_hCvar_DropOrNot.AddChangeHook(OnCvarChange);
 
-	g_hCvar_CheckTimeOut = CreateConVar("l4d2_block_no_steam_logon_check_timeout", "0", "Enable to check client's timeout.", _, true, 0.0, true, 1.0);
+	g_hCvar_CheckTimeOut = CreateConVar("l4d2_block_no_steam_logon_check_timeout", "1", "Enable to check client's timeout.", _, true, 0.0, true, 1.0);
 	g_hCvar_CheckTimeOut.AddChangeHook(OnCvarChange);
 	OnCvarChange(null, "", "");
 	InitGameData();
@@ -109,10 +111,9 @@ void OnCvarChange(ConVar convar, const char[] oldValue, const char[] newValue)
 MRESReturn DTR_OnValidateAuthTicketResponseHelper_Pre(DHookParam hParam)
 {
 	CBaseClient pBaseClient = view_as<CBaseClient>(hParam.Get(1));
-	PrintLog("### Detour Function called, pBaseClient: %d", pBaseClient);
 
 	// invalid addresses cause crashes.
-	if (view_as<int>(pBaseClient) <= 0)
+	if (view_as<Address>(pBaseClient) == Address_Null)
 		return MRES_Ignored;
 
 	char sName[128];
@@ -142,7 +143,7 @@ MRESReturn DTR_OnValidateAuthTicketResponseHelper_Pre(DHookParam hParam)
 	// in that case, we drop the client manully. this code is not represented in l4d2 engine, maybe the newer engine?
 	// by default the time out check time is 4.0s in CNetChan::IsTimingOut().
 	// https://github.com/nillerusr/source-engine/blob/29985681a18508e78dc79ad863952f830be237b6/engine/sv_steamauth.cpp#L623
-
+	// https://github.com/nillerusr/source-engine/blob/29985681a18508e78dc79ad863952f830be237b6/engine/net_chan.cpp#L58
 	if (g_bCheckTimeOut)
 	{
 		INetChannel netchan = pBaseClient.GetNetChannel();
@@ -163,13 +164,16 @@ MRESReturn DTR_OnValidateAuthTicketResponseHelper_Pre(DHookParam hParam)
 		mov     [ebp+arg_4], offset aNoSteamLogon ; "No Steam logon\n"
 
 		1, 6, 7, 8 indicates no steam logon failure.
-		specific reason name unknown.
+		in the newer engine, the message is different, not all using "No Steam logon\n". see the leaked code.
 	*/
 
 	switch (response)
 	{
 		// dont let no steam logon drop you.
-		case Response_NoSteamLogon, Response_UnknownError, Response_UnknownError2, Response_UnknownError3, Response_TimedOut:
+		case k_EAuthSessionResponseUserNotConnectedToSteam,
+			k_EAuthSessionResponseAuthTicketCanceled,
+			k_EAuthSessionResponseAuthTicketInvalidAlreadyUsed,
+			k_EAuthSessionResponseAuthTicketInvalid:
 		{
 			if (g_bDropOrNot)
 			{
@@ -190,8 +194,7 @@ void InitGameData()
 		SetFailState("Invalid operating system.");
 
 	g_iOff_CBaseClient_m_Name = gd.GetOffset(OFFSET_NAME);
-
-	gd.CreateDetourOrFailEx(DETOUR_FUNCTION, true, DTR_OnValidateAuthTicketResponseHelper_Pre);
+	gd.CreateDetourOrFailEx(DETOUR_FUNCTION, DTR_OnValidateAuthTicketResponseHelper_Pre);
 
 	// SDKCallParamsWrapper params1[] = {{SDKType_PlainOldData, SDKPass_Plain}};
 	// SDKCallParamsWrapper ret1 = {SDKType_PlainOldData, SDKPass_Plain};
