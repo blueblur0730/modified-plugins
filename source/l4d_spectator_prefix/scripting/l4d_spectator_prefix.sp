@@ -7,7 +7,7 @@
 #undef REQUIRE_PLUGIN
 #include <caster_system>
 
-#define PLUGIN_VERSION "2.2.0-2025/3/9"
+#define PLUGIN_VERSION "2.2.1-2025/3/9"
 
 ConVar
 	g_hCvar_Allow,
@@ -26,7 +26,7 @@ public Plugin myinfo =
 	author = "Forgetest, Harry Potter, blueblur",
 	description = "Brand-fresh views in Server Browser where spectators are clear to identify.",
 	version	= PLUGIN_VERSION,
-	url	= "https://github.com/blueblur0730"
+	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -108,19 +108,22 @@ void OnAllowedChanged(ConVar convar, const char[] oldValue, const char[] newValu
 
 void ToggleAllowed()
 {
-	if (g_hCvar_Allow.BoolValue)
+	static bool bEnabled = false;
+	if (g_hCvar_Allow.BoolValue && !bEnabled)
 	{
 		HookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
 		HookEvent("player_changename", Event_NameChanged, EventHookMode_Pre);
 
 		AddPrefixToAllClients();
+		bEnabled = true;
 	}
-	else
+	else if (!g_hCvar_Allow.BoolValue && bEnabled)
 	{
 		UnhookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
 		UnhookEvent("player_changename", Event_NameChanged, EventHookMode_Pre);
 
 		RemovePrefixFromAllClients();
+		bEnabled = false;
 	}
 }
 
