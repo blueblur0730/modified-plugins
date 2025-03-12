@@ -1,0 +1,84 @@
+"Phrases"
+{
+    "WitchKilled"
+    {
+        "#format"   "{1:d},{2:t}"
+        "en"        "<{orange}!{default}> Killed {red}Witch{default} {orange}{2}{default}, {olive}{1}{default} HP Rewarded."
+        "chi"       "<{orange}!{default}> {orange}{2}{default}击杀 {red}Witch{default}, 奖励 {olive}{1}{default} 点 HP."
+    }
+
+    "TankKilled"
+    {
+        "#format"   "{1:d},{2:t}"
+        "en"        "<{orange}!{default}> Killed {red}Tank{default} {orange}{1}{default}, {olive}{1}{default} HP Rewarded."
+        "chi"       "<{orange}!{default}> {orange}{1}{default}击杀 {red}Tank{default}, 奖励 {olive}{1}{default} 点 HP."
+    }
+
+    "KillSI"
+    {
+        "#format"   "{1:d},{2:s}"
+        "en"        "<{orange}!{default}> Killed SI {red}{2}{default}, {olive}{1}{default} HP Rewarded."
+        "chi"       "<{orange}!{default}> 击杀特感 {red}{2}{default}, 奖励 {olive}{1}{default} 点 HP."
+    }
+
+    "DefibUsed"
+    {
+        "#format"   "{1:d},{2:N}"
+        "en"        "<{orange}!{default}> Used defibrillator to respawn teammate {blue}{2}{default}, {olive}{1}{default} HP Rewarded."
+        "chi"       "<{orange}!{default}> 使用电击器复活队友 {blue}{2}{default}, 奖励 {olive}{1}{default} 点 HP."
+    }
+
+    "LedgeRevive"
+    {
+        "#format"   "{1:d},{2:N}"
+        "en"        "<{orange}!{default}> Revived a ledged teammate {blue}{2}{default}, {olive}{1}{default} HP Rewarded."
+        "chi"       "<{orange}!{default}> 救助挂边队友 {blue}{2}{default}, 奖励 {olive}{1}{default} 点 HP."
+    }
+
+    "Revive"
+    {
+        "#format"   "{1:d},{2:N}"
+        "en"        "<{orange}!{default}> Revived a teammate {blue}{2}{default}, {olive}{1}{default} HP Rewarded."
+        "chi"       "<{orange}!{default}> 救助倒地队友 {blue}{2}{default}, 奖励 {olive}{1}{default} 点 HP."
+    }
+
+    "Rescured"
+    {
+        "#format"   "{1:d},{2:N}"
+        "en"        "<{orange}!{default}> Rescured a teammate {blue}{2}{default}, {olive}{1}{default} HP Rewarded."
+        "chi"       "<{orange}!{default}> 营救复活队友 {blue}{2}{default}, 奖励 {olive}{1}{default} 点 HP."
+    }
+
+    "HealSuccess"
+    {
+        "#format"   "{1:d},{2:N}"
+        "en"        "<{orange}!{default}> Healed a teammate {blue}{2}{default}, {olive}{1}{default} HP Rewarded."
+        "chi"       "<{orange}!{default}> 治疗队友 {blue}{2}{default}, 奖励 {olive}{1}{default} 点 HP."
+    }
+
+    "ProtectFriendly"
+    {
+        "#format"   "{1:d},{2:N}"
+        "en"        "<{orange}!{default}> Protected a teammate {blue}{2}{default}, {olive}{1}{default} HP Rewarded."
+        "chi"       "<{orange}!{default}> 保护队友 {blue}{2}{default}, 奖励 {olive}{1}{default} 点 HP."
+    }
+
+    "SavedFromSIControl"
+    {
+        "#format"   "{1:d},{2:N}"
+        "en"        "<{orange}!{default}> Saved a teammate {blue}{2}{default}, {olive}{1}{default} HP Rewarded."
+        "chi"       "<{orange}!{default}> 帮助队友 {blue}{2}{default} 解控, 奖励 {olive}{1}{default} 点 HP."
+    }
+
+    "by solo"
+    {
+        "en"        "by solo"
+        "chi"       "独自"
+    }
+
+    "by one shot"
+    {
+        "en"        "by one shot"
+        "chi"       "一枪"
+    }
+}
