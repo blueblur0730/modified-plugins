@@ -2,38 +2,24 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#include <sdktools>
 #include <colors>
-
-// just for l4d2. for general use, use nativevotes.
 #include <l4d2_nativevote>
 
-native void L4D_ReviveSurvivor(int client);
-
 #define CONFIG_PATH "configs/vote_manager.cfg"
-#define DEBUG		0
 
 KeyValues 	kv[MAXPLAYERS + 1] 	= { null, ... };
-ConVar	 	g_hCvar_Balancer	= null;
-int		 	g_iBalancer			= 0;
 char		g_sConfigPath[PLATFORM_MAX_PATH];
 
 #define PLUGIN_VERSION "1.2"
 
 public Plugin myinfo =
 {
-	name = "[ANY/L4D2] Vote Manager",
+	name = "[Any/L4D2] Vote Manager",
 	author = "blueblur",
-	description = "Vote Manager 3000 with whatever tou want config.",
+	description = "Vote Manager 3000 with whatever you want config.",
 	version	= PLUGIN_VERSION,
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
-
-public APLRes AskPluginLoad2()
-{
-	MarkNativeAsOptional("L4D_ReviveSurvivor");
-	return APLRes_Success;
-}
 
 public void OnPluginStart()
 {
@@ -41,25 +27,14 @@ public void OnPluginStart()
 		SetFailState("Config File \"" ... CONFIG_PATH... "\" Not Found.");
 
 	LoadTranslation("vote_manager.phrases");
-	g_hCvar_Balancer = CreateConVar("vote_manager_balancer", "2", "Yes vote count required to pass a vote. 1=1/3, 2=1/2, 3=2/3, 4=1/1", _, true, 1.0, true, 4.0);
-	g_hCvar_Balancer.AddChangeHook(OnCvarChange);
-
-	OnCvarChange(null, "", "");
+	CreateConVar("vote_manager_version", PLUGIN_VERSION, "Vote Manager Version", FCVAR_NOTIFY | FCVAR_DONTRECORD);
 	RegConsoleCmd("sm_vote", Cmd_Vote, "Open Vote Menu");
-	RegAdminCmd("sm_restoreallhealth", Cmd_RestoreHealth, ADMFLAG_ROOT, "Restore Health");
 }
 
 public void OnPluginEnd()
 {
 	for (int i = 0; i < MaxClients; i++)
-	{
 		if (kv[i]) delete kv[i];
-	}
-}
-
-void OnCvarChange(ConVar convar, const char[] sOldValue, const char[] sNewValue)
-{
-	g_iBalancer = g_hCvar_Balancer.IntValue;
 }
 
 Action Cmd_Vote(int client, int args)
@@ -76,10 +51,7 @@ Action Cmd_Vote(int client, int args)
 		return Plugin_Handled;
 	}
 
-	// if no args, open the default vote menu.
-	if (!args)
-		OpenDefaultMenu(client);
-
+	OpenDefaultMenu(client);
 	return Plugin_Handled;
 }
 
@@ -92,9 +64,6 @@ void OpenDefaultMenu(int client)
 
 	if (!kv[client])
 	{
-#if DEBUG
-		PrintToServer("Creating new KeyValues for client %N", client);
-#endif
 		kv[client] = new KeyValues("");
 		kv[client].ImportFromFile(g_sConfigPath);
 	}
@@ -107,7 +76,7 @@ void OpenDefaultMenu(int client)
 			TraverseKeys(menu, client);
 		}
 		while (kv[client].GotoNextKey(false));
-		kv[client].Rewind(false);
+		kv[client].Rewind();
 
 		if (!menu.ItemCount)
 		{
@@ -118,7 +87,7 @@ void OpenDefaultMenu(int client)
 		}
 		else
 		{
-			menu.Display(client, 30);
+			menu.Display(client, MENU_TIME_FOREVER);
 		}
 	}
 	else
@@ -138,15 +107,10 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 		{
 			char sBuffer[MAX_MESSAGE_LENGTH], sDisplayBuffer[MAX_MESSAGE_LENGTH];
 			menu.GetItem(param2, sBuffer, sizeof(sBuffer), _, sDisplayBuffer, sizeof(sDisplayBuffer));
-#if DEBUG
-			PrintToServer("Item selected: %s", sBuffer);
-#endif
+
 			// this is a section
 			if (kv[param1].JumpToKey(sBuffer))
 			{
-#if DEBUG
-				PrintToServer("Jumping to sub section %s", sBuffer);
-#endif
 				kv[param1].SavePosition();
 				if (kv[param1].GotoFirstSubKey(false))
 				{
@@ -170,15 +134,12 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 					else
 					{
 						menu2.ExitBackButton = true;
-						menu2.Display(param1, 30);
+						menu2.Display(param1, MENU_TIME_FOREVER);
 					}
 				}
 			}
 			else
 			{
-#if DEBUG
-				PrintToServer("Prepare to vote for %s", sBuffer);
-#endif
 				if (!L4D2NativeVote_IsAllowNewVote())
 				{
 					CPrintToChat(param1, "%t", "VoteInProgress");
@@ -186,7 +147,7 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 				}	
 
 				L4D2NativeVote vote = L4D2NativeVote(VoteHandler);
-				vote.SetTitle("通过 %s?", sDisplayBuffer);
+				vote.SetTitle("Pass %s?", sDisplayBuffer);
 				vote.Initiator = param1;
 				vote.SetInfo(sBuffer);
 
@@ -209,6 +170,8 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 					CPrintToChat(param1, "%t", "VoteFailedDisPlay");
 					LogError("Vote failed to display.");
 				}
+
+				delete kv[param1];
 			}
 		}
 
@@ -218,7 +181,8 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 				OpenDefaultMenu(param1);
 		}
 
-		case MenuAction_End: delete menu;
+		case MenuAction_End: 
+			delete menu;
 	}
 }
 
@@ -242,24 +206,15 @@ void VoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
 
 		case VoteAction_End:
 		{
-			int iFactor = 2;
-			switch (g_iBalancer)
+			if (vote.YesCount >= vote.PlayerCount)
 			{
-				case 1: iFactor = 3;
-				case 2: iFactor = 2;
-				case 3: iFactor = -1;
-				case 4: iFactor = 1;
-				default: iFactor = 2;
-			}
-
-			if (vote.YesCount >= RoundToFloor(float(vote.PlayerCount) / float(iFactor == -1 ? 3 / 2 : iFactor)))
-			{
-				vote.SetPass("正在执行...");
+				vote.SetPass("Excuting...");
 				CPrintToChatAll("%t", "PassingVote");
 
 				char sInfo[256];
 				vote.GetInfo(sInfo, sizeof(sInfo));
 				ServerCommand(sInfo);
+				ServerExecute();
 			}
 			else
 			{
@@ -272,54 +227,94 @@ void VoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
 
 void TraverseKeys(Menu menu, int client)
 {
-	static char sBuffer[MAX_MESSAGE_LENGTH], sKeyValue[MAX_MESSAGE_LENGTH];	   // sTranslated[MAX_MESSAGE_LENGTH];
+	static char sBuffer[MAX_MESSAGE_LENGTH], sKeyValue[MAX_MESSAGE_LENGTH];
 	if (kv[client].GetSectionName(sBuffer, sizeof(sBuffer)))
 	{
-#if DEBUG
-		PrintToServer("Traversing section %s", sBuffer);
-#endif
+		char sText[64];
+		kv[client].GetString("required", sText, sizeof(sText));
+
+		if (sText[0] != '\0')
+		{
+			Format(sText, sizeof(sText), "%s.smx", sText);
+			if (!FindPluginByFileEx(sText, strlen(sText)))
+				return;
+		}
+
 		kv[client].GetString(NULL_STRING, sKeyValue, sizeof(sKeyValue), "NoKeyValue");
-#if DEBUG
-		PrintToServer("Retrieving keyvalue %s", sKeyValue);
-#endif
-		// Format(sTranslated, sizeof(sTranslated), "%T", client, sBuffer);
-		if (StrEqual(sKeyValue, "NoKeyValue"))
-			menu.AddItem(sBuffer, sBuffer);
-		else
-			menu.AddItem(sKeyValue, sBuffer);
+
+		int iPos;
+		if (FindSeperator(sKeyValue, iPos))
+		{
+			char sFileName[64];
+			strcopy(sFileName, sizeof(sFileName), sKeyValue[iPos + 1]);
+			Format(sFileName, sizeof(sFileName), "%s.smx", sFileName);
+
+			if (!FindPluginByFileEx(sFileName, strlen(sFileName)))
+				return;
+
+			sKeyValue[iPos] = '\0';
+		}
+
+		if (!strcmp(sBuffer, "required"))
+			return;
+
+		strcmp(sKeyValue, "NoKeyValue") ?
+		menu.AddItem(sKeyValue, sBuffer) :
+		menu.AddItem(sBuffer, sBuffer);
 	}
-}
-
-Action Cmd_RestoreHealth(int client, int args)
-{
-	if (client > MaxClients)
-		return Plugin_Handled;
-
-	for (int i = 1; i < MaxClients; i++)
-	{
-		if (!IsClientInGame(i) || GetClientTeam(i) != 2)
-			continue;
-
-		if (view_as<bool>(GetEntProp(i, Prop_Send, "m_isIncapacitated")))
-			L4D_ReviveSurvivor(i);
-
-		SetEntPropFloat(i, Prop_Send, "m_healthBuffer", 0.0);
-		SetEntityHealth(i, GetEntProp(i, Prop_Data, "m_iMaxHealth"));
-		SetEntPropFloat(i, Prop_Send, "m_healthBufferTime", GetGameTime());
-		SetEntProp(i, Prop_Send, "m_isGoingToDie", 0);
-		SetEntProp(i, Prop_Send, "m_currentReviveCount", 0);
-		SetEntProp(i, Prop_Send, "m_bIsOnThirdStrike", 0);
-		StopSound(i, SNDCHAN_STATIC, "player/heartbeatloop.wav");
-	}
-
-	!client ? CPrintToChatAll("%t", "HealthRestoredConsole") : CPrintToChatAllEx(client, "%t", "HealthRestored", client);
-	return Plugin_Handled;
 }
 
 stock bool BuildConfigPath()
 {
 	BuildPath(Path_SM, g_sConfigPath, sizeof(g_sConfigPath), CONFIG_PATH);
 	return FileExists(g_sConfigPath);
+}
+
+stock bool FindSeperator(const char[] sText, int &iPos)
+{
+	for (int i = 0; i < strlen(sText); i++)
+	{
+		if (sText[i] == '#')
+		{
+			iPos = i;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+stock bool FindPluginByFileEx(const char[] filename, int length)
+{
+	char buffer[256];
+	Handle iter = GetPluginIterator();
+	Handle pl;
+	
+	while (MorePlugins(iter))
+	{
+		pl = ReadPlugin(iter);
+		
+		GetPluginFilename(pl, buffer, sizeof(buffer));
+		if (strlen(buffer) == length)
+		{
+			if (!strcmp(buffer, filename, true))
+			{
+				delete iter;
+				return true;
+			}
+		}
+		else if (strlen(buffer) - length > 0)
+		{
+			if (!strcmp(buffer[strlen(buffer) - length], filename, true))
+			{
+				delete iter;
+				return true;
+			}
+		}
+	}
+	
+	delete iter;
+	return false;
 }
 
 stock void LoadTranslation(const char[] translation)
