@@ -1,0 +1,14 @@
+"Phrases"
+{
+    "NightVisionOn"
+    {
+        "en"    "Night Vision On"
+        "chi"   "夜视仪已开启"
+    }
+
+    "NightVisionOff"
+    {
+        "en"    "Night Vision Off"
+        "chi"   "夜视仪已关闭"
+    }
+}

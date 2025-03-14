@@ -1,0 +1,23 @@
+"Phrases"
+{
+    "MolotovThrown"
+    {
+        "#format"   "{1:N}"
+        "en"        "[{green}!{default}] {blue}{1}{default} throwed a {olive}molotov{default}."
+        "chi"       "[{green}!{default}] {blue}{1}{default} 扔出了一枚{olive}燃烧弹{default}."
+    }
+
+    "PipeBombThrown"
+    {
+        "#format"   "{1:N}"
+        "en"        "[{green}!{default}] {blue}{1}{default} throwed a {olive}Pipe Bomb{default}."
+        "chi"       "[{green}!{default}] {blue}{1}{default} 扔出了一枚{olive}土质炸弹{default}."
+    }
+
+    "VomitJarThrown"
+    {
+        "#format"   "{1:N}"
+        "en"        "[{green}!{default}] {blue}{1}{default} throwed a {olive}Vommit Jar{default}."
+        "chi"       "[{green}!{default}] {blue}{1}{default} 扔出了一枚{olive}胆汁罐{default}."
+    }
+}

@@ -1,0 +1,9 @@
+"Phrases"
+{
+    "AnnounceTankHealth"
+    {
+        "#format"   "{1:d}"
+        "en"        "{red}[{default}!{red}] {olive}Tank's{default} Health was set to {red}{1}{default} defined by {green}Current survivor count and Difficulty{default}!"
+        "chi"       "{red}[{default}!{red}] {olive}坦克{default}血量已由{green}当前幸存者数量和难度{default}设置为 {red}{1}{default}!"
+    }
+}

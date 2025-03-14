@@ -1,0 +1,27 @@
+"Phrases"
+{
+    "Changed"
+    {
+        "#format"   "{1:d},{2:T}"
+        "en"        "[{green}!{default}] {lightgreen}{2}{default} count multiplied to {olive}{1}{default} times."
+        "chi"       "[{green}!{default}] {lightgreen}{2}{default} 数量更改为 {olive}{1}{default} 倍."
+    }
+
+    "first_aid_kit"
+    {
+        "en"        "First Aid Kit"
+        "chi"       "医疗包"
+    }
+
+    "pain_pills"
+    {
+        "en"        "Pain Pills"
+        "chi"       "止痛药"
+    }
+
+    "adrenaline"
+    {
+        "en"        "Adrenaline"
+        "chi"       "肾上腺素"
+    }
+}

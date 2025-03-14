@@ -2,16 +2,16 @@
 {
     "WitchKilled"
     {
-        "#format"   "{1:d},{2:t}"
+        "#format"   "{1:d},{2:s}"
         "en"        "<{orange}!{default}> Killed {red}Witch{default} {orange}{2}{default}, {olive}{1}{default} HP Rewarded."
         "chi"       "<{orange}!{default}> {orange}{2}{default}击杀 {red}Witch{default}, 奖励 {olive}{1}{default} 点 HP."
     }
 
     "TankKilled"
     {
-        "#format"   "{1:d},{2:t}"
-        "en"        "<{orange}!{default}> Killed {red}Tank{default} {orange}{1}{default}, {olive}{1}{default} HP Rewarded."
-        "chi"       "<{orange}!{default}> {orange}{1}{default}击杀 {red}Tank{default}, 奖励 {olive}{1}{default} 点 HP."
+        "#format"   "{1:d},{2:s}"
+        "en"        "<{orange}!{default}> Killed {red}Tank{default} {orange}{2}{default}, {olive}{1}{default} HP Rewarded."
+        "chi"       "<{orange}!{default}> {orange}{2}{default}击杀 {red}Tank{default}, 奖励 {olive}{1}{default} 点 HP."
     }
 
     "KillSI"
@@ -70,13 +70,13 @@
         "chi"       "<{orange}!{default}> 帮助队友 {blue}{2}{default} 解控, 奖励 {olive}{1}{default} 点 HP."
     }
 
-    "by solo"
+    "BySolo"
     {
         "en"        "by solo"
         "chi"       "独自"
     }
 
-    "by one shot"
+    "ByOneShot"
     {
         "en"        "by one shot"
         "chi"       "一枪"

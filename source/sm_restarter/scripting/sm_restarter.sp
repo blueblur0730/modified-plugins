@@ -25,7 +25,7 @@ ConVar g_hCvar_Hibernate;
 char g_sPath[256];
 bool g_bChangeLevelAvailable = false;
 
-#define PLUGIN_VERSION "r1.0"
+#define PLUGIN_VERSION "r1.0.1"
 
 public Plugin myinfo =
 {
@@ -257,7 +257,7 @@ void RestartMap()
 
 Action Command_RestartMap(int client, int args)
 {
-    CPrintToChatAll("%t", "RestartingMap", g_hCvar_DelayForMapRestart);
+    CPrintToChatAll("%t", "RestartingMap", g_hCvar_DelayForMapRestart.FloatValue);
     CreateTimer(g_hCvar_DelayForMapRestart.FloatValue, Timer_RestartMapPre);
     return Plugin_Handled;
 }
