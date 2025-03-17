@@ -6,9 +6,11 @@
 #include <l4d2_nativevote>
 
 #define CONFIG_PATH "configs/vote_manager.cfg"
+#define MAX_VOTEPANEL_TITLE_LENGTH 64
 
 KeyValues 	kv[MAXPLAYERS + 1] 	= { null, ... };
 char		g_sConfigPath[PLATFORM_MAX_PATH];
+char		g_sTitle[MAXPLAYERS + 1][MAX_VOTEPANEL_TITLE_LENGTH];
 
 #define PLUGIN_VERSION "1.2"
 
@@ -118,6 +120,10 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 					Format(sBuffer, sizeof(sBuffer), "%T", "VoteMenuTitle2", param1, sDisplayBuffer);
 					menu2.SetTitle(sBuffer);
 
+					g_sTitle[param1][0] != '\0' ?
+					Format(g_sTitle[param1], sizeof(g_sTitle[param1]), "%s - %s", g_sTitle[param1], sDisplayBuffer) :
+					Format(g_sTitle[param1], sizeof(g_sTitle[param1]), "%s", sDisplayBuffer);
+
 					do
 					{
 						TraverseKeys(menu2, param1);
@@ -129,6 +135,7 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 					{
 						CPrintToChat(param1, "%t", "NoVoteItem");
 						OpenDefaultMenu(param1);
+						g_sTitle[param1] = "";
 						delete menu2;
 					}
 					else
@@ -146,8 +153,12 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 					return;
 				}	
 
+				g_sTitle[param1][0] != '\0' ?
+				Format(g_sTitle[param1], sizeof(g_sTitle[param1]), "%s - %s", g_sTitle[param1], sDisplayBuffer) :
+				Format(g_sTitle[param1], sizeof(g_sTitle[param1]), "%s", sDisplayBuffer);
+
 				L4D2NativeVote vote = L4D2NativeVote(VoteHandler);
-				vote.SetTitle("Pass %s?", sDisplayBuffer);
+				vote.SetTitle("Pass %s?", g_sTitle[param1]);
 				vote.Initiator = param1;
 				vote.SetInfo(sBuffer);
 
@@ -172,13 +183,17 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 				}
 
 				delete kv[param1];
+				g_sTitle[param1] = "";
 			}
 		}
 
 		case MenuAction_Cancel:
 		{
 			if (param2 == MenuCancel_ExitBack)
+			{
+				g_sTitle[param1] = "";
 				OpenDefaultMenu(param1);
+			}	
 		}
 
 		case MenuAction_End: 
