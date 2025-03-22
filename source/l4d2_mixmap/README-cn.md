@@ -38,7 +38,7 @@
 - [SourceScramble 拓展](https://github.com/nosoop/SMExt-SourceScramble) by nosoop.
 - [l4d2_source_keyvalues 插件](https://github.com/fdxx/l4d2_source_keyvalues) by fdxx.
 - [l4d2_nativevote 插件](https://github.com/fdxx/l4d2_nativevote) by fdxx.
-- [Left 4 DHooks Direct 插件](https://forums.alliedmods.net/showthread.php?t=321696) by Silvers 以及其他贡献者.
+- [Left 4 DHooks Direct 插件 1.159+](https://forums.alliedmods.net/showthread.php?t=321696) by Silvers 以及其他贡献者.
 
 - [colors.inc](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/include/colors.inc) 用于编译.
 - [gamedata_wrapper.inc](https://github.com/blueblur0730/modified-plugins/blob/main/include/gamedata_wrapper.inc) 用于编译.
@@ -47,11 +47,9 @@
 
 ## 已知存在冲突插件
 
-- [[L4D2] Transition Restore Fix (修复过关装备属性混乱)](https://forums.alliedmods.net/showthread.php?t=336287) by soralll, 因使用 DHooks 挂钩相同的函数 `CTerrorPlayer::TransitionRestore`.
+- [[L4D2] Transition Restore Fix (修复过关装备属性混乱)](https://forums.alliedmods.net/showthread.php?t=336287) by soralll, 因使用 DHooks 挂钩相同的函数 `CTerrorPlayer::TransitionRestore`. 使用[此仓库内](https://github.com/blueblur0730/modified-plugins/tree/main/source/transition_restore_fix)修改版本可解决该问题.
 
-- [Survivor Chat Select (8角色共存)](https://forums.alliedmods.net/showthread.php?p=2607394) by DeatChaos25, Mi123456 & Merudo, Lux, SilverShot, 因使用 DHooks 挂钩相同的函数 `RestoreTransitionedSurvivorBots`.
-
-为了解决这个问题, 我们需要向 left4dhooks 提交一次更新, 并同时更新这些插件.
+- [Survivor Chat Select (8角色共存)](https://forums.alliedmods.net/showthread.php?p=2607394) by DeatChaos25, Mi123456 & Merudo, Lux, SilverShot, 因使用 DHooks 挂钩相同的函数 `RestoreTransitionedSurvivorBots`.使用[此仓库内](https://github.com/blueblur0730/modified-plugins/tree/main/source/survivor_chat_select)修改版本可解决该问题.
 
 <hr>
 

@@ -4,7 +4,7 @@
 #define _l4d2_mixmap_setup_included
 
 #define LOGGER_NAME	                               "Mixmap"
-#define LOGGER_ERROR_FILE                          "logs/l4d2_mixmap_errors.log"
+#define LOGGER_ERROR_FILE                          "logs/l4d2_mixmap.log"
 #define TRANSLATION_FILE                           "l4d2_mixmap.phrases"
 #define TRANSLATION_FILE_LOCALIZATION              "l4d2_mixmap_localizer.phrases"
 #define GAMEDATA_FILE                              "l4d2_mixmap"
@@ -23,10 +23,8 @@
 #define SDKCALL_ONCHANGEMISSIONVOTE	               "CDirector::OnChangeMissionVote"
 #define SDKCALL_ONCHANGECHAPTERVOTE	               "CDirector::OnChangeChapterVote"
 
-#define DETOUR_TRANSITIONRESTORE                   "CTerrorPlayer::TransitionRestore"
 #define DETOUR_DIRECTORCHANGELEVEL	               "CDirector::DirectorChangeLevel"
 #define DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL "CTerrorGameRules::OnBeginChangeLevel"
-#define DETOUR_RESTORETRANSITIONEDSURVIVORBOTS     "RestoreTransitionedSurvivorBots"
 
 #define MIDHOOK_RESTORETRANSITIONEDSURVIVORBOTS	   "RestoreTransitionedSurvivorBots__ChangeCharacter"
 
@@ -105,8 +103,6 @@ ConVar
 	g_hCvar_SaveStatus,
 	g_hCvar_SaveStatus_Bot,
 	g_hCvar_CheckPointSearchCount,
-	g_hCvar_ShouldSearchAgain,
-	g_hCvar_SearchAgainCount,
 	g_hCvar_MapPoolCapacity,
 	g_hCvar_EnableBlackList,
 	g_hCvar_BlackListLimit;
@@ -146,11 +142,8 @@ void SetUpGameData()
 	SDKCallParamsWrapper ret4                   = { SDKType_PlainOldData, SDKPass_Plain };
 	g_hSDKCall_GetGameModeInfo                  = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_GETGAMEMODEINFO, params4, sizeof(params4), true, ret4);
 
-
-	gd.CreateDetourOrFailEx(DETOUR_TRANSITIONRESTORE, DTR_CTerrorPlayer_OnTransitionRestore);
 	gd.CreateDetourOrFailEx(DETOUR_DIRECTORCHANGELEVEL, DTR_CDirector_OnDirectorChangeLevel);
 	gd.CreateDetourOrFailEx(DETOUR_CTERRORGAMERULES_ONBEGINCHANGELEVEL, DTR_CTerrorGameRules_OnBeginChangeLevel);
-	gd.CreateDetourOrFailEx(DETOUR_RESTORETRANSITIONEDSURVIVORBOTS, _, DTR_RestoreTransitionedSurvivorBots_Post);
 
 	g_hMidhook_ChangeCharacter                  = gd.CreateMidHookOrFail(MIDHOOK_RESTORETRANSITIONEDSURVIVORBOTS, MidHook_RestoreTransitionedSurvivorBots__ChangeCharacter, true);
 	g_hPatch_Bot_BlockRestoring                 = gd.CreateMemoryPatchOrFail(MEMPATCH_BLOCKRESTORING_BOT);
@@ -173,9 +166,6 @@ void SetupConVars()
 	g_hCvar_SaveStatus            = CreateConVar("l4d2mm_save_status", "1", "Whether to save player status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
 	g_hCvar_SaveStatus_Bot        = CreateConVar("l4d2mm_save_status_bot", "1", "Whether to save bot status in coop or realism mode after changing map.", _, true, 0.0, true, 1.0);
 	g_hCvar_CheckPointSearchCount = CreateConVar("l4d2mm_checkpoint_search_count", "50", "Determine how many times to search for the checkpoint.", _, true, 1.0);
-	g_hCvar_ShouldSearchAgain     = CreateConVar("l4d2mm_should_re_search", "1", "Whether to re-search for the checkpoint if it is not found.", _, true, 0.0, true, 1.0);
-	g_hCvar_SearchAgainCount      = CreateConVar("l4d2mm_search_again_count", "3", "Determine how many times to re-search for the checkpoint.", _, true, 1.0);
-
 	// map pool
 	g_hCvar_MapPoolCapacity       = CreateConVar("l4d2mm_map_pool_capacity", "5", "Determine how many maps can be selected in one pool.", _, true, 1.0);
 	g_hCvar_EnableBlackList       = CreateConVar("l4d2mm_enable_blacklist", "0", "Determine whether to enable blacklist.", _, true, 0.0, true, 1.0);
@@ -189,11 +179,13 @@ void SetupCommands()
 	RegAdminCmd("sm_fmixmap", Command_ForceMixmap, ADMFLAG_BAN, "Force start mixmap");
 	RegAdminCmd("sm_fstopmixmap", Command_ForceStopMixmap, ADMFLAG_BAN, "Force stop a mixmap");
 
-	RegConsoleCmd("sm_mixmap_maplist", Command_Maplist, "Show the map list");
-	RegAdminCmd("sm_mixmap_reload_blacklist", Command_ReloadBlackList, ADMFLAG_CONFIG, "Reload the blacklist file");
-	RegConsoleCmd("sm_mixmap_blacklist", Commnad_ShowBlackList, "Show the blacklist");
-	RegAdminCmd("sm_mixmap_reload_presetlist", Command_ReloadPresetList, ADMFLAG_CONFIG, "Reload all preset files.");
-	RegConsoleCmd("sm_mixmap_presetlist", Command_PresetList, "Show the preset list");
+	RegConsoleCmd("sm_mm_maplist", Command_Maplist, "Show the map list");
+
+	RegAdminCmd("sm_mm_reload_blacklist", Command_ReloadBlackList, ADMFLAG_CONFIG, "Reload the blacklist file");
+	RegAdminCmd("sm_mm_reload_presetlist", Command_ReloadPresetList, ADMFLAG_CONFIG, "Reload all preset files.");
+
+	RegConsoleCmd("sm_mm_blacklist", Commnad_ShowBlackList, "Show the blacklist");
+	RegConsoleCmd("sm_mm_presetlist", Command_PresetList, "Show the preset list");
 }
 
 void SetupLogger()
@@ -209,12 +201,12 @@ void SetupLogger()
 	// to not spam the console, default info.
 	// you can set its level through log4sp_manager to real time debug.
 	g_hLogger.SetLevel(LogLevel_Info);
-	g_hLogger.FlushOn(LogLevel_Info);
+	g_hLogger.FlushOn(LogLevel_Debug);
 
 	char sBuffer[64];
 	BuildPath(Path_SM, sBuffer, sizeof(sBuffer), LOGGER_ERROR_FILE);
 	BasicFileSink sink = new BasicFileSink(sBuffer);
-	sink.SetLevel(LogLevel_Warn);
+	sink.SetLevel(LogLevel_Debug);
 	g_hLogger.AddSinkEx(sink);
 }
 

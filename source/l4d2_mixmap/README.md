@@ -38,7 +38,7 @@ This plugin reads map list from the game internally, and forms map pool in muilt
 - [SourceScramble Extension](https://github.com/nosoop/SMExt-SourceScramble) by nosoop.
 - [l4d2_source_keyvalues Plugin](https://github.com/fdxx/l4d2_source_keyvalues) by fdxx.
 - [l4d2_nativevote Plugin](https://github.com/fdxx/l4d2_nativevote) by fdxx.
-- [Left 4 DHooks Direct Plugin](https://forums.alliedmods.net/showthread.php?t=321696) by Silvers and others.
+- [Left 4 DHooks Direct Plugin 1.159+](https://forums.alliedmods.net/showthread.php?t=321696) by Silvers and others.
 
 - [colors.inc](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/include/colors.inc) to compile.
 - [gamedata_wrapper.inc](https://github.com/blueblur0730/modified-plugins/blob/main/include/gamedata_wrapper.inc) to compile.
@@ -47,11 +47,9 @@ This plugin reads map list from the game internally, and forms map pool in muilt
 
 ## Known Conflicted Plugins
 
-- [[L4D2] Transition Restore Fix](https://forums.alliedmods.net/showthread.php?t=336287) by soralll, due to hooking a same function `CTerrorPlayer::TransitionRestore` using DHooks.
+- [[L4D2] Transition Restore Fix](https://forums.alliedmods.net/showthread.php?t=336287) by soralll, due to hooking a same function `CTerrorPlayer::TransitionRestore` using DHooks. Use the modified version in [this repo](https://github.com/blueblur0730/modified-plugins/tree/main/source/transition_restore_fix) can solve this.
 
-- [Survivor Chat Select](https://forums.alliedmods.net/showthread.php?p=2607394) by DeatChaos25, Mi123456 & Merudo, Lux, SilverShot, due to hooking the same function `RestoreTransitionedSurvivorBots` using DHooks.
-
-To resolve, we need to push an update to left4dhooks, and also update thses plugins.
+- [Survivor Chat Select](https://forums.alliedmods.net/showthread.php?p=2607394) by DeatChaos25, Mi123456 & Merudo, Lux, SilverShot, due to hooking the same function `RestoreTransitionedSurvivorBots` using DHooks. Use the modified version in [this repo](https://github.com/blueblur0730/modified-plugins/tree/main/source/survivor_chat_select) can solve this.
 
 <hr>
 

@@ -113,6 +113,7 @@ stock void Patch(MemoryPatch hPatch, bool bPatch)
 
 stock void GetSafeAreaOrigin(float vec[3])
 {
+/*
 	// HACKHACK: Some third party map's first checkpoint door's classname may not be "prop_door_rotating_checkpoint",
 	// chould be unreliable.
 	// how could we know the first checkpoint's classname?
@@ -128,19 +129,43 @@ stock void GetSafeAreaOrigin(float vec[3])
 		}
 		while (!bFound && g_hCvar_ShouldSearchAgain.BoolValue && count < g_hCvar_SearchAgainCount.IntValue)
 
-			if (count > g_hCvar_CheckPointSearchCount.IntValue)
+		if (count > g_hCvar_CheckPointSearchCount.IntValue)
 		{
-			g_hLogger.Debug("### GetSafeAreaOriginEx: Failed to find valid point. Trying Default");
+			g_hLogger.Debug("### GetSafeAreaOrigin: Failed to find valid point. Trying Default");
 			GetSafeAreaOriginEx(checkPoint, vec);
 		}
 	}
 	else
 	{
-		g_hLogger.DebugEx("### GetSafeAreaOriginEx: Failed to find checkpoint entity. checkPoint: %d. Abort action.", checkPoint);
+		g_hLogger.DebugEx("### GetSafeAreaOrigin: Failed to find checkpoint entity. checkPoint: %d. Abort action.", checkPoint);
+	}
+*/
+
+	// every level has at least one info_landmark entity and should always be inside of saferoom.
+	bool bFound = false;
+	int ent = INVALID_ENT_REFERENCE;
+	while ((ent = FindEntityByClassname(ent, "info_landmark")) != INVALID_ENT_REFERENCE)
+	{
+		GetAbsOrigin(ent, vec);
+		g_hLogger.DebugEx("### GetSafeAreaOrigin: Found landmark entity: %d.", ent);
+
+		Address pNav = L4D_GetNearestNavArea(vec, 100.0, true, false, false, 2);
+		if (pNav != Address_Null && IsNavInSafeArea(pNav))
+		{
+			bFound = true;
+			g_hLogger.DebugEx("### GetSafeAreaOrigin: Found valid point: %f, %f, %f.", vec[0], vec[1], vec[2]);
+			return;
+		}
+	}
+
+	if (!bFound)
+	{
+		g_hLogger.DebugEx("### GetSafeAreaOrigin: Failed to find valid point. Trying Default");
+		GetSafeAreaOriginEx(vec);
 	}
 }
 
-stock void GetSafeAreaOriginEx(int checkPoint, float vec[3])
+void GetSafeAreaOriginEx(float vec[3])
 {
 	// TerrorNavMesh::GetInitialCheckPoint get the first checkpoint door by finding info_landmark through s_landmarkname.
 	// since we have meesed up with the landmark driving around in different compaigns, this is probably not work,
@@ -163,6 +188,8 @@ stock void GetSafeAreaOriginEx(int checkPoint, float vec[3])
 			}
 		}
 	*/
+	int checkPoint = L4D_GetCheckpointFirst();
+
 	if (checkPoint != -1)
 	{
 		int		i	   = 0;
@@ -180,7 +207,7 @@ stock void GetSafeAreaOriginEx(int checkPoint, float vec[3])
 			pNav = L4D_GetNearestNavArea(vec, 1000.0, true, true, true, 2);
 			++i;
 
-			if (view_as<int>(pNav) > 0 && IsNavInSafeArea(pNav))
+			if (pNav != Address_Null && IsNavInSafeArea(pNav))
 			{
 				do
 				{
@@ -199,6 +226,7 @@ stock void GetSafeAreaOriginEx(int checkPoint, float vec[3])
 	}
 }
 
+/*
 bool SearchForValidPoint(int checkPoint, float vec[3])
 {
 	float fDirection[3] = { 0.0 }, fEndPos[3] = { 0.0 };
@@ -252,13 +280,14 @@ bool SearchForValidPoint(int checkPoint, float vec[3])
 
 	return true;
 }
-
+*/
 stock bool IsClientInSafeArea(int client)
 {
 	if (client <= 0 || client > MaxClients)
 		return false
 
-			if (!IsClientInGame(client)) return false;
+	if (!IsClientInGame(client)) 
+		return false;
 
 	if (!IsPlayerAlive(client))
 		return false;
@@ -266,13 +295,7 @@ stock bool IsClientInSafeArea(int client)
 	Address nav = L4D_GetLastKnownArea(client);
 	if (!nav) return false;
 
-	int	 iAttr		   = L4D_GetNavArea_SpawnAttributes(nav);
-	bool bInStartPoint = !!(iAttr & NAV_SPAWN_PLAYER_START);
-	bool bInCheckPoint = !!(iAttr & NAV_SPAWN_CHECKPOINT);
-	if (!bInStartPoint && !bInCheckPoint)
-		return false;
-
-	return true;
+	return IsNavInSafeArea(nav);
 }
 
 stock bool IsNavInSafeArea(Address nav)
@@ -284,12 +307,6 @@ stock bool IsNavInSafeArea(Address nav)
 		return false;
 
 	return true;
-}
-
-stock bool IsOnValidMesh(float fReferencePos[3])
-{
-	Address pNavArea = L4D_GetNearestNavArea(fReferencePos, _, _, _, _, 3);
-	return (pNavArea != Address_Null && (L4D_GetNavArea_SpawnAttributes(pNavArea) & NAV_SPAWN_CHECKPOINT));
 }
 
 // credits to fdxx from L4D2 Special infected spawn control.
@@ -316,28 +333,36 @@ bool TraceFilter_Stuck(int entity, int contentsMask)
 	return true;
 }
 
-stock void PrecacheAllModels()
+/*
+stock bool IsOnValidMesh(float fReferencePos[3])
+{
+	Address pNavArea = L4D_GetNearestNavArea(fReferencePos, _, _, _, _, 3);
+	return (pNavArea != Address_Null && (L4D_GetNavArea_SpawnAttributes(pNavArea) & NAV_SPAWN_CHECKPOINT));
+}
+*/
+
+void PrecacheAllModels()
 {
 	for (int i = 0; i < sizeof(g_sSurvivorModels); i++)
 		PrecacheModel(g_sSurvivorModels[i], true);
 }
 
-stock void GetCorrespondingModel(int character, char[] model, int size)
+void GetCorrespondingModel(int character, char[] model, int size)
 {
 	strcopy(model, size, g_sSurvivorModels[character]);
 }
 
-stock void GetCorrespondingName(int character, char[] name, int size)
+void GetCorrespondingName(int character, char[] name, int size)
 {
 	strcopy(name, size, g_sSurvivorNames[character]);
 }
 
-stock bool IsFakeMission(const char[] sMissionName)
+bool IsFakeMission(const char[] sMissionName)
 {
 	return CheckMap(sMissionName, g_sFakeMissions, sizeof(g_sFakeMissions));
 }
 
-stock bool IsOfficialMap(const char[] sMapName)
+bool IsOfficialMap(const char[] sMapName)
 {
 	return CheckMap(sMapName, g_sOfficialMaps, sizeof(g_sOfficialMaps));
 }
@@ -441,10 +466,10 @@ stock void ConvertTagAndTranslate(char[] sTag, int size, int client, bool bIsOff
 }
 
 // from attachment_api by Silvers.
-void StrToLowerCase(const char[] input, char[] output, int maxlength)
+stock void StrToLowerCase(const char[] input, char[] output, int maxlength)
 {
 	int pos;
-	while( input[pos] != 0 && pos < maxlength )
+	while ( input[pos] != 0 && pos < maxlength )
 	{
 		output[pos] = CharToLower(input[pos]);
 		pos++;

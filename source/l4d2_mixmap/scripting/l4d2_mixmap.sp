@@ -13,7 +13,7 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re3.1.2"
+#define PLUGIN_VERSION "re3.3.0"
 
 StringMap g_hMapChapterNames;	 // stores the mission name by its corresponding first map name.
 
@@ -31,7 +31,7 @@ bool	   g_bManullyChoosingMap = false;
 bool	   g_bMapsetInitialized	 = false;
 int		   g_iMapsPlayed		 = 0;
 MapSetType g_iMapsetType		 = MapSet_None;
-char	   g_sPresetName[512];
+char	   g_sPresetName[256];
 
 // Modules
 #include <l4d2_mixmap/setup.sp>

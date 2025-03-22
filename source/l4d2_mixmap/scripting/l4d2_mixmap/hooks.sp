@@ -3,12 +3,12 @@
 #endif
 #define _l4d2_mixmap_hooks_included
 
-MRESReturn DTR_CTerrorPlayer_OnTransitionRestore(int pThis, DHookReturn hReturn)
+public Action L4D2_OnTransitionRestore(int pThis)
 {
 	if (!g_bMapsetInitialized)
-		return MRES_Ignored;
+		return Plugin_Continue;
 
-	g_hLogger.DebugEx("### DTR_CTerrorPlayer_OnTransitionRestore Called for %d, %N.", pThis, pThis);
+	g_hLogger.DebugEx("### L4D2_OnTransitionRestore Called for %d, %N.", pThis, pThis);
 
 	// not first map.
 	if (!L4D_IsFirstMapInScenario() && g_iMapsPlayed != 1)
@@ -17,69 +17,42 @@ MRESReturn DTR_CTerrorPlayer_OnTransitionRestore(int pThis, DHookReturn hReturn)
 	RequestFrame(OnNextFrame_ResetPlayers, pThis);	  // bots have not created, only player. same as midhook callback.
 	Patch(g_hPatch_Player_BlockRestoring, g_hCvar_SaveStatus.BoolValue ? false : true);
 
-	return MRES_Ignored;
+	return Plugin_Continue;
 }
 
 // redirect the map name to our desired map.
 MRESReturn DTR_CDirector_OnDirectorChangeLevel(DHookParam hParams)
 {
-	if (g_bMapsetInitialized)
-	{
-		if (L4D2_IsScavengeMode())
-			return MRES_Ignored;
-
-		g_hLogger.Trace("### DTR_CDirector_OnDirectorChangeLevel Called.");
-
-		char sMap[128];
-		if (g_hLogger.GetLevel() <= LogLevel_Debug)
-		{
-			if (hParams.IsNull(1))
-			{
-				g_hLogger.Error("### DTR_CDirector_OnDirectorChangeLevel: hParams.IsNull(1): true.");
-				return MRES_Ignored;
-			}
-			else
-			{
-				hParams.GetString(1, sMap, sizeof(sMap));
-				g_hLogger.DebugEx("### DTR_CDirector_OnDirectorChangeLevel: Original Map Name: \"%s\".", sMap);
-			}
-		}
-
-		if (g_iMapsPlayed >= g_hArrayPools.Length)
-			return MRES_Ignored;
-
-		g_hArrayPools.GetString(g_iMapsPlayed, sMap, sizeof(sMap));
-		g_hLogger.DebugEx("### DTR_CDirector_OnDirectorChangeLevel: Transition Map Name: \"%s\".", sMap);
-		hParams.SetString(1, sMap);
-
-		return MRES_ChangedHandled;
-	}
-
-	return MRES_Ignored;
+	return RedirectMap(hParams);
 }
 
 // three onbeginchangelevel should be set to the right map.
 MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
+{
+	return RedirectMap(hParams);
+}
+
+MRESReturn RedirectMap(DHookParam hParams)
 {
 	if (g_bMapsetInitialized)
 	{
 		if (L4D2_IsScavengeMode())
 			return MRES_Ignored;
 
-		g_hLogger.Trace("### DTR_CTerrorGameRules_OnBeginChangeLevel Called.");
+		g_hLogger.Trace("### RedirectMap Called.");
 
 		char sMap[128];
 		if (g_hLogger.GetLevel() <= LogLevel_Debug)
 		{
 			if (hParams.IsNull(1))
 			{
-				g_hLogger.Error("### DTR_CTerrorGameRules_OnBeginChangeLevel: hParams.IsNull(1): true.");
+				g_hLogger.Error("### RedirectMap: hParams.IsNull(1): true.");
 				return MRES_Ignored;
 			}
 			else
 			{
 				hParams.GetString(1, sMap, sizeof(sMap));
-				g_hLogger.DebugEx("### DTR_CTerrorGameRules_OnBeginChangeLevel: Original Map Name: \"%s\".", sMap);
+				g_hLogger.DebugEx("### RedirectMap: Original Map Name: \"%s\".", sMap);
 			}
 		}
 
@@ -87,7 +60,7 @@ MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
 			return MRES_Ignored;
 
 		g_hArrayPools.GetString(g_iMapsPlayed, sMap, sizeof(sMap));
-		g_hLogger.DebugEx("### DTR_CTerrorGameRules_OnBeginChangeLevel: Transition Map Name: \"%s\".", sMap);
+		g_hLogger.DebugEx("### RedirectMap: Transition Map Name: \"%s\".", sMap);
 		hParams.SetString(1, sMap);
 
 		return MRES_ChangedHandled;
@@ -97,10 +70,12 @@ MRESReturn DTR_CTerrorGameRules_OnBeginChangeLevel(DHookParam hParams)
 }
 
 // bots have created.
-MRESReturn DTR_RestoreTransitionedSurvivorBots_Post()
+public void L4D2_OnRestoreTransitionedSurvivorBots_Post()
 {
 	if (!g_bMapsetInitialized)
-		return MRES_Ignored;
+		return;
+
+	g_hLogger.Trace("### L4D2_RestoreTransitionedSurvivorBots_Post Called.");
 
 	// rarely, bots died before we teleport them.
 	// need to set them god like.
@@ -118,7 +93,6 @@ MRESReturn DTR_RestoreTransitionedSurvivorBots_Post()
 	}
 
 	RequestFrame(OnNextFrame_ResetPlayers, 0);
-	return MRES_Ignored;
 }
 
 // prevent survivor bot disodering when map change using survivor set between l4d2 and l4d1.
@@ -252,9 +226,10 @@ void ResetPlayer(int client)
 		{
 			TeleportEntity(client, vec, NULL_VECTOR, NULL_VECTOR);
 
-			// only available when player is not inside the wall (have a valid nav.)
+			// only available when player is not inside the wall (have a valid nav.), that's why we need to teleport them first by searching the valid point then this.
 			// so this is used to teleport player twice in case they were teleported outside the saferoom.
-			CheatCommand(client, "warp_to_start_area");
+			if (!IsClientInSafeArea(client))
+				CheatCommand(client, "warp_to_start_area");
 		}
 	}
 
