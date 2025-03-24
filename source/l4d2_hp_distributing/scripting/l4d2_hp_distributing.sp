@@ -19,7 +19,8 @@ static const char g_sRewardEventName[][] = {
 	"saved_from_si_control",
 };
 
-enum {
+enum
+{
 	SIType_Smoker = 1,
 	SIType_Boomer,
 	SIType_Hunter,
@@ -30,16 +31,18 @@ enum {
 	SIType_Size	   // 6 size
 }
 
-enum {
-	RewordType_ProtectFriendly = 67,
+enum
+{
+	RewordType_ProtectFriendly	  = 67,
 	RewardType_SavedFromSIControl = 76,
 }
 
-enum {
-	ProtectFriendly = 0,
+enum
+{
+	ProtectFriendly	   = 0,
 	SavedFromSIControl = 1,
 
-	RewardType_Size = 2
+	RewardType_Size	   = 2
 }
 
 ConVar g_hCvar_MaxmuimHealth;
@@ -58,7 +61,7 @@ ConVar
 	g_hCvar_SoloTankReward,
 	g_hCvar_OneShotWitch;
 
-#define PLUGIN_VERSION "1.0.0"
+#define PLUGIN_VERSION "1.0.1"
 
 public Plugin myinfo =
 {
@@ -74,7 +77,7 @@ public void OnPluginStart()
 	LoadTranslation("l4d2_hp_distributing.phrases");
 
 	CreateConVar("l4d2_hp_distributing_version", PLUGIN_VERSION, "Plugin version", FCVAR_NOTIFY | FCVAR_DONTRECORD);
-	g_hCvar_Enable = CreateConVar("l4d2_hp_distributing_enable", "1", "Enable or disable plugin.");
+	g_hCvar_Enable		  = CreateConVar("l4d2_hp_distributing_enable", "1", "Enable or disable plugin.");
 	g_hCvar_MaxmuimHealth = CreateConVar("l4d2_hp_distributing_max_health", "120", "Max health to stop rewarding.", _, true, 0.0);
 
 	char sBuffer[128];
@@ -91,16 +94,16 @@ public void OnPluginStart()
 		g_hCvar_RewardEvent[i] = CreateConVar(sBuffer, "0", "Event Reward Health", _, true, 0.0);
 	}
 
-	g_hCvar_KillTankReward = CreateConVar("l4d2_hp_distributing_kill_tank_reward", "10", "Kill Tank Reward Health", _, true, 0.0);
-	g_hCvar_KillWitchReward = CreateConVar("l4d2_hp_distributing_kill_witch_reward", "10", "Kill Witch Reward Health", _, true, 0.0);
-	g_hCvar_DefibReward = CreateConVar("l4d2_hp_distributing_defiber_reward", "10", "Defiber Reward Health", _, true, 0.0);
-	g_hCvar_ReviveReward = CreateConVar("l4d2_hp_distributing_revive_reward", "5", "Revive Reward Health", _, true, 0.0);
+	g_hCvar_KillTankReward	  = CreateConVar("l4d2_hp_distributing_kill_tank_reward", "10", "Kill Tank Reward Health", _, true, 0.0);
+	g_hCvar_KillWitchReward	  = CreateConVar("l4d2_hp_distributing_kill_witch_reward", "10", "Kill Witch Reward Health", _, true, 0.0);
+	g_hCvar_DefibReward		  = CreateConVar("l4d2_hp_distributing_defiber_reward", "10", "Defiber Reward Health", _, true, 0.0);
+	g_hCvar_ReviveReward	  = CreateConVar("l4d2_hp_distributing_revive_reward", "5", "Revive Reward Health", _, true, 0.0);
 	g_hCvar_LedgeReviveReward = CreateConVar("l4d2_hp_distributing_ledge_revive_reward", "3", "Ledge Revive Reward Health", _, true, 0.0);
-	g_hCvar_RescureReward = CreateConVar("l4d2_hp_distributing_rescure_reward", "10", "Rescure Reward Health", _, true, 0.0);
-	g_hCvar_HealReward = CreateConVar("l4d2_hp_distributing_heal_reward", "2", "Heal Reward Health", _, true, 0.0);
-	g_hCvar_SoloTankReward = CreateConVar("l4d2_hp_distributing_solo_tank_reward", "10", "Solo Tank Reward Health", _, true, 0.0);
-	g_hCvar_OneShotWitch = CreateConVar("l4d2_hp_distributing_one_shot_witch_reward", "10", "One Shot Witch Reward Health", _, true, 0.0);
-	
+	g_hCvar_RescureReward	  = CreateConVar("l4d2_hp_distributing_rescure_reward", "10", "Rescure Reward Health", _, true, 0.0);
+	g_hCvar_HealReward		  = CreateConVar("l4d2_hp_distributing_heal_reward", "2", "Heal Reward Health", _, true, 0.0);
+	g_hCvar_SoloTankReward	  = CreateConVar("l4d2_hp_distributing_solo_tank_reward", "10", "Solo Tank Reward Health", _, true, 0.0);
+	g_hCvar_OneShotWitch	  = CreateConVar("l4d2_hp_distributing_one_shot_witch_reward", "10", "One Shot Witch Reward Health", _, true, 0.0);
+
 	g_hCvar_Enable.AddChangeHook(OnEnableChanged);
 	ToggleEnable();
 }
@@ -160,7 +163,11 @@ void Event_Witchkilled(Event event, const char[] name, bool dontBroadcast)
 
 	bool bOneShot = event.GetBool("oneshot");
 	if (!IsFakeClient(client))
-		CPrintToChat(client, "%t", "WitchKilled", g_hCvar_KillWitchReward.IntValue + (bOneShot ? g_hCvar_OneShotWitch.IntValue : 0), bOneShot ? "by one shot" : "");
+	{
+		char sBuffer[64];
+		if (bOneShot) Format(sBuffer, sizeof(sBuffer), "%T", "ByOneShot", client);
+		CPrintToChat(client, "%t", "WitchKilled", g_hCvar_KillWitchReward.IntValue + (bOneShot ? g_hCvar_OneShotWitch.IntValue : 0), sBuffer);
+	}
 
 	RewardHealth(client, g_hCvar_KillWitchReward.IntValue + (bOneShot ? g_hCvar_OneShotWitch.IntValue : 0));
 }
@@ -182,7 +189,11 @@ void Event_TankKilled(Event event, const char[] name, bool dontBroadcast)
 
 	bool bSolo = event.GetBool("solo");
 	if (!IsFakeClient(client))
-		CPrintToChat(client, "%t", "TankKilled", g_hCvar_KillTankReward.IntValue + (bSolo ? g_hCvar_SoloTankReward.IntValue : 0), bSolo ? "by solo" : "");
+	{
+		char sBuffer[64];
+		if (bSolo) Format(sBuffer, sizeof(sBuffer), "%T", "BySolo", client);
+		CPrintToChat(client, "%t", "TankKilled", g_hCvar_KillTankReward.IntValue + (bSolo ? g_hCvar_SoloTankReward.IntValue : 0), sBuffer);
+	}
 
 	RewardHealth(client, g_hCvar_KillTankReward.IntValue + (bSolo ? g_hCvar_SoloTankReward.IntValue : 0));
 }
@@ -259,7 +270,8 @@ void Event_ReviveSuccess(Event event, const char[] name, bool dontBroadcast)
 		return;
 
 	if (!IsFakeClient(savior))
-		CPrintToChat(savior, "%t", bLedged ? "LedgeRevive" : "Revive", bLedged ? g_hCvar_LedgeReviveReward.IntValue : g_hCvar_ReviveReward.IntValue, patient);
+		CPrintToChat(savior, "%t", 	bLedged ? "LedgeRevive" : "Revive", 
+									bLedged ? g_hCvar_LedgeReviveReward.IntValue : g_hCvar_ReviveReward.IntValue, patient);
 
 	bLedged ? 
 	RewardHealth(savior, g_hCvar_LedgeReviveReward.IntValue) : 
@@ -302,6 +314,11 @@ void Event_HealSuccess(Event event, const char[] name, bool dontBroadcast)
 
 	int patient = GetClientOfUserId(event.GetInt("subject"));
 	if (!ValidatePlayer(patient, 2))
+		return;
+
+	// you can't actully aid-heal yourself right?
+	// for l4d2_dev_menu plugin by fdxx. 
+	if (patient == healer)
 		return;
 
 	if (!IsFakeClient(healer))
@@ -356,37 +373,35 @@ void RewardHealth(int client, int iReward)
 
 	if (tempHealth == -1)
 		tempHealth = 0;
-	
+
 	if (realHealth + tempHealth + iReward > g_hCvar_MaxmuimHealth.IntValue)
 	{
 		float overflowHealth, occupiedHealth;
 		overflowHealth = float(realHealth + tempHealth + iReward - g_hCvar_MaxmuimHealth.IntValue);
 		occupiedHealth = (tempHealth < overflowHealth) ? 0.0 : (float(tempHealth) - overflowHealth);
-		
+
 		SetEntPropFloat(client, Prop_Send, "m_healthBufferTime", GetGameTime());
 		SetEntPropFloat(client, Prop_Send, "m_healthBuffer", occupiedHealth);
 	}
-		
-	((realHealth + iReward) < g_hCvar_MaxmuimHealth.IntValue) ?
-	SetEntProp(client, Prop_Send, "m_iHealth", realHealth + iReward) :
+
+	((realHealth + iReward) < g_hCvar_MaxmuimHealth.IntValue) ? 
+	SetEntProp(client, Prop_Send, "m_iHealth", realHealth + iReward) : 
 	SetEntProp(client, Prop_Send, "m_iHealth", realHealth > g_hCvar_MaxmuimHealth.IntValue ? realHealth : g_hCvar_MaxmuimHealth.IntValue);
 }
 
 // from left4dhooks_stocks by Silvers
 stock int GetPlayerTempHealth(int client)
 {
-    static ConVar pain_pills_decay_rate = null;
-    if (!pain_pills_decay_rate)
-    {
-        pain_pills_decay_rate = FindConVar("pain_pills_decay_rate");
-        if (!pain_pills_decay_rate)
-            return -1;
-    }
+	static ConVar pain_pills_decay_rate = null;
+	if (!pain_pills_decay_rate)
+	{
+		pain_pills_decay_rate = FindConVar("pain_pills_decay_rate");
+		if (!pain_pills_decay_rate)
+			return -1;
+	}
 
-    int tempHealth = RoundToCeil(GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - 
-								((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * 
-								pain_pills_decay_rate.FloatValue)) - 1;
-    return tempHealth < 0 ? 0 : tempHealth;
+	int tempHealth = RoundToCeil(GetEntPropFloat(client, Prop_Send, "m_healthBuffer") - ((GetGameTime() - GetEntPropFloat(client, Prop_Send, "m_healthBufferTime")) * pain_pills_decay_rate.FloatValue)) - 1;
+	return tempHealth < 0 ? 0 : tempHealth;
 }
 
 stock bool ValidatePlayer(int client, int team)
@@ -404,7 +419,7 @@ stock bool ValidatePlayer(int client, int team)
 stock void StrToLowerCase(const char[] input, char[] output, int maxlength)
 {
 	int pos;
-	while( input[pos] != 0 && pos < maxlength )
+	while (input[pos] != 0 && pos < maxlength)
 	{
 		output[pos] = CharToLower(input[pos]);
 		pos++;
