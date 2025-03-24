@@ -61,7 +61,7 @@ ConVar
 	g_hCvar_SoloTankReward,
 	g_hCvar_OneShotWitch;
 
-#define PLUGIN_VERSION "1.0.1"
+#define PLUGIN_VERSION "1.1.0"
 
 public Plugin myinfo =
 {
@@ -71,6 +71,19 @@ public Plugin myinfo =
 	version	= PLUGIN_VERSION,
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
+
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
+	if (GetEngineVersion() != Engine_Left4Dead2)
+	{
+		strcopy(error, err_max, "Plugin only supports Left 4 Dead 2.");
+		return APLRes_SilentFailure;
+	}
+
+	CreateNative("GetSIReward", Native_GetSIReward);
+    RegPluginLibrary("l4d2_hp_distributing");
+	return APLRes_Success;
+}
 
 public void OnPluginStart()
 {
@@ -437,4 +450,11 @@ stock void LoadTranslation(const char[] translation)
 		SetFailState("Missing translation file %s.txt", translation);
 
 	LoadTranslations(translation);
+}
+
+// native int GetSIReward(SIType type);
+int Native_GetSIReward(Handle hPlugin, int iNumParams)
+{
+	int type = GetNativeCell(1);
+	return g_hCvar_SIReward[type - 1].IntValue;
 }
