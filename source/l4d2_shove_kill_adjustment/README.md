@@ -10,19 +10,19 @@ Provides ability to modify the mechanics of "shoving special infecteds to death"
 
 2. Allows you completely disable the shove kill mechanics.
 
-3. Allows you to adjust the time that the game needs to decrement the shove count. (Requires [MidHook Extention](https://github.com/Scags/SM-MidHooks))
+3. Allows you to adjust the time that the game needs to decrement the shove count.
 
 ## Requirements
 
 * SourceMod 1.12+
 * [Left 4 DHooks Direct Plugin](https://forums.alliedmods.net/showthread.php?t=321696) by Silvers and others.
-* [MidHook Extention](https://github.com/Scags/SM-MidHooks) (Optional)
+* [MidHook Extention](https://github.com/Scags/SM-MidHooks)
 * [gamedata_wrapper.inc](https://github.com/blueblur0730/modified-plugins/blob/main/include/gamedata_wrapper.inc) to compile.
 
 ## ConVars
 
-See [file](./scripting/l4d2_shove_kill_adjustment.sp#L542C0 -L542C20).
+See [file](./scripting/l4d2_shove_kill_adjustment.sp#L503C0-L503C20).
 
 ## Additional Comments
 
-See [file](./scripting/l4d2_shove_kill_adjustment.sp#L30C0 -L37C114).
+See [file](./scripting/l4d2_shove_kill_adjustment.sp#L43C0-L46C114).
