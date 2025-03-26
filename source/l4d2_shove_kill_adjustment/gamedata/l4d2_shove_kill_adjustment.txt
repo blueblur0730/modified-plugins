@@ -1,0 +1,87 @@
+"Games"
+{
+    "#default"
+    {
+        "Offsets"
+        {
+            "OS"
+            {
+                "linux"     "1"
+                "windows"   "0"
+            }
+        }
+    }
+    
+    "left4dead2"
+    {
+        "Functions"
+        {
+            "CTerrorPlayer::UpdateStagger"
+            {
+                "signature"     "CTerrorPlayer::UpdateStagger"
+                "callconv"      "thiscall"
+                "return"        "void"
+                "this"          "entity"
+            }
+        }
+
+        "Addresses"
+        {
+            "CTerrorPlayer::UpdateStagger__OnCheckTimestamp"
+            {
+                "linux"
+                {
+                    "signature"     "CTerrorPlayer::UpdateStagger"
+                    "offset"        "0x8F"  // CTerrorPlayer::UpdateStagger(void)+8F   F3 0F 5C 41 2C  subss   xmm0, dword ptr [ecx+2Ch]
+                }
+
+                "windows"
+                {
+                    "signature"     "CTerrorPlayer::UpdateStagger"
+                    "offset"        "0x37"  // sub_1034B110+37   F3 0F 5C 42 2C   subss   xmm0, dword ptr [edx+2Ch]
+                }
+            }
+        }
+
+        "Offsets"
+        {
+            "CTerrorPlayer->m_nMaxShoveCount__relative_offset"  // relative to m_shoveForce.
+            {
+                "linux"     "24"
+                "windows"   "24"
+            }
+
+            "CTerrorPlayer->m_nCurrentShoveCount__relative_offset"  // relative to m_shoveForce.
+            {
+                "linux"     "8"
+                "windows"   "8"
+            }
+
+            "CBaseEntity::GetBaseEntity"
+            {
+                "linux"     "6"
+                "windows"   "5"
+            }
+
+            "MidHook__patch_offset"
+            {
+                "linux"     "36"    // 0x9, 0x98 - 0x8F.
+                "windows"   "32"    // 0x8, 0x3F - 0x37.
+            }
+        }
+
+        "Signatures"
+        {
+            // windows sig:
+            // search for "%s: nav intensity: %f" to find CTerrorPlayer::PostThink,
+            // see above, a lot of functions gathering here, the 5th is CTerrorPlayer::UpdateStagger.
+            "CTerrorPlayer::UpdateStagger"
+            {
+                "library"   "server"
+                "linux"     "@_ZN13CTerrorPlayer13UpdateStaggerEv"
+                "windows"   "\x53\x56\x8B\xF1\x83\xCB\x2A\x83\xBE\x2A\x2A\x00\x00\x00\x57\x0F\x84\x2A\x00\x00\x00\x8B\x3D\x2A\x2A\x2A\x2A\xEB"
+                /* 53 56 8B F1 83 CB ? 83 BE ? ? 00 00 00 57 0F 84 ? 00 00 00 8B 3D ? ? ? ? EB */
+            }
+        }
+    }
+}
