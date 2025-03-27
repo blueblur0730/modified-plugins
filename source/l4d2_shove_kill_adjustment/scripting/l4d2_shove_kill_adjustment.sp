@@ -140,7 +140,7 @@ public Plugin myinfo =
 {
 	name = "[L4D2] Shove Kill Adjustment",
 	author = "blueblur",
-	description = "Adjust the shove count of getting killed for SIs.",
+	description = "Provides ability to modify the mechanics of \"shoving special infecteds to death\".",
 	version = PLUGIN_VERSION,
 	url = "https://github.com/blueblur0730/modified-plugins",
 }
