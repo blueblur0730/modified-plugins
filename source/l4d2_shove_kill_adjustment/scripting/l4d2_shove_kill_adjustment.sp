@@ -3,9 +3,11 @@
 
 #include <sourcemod>
 #include <sdktools>
-#include <sdkhooks>
+#include <sourcescramble>
+
+#undef REQUIRE_EXTENSIONS
 #include <midhook>
-#include <left4dhooks>
+
 #include <gamedata_wrapper>
 
 #define GAMEDATA_FILE "l4d2_shove_kill_adjustment"
@@ -14,12 +16,8 @@
 #define DETOUR_FUNCTION "CTerrorPlayer::UpdateStagger"
 #define MIDHOOK_FUNCTION "CTerrorPlayer::UpdateStagger__OnCheckTimestamp"
 #define SDKCALL_FUNCTION "CBaseEntity::GetBaseEntity"
-#define PATCH_OFFSET "MidHook__patch_offset"
-
-#define JGE_JUMPNEAR_OPCODE 0x8D // 0F 8D, linux
-#define JGE_JUMPSHORT_OPCODE 0x7D // 7D, windows
-#define JBE_JUMPNEAR_OPCODE 0x86 // 0F 86, linux
-#define JBE_JUMPSHORT_OPCODE 0x76 // 76, widows
+#define PATCH_NAME "CTerrorPlayer::UpdateStagger__PatchGreaterOrEqual"
+#define PATCH_NAME2 "CTerrorPlayer::OnShovedBySurvivor__PatchJumpNoCondition"
 
 OperatingSystem g_iOS = OS_UnknownPlatform;
 
@@ -87,8 +85,14 @@ OperatingSystem g_iOS = OS_UnknownPlatform;
  * `m_nMaxShoveCount = RandomInt(z_exploding_shove_min.GetInt(), z_exploding_shove_max.GetInt());`
  * 
  * won't be executed either.
- * Thus, m_nMaxShoveCount will be only set once by cvar on post spawn during the SI life time.
+ * Thus, m_nMaxShoveCount will be only set once by plugin cvar on post spawn during the SI its whole life time (or anytime you want).
  * At last, the shove kill mechanics is fully controlled by plugin cvars.
+ * 
+ * Additionaly, to make the SI "invunerable", which means they can't be killed by shove, we will patch here on CTerrorPlayer::OnShovedBySurvivor:
+ * 
+ * `if ( m_nCurrentShoveCount < m_nMaxShoveCount )`
+ * 
+ * from `JL` to `JMP`, so the following take damage logic will never be excuted.
 */
 
 enum {
@@ -104,11 +108,14 @@ enum {
 
 int g_iOff_m_nMaxShoveCount = -1;
 int g_iOff_m_nCurrentShoveCount = -1;
-int g_iOff_PatchOffset = -1;
 
 MidHook g_hMidHook;
 DynamicDetour g_hDetour;
 Handle g_hSDKCall_GetBaseEntity;
+MemoryPatch g_hPatch__OnCheckTimestamp;
+MemoryPatch g_hPatch__PreventAccumulating;
+
+ConVar g_hCvar_ShoveCountToggle;
 
 ConVar g_hCvar_SmokerShoveCount;
 ConVar g_hCvar_BoomerShoveCount;
@@ -117,19 +124,6 @@ ConVar g_hCvar_SpitterShoveCount;
 ConVar g_hCvar_JockeyShoveCount;
 ConVar g_hCvar_ChargerShoveCount;
 
-int g_iSmokerShoveCount;
-int g_iBoomerShoveCount;
-int g_iHunterShoveCount;
-int g_iSpitterShoveCount;
-int g_iJockeyShoveCount;
-int g_iChargerShoveCount;
-
-ConVar g_hCvar_PreventAccumulating;
-ConVar g_hCvar_IntervalAdjustment;
-
-bool g_bPreventAccumulating;
-bool g_bIntervalAdjustment;
-
 ConVar g_hCvar_SmokerShoveInterval;
 ConVar g_hCvar_BoomerShoveInterval;
 ConVar g_hCvar_HunterShoveInterval;
@@ -137,16 +131,10 @@ ConVar g_hCvar_SpitterShoveInterval;
 ConVar g_hCvar_JockeyShoveInterval;
 ConVar g_hCvar_ChargerShoveInterval;
 
-float g_flSmokerShoveInterval;
-float g_flBoomerShoveInterval;
-float g_flHunterShoveInterval;
-float g_flSpitterShoveInterval;
-float g_flJockeyShoveInterval;
-float g_flChargerShoveInterval;
-
 bool g_bShouldAdjust[MAXPLAYERS + 1] = { false, ... };
+bool g_bMidHookAvailable = false;
 
-#define PLUGIN_VERSION "2.0.0"
+#define PLUGIN_VERSION "2.2.0"
 
 public Plugin myinfo = 
 {
@@ -159,54 +147,33 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
+    g_bMidHookAvailable = LibraryExists("midhooks");
+
     LoadGameData();
-    CreateConVar("l4d2_shove_kill_adjustment_version", PLUGIN_VERSION, "Plugin version.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
     CreateConVars();
+    HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Post);
 }
 
 public void OnPluginEnd()
 {
     delete g_hMidHook;
     delete g_hDetour;   // well whatever disable it or not, it dosen't do anything.
+    delete g_hPatch__OnCheckTimestamp;
+    delete g_hPatch__PreventAccumulating;
 }
 
-public void OnEntityCreated(int entity, const char[] classname)
+// m_nMaxShoveCount is initialized in CTerrorPlayer::Spawn, player_spawn is called after it.
+void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
-    if (entity <= 0 || entity > MaxClients)
+    int client = GetClientOfUserId(event.GetInt("userid"));
+
+    if (client <= 0 || client > MaxClients)
         return;
 
-    if (!IsValidEntity(entity))
+    if (!IsClientInGame(client) || GetClientTeam(client) != 3)
         return;
 
-    SDKHook(entity, SDKHook_SpawnPost, OnSpawnPost);    
-}
-
-void OnSpawnPost(int entity)
-{
-    if (!IsValidEntity(entity))
-        return;
-
-    if (!IsClientInGame(entity) || GetClientTeam(entity) != 3)
-        return;
-
-    RequestFrame(SetMaxShoveCount, entity);
-}
-
-public void L4D_OnShovedBySurvivor_Post(int client, int victim, const float vecDir[3])
-{
-    if (!g_bPreventAccumulating)
-        return;
-
-	if (!IsClientInGame(victim))
-		return;
-	
-	if (GetClientTeam(victim) != 3 || !IsPlayerAlive(victim))
-		return;
-	
-	if (!L4D_IsPlayerStaggering(victim))
-		return;
-
-	SetCurrentShoveCount(victim, 0);
+    SetMaxShoveCount(client);
 }
 
 // need a inline hook here, cause this function is called in frames and literally for every SIs, and we only have one cvar.
@@ -253,7 +220,7 @@ void MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp(MidHookRegisters reg)
     {
         case SIType_Smoker:
         {
-            float flDifferential = flCurtime[0] - g_flSmokerShoveInterval;
+            float flDifferential = flCurtime[0] - g_hCvar_SmokerShoveInterval.FloatValue;
             if (flDifferential > flShoveTimestamp)
             {
                 if (GetCurrentShoveCount(client) - 1 >= 0)
@@ -263,7 +230,7 @@ void MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp(MidHookRegisters reg)
 
         case SIType_Boomer:
         {
-            float flDifferential = flCurtime[0] - g_flBoomerShoveInterval;
+            float flDifferential = flCurtime[0] - g_hCvar_BoomerShoveInterval.FloatValue;
             if (flDifferential > flShoveTimestamp)
             {
                 if (GetCurrentShoveCount(client) - 1 >= 0)
@@ -273,7 +240,7 @@ void MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp(MidHookRegisters reg)
 
         case SIType_Hunter:
         {
-            float flDifferential = flCurtime[0] - g_flHunterShoveInterval;
+            float flDifferential = flCurtime[0] - g_hCvar_HunterShoveInterval.FloatValue;
             if (flDifferential > flShoveTimestamp)
             {
                 if (GetCurrentShoveCount(client) - 1 >= 0)
@@ -283,7 +250,7 @@ void MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp(MidHookRegisters reg)
 
         case SIType_Spitter:
         {
-            float flDifferential = flCurtime[0] - g_flSpitterShoveInterval;
+            float flDifferential = flCurtime[0] - g_hCvar_SpitterShoveInterval.FloatValue;
             if (flDifferential > flShoveTimestamp)
             {
                 if (GetCurrentShoveCount(client) - 1 >= 0)
@@ -293,7 +260,7 @@ void MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp(MidHookRegisters reg)
 
         case SIType_Jockey:
         {
-            float flDifferential = flCurtime[0] - g_flJockeyShoveInterval;
+            float flDifferential = flCurtime[0] - g_hCvar_JockeyShoveInterval.FloatValue;
             if (flDifferential > flShoveTimestamp)
             {
                 if (GetCurrentShoveCount(client) - 1 >= 0)
@@ -303,7 +270,7 @@ void MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp(MidHookRegisters reg)
 
         case SIType_Charger:
         {
-            float flDifferential = flCurtime[0] - g_flChargerShoveInterval;
+            float flDifferential = flCurtime[0] - g_hCvar_ChargerShoveInterval.FloatValue;
             if (flDifferential > flShoveTimestamp)
             {
                 if (GetCurrentShoveCount(client) - 1 >= 0)
@@ -349,40 +316,62 @@ void SetMaxShoveCount(int entity)
     if (s_iOff_m_nMaxShoveCount == -1)
         s_iOff_m_nMaxShoveCount = (FindSendPropInfo("CTerrorPlayer", "m_shoveForce") - g_iOff_m_nMaxShoveCount); 
 
-    switch (GetEntProp(entity, Prop_Send, "m_zombieClass"))
+    if (!g_hCvar_ShoveCountToggle.BoolValue)
     {
-        case SIType_Smoker:
-            SetEntData(entity, s_iOff_m_nMaxShoveCount, g_iSmokerShoveCount, true);
+        static ConVar z_exploding_shove_min = null;
+        static ConVar z_exploding_shove_max = null;
+        if (!z_exploding_shove_min)
+            z_exploding_shove_min = FindConVar("z_exploding_shove_min");
 
-        case SIType_Boomer:
-            SetEntData(entity, s_iOff_m_nMaxShoveCount, g_iBoomerShoveCount, true);
+        if (!z_exploding_shove_max)
+            z_exploding_shove_max = FindConVar("z_exploding_shove_max");
 
-        case SIType_Hunter:
-            SetEntData(entity, s_iOff_m_nMaxShoveCount, g_iHunterShoveCount, true);
+        SetEntData(entity, s_iOff_m_nMaxShoveCount, GetRandomInt(z_exploding_shove_min.IntValue, z_exploding_shove_max.IntValue), true);
+    }
+    else
+    {
+        switch (GetEntProp(entity, Prop_Send, "m_zombieClass"))
+        {
+            case SIType_Smoker:
+                SetEntData(entity, s_iOff_m_nMaxShoveCount, g_hCvar_SmokerShoveCount.IntValue, true);
 
-        case SIType_Spitter:
-            SetEntData(entity, s_iOff_m_nMaxShoveCount, g_iSpitterShoveCount, true);
+            case SIType_Boomer:
+                SetEntData(entity, s_iOff_m_nMaxShoveCount, g_hCvar_BoomerShoveCount.IntValue, true);
 
-        case SIType_Jockey:
-            SetEntData(entity, s_iOff_m_nMaxShoveCount, g_iJockeyShoveCount, true);
+            case SIType_Hunter:
+                SetEntData(entity, s_iOff_m_nMaxShoveCount, g_hCvar_HunterShoveCount.IntValue, true);
 
-        case SIType_Charger:
-            SetEntData(entity, s_iOff_m_nMaxShoveCount, g_iChargerShoveCount, true);
+            case SIType_Spitter:
+                SetEntData(entity, s_iOff_m_nMaxShoveCount, g_hCvar_SpitterShoveCount.IntValue, true);
+
+            case SIType_Jockey:
+                SetEntData(entity, s_iOff_m_nMaxShoveCount, g_hCvar_JockeyShoveCount.IntValue, true);
+
+            case SIType_Charger:
+                SetEntData(entity, s_iOff_m_nMaxShoveCount, g_hCvar_ChargerShoveCount.IntValue, true);
+        }
     }
 }
 
-void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+void OnEnableChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-    g_bPreventAccumulating = g_hCvar_PreventAccumulating.BoolValue;
-    g_bIntervalAdjustment = g_hCvar_IntervalAdjustment.BoolValue;
+    if (!g_bMidHookAvailable)
+        return;
+
+    if (!g_hMidHook && g_bMidHookAvailable)
+    {
+        GameDataWrapper gd = new GameDataWrapper(GAMEDATA_FILE);
+        g_hMidHook = gd.CreateMidHookOrFail(MIDHOOK_FUNCTION, MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp, false);
+        delete gd;
+    }
 
     static bool bDetoured = false;
-    if (g_bIntervalAdjustment)
+    if (convar.BoolValue)
     {
         if (g_hMidHook && !g_hMidHook.Enabled)
         {
             g_hMidHook.Enable();
-            Patch(g_hMidHook.TargetAddress + view_as<Address>(g_iOff_PatchOffset), true);
+            Patch(g_hPatch__OnCheckTimestamp, true);
         }
 
         if (g_hDetour && !bDetoured)
@@ -397,7 +386,7 @@ void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue
         if (g_hMidHook && g_hMidHook.Enabled)
         {
             g_hMidHook.Disable();
-            Patch(g_hMidHook.TargetAddress + view_as<Address>(g_iOff_PatchOffset), false);
+            Patch(g_hPatch__OnCheckTimestamp, false);
         }
 
         if (g_hDetour && bDetoured)
@@ -409,76 +398,11 @@ void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue
     }
 }
 
-void OnShoveCountChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+void OnPreventShoveKillChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-    g_iSmokerShoveCount = g_hCvar_SmokerShoveCount.IntValue;
-    g_iBoomerShoveCount = g_hCvar_BoomerShoveCount.IntValue;
-    g_iHunterShoveCount = g_hCvar_HunterShoveCount.IntValue;
-    g_iSpitterShoveCount = g_hCvar_SpitterShoveCount.IntValue;
-    g_iJockeyShoveCount = g_hCvar_JockeyShoveCount.IntValue;
-    g_iChargerShoveCount = g_hCvar_ChargerShoveCount.IntValue;
-}
-
-void OnShoveIntervalChanged(ConVar convar, const char[] oldValue, const char[] newValue)
-{
-    g_flSmokerShoveInterval = g_hCvar_SmokerShoveInterval.FloatValue;
-    g_flBoomerShoveInterval = g_hCvar_BoomerShoveInterval.FloatValue;
-    g_flHunterShoveInterval = g_hCvar_HunterShoveInterval.FloatValue;
-    g_flSpitterShoveInterval = g_hCvar_SpitterShoveInterval.FloatValue;
-    g_flJockeyShoveInterval = g_hCvar_JockeyShoveInterval.FloatValue;
-    g_flChargerShoveInterval = g_hCvar_ChargerShoveInterval.FloatValue;
-}
-
-stock void Patch(Address pAdr, bool bPatch)
-{
-	static bool bPatched = false;
-	if (bPatch && !bPatched)
-	{
-        switch (g_iOS)
-        {
-            case OS_Linux:
-            {
-		        if (LoadFromAddress(pAdr, NumberType_Int8) == JBE_JUMPNEAR_OPCODE)
-                {
-                    StoreToAddress(pAdr, JGE_JUMPNEAR_OPCODE, NumberType_Int8);
-                    bPatched = true;
-                }
-            }
-
-            case OS_Windows:
-            {
-		        if (LoadFromAddress(pAdr, NumberType_Int8) == JBE_JUMPSHORT_OPCODE)
-                {
-                    StoreToAddress(pAdr, JGE_JUMPSHORT_OPCODE, NumberType_Int8);
-                    bPatched = true;
-                }
-            }
-        }
-
-	}
-	else if (!bPatch && bPatched)
-	{
-        switch (g_iOS)
-        {
-            case OS_Linux:
-            {
-		        if (LoadFromAddress(pAdr, NumberType_Int8) == JGE_JUMPNEAR_OPCODE)
-                {
-                    StoreToAddress(pAdr, JBE_JUMPNEAR_OPCODE, NumberType_Int8);
-                    bPatched = false;
-                }
-            }
-
-            case OS_Windows:
-            {
-		        if (LoadFromAddress(pAdr, NumberType_Int8) == JGE_JUMPSHORT_OPCODE)
-                {
-                    StoreToAddress(pAdr, JBE_JUMPSHORT_OPCODE, NumberType_Int8);
-                    bPatched = false;
-                }
-            }
-        }
-	}
+    convar.BoolValue ?
+    Patch(g_hPatch__PreventAccumulating, true) :
+    Patch(g_hPatch__PreventAccumulating, false);
 }
 
 void LoadGameData()
@@ -490,10 +414,14 @@ void LoadGameData()
 
     g_iOff_m_nMaxShoveCount = gd.GetOffset(OFFSET_NAME);
     g_iOff_m_nCurrentShoveCount = gd.GetOffset(OFFSET_NAME2);
-    g_iOff_PatchOffset = gd.GetOffset(PATCH_OFFSET);
-             
-    g_hMidHook = gd.CreateMidHookOrFail(MIDHOOK_FUNCTION, MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp, false);
+
+    if (g_bMidHookAvailable)
+        g_hMidHook = gd.CreateMidHookOrFail(MIDHOOK_FUNCTION, MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp, false);
+
     g_hDetour = gd.CreateDetourOrFail(DETOUR_FUNCTION, false, DTR_OnUpdateStagger_Pre, DTR_OnUpdateStagger_Post);
+
+    g_hPatch__OnCheckTimestamp = gd.CreateMemoryPatchOrFail(PATCH_NAME, false);
+    g_hPatch__PreventAccumulating = gd.CreateMemoryPatchOrFail(PATCH_NAME2, false);
 
     SDKCallParamsWrapper ret = { SDKType_CBaseEntity, SDKPass_Pointer };
     g_hSDKCall_GetBaseEntity = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_FUNCTION, _, _, true, ret);
@@ -503,107 +431,124 @@ void LoadGameData()
 
 void CreateConVars()
 {
-    g_hCvar_IntervalAdjustment = CreateConVarHook("l4d2_shove_kill_adjustment_enable", 
-                                                "0", 
-                                                "Enable plugins shove kill logic? \
-                                                1=plugin logic, 0=game cvar (z_exploding_shove_interval).", 
-                                                _, 
-                                                true, 0.0, true, 1.0,
-                                                OnConVarChanged);
+    CreateConVar("l4d2_shove_kill_adjustment_version", PLUGIN_VERSION, "Plugin version.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
 
-    g_hCvar_PreventAccumulating = CreateConVarHook("l4d2_shove_kill_adjustment_prevent_shove_kill", 
-                                                "0", 
-                                                "Prevent the shove count from accumulating.\
-                                                Note: This cvar is independent of l4d2_shove_kill_adjustment_enable.", 
-                                                _, 
-                                                true, 0.0, true, 1.0,
-                                                OnConVarChanged);
+    CreateConVarHookEx("l4d2_shove_kill_adjustment_enable", 
+                        "1", 
+                        "Enable plugin's shove interval logic? \
+                        1=plugin logic, 0=game cvar (z_exploding_shove_interval).", 
+                        _, 
+                        true, 0.0, true, 1.0,
+                        OnEnableChanged);
 
-    g_hCvar_SmokerShoveCount = CreateConVarHook("z_smoker_max_shove_count", 
-                                                "5", 
-                                                "Adjust the max shove count to get killed for smokers.", 
-                                                FCVAR_CHEAT|FCVAR_SPONLY, 
-                                                true, 1.0, false, 0.0,
-                                                OnShoveCountChanged);
+    CreateConVarHookEx("l4d2_shove_kill_adjustment_prevent_shove_kill", 
+                        "0", 
+                        "Prevent the shove count from accumulating.", 
+                        _, 
+                        true, 0.0, true, 1.0,
+                        OnPreventShoveKillChanged);
 
-    g_hCvar_BoomerShoveCount = CreateConVarHook("z_boomer_max_shove_count",
-                                                "5", 
-                                                "Adjust the max shove count to get killed for boomers.", 
-                                                FCVAR_CHEAT|FCVAR_SPONLY, 
-                                                true, 1.0, false, 0.0,
-                                                OnShoveCountChanged);
+    g_hCvar_ShoveCountToggle = CreateConVar("l4d2_shove_kill_adjustment_toggle", 
+                                            "1", 
+                                            "Enable plugin's shove count logic?\
+                                            1=plugin logic, 0=game cvar (z_exploding_shove_max/min).", 
+                                            _, 
+                                            true, 1.0, false, 0.0);
 
-    g_hCvar_HunterShoveCount = CreateConVarHook("z_hunter_max_shove_count", 
-                                                "5", 
-                                                "Adjust the max shove count to get killed for hunters.", 
-                                                FCVAR_CHEAT|FCVAR_SPONLY, 
-                                                true, 1.0, false, 0.0,
-                                                OnShoveCountChanged);
+    g_hCvar_SmokerShoveCount = CreateConVar("z_smoker_max_shove_count", 
+                                            "5", 
+                                            "Adjust the max shove count to get killed for smokers.", 
+                                            FCVAR_CHEAT|FCVAR_SPONLY, 
+                                            true, 1.0, false, 0.0);
 
-    g_hCvar_SpitterShoveCount = CreateConVarHook("z_spitter_max_shove_count", 
-                                                "4", 
-                                                "Adjust the max shove count to get killed for spitters.", 
-                                                FCVAR_CHEAT|FCVAR_SPONLY, 
-                                                true, 1.0, false, 0.0,
-                                                OnShoveCountChanged);
+    g_hCvar_BoomerShoveCount = CreateConVar("z_boomer_max_shove_count",
+                                            "5", 
+                                            "Adjust the max shove count to get killed for boomers.", 
+                                            FCVAR_CHEAT|FCVAR_SPONLY, 
+                                            true, 1.0, false, 0.0);
 
-    g_hCvar_JockeyShoveCount = CreateConVarHook("z_jockey_max_shove_count", 
-                                                "5", "Adjust the max shove count to get killed for jockeys.", 
-                                                FCVAR_CHEAT|FCVAR_SPONLY, 
-                                                true, 1.0, false, 0.0,
-                                                OnShoveCountChanged);
+    g_hCvar_HunterShoveCount = CreateConVar("z_hunter_max_shove_count", 
+                                            "5", 
+                                            "Adjust the max shove count to get killed for hunters.", 
+                                            FCVAR_CHEAT|FCVAR_SPONLY, 
+                                            true, 1.0, false, 0.0);
 
-    g_hCvar_ChargerShoveCount = CreateConVarHook("z_charger_max_shove_count", 
-                                                "6", 
-                                                "Adjust the max shove count to get killed for chargers.", 
-                                                FCVAR_CHEAT|FCVAR_SPONLY, 
-                                                true, 1.0, false, 0.0,
-                                                OnShoveCountChanged);
+    g_hCvar_SpitterShoveCount = CreateConVar("z_spitter_max_shove_count", 
+                                            "5", 
+                                            "Adjust the max shove count to get killed for spitters.", 
+                                            FCVAR_CHEAT|FCVAR_SPONLY, 
+                                            true, 1.0, false, 0.0);
 
-    g_hCvar_SmokerShoveInterval = CreateConVarHook("z_smoker_shove_interval",
+    g_hCvar_JockeyShoveCount = CreateConVar("z_jockey_max_shove_count", 
+                                            "5", "Adjust the max shove count to get killed for jockeys.", 
+                                            FCVAR_CHEAT|FCVAR_SPONLY, 
+                                            true, 1.0, false, 0.0);
+
+    g_hCvar_ChargerShoveCount = CreateConVar("z_charger_max_shove_count", 
+                                            "5", 
+                                            "Adjust the max shove count to get killed for chargers.", 
+                                            FCVAR_CHEAT|FCVAR_SPONLY, 
+                                            true, 1.0, false, 0.0);
+
+    g_hCvar_SmokerShoveInterval = CreateConVar("z_smoker_shove_interval",
                                                 "10.0", 
                                                 "Adjust the interval of decrementing a shove count for smokers.", 
                                                 FCVAR_CHEAT|FCVAR_SPONLY, 
-                                                true, 0.1, false, 0.0,
-                                                OnShoveIntervalChanged);
+                                                true, 0.1, false, 0.0);
 
-    g_hCvar_HunterShoveInterval = CreateConVarHook("z_hunter_shove_interval",
+    g_hCvar_HunterShoveInterval = CreateConVar("z_hunter_shove_interval",
                                                 "10.0", 
                                                 "Adjust the interval of decrementing a shove count for hunters.", 
                                                 FCVAR_CHEAT|FCVAR_SPONLY, 
-                                                true, 0.1, false, 0.0,
-                                                OnShoveIntervalChanged);
+                                                true, 0.1, false, 0.0);
 
-    g_hCvar_SpitterShoveInterval = CreateConVarHook("z_spitter_shove_interval",
+    g_hCvar_SpitterShoveInterval = CreateConVar("z_spitter_shove_interval",
                                                 "10.0", 
                                                 "Adjust the interval of decrementing a shove count for spitters.", 
                                                 FCVAR_CHEAT|FCVAR_SPONLY, 
-                                                true, 0.1, false, 0.0,
-                                                OnShoveIntervalChanged);
+                                                true, 0.1, false, 0.0);
 
-    g_hCvar_JockeyShoveInterval = CreateConVarHook("z_jockey_shove_interval",
+    g_hCvar_JockeyShoveInterval = CreateConVar("z_jockey_shove_interval",
                                                 "10.0", 
                                                 "Adjust the interval of decrementing a shove count for jockeys.", 
                                                 FCVAR_CHEAT|FCVAR_SPONLY, 
-                                                true, 0.1, false, 0.0,
-                                                OnShoveIntervalChanged);
+                                                true, 0.1, false, 0.0);
 
-    g_hCvar_ChargerShoveInterval = CreateConVarHook("z_charger_shove_interval",
+    g_hCvar_ChargerShoveInterval = CreateConVar("z_charger_shove_interval",
                                                 "10.0", 
                                                 "Adjust the interval of decrementing a shove count for chargers.", 
                                                 FCVAR_CHEAT|FCVAR_SPONLY, 
-                                                true, 0.1, false, 0.0,
-                                                OnShoveIntervalChanged);
+                                                true, 0.1, false, 0.0);
 
     g_hCvar_BoomerShoveInterval = FindConVar("z_exploding_shove_interval");
-    g_hCvar_BoomerShoveInterval.AddChangeHook(OnShoveIntervalChanged);
-
-    OnConVarChanged(null, "", "");
-    OnShoveCountChanged(null, "", "");
-    OnShoveIntervalChanged(null, "", "");
 }
 
-stock ConVar CreateConVarHook(const char[] name,
+public void OnLibraryAdded(const char[] name) { if (StrEqual("midhooks", name)) g_bMidHookAvailable = true; }
+public void OnLibraryRemoved(const char[] name) 
+{ 
+    if (StrEqual("midhooks", name)) 
+        g_bMidHookAvailable = false;
+
+    if (!g_bMidHookAvailable && g_hPatch__OnCheckTimestamp)
+        Patch(g_hPatch__OnCheckTimestamp, false);
+}
+
+stock void Patch(MemoryPatch hPatch, bool bPatch)
+{
+	static bool bPatched = false;
+	if (bPatch && !bPatched)
+	{
+		hPatch.Enable();
+		bPatched = true;
+	}
+	else if (!bPatch && bPatched)
+	{
+		hPatch.Disable();
+		bPatched = false;
+	}
+}
+
+stock ConVar CreateConVarHookEx(const char[] name,
 	const char[] defaultValue,
 	const char[] description="",
 	int flags=0,
@@ -612,6 +557,13 @@ stock ConVar CreateConVarHook(const char[] name,
 	ConVarChanged callback)
 {
 	ConVar cv = CreateConVar(name, defaultValue, description, flags, hasMin, min, hasMax, max);
+	
+	Call_StartFunction(INVALID_HANDLE, callback);
+	Call_PushCell(cv);
+	Call_PushNullString();
+	Call_PushNullString();
+	Call_Finish();
+	
 	cv.AddChangeHook(callback);
 	
 	return cv;

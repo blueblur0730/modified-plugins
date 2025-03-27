@@ -1,6 +1,6 @@
 **[English](./README.md) | [中文](./README-cn.md)**
 
-* [L4D2] Shove Kill Adjustment
+# [L4D2] Shove Kill Adjustment
 
 ## Introduction
 
@@ -8,21 +8,21 @@ Provides ability to modify the mechanics of "shoving special infecteds to death"
 
 1. Allows you to set the maximum count to get the SI to be shoved to death.
 
-2. Allows you completely disable the shove kill mechanics.
+2. Allows you completely disable the shove kill mechanics. (Required Source Scramble Extention)
 
-3. Allows you to adjust the time that the game needs to decrement the shove count.
+3. Allows you to adjust the time that the game needs to decrement the shove count for once. (Required Source Scramble Extention and MidHook Extention, Optional.)
 
 ## Requirements
 
-* SourceMod 1.12+
-* [Left 4 DHooks Direct Plugin](https://forums.alliedmods.net/showthread.php?t=321696) by Silvers and others.
-* [MidHook Extention](https://github.com/Scags/SM-MidHooks)
+* SourceMod 1.12+.
+* [MidHook Extention](https://github.com/Scags/SM-MidHooks) by Scags. (Optional)
+* [Source Scramble Extention](https://github.com/nosoop/SMExt-SourceScramble) by nosoop. (Required)
 * [gamedata_wrapper.inc](https://github.com/blueblur0730/modified-plugins/blob/main/include/gamedata_wrapper.inc) to compile.
 
 ## ConVars
 
-See [file](./scripting/l4d2_shove_kill_adjustment.sp#L503C0-L503C20).
+See [file](./scripting/l4d2_shove_kill_adjustment.sp#L431C0-L431C20).
 
 ## Additional Comments
 
-See [file](./scripting/l4d2_shove_kill_adjustment.sp#L43C0-L46C114).
+See [file](./scripting/l4d2_shove_kill_adjustment.sp#L41C0-L44C114).

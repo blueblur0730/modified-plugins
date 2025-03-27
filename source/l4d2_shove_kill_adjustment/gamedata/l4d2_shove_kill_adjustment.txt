@@ -27,6 +27,8 @@
 
         "Addresses"
         {
+            // midhook jmps is always 5 bytes in length, so this trampline has also patched the substrction operation.
+            // this is a perfect example to use midhook.
             "CTerrorPlayer::UpdateStagger__OnCheckTimestamp"
             {
                 "linux"
@@ -39,6 +41,46 @@
                 {
                     "signature"     "CTerrorPlayer::UpdateStagger"
                     "offset"        "0x37"  // sub_1034B110+37   F3 0F 5C 42 2C   subss   xmm0, dword ptr [edx+2Ch]
+                }
+            }
+        }
+
+        // well we could have not to use source scramble so it is just for convenient.
+        "MemPatches"
+        {
+            "CTerrorPlayer::UpdateStagger__PatchGreaterOrEqual"
+            {
+                "signature"     "CTerrorPlayer::UpdateStagger"
+                "linux"
+                {
+                    "offset"        "97h"   // CTerrorPlayer::UpdateStagger(void)+97   0F 86 78 FF FF FF  jbe     loc_9E8585
+                    "verify"        "\x0F\x86"  // JBE rel16/32, jump near if below or equal.
+                    "patch"         "\x0F\x8D"  // JGE rel16/32, jump near if above or equal.
+                }
+
+                "windows"
+                {
+                    "offset"        "3Fh"   // sub_1034B110+3F   76 59    jbe     short loc_1034B1AA
+                    "verify"        "\x76\x59"  // JBE rel16/32, jump short if below or equal.
+                    "patch"         "\x7D\x59"  // JGE rel16/32, jump short if above or equal.
+                }
+            }
+
+            "CTerrorPlayer::OnShovedBySurvivor__PatchJumpNoCondition"
+            {
+                "signature"     "CTerrorPlayer::OnShovedBySurvivor"
+                "linux"
+                {
+                    "offset"        "81Bh"   // CTerrorPlayer::OnShovedBySurvivor(CTerrorPlayer*,Vector const&) [clone]+81B  0F 8C 5F 02 00 00  jl      loc_9A9C90
+                    "verify"        "\x0F\x8C\x5F\x02\x00\x00"  // JL rel16/32, jump near if less.
+                    "patch"         "\x90\xE9\x5F\x02\x00\x00"  // NOP + JMP rel32 , jump near.
+                }
+
+                "windows"
+                {
+                    "offset"        "629h"  // sub_1032BA10+629  0F 8C 56 01 00 00  jl      loc_1032C195
+                    "verify"        "\x0F\x8C\x56\x01\x00\x00"  // JL rel16/32, jump near if less.
+                    "patch"         "\x90\xE9\x56\x01\x00\x00"  // NOP + JMP rel32 , jump near.
                 }
             }
         }
@@ -62,12 +104,6 @@
                 "linux"     "6"
                 "windows"   "5"
             }
-
-            "MidHook__patch_offset"
-            {
-                "linux"     "36"    // 0x9, 0x98 - 0x8F.
-                "windows"   "32"    // 0x8, 0x3F - 0x37.
-            }
         }
 
         "Signatures"
@@ -82,6 +118,16 @@
                 "windows"   "\x53\x56\x8B\xF1\x83\xCB\x2A\x83\xBE\x2A\x2A\x00\x00\x00\x57\x0F\x84\x2A\x00\x00\x00\x8B\x3D\x2A\x2A\x2A\x2A\xEB"
                 /* 53 56 8B F1 83 CB ? 83 BE ? ? 00 00 00 57 0F 84 ? 00 00 00 8B 3D ? ? ? ? EB */
             }
+
+            // Linux: CTerrorPlayer::OnShovedBySurvivor [clone].
+            // Windows: CTerrorPlayer::OnShovedBySurvivor.
+			"CTerrorPlayer::OnShovedBySurvivor"
+			{
+				"library"	"server"
+				"linux" 	"@_ZN13CTerrorPlayer18OnShovedBySurvivorEPS_RK6Vector.part.728"
+				"windows" 	"\x55\x8B\xEC\x81\xEC\x2A\x00\x00\x00\xA1\x2A\x2A\x2A\x2A\x33\xC5\x89\x45\x2A\x53\x8B\x5D\x2A\x56\x57\x8B\x7D\x2A\x8B\xF1"
+				/* 55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 ? 53 8B 5D ? 56 57 8B 7D ? 8B F1 */
+			}
         }
     }
 }

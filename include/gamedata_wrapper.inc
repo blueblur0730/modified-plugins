@@ -410,7 +410,7 @@ methodmap GameDataWrapper < GameData {
         if (!hPatch) SetFailState("[MemoryPatch] Failed to create memory patch for section \"%s\".", name);
 
         if (!(enable ? hPatch.Enable() : hPatch.Validate()))
-            SetFailState("[MemoryPatch] Failed to patch section \"%s\" through source scramble.", name);
+            SetFailState("[MemoryPatch] Failed to %s section \"%s\" through source scramble.", enable ? "patch" : "validate", name);
 
         return hPatch;
     }
@@ -432,6 +432,16 @@ methodmap GameDataWrapper < GameData {
         return hBlock;
     }
 
+    /**
+     * Allocates a fixed amount of memeory by the given size.
+     * Size is in bytes, handle and its content must be freed manually.
+     * 
+     * @param iOff              The size in bytes to be allocated.
+     * 
+     * @return                  The handle to the allocated memory.
+     * 
+     * @error                   Plugin failed if the section is missing, or failed to allocate the memory.
+    */
     public static MemoryBlock CreateMemoryBlockOrFailEx(int iOff) {
         MemoryBlock hBlock = new MemoryBlock(iOff);
         if (!hBlock) SetFailState("[MemoryBlock] Failed to create memory block for the given size: \"%d\".", iOff);
