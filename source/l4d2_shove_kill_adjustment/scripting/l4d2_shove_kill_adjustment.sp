@@ -134,7 +134,7 @@ ConVar g_hCvar_ChargerShoveInterval;
 bool g_bShouldAdjust[MAXPLAYERS + 1] = { false, ... };
 bool g_bMidHookAvailable = false;
 
-#define PLUGIN_VERSION "2.2.0"
+#define PLUGIN_VERSION "2.2.1"
 
 public Plugin myinfo = 
 {
@@ -195,7 +195,7 @@ void MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp(MidHookRegisters reg)
     int client = SDKCall(g_hSDKCall_GetBaseEntity, ptr);
     //PrintToServer("[DEBUG] midhook: client: %d, %N", client, client);
 
-    if (client == -1)
+    if (client <= 0 || client > MaxClients)
         return;
     
     if (!IsClientInGame(client) || GetClientTeam(client) != 3 || !IsPlayerAlive(client))
