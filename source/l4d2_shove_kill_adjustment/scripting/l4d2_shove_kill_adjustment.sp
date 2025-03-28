@@ -3,6 +3,8 @@
 
 #include <sourcemod>
 #include <sdktools>
+
+#undef REQUIRE_EXTENSIONS
 #include <sourcescramble>
 
 #undef REQUIRE_EXTENSIONS
@@ -133,8 +135,9 @@ ConVar g_hCvar_ChargerShoveInterval;
 
 bool g_bShouldAdjust[MAXPLAYERS + 1] = { false, ... };
 bool g_bMidHookAvailable = false;
+bool g_bSourceScrambleAvailable = false;
 
-#define PLUGIN_VERSION "2.2.1"
+#define PLUGIN_VERSION "2.3.0"
 
 public Plugin myinfo = 
 {
@@ -147,7 +150,9 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
+    // only check once here. if you enable something during the gameplay, just reload this plugin.
     g_bMidHookAvailable = LibraryExists("midhooks");
+    g_bSourceScrambleAvailable = LibraryExists("sourcescramble");
 
     LoadGameData();
     CreateConVars();
@@ -179,6 +184,12 @@ void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 // need a inline hook here, cause this function is called in frames and literally for every SIs, and we only have one cvar.
 MRESReturn DTR_OnUpdateStagger_Pre(int pThis)
 {
+    if (!g_bMidHookAvailable || !g_bSourceScrambleAvailable)
+        return MRES_Ignored;
+
+    if (!g_hMidHook.Enabled || !g_hPatch__OnCheckTimestamp.Enabled)
+        return MRES_Ignored;
+
     if (!IsClientInGame(pThis) || GetClientTeam(pThis) != 3)
         return MRES_Ignored;
 
@@ -282,6 +293,12 @@ void MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp(MidHookRegisters reg)
 
 MRESReturn DTR_OnUpdateStagger_Post(int pThis)
 {
+    if (!g_bMidHookAvailable || !g_bSourceScrambleAvailable)
+        return MRES_Ignored;
+
+    if (!g_hMidHook.Enabled || !g_hPatch__OnCheckTimestamp.Enabled)
+        return MRES_Ignored;
+
     if (!IsClientInGame(pThis) || GetClientTeam(pThis) != 3)
         return MRES_Ignored;
 
@@ -355,54 +372,34 @@ void SetMaxShoveCount(int entity)
 
 void OnEnableChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-    if (!g_bMidHookAvailable)
+    if (!g_bMidHookAvailable || !g_bSourceScrambleAvailable)
         return;
-
-    if (!g_hMidHook && g_bMidHookAvailable)
-    {
-        GameDataWrapper gd = new GameDataWrapper(GAMEDATA_FILE);
-        g_hMidHook = gd.CreateMidHookOrFail(MIDHOOK_FUNCTION, MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp, false);
-        delete gd;
-    }
-
-    static bool bDetoured = false;
+    
     if (convar.BoolValue)
     {
-        if (g_hMidHook && !g_hMidHook.Enabled)
-        {
-            g_hMidHook.Enable();
-            Patch(g_hPatch__OnCheckTimestamp, true);
-        }
-
-        if (g_hDetour && !bDetoured)
-        {
-            g_hDetour.Enable(Hook_Pre, DTR_OnUpdateStagger_Pre);
-            g_hDetour.Enable(Hook_Post, DTR_OnUpdateStagger_Post);
-            bDetoured = true;
-        }
+        g_hMidHook.Enable();
+        g_hPatch__OnCheckTimestamp.Enable();
     }
     else
     {
-        if (g_hMidHook && g_hMidHook.Enabled)
-        {
-            g_hMidHook.Disable();
-            Patch(g_hPatch__OnCheckTimestamp, false);
-        }
-
-        if (g_hDetour && bDetoured)
-        {
-            g_hDetour.Disable(Hook_Pre, DTR_OnUpdateStagger_Pre);
-            g_hDetour.Disable(Hook_Post, DTR_OnUpdateStagger_Post);
-            bDetoured = false;
-        }
+        g_hMidHook.Disable();
+        g_hPatch__OnCheckTimestamp.Disable();
     }
 }
 
 void OnPreventShoveKillChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-    convar.BoolValue ?
-    Patch(g_hPatch__PreventAccumulating, true) :
-    Patch(g_hPatch__PreventAccumulating, false);
+    if (!g_bSourceScrambleAvailable)
+        return;
+
+    if(convar.BoolValue)
+    {
+        g_hPatch__PreventAccumulating.Enable();
+    }
+    else
+    {
+        g_hPatch__PreventAccumulating.Disable();
+    }
 }
 
 void LoadGameData()
@@ -415,14 +412,17 @@ void LoadGameData()
     g_iOff_m_nMaxShoveCount = gd.GetOffset(OFFSET_NAME);
     g_iOff_m_nCurrentShoveCount = gd.GetOffset(OFFSET_NAME2);
 
-    if (g_bMidHookAvailable)
-        g_hMidHook = gd.CreateMidHookOrFail(MIDHOOK_FUNCTION, MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp, false);
-
     g_hDetour = gd.CreateDetourOrFail(DETOUR_FUNCTION, false, DTR_OnUpdateStagger_Pre, DTR_OnUpdateStagger_Post);
 
-    g_hPatch__OnCheckTimestamp = gd.CreateMemoryPatchOrFail(PATCH_NAME, false);
-    g_hPatch__PreventAccumulating = gd.CreateMemoryPatchOrFail(PATCH_NAME2, false);
+    if (g_bSourceScrambleAvailable)
+        g_hPatch__PreventAccumulating = gd.CreateMemoryPatchOrFail(PATCH_NAME2, false);
 
+    if (g_bMidHookAvailable && g_bSourceScrambleAvailable)
+    {
+        g_hMidHook = gd.CreateMidHookOrFail(MIDHOOK_FUNCTION, MidHook_CTerrorPlayer_UpdateStagger__OnCheckTimestamp, false);
+        g_hPatch__OnCheckTimestamp = gd.CreateMemoryPatchOrFail(PATCH_NAME, false);
+    }
+    
     SDKCallParamsWrapper ret = { SDKType_CBaseEntity, SDKPass_Pointer };
     g_hSDKCall_GetBaseEntity = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Virtual, SDKCALL_FUNCTION, _, _, true, ret);
 
@@ -521,31 +521,6 @@ void CreateConVars()
                                                 true, 0.1, false, 0.0);
 
     g_hCvar_BoomerShoveInterval = FindConVar("z_exploding_shove_interval");
-}
-
-public void OnLibraryAdded(const char[] name) { if (StrEqual("midhooks", name)) g_bMidHookAvailable = true; }
-public void OnLibraryRemoved(const char[] name) 
-{ 
-    if (StrEqual("midhooks", name)) 
-        g_bMidHookAvailable = false;
-
-    if (!g_bMidHookAvailable && g_hPatch__OnCheckTimestamp)
-        Patch(g_hPatch__OnCheckTimestamp, false);
-}
-
-stock void Patch(MemoryPatch hPatch, bool bPatch)
-{
-	static bool bPatched = false;
-	if (bPatch && !bPatched)
-	{
-		hPatch.Enable();
-		bPatched = true;
-	}
-	else if (!bPatch && bPatched)
-	{
-		hPatch.Disable();
-		bPatched = false;
-	}
 }
 
 stock ConVar CreateConVarHookEx(const char[] name,

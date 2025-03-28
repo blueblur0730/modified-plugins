@@ -8,7 +8,7 @@
 
 1. 允许你设置推死一个特感所需的最大推次数.
 
-2. 允许你完全关闭推死特感的机制. (需要 Source Scramble 拓展)
+2. 允许你完全关闭推死特感的机制. (需要 Source Scramble 拓展, 可选.)
 
 3. 允许你修改游戏将特感被推次数消减一次所需的时间. (需要 Source Scramble 拓展, MidHook 拓展, 可选.)
 
@@ -16,7 +16,7 @@
 
 * SourceMod 1.12+.
 * [MidHook 拓展](https://github.com/Scags/SM-MidHooks) by Scags. (可选)
-* [Source Scramble 拓展](https://github.com/nosoop/SMExt-SourceScramble) by nosoop. (必要)
+* [Source Scramble 拓展 0.7.2+](https://github.com/nosoop/SMExt-SourceScramble) by nosoop. (可选)
 * [gamedata_wrapper.inc](https://github.com/blueblur0730/modified-plugins/blob/main/include/gamedata_wrapper.inc) 用于编译.
 
 ## ConVars
