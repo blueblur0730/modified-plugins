@@ -281,10 +281,11 @@ bool SearchForValidPoint(int checkPoint, float vec[3])
 	return true;
 }
 */
+
 stock bool IsClientInSafeArea(int client)
 {
 	if (client <= 0 || client > MaxClients)
-		return false
+		return false;
 
 	if (!IsClientInGame(client)) 
 		return false;
@@ -333,13 +334,11 @@ bool TraceFilter_Stuck(int entity, int contentsMask)
 	return true;
 }
 
-/*
 stock bool IsOnValidMesh(float fReferencePos[3])
 {
-	Address pNavArea = L4D_GetNearestNavArea(fReferencePos, _, _, _, _, 3);
+	Address pNavArea = L4D_GetNearestNavArea(fReferencePos, _, _, _, _, 2);
 	return (pNavArea != Address_Null && (L4D_GetNavArea_SpawnAttributes(pNavArea) & NAV_SPAWN_CHECKPOINT));
 }
-*/
 
 void PrecacheAllModels()
 {

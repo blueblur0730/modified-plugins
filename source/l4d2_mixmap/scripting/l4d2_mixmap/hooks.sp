@@ -215,7 +215,11 @@ void OnNextFrame_ResetPlayers(int client)
 
 void ResetPlayer(int client)
 {
-	if (!IsClientInSafeArea(client))
+	float vecOrigin[3];
+	GetClientAbsOrigin(client, vecOrigin);
+	g_hLogger.DebugEx("### OnNextFrame_ResetPlayer: Checking %N.", client);
+	
+	if (!IsClientInSafeArea(client) || !IsOnValidMesh(vecOrigin))
 	{
 		g_hLogger.DebugEx("### OnNextFrame_ResetPlayer: Client %N is not in saferoom.", client);
 
@@ -226,12 +230,16 @@ void ResetPlayer(int client)
 		{
 			TeleportEntity(client, vec, NULL_VECTOR, NULL_VECTOR);
 
-			// only available when player is not inside the wall (have a valid nav.), that's why we need to teleport them first by searching the valid point then this.
-			// so this is used to teleport player twice in case they were teleported outside the saferoom.
-			if (!IsClientInSafeArea(client))
-				CheatCommand(client, "warp_to_start_area");
+
+			//if (!IsClientInSafeArea(client))
+				//CheatCommand(client, "warp_to_start_area");
 		}
 	}
+
+	// only available when player is not inside the wall (have a valid nav.), that's why we need to teleport them first by searching the valid point then this.
+	// so this is used to teleport player twice in case they were teleported outside the saferoom.
+	// edit: no matter what, this should be called just in case.
+	CheatCommand(client, "warp_to_start_area");
 
 	if (GetPlayerWeaponSlot(client, 1) == -1)
 		CheatCommand(client, "give", "pistol");
