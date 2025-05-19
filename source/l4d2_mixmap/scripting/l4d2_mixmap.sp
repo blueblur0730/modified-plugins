@@ -4,7 +4,6 @@
 #include <sourcemod>
 #include <sdktools>
 #include <dhooks>
-#include <log4sp>	 // requires log4sp 1.8.0+
 #include <midhook>
 #include <sourcescramble>
 #include <l4d2_source_keyvalues>
@@ -13,7 +12,16 @@
 #include <gamedata_wrapper>
 #include <colors>
 
-#define PLUGIN_VERSION "re3.3.1"
+#define PLUGIN_VERSION "re3.4.0"
+
+// Enable log4sp support. Disable it reduced the extension requirement. Suggested value is 1.
+#define REQUIRE_LOG4SP 0
+
+#if REQUIRE_LOG4SP
+	#include <log4sp>	 // requires at least log4sp 1.8.0+
+#else
+	#include <logger>	// by 夜羽真白 / Sir.P. https://github.com/PencilMario/L4D2-Not0721Here-CoopSvPlugins
+#endif
 
 StringMap g_hMapChapterNames;	 // stores the mission name by its corresponding first map name.
 
@@ -106,7 +114,12 @@ public void OnMapStart()
 		return;
 
 	// turn off entitis transisition.
+#if REQUIRE_LOG4SP
 	g_hLogger.Trace("### OnMapStart: Blocking restored entitis from transitioning.");
+#else
+	g_hLogger.debug("### OnMapStart: Blocking restored entitis from transitioning.");
+#endif
+	
 	StoreToAddress(g_bNeedRestore, 0, NumberType_Int8);
 
 	// just in case.
@@ -121,7 +134,11 @@ public void OnMapStart()
 	if (!StrEqual(sBuffer, sPresetMap))
 	{
 		PluginStartInit();
+#if REQUIRE_LOG4SP
 		g_hLogger.WarnEx("Current map dose not match the map set. Stopping MixMap. Current map: %s, Map set: %s", sBuffer, sPresetMap);
+#else
+		g_hLogger.warning("Current map dose not match the map set. Stopping MixMap. Current map: %s, Map set: %s", sBuffer, sPresetMap);
+#endif
 		Call_StartForward(g_hForwardInterrupt);
 		Call_Finish();
 		return;
@@ -143,7 +160,12 @@ public void OnMapEnd()
 	// finished playing. reset.
 	if (g_iMapsPlayed >= g_hArrayPools.Length)
 	{
+#if REQUIRE_LOG4SP
 		g_hLogger.Info("### Stopping MixMap.");
+#else
+		g_hLogger.info("### Stopping MixMap.");
+#endif
+		
 		PluginStartInit();
 		Patch(g_hPatch_Bot_BlockRestoring, false);
 		Patch(g_hPatch_Player_BlockRestoring, false);
@@ -164,5 +186,12 @@ public void OnPluginEnd()
 	delete g_hArrayBlackList;
 	delete g_hArrayPresetList;
 	delete g_hArrayPresetNames;
+	
+#if REQUIRE_LOG4SP
 	delete g_hLogger;
+#else
+	// this is because __nullable__ is no longer user defined unless we define it as 'logger < Handle'.
+	// will fix this up in the future time.
+	// delete g_hLogger;
+#endif
 }

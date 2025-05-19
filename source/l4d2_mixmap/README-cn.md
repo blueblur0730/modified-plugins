@@ -33,16 +33,18 @@
 ## 需求
 
 - SourceMod 1.12+
-- [Log4sp 拓展 1.8.0+](https://github.com/F1F88/sm-ext-log4sp) by F1F88.
 - [MidHook 拓展](https://github.com/Scags/SM-MidHooks) by Scags.
 - [SourceScramble 拓展](https://github.com/nosoop/SMExt-SourceScramble) by nosoop.
 - [l4d2_source_keyvalues 插件](https://github.com/fdxx/l4d2_source_keyvalues) by fdxx.
 - [l4d2_nativevote 插件](https://github.com/fdxx/l4d2_nativevote) by fdxx.
 - [Left 4 DHooks Direct 插件 1.159+](https://forums.alliedmods.net/showthread.php?t=321696) by Silvers 以及其他贡献者.
-
 - [colors.inc](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/include/colors.inc) 用于编译.
 - [gamedata_wrapper.inc](https://github.com/blueblur0730/modified-plugins/blob/main/include/gamedata_wrapper.inc) 用于编译.
 
+- 日志 (二选一)
+  - [Log4sp 拓展 1.8.0+](https://github.com/F1F88/sm-ext-log4sp) by F1F88.
+  - [Logger](https://github.com/PencilMario/L4D2-Not0721Here-CoopSvPlugins) by 夜羽真白 / Sir.P.
+  
 <hr>
 
 ## 已知存在冲突插件

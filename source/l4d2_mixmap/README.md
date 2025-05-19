@@ -33,15 +33,17 @@ This plugin reads map list from the game internally, and forms map pool in muilt
 ## Requirements
 
 - SourceMod 1.12+
-- [Log4sp Extension 1.8.0+](https://github.com/F1F88/sm-ext-log4sp) by F1F88.
 - [MidHook Extension](https://github.com/Scags/SM-MidHooks) by Scags.
 - [SourceScramble Extension](https://github.com/nosoop/SMExt-SourceScramble) by nosoop.
 - [l4d2_source_keyvalues Plugin](https://github.com/fdxx/l4d2_source_keyvalues) by fdxx.
 - [l4d2_nativevote Plugin](https://github.com/fdxx/l4d2_nativevote) by fdxx.
 - [Left 4 DHooks Direct Plugin 1.159+](https://forums.alliedmods.net/showthread.php?t=321696) by Silvers and others.
-
 - [colors.inc](https://github.com/SirPlease/L4D2-Competitive-Rework/blob/master/addons/sourcemod/scripting/include/colors.inc) to compile.
 - [gamedata_wrapper.inc](https://github.com/blueblur0730/modified-plugins/blob/main/include/gamedata_wrapper.inc) to compile.
+
+- Logging (Choose one of two):
+  - [Log4sp Extension 1.8.0+](https://github.com/F1F88/sm-ext-log4sp) by F1F88. (Recommended.)
+  - [Logger](https://github.com/PencilMario/L4D2-Not0721Here-CoopSvPlugins) by 夜羽真白 / Sir.P.
 
 <hr>
 

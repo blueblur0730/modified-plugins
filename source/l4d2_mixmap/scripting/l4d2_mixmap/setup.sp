@@ -4,7 +4,11 @@
 #define _l4d2_mixmap_setup_included
 
 #define LOGGER_NAME	                               "Mixmap"
-#define LOGGER_ERROR_FILE                          "logs/l4d2_mixmap.log"
+#if REQUIRE_LOG4SP
+	#define LOGGER_ERROR_FILE                      "logs/l4d2_mixmap.log"
+#else
+	#define LOGGER_ERROR_FILE                      "l4d2_mixmap"
+#endif
 #define TRANSLATION_FILE                           "l4d2_mixmap.phrases"
 #define TRANSLATION_FILE_LOCALIZATION              "l4d2_mixmap_localizer.phrases"
 #define GAMEDATA_FILE                              "l4d2_mixmap"
@@ -47,7 +51,7 @@ methodmap CMatchExtL4D {
 		return SDKCall(g_hSDKCall_GetAllMissions, view_as<Address>(this));
 	}
 
-	// credits to shqke: https://github.com/shqke/imatchext/blob/7cab051f435bf997fec9d088a0bd87be048b56ae/extension/natives.cpp#L318
+	// credits to shqke: https://github.com/shqke/imatchext/blob/main/src/natives.cpp#L318
 	public SourceKeyValues GetMapInfoByBspName(const char[] bspName, const char[] gamemode, Address &kvMissionInfo = Address_Null) {
 		SourceKeyValues kvServerGameDetails = GetServerGameDetails();
 		if (!kvServerGameDetails || kvServerGameDetails.IsNull())
@@ -63,7 +67,7 @@ methodmap CMatchExtL4D {
 }
 
 methodmap CDirector {
-    public CDirector() {return view_as<CDirector>(L4D_GetPointer(POINTER_DIRECTOR));}
+    public CDirector() { return view_as<CDirector>(L4D_GetPointer(POINTER_DIRECTOR)); }
 
 	public void OnChangeMissionVote(const char[] mission) {
 		SDKCall(g_hSDKCall_OnChangeMissionVote, view_as<Address>(this), mission);
@@ -75,7 +79,6 @@ methodmap CDirector {
 }
 
 CMatchExtL4D TheMatchExt;
-
 CDirector TheDirector;
 
 GlobalForward
@@ -176,6 +179,7 @@ void SetupCommands()
 {
 	RegConsoleCmd("sm_mixmap", Command_Mixmap, "Vote to start a mixmap");
 	RegConsoleCmd("sm_stopmixmap", Command_StopMixmap, "Stop a mixmap.");
+
 	RegAdminCmd("sm_fmixmap", Command_ForceMixmap, ADMFLAG_BAN, "Force start mixmap");
 	RegAdminCmd("sm_fstopmixmap", Command_ForceStopMixmap, ADMFLAG_BAN, "Force stop a mixmap");
 
@@ -190,6 +194,7 @@ void SetupCommands()
 
 void SetupLogger()
 {
+#if REQUIRE_LOG4SP
 	g_hLogger = Logger.Get(LOGGER_NAME);
 	if (!g_hLogger)
 	{
@@ -208,6 +213,10 @@ void SetupLogger()
 	BasicFileSink sink = new BasicFileSink(sBuffer);
 	sink.SetLevel(LogLevel_Debug);
 	g_hLogger.AddSinkEx(sink);
+#else
+	g_hLogger = new Logger(LOGGER_ERROR_FILE, LoggerType_NewLogFile);
+	g_hLogger.SetLogPrefix("[Mixmap]")
+#endif
 }
 
 void SetupForwards()

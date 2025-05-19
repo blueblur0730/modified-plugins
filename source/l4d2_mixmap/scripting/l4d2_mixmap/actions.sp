@@ -37,7 +37,13 @@ void Timer_StartFirstMissionMixmap(Handle timer)
 	char sMap[128], sMissionName[128];
 	g_hArrayPools.GetString(0, sMap, sizeof(sMap));
 	g_hMapChapterNames.GetString(sMap, sMissionName, sizeof(sMissionName));
+
+#if REQUIRE_LOG4SP
 	g_hLogger.InfoEx("### Starting Mixmap with %s", sMissionName);
+#else
+	g_hLogger.info("### Starting Mixmap with %s", sMissionName);
+#endif
+	
 
 	g_bMapsetInitialized = true;
 	Call_StartForward(g_hForwardStart);
@@ -53,8 +59,13 @@ void Timer_StartFirstMapMixmap(Handle timer)
 {
 	char sMap[128];
 	g_hArrayPools.GetString(0, sMap, sizeof(sMap));
-	g_hLogger.InfoEx("### Starting Mixmap with %s", sMap);
 
+#if REQUIRE_LOG4SP
+	g_hLogger.InfoEx("### Starting Mixmap with %s", sMap);
+#else
+	g_hLogger.info("### Starting Mixmap with %s", sMap);
+#endif
+	
 	g_bMapsetInitialized = true;
 	Call_StartForward(g_hForwardStart);
 	Call_PushCell(g_hArrayPools.Length);
@@ -154,7 +165,11 @@ void BuildBlackList(int client)
 				if (count >= g_hCvar_BlackListLimit.IntValue)
 				{
 					kv.deleteThis();
+#if REQUIRE_LOG4SP
 					g_hLogger.WarnEx("Reached limit of %d blacklisted maps. Abort the rest.", g_hCvar_BlackListLimit.IntValue);
+#else
+					g_hLogger.warning("Reached limit of %d blacklisted maps. Abort the rest.", g_hCvar_BlackListLimit.IntValue);
+#endif
 
 					if (client != -1 && client > 0 && client <= MaxClients)
 						CPrintToChat(client, "%t", "BlackListLoaded");
@@ -181,8 +196,11 @@ void BuildBlackList(int client)
 				if (count >= g_hCvar_BlackListLimit.IntValue)
 				{
 					kv.deleteThis();
+#if REQUIRE_LOG4SP
 					g_hLogger.WarnEx("Reached limit of %d blacklisted maps. Abort the rest.", g_hCvar_BlackListLimit.IntValue);
-
+#else
+					g_hLogger.warning("Reached limit of %d blacklisted maps. Abort the rest.", g_hCvar_BlackListLimit.IntValue);
+#endif
 					if (client != -1 && client > 0 && client <= MaxClients)
 						CPrintToChat(client, "%t", "BlackListLoaded");
 
@@ -194,7 +212,11 @@ void BuildBlackList(int client)
 		if (!g_hArrayBlackList || !g_hArrayBlackList.Length)
 		{
 			kv.deleteThis();
-			g_hLogger.ErrorEx("No keys found in \"" ... CONFIG_BLACKLIST... "\" on node %s and global filter.", sMode);
+#if REQUIRE_LOG4SP
+			g_hLogger.ErrorEx("No keys found in \""... CONFIG_BLACKLIST..."\" on node %s and global filter.", sMode);
+#else
+			g_hLogger.error("No keys found in \""... CONFIG_BLACKLIST..."\" on node %s and global filter.", sMode);
+#endif
 
 			if (client != -1 && client > 0 && client <= MaxClients)
 				CPrintToChat(client, "%t", "NoKeysFoundInBlackList");
@@ -205,7 +227,11 @@ void BuildBlackList(int client)
 	else
 	{
 		kv.deleteThis();
-		g_hLogger.Error("Failed to load black list file from \"" ... CONFIG_BLACKLIST... "\".");
+#if REQUIRE_LOG4SP
+		g_hLogger.Error("Failed to load black list file from \""... CONFIG_BLACKLIST..."\".");
+#else
+		g_hLogger.error("Failed to load black list file from \""... CONFIG_BLACKLIST..."\".");
+#endif
 
 		if (client != -1 && client > 0 && client <= MaxClients)
 			CPrintToChat(client, "%t", "FailedToLoadBlackList");
@@ -240,7 +266,11 @@ void LoadFolderFiles(int client)
 
 		delete g_hArrayPresetNames;
 		delete g_hArrayPresetList;
+#if REQUIRE_LOG4SP
 		g_hLogger.ErrorEx("Failed to open directory \"%s\".", sPath);
+#else
+		g_hLogger.error("Failed to open directory \"%s\".", sPath);
+#endif
 		return;
 	}
 
@@ -261,7 +291,11 @@ void LoadFolderFiles(int client)
 		if (!kv.LoadFromFile(sFilePath))
 		{
 			kv.deleteThis();
+#if REQUIRE_LOG4SP
 			g_hLogger.ErrorEx("Failed to load preset file: \"%s\"", sFilePath);
+#else
+			g_hLogger.error("Failed to load preset file: \"%s\"", sFilePath);
+#endif
 			continue;
 		}
 
@@ -293,7 +327,11 @@ void LoadPreset(const char[] sFile, int client)
 		kv.deleteThis();
 		delete g_hArrayPools;
 		delete g_hArraySurvivorSets;
+#if REQUIRE_LOG4SP
 		g_hLogger.ErrorEx("Failed to load preset file: \"%s\"", sFile);
+#else
+		g_hLogger.error("Failed to load preset file: \"%s\"", sFile);
+#endif
 		CPrintToChat(client, "%t", "PresetFileLoadFailed");
 		return;
 	}
@@ -308,7 +346,11 @@ void LoadPreset(const char[] sFile, int client)
 		kv.deleteThis();
 		delete g_hArrayPools;
 		delete g_hArraySurvivorSets;
+#if REQUIRE_LOG4SP
 		g_hLogger.ErrorEx("Failed to find subkey \"gamemode\" in preset file: \"%s\"", sFile);
+#else
+		g_hLogger.error("Failed to find subkey \"gamemode\" in preset file: \"%s\"", sFile);
+#endif
 		CPrintToChat(client, "%t", "PresetFileLoadFailed");
 		return;
 	}
@@ -336,7 +378,11 @@ void LoadPreset(const char[] sFile, int client)
 		kv.deleteThis();
 		delete g_hArrayPools;
 		delete g_hArraySurvivorSets;
+#if REQUIRE_LOG4SP
 		g_hLogger.ErrorEx("Failed to find gamemode \"%s\" in preset file: \"%s\", useBased: \"%d\"", sMode, sFile, iUseBased);
+#else
+		g_hLogger.error("Failed to find gamemode \"%s\" in preset file: \"%s\", useBased: \"%d\"", sMode, sFile, iUseBased);
+#endif
 		CPrintToChat(client, "%t", "PresetFileLoadFailed_GameModeNotMatched");
 		return;
 	}
@@ -347,7 +393,11 @@ void LoadPreset(const char[] sFile, int client)
 		kv.deleteThis();
 		delete g_hArrayPools;
 		delete g_hArraySurvivorSets;
+#if REQUIRE_LOG4SP
 		g_hLogger.ErrorEx("Failed to find subkey \"MapPool\" in preset file: \"%s\"", sFile);
+#else
+		g_hLogger.error("Failed to find subkey \"MapPool\" in preset file: \"%s\"", sFile);
+#endif
 		CPrintToChat(client, "%t", "PresetFileLoadFailed");
 		return;
 	}
@@ -362,7 +412,11 @@ void LoadPreset(const char[] sFile, int client)
 		{
 			if (CheckBlackList(sBuffer))
 			{
-				g_hLogger.WarnEx("Found map \"%s\" in blacklist.", sBuffer);
+#if REQUIRE_LOG4SP
+				g_hLogger.InfoEx("Found map \"%s\" in blacklist.", sBuffer);
+#else
+				g_hLogger.info("Found map \"%s\" in blacklist.", sBuffer);
+#endif
 				continue;
 			}
 		}
@@ -372,13 +426,21 @@ void LoadPreset(const char[] sFile, int client)
 		SourceKeyValues kvMapInfo = TheMatchExt.GetMapInfoByBspName(sBuffer, sMode, view_as<Address>(kvMissionInfo));
 		if (!kvMapInfo || kvMapInfo.IsNull())
 		{
+#if REQUIRE_LOG4SP
 			g_hLogger.WarnEx("Failed to find map \"%s\" in gamemode \"%s\".", sBuffer, sMode);
+#else
+			g_hLogger.warning("Failed to find map \"%s\" in gamemode \"%s\".", sBuffer, sMode);
+#endif
 			continue;
 		}
 
 		if (!kvMissionInfo || kvMissionInfo.IsNull())
 		{
+#if REQUIRE_LOG4SP
 			g_hLogger.WarnEx("Failed to find mission info for map \"%s\" in gamemode \"%s\". kvMissionInfo: %d", sBuffer, sMode, kvMissionInfo);
+#else
+			g_hLogger.warning("Failed to find mission info for map \"%s\" in gamemode \"%s\". kvMissionInfo: %d", sBuffer, sMode, kvMissionInfo);
+#endif
 			continue;
 		}
 
@@ -392,7 +454,11 @@ void LoadPreset(const char[] sFile, int client)
 		kv.deleteThis();
 		delete g_hArrayPools;
 		delete g_hArraySurvivorSets;
+#if REQUIRE_LOG4SP
 		g_hLogger.ErrorEx("Preset file \"%s\" is empty because all map name is invalid.", sFile);
+#else
+		g_hLogger.error("Preset file \"%s\" is empty because all map name is invalid.", sFile);
+#endif
 		CPrintToChat(client, "%t", "PresetFileLoadFailed");
 		return;
 	}

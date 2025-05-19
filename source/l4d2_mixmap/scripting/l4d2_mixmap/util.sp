@@ -142,27 +142,35 @@ stock void GetSafeAreaOrigin(float vec[3])
 */
 
 	// every level has at least one info_landmark entity and should always be inside of saferoom.
-	bool bFound = false;
 	int ent = INVALID_ENT_REFERENCE;
 	while ((ent = FindEntityByClassname(ent, "info_landmark")) != INVALID_ENT_REFERENCE)
 	{
 		GetAbsOrigin(ent, vec);
-		g_hLogger.DebugEx("### GetSafeAreaOrigin: Found landmark entity: %d.", ent);
 
+#if REQUIRE_LOG4SP
+		g_hLogger.DebugEx("### GetSafeAreaOrigin: Found landmark entity: %d.", ent);
+#else
+		g_hLogger.debug("### GetSafeAreaOrigin: Found landmark entity: %d.", ent);
+#endif
+		
 		Address pNav = L4D_GetNearestNavArea(vec, 100.0, true, false, false, 2);
 		if (pNav != Address_Null && IsNavInSafeArea(pNav))
 		{
-			bFound = true;
+#if REQUIRE_LOG4SP
 			g_hLogger.DebugEx("### GetSafeAreaOrigin: Found valid point: %f, %f, %f.", vec[0], vec[1], vec[2]);
+#else
+			g_hLogger.debug("### GetSafeAreaOrigin: Found valid point: %f, %f, %f.", vec[0], vec[1], vec[2]);
+#endif
 			return;
 		}
 	}
 
-	if (!bFound)
-	{
-		g_hLogger.DebugEx("### GetSafeAreaOrigin: Failed to find valid point. Trying Default");
-		GetSafeAreaOriginEx(vec);
-	}
+#if REQUIRE_LOG4SP
+	g_hLogger.DebugEx("### GetSafeAreaOrigin: Failed to find valid point. Trying Default");
+#else
+	g_hLogger.debug("### GetSafeAreaOrigin: Failed to find valid point. Trying Default");
+#endif
+	GetSafeAreaOriginEx(vec);
 }
 
 void GetSafeAreaOriginEx(float vec[3])
@@ -222,7 +230,14 @@ void GetSafeAreaOriginEx(float vec[3])
 		}
 
 		if (!bFound)
+		{
+#if REQUIRE_LOG4SP
 			g_hLogger.DebugEx("### GetSafeAreaOriginEx: Failed to find random spot. pNav: %d.", pNav);
+#else
+			g_hLogger.debug("### GetSafeAreaOriginEx: Failed to find random spot. pNav: %d.", pNav);
+#endif
+		}
+			
 	}
 }
 
@@ -412,7 +427,11 @@ stock void GetBasedMode(char[] sMode, int size)
 	SourceKeyValues kvGameMode = TheMatchExt.GetGameModeInfo(sMode);
 	if (!kvGameMode || kvGameMode.IsNull())
 	{
+#if REQUIRE_LOG4SP
 		g_hLogger.ErrorEx("Failed to get gamemode info for gamnemode \"%s\".", sMode);
+#else
+		g_hLogger.error("Failed to get gamemode info for gamnemode \"%s\".", sMode);
+#endif
 		return;
 	}
 
@@ -423,17 +442,25 @@ stock void GetBasedMode(char[] sMode, int size)
 		strcopy(sMode, size, "coop");
 }
 
-// credits to shqke: https://github.com/shqke/imatchext/blob/7cab051f435bf997fec9d088a0bd87be048b56ae/extension/natives.cpp#L30
+// credits to shqke: https://github.com/shqke/imatchext/blob/main/src/natives.cpp#L30
 stock SourceKeyValues GetServerGameDetails(Address &pkvRequest = Address_Null)
 {
 	Address pMatchNetworkMsgController = SDKCall(g_hSDKCall_GetMatchNetworkMsgController, g_MatchFramework);
+#if REQUIRE_LOG4SP
 	g_hLogger.DebugEx("### pMatchNetworkMsgController: %d", pMatchNetworkMsgController);
+#else
+	g_hLogger.debug("### pMatchNetworkMsgController: %d", pMatchNetworkMsgController);
+#endif
 
 	Address pkvDetails;
 	if (pMatchNetworkMsgController != Address_Null)
 	{
 		pkvDetails = SDKCall(g_hSDKCall_GetActiveServerGameDetails, pMatchNetworkMsgController, pkvRequest);
+#if REQUIRE_LOG4SP
 		g_hLogger.DebugEx("### kvDetails: %d", pkvDetails);
+#else
+		g_hLogger.debug("### kvDetails: %d", pkvDetails);
+#endif
 	}
 
 	return view_as<SourceKeyValues>(pkvDetails);
@@ -459,7 +486,11 @@ stock void ConvertTagAndTranslate(char[] sTag, int size, int client, bool bIsOff
 		}
 		else
 		{
+#if REQUIRE_LOG4SP
 			g_hLogger.DebugEx("Failed to translate phrase \"%s\" for language \"%s\".", sTag, GetClientLanguage(client));
+#else
+			g_hLogger.debug("Failed to translate phrase \"%s\" for language \"%s\".", sTag, GetClientLanguage(client));
+#endif
 		}
 	}
 }
