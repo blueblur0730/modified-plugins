@@ -140,4 +140,16 @@
 			}
 		}
 	}
+
+	"bms"
+	{
+		"Offsets"
+		{
+			"CBaseEntity::AcceptInput"
+			{
+				"windows"	"39"
+				"linux"		"40"
+			}
+		}
+	}
 }

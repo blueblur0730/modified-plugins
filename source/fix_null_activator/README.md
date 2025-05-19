@@ -13,6 +13,7 @@
   - l4d
   - l4d2
   - csgo
+  - bms
 
 ### How to use
 
