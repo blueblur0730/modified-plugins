@@ -42,9 +42,9 @@
 - [gamedata_wrapper.inc](https://github.com/blueblur0730/modified-plugins/blob/main/include/gamedata_wrapper.inc) 用于编译.
 
 - 日志 (二选一)
-  - [Log4sp 拓展 1.8.0+](https://github.com/F1F88/sm-ext-log4sp) by F1F88.
+  - [Log4sp 拓展 1.8.0+](https://github.com/F1F88/sm-ext-log4sp) by F1F88. (推荐.)
   - [Logger](https://github.com/PencilMario/L4D2-Not0721Here-CoopSvPlugins) by 夜羽真白 / Sir.P.
-  
+
 <hr>
 
 ## 已知存在冲突插件
