@@ -51,7 +51,7 @@ public Plugin myinfo =
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
-public APLRes AskPluginLoad2()
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	g_hFWD_OnGetPlayTime = new GlobalForward("OnGetPlayerHours", ET_Event, Param_Cell, Param_Cell);
 	return APLRes_Success;
@@ -117,12 +117,12 @@ public void SteamWorks_OnValidateClient(int iAuthId)
 
 public void OnClientConnected(int iClient)
 {
-	if (IsValidClient(iClient) && !IsFakeClient(iClient))
-	{
-		char sName[128];
-		GetClientName(iClient, sName, sizeof(sName));
-		CPrintToChatAll("%t", "Connecting", sName);
-	}
+	if (IsValidClient(iClient))
+		return;
+
+	char sName[128];
+	GetClientName(iClient, sName, sizeof(sName));
+	CPrintToChatAll("%t", "Connecting", sName);
 }
 
 public void OnClientPutInServer(int iClient)

@@ -34,7 +34,7 @@ public Plugin myinfo =
 
 int g_iClientTry[MAXPLAYERS + 1];
 
-public APLRes AskPluginLoad2()
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	g_hFWD_OnVerifiedHiddenHoursPlayer = new GlobalForward("OnVerifiedHiddenHoursPlayer", ET_Ignore, Param_Cell);
 	return APLRes_Success;
