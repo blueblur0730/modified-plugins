@@ -14,8 +14,8 @@
 
 #define PLUGIN_VERSION "re3.4.0"
 
-// Enable log4sp support. Disable it reduced the extension requirement. Suggested value is 1.
-#define REQUIRE_LOG4SP 0
+// Enable log4sp support. Disable it reduced the extension requirement. Recommended value is 1.
+#define REQUIRE_LOG4SP 1
 
 #if REQUIRE_LOG4SP
 	#include <log4sp>	 // requires at least log4sp 1.8.0+
@@ -186,7 +186,7 @@ public void OnPluginEnd()
 	delete g_hArrayBlackList;
 	delete g_hArrayPresetList;
 	delete g_hArrayPresetNames;
-	
+
 #if REQUIRE_LOG4SP
 	delete g_hLogger;
 #else
