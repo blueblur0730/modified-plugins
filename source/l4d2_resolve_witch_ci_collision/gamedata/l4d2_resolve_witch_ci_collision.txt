@@ -1,0 +1,66 @@
+"Games"
+{
+	"left4dead2"
+	{
+		"Offsets"
+		{
+			"CBaseEntity::MyNextBotPointer"
+			{
+				"linux"			"82"
+				"windows"		"81"
+			}
+
+			"INextBot::GetLocomotionInterface"
+			{
+				"linux"			"48"
+				"windows"		"47"
+			}
+
+			// where are you?
+			"WitchLocomotion::GetSpeedLimit"
+			{
+				"linux"			"61"
+				"windows"		"60"
+			}
+
+			"CBaseEntity::GetBaseEntity"
+			{
+				"linux"     "6"
+				"windows"   "5"
+			}
+		}
+
+		"Addresses"
+		{
+			// overrites CBaseEntity::SetAbsVelocity, but don't worry it is still got called.
+			"ZombieBotLocomotion_Update__OnSetAbsVelocity"
+			{
+				"linux"
+				{
+					"signature"	"ZombieBotLocomotion::Update"
+					"offset"	"0x3A2"
+				}
+
+				"windows"
+				{
+					"signature"	"ZombieBotLocomotion::Update"
+					"offset"	"0x6AF"
+				}
+			}
+		}
+
+		"Signatures"
+		{
+			// windows sig:
+			// serach string is... well "ZombieBotLocomotion::Update"
+			// you gotta thanks vprof.
+			"ZombieBotLocomotion::Update"
+			{
+				"library"	"server"
+				"linux"		"@_ZN19ZombieBotLocomotion6UpdateEv"
+				"windows"	"\x53\x8B\xDC\x83\xEC\x2A\x83\xE4\x2A\x83\xC4\x2A\x55\x8B\x6B\x2A\x89\x6C\x24\x2A\x8B\xEC\x83\xEC\x2A\xA1\x2A\x2A\x2A\x2A\x56\x8B\xF1\x33\xC9\x89\x4D\x2A\x89\x4D\x2A\x57\x39\x48\x2A\x74\x2A\x8B\x40\x2A\x68\x2A\x2A\x2A\x2A\x8B\x50\x2A\x68\x2A\x2A\x2A\x2A\x68\x2A\x2A\x2A\x2A\x68\x2A\x2A\x2A\x2A\x68\x2A\x2A\x2A\x2A\x68\x2A\x2A\x2A\x2A\x51\x51\x51\x51\x8D\x4D\x2A\x51\x50\xFF\xD2\xA1\x2A\x2A\x2A\x2A\x83\xC4\x2A\x8B\x4D\x2A\x8B\x78\x2A\x8B\x45\x2A\x6A\x2A\x6A\x2A\x68\x2A\x2A\x2A\x2A\x6A\x2A\x89\x4D\x2A\x8B\x0D\x2A\x2A\x2A\x2A\x68\x2A\x2A\x2A\x2A\x89\x7D\x2A\x89\x45\x2A\xFF\x15\x2A\x2A\x2A\x2A\x8B\xCE"
+				/* 53 8B DC 83 EC ? 83 E4 ? 83 C4 ? 55 8B 6B ? 89 6C 24 ? 8B EC 83 EC ? A1 ? ? ? ? 56 8B F1 33 C9 89 4D ? 89 4D ? 57 39 48 ? 74 ? 8B 40 ? 68 ? ? ? ? 8B 50 ? 68 ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 68 ? ? ? ? 51 51 51 51 8D 4D ? 51 50 FF D2 A1 ? ? ? ? 83 C4 ? 8B 4D ? 8B 78 ? 8B 45 ? 6A ? 6A ? 68 ? ? ? ? 6A ? 89 4D ? 8B 0D ? ? ? ? 68 ? ? ? ? 89 7D ? 89 45 ? FF 15 ? ? ? ? 8B CE */
+			}
+		}
+	}
+}
