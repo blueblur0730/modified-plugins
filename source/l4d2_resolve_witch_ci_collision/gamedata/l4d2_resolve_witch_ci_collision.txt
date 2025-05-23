@@ -1,5 +1,17 @@
 "Games"
 {
+	"#default"
+	{
+		"Offsets"
+		{
+			"OS"
+			{
+				"linux"			"1"
+				"windows"		"0"
+			}
+		}
+	}
+	
 	"left4dead2"
 	{
 		"Offsets"
@@ -27,6 +39,13 @@
 			{
 				"linux"     "6"
 				"windows"   "5"
+			}
+
+			// in source-sdk-2013 this is 264.
+			"NextBotGroundLocomotion::m_moveVector"
+			{
+				"linux"		"284"
+				"windows"	"284"
 			}
 		}
 
