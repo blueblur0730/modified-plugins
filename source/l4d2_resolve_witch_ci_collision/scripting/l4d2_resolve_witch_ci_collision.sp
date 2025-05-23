@@ -44,7 +44,7 @@ methodmap WitchLocomotion < ILocomotion {
     */
 }
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 public Plugin myinfo =
 {
@@ -95,12 +95,6 @@ void MidHook_ZombieBotLocomotion_Update__OnSetAbsVelocity(MidHookRegisters regs)
 
     int entity = SDKCall(g_hSDKCall_GetBaseEntity, pEntity);
     if (entity <= MaxClients || !IsValidEntity(entity))
-        return;
-
-    char szClassname[64];
-    GetEntityClassname(entity, szClassname, sizeof(szClassname));
-
-    if (strcmp(szClassname, "witch") != 0)
         return;
 
     BehaviorAction action = ActionsManager.GetAction(entity, "WitchWander");
