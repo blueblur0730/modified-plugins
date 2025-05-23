@@ -21,6 +21,10 @@ Attemp to neutralize the collision between wandering witch and common infected.
 z_witch_collision_neutralize_scale 0.95
 ```
 
+## Demostration
+
+- [Link](https://www.bilibili.com/video/BV1VvJnzUEy1/)
+
 ## Explaination
 
 This plugin dose not resolve the collision problem, instead, This is a compromise solution to minimize the force from the CI collision to witch. Witch will still being push away by CI but no longer shift away far from the original position.
