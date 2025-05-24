@@ -55,7 +55,7 @@ methodmap WitchLocomotion < ILocomotion {
     */
 }
 
-#define PLUGIN_VERSION "1.2.2"
+#define PLUGIN_VERSION "1.2.3"
 
 public Plugin myinfo =
 {
@@ -114,7 +114,7 @@ void MidHook_ZombieBotLocomotion_Update__OnSetAbsVelocity(MidHookRegisters regs)
             pEntity = regs.Load(DHookRegister_ESP, 0, NumberType_Int32);
         
         case OS_Windows:
-            pEntity = regs.Load(DHookRegister_ECX, 0, NumberType_Int32);
+            pEntity = regs.Get(DHookRegister_ECX, NumberType_Int32);
     }
     
     if (pEntity == Address_Null)
@@ -143,7 +143,7 @@ void MidHook_ZombieBotLocomotion_Update__OnSetAbsVelocity(MidHookRegisters regs)
             pVector = regs.Load(DHookRegister_ESP, 4, NumberType_Int32);
 
         case OS_Windows:
-            pVector = regs.Load(DHookRegister_EDI, 0, NumberType_Int32);
+            pVector = regs.Get(DHookRegister_EDI, NumberType_Int32);
     }
 
     if (pVector == Address_Null)
@@ -160,6 +160,7 @@ void MidHook_ZombieBotLocomotion_Update__OnSetAbsVelocity(MidHookRegisters regs)
         float vecMove[3];
 
         // m_moveVector is always a 2D normal vector, indicates the direction in (X,Y) plain.
+        // edit: might not be true. it might be 3D vector.
         view_as<NextBotGroundLocomotion>(pLocomotion).GetMoveVector(vecMove);
 
         // not in the same direction, rotate velocity.
