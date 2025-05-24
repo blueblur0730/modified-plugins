@@ -55,7 +55,7 @@ methodmap WitchLocomotion < ILocomotion {
     */
 }
 
-#define PLUGIN_VERSION "1.2.1"
+#define PLUGIN_VERSION "1.2.2"
 
 public Plugin myinfo =
 {
@@ -155,12 +155,6 @@ void MidHook_ZombieBotLocomotion_Update__OnSetAbsVelocity(MidHookRegisters regs)
     vecVelocity[1] = LoadFromAddress(pVector + view_as<Address>(4), NumberType_Int32);
     vecVelocity[2] = LoadFromAddress(pVector + view_as<Address>(8), NumberType_Int32);
 
-    float flLentgh = GetVectorLength(vecVelocity);
-    float flScale = g_hCvar_Scale.FloatValue;
-
-    // should never be 0.0 or 1.0.
-    flScale = clamp(flScale, 0.01, 0.99);
-
     if (g_hCvar_ScaleDirection.BoolValue)
     {
         float vecMove[3];
@@ -169,20 +163,26 @@ void MidHook_ZombieBotLocomotion_Update__OnSetAbsVelocity(MidHookRegisters regs)
         view_as<NextBotGroundLocomotion>(pLocomotion).GetMoveVector(vecMove);
 
         // not in the same direction, rotate velocity.
-        if (!AreVectorsInSameDirection(vecVelocity, vecMove))
+        if (!AreVectorsInSameDirection2D(vecVelocity, vecMove))
         {
-            // here we only rotate velocity's (X,Y) surface, equivalent to rotate velocity about z axis.
+            // here we only rotate velocity's (X,Y) plain, equivalent to rotate velocity about z axis.
             // so we use 2x2 matrix.
             float flAngle = AngleBetweenVectors(vecVelocity, vecMove);
             RotateVector2D(vecVelocity, flAngle);
         }
     }
 
+    float flLength = GetVectorLength(vecVelocity);
+    float flScale = g_hCvar_Scale.FloatValue;
+
+    // should never be 0.0 or 1.0.
+    flScale = clamp(flScale, 0.01, 0.99);
+
     // scale the speed below 35.0.
-    while (flLentgh >= pLocomotion.GetSpeedLimit())
+    while (flLength >= pLocomotion.GetSpeedLimit())
     {
         ScaleVector(vecVelocity, flScale);
-        flLentgh = GetVectorLength(vecVelocity);
+        flLength = GetVectorLength(vecVelocity);
     }
 
     StoreToAddress(pVector, vecVelocity[0], NumberType_Int32);
@@ -227,13 +227,19 @@ stock float AngleBetweenVectors(const float vector1[3], const float vector2[3], 
 	return degree;
 }
 
-stock bool AreVectorsInSameDirection(const float vec1[3], const float vec2[3], float epsilon = 0.001)
+stock bool AreVectorsInSameDirection2D(const float vec1[3], const float vec2[3], float epsilon = 0.001)
 {
     float vector1_n[3], vector2_n[3];
-    NormalizeVector(vec1, vector1_n);
-    NormalizeVector(vec2, vector2_n);
 
-    return FloatAbs( clamp(GetVectorDotProduct( vector1_n, vector2_n ), -1.0, 1.0) ) - 1.0 < epsilon;
+    // set z 0.0.
+    vector1_n = vec1; vector2_n = vec2;
+    vector1_n[2] = vector2_n[2] = 0.0;
+
+    // normalize a plain vector.
+    NormalizeVector(vector1_n, vector1_n);
+    NormalizeVector(vector2_n, vector2_n);
+
+    return (FloatAbs( FloatAbs( clamp(GetVectorDotProduct( vector1_n, vector2_n ), -1.0, 1.0) ) - 1.0) < epsilon);
 }
 
 stock void RotateVector2D(float vecInput[3], float angle /* in radiant */)
