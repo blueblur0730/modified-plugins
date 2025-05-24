@@ -205,10 +205,14 @@ void OnEnableChanged(ConVar hConVar, const char[] strOldValue, const char[] strN
 stock float AngleBetweenVectors(const float vector1[3], const float vector2[3], const float direction[3] = {0.0, 0.0, 0.0}, bool bRadOrDeg = true)
 {
 	float vector1_n[3], vector2_n[3];
+    
+    // set z 0.0.
+    vector1_n = vector1; vector2_n = vector2;
+    vector1_n[2] = vector2_n[2] = 0.0;
 
     // normalize in place first.
-	NormalizeVector( vector1, vector1_n );
-	NormalizeVector( vector2, vector2_n );
+    NormalizeVector( vector1_n, vector1_n );
+    NormalizeVector( vector2_n, vector2_n );
     float radiant = ArcCosine( clamp(GetVectorDotProduct( vector1_n, vector2_n ), -1.0, 1.0) );
 
     if (bRadOrDeg)
