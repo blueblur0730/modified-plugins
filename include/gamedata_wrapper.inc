@@ -5,9 +5,13 @@
 
 #include <sourcemod>
 
+#define GAMEDATA_WRAPPER_VERSION "3.0"
+
 /**
  * This include file was inspired by @Forgetest.
  * https://github.com/jensewe
+ * 
+ * Summarized and extended by: @blueblur0730.
 */
 
 enum OperatingSystem
@@ -26,6 +30,22 @@ enum struct SDKCallParamsWrapper {
 }
 
 static const char k_sSDKFuncConfSource[3][] = { "Offsets", "Signatures", "Addresses" };
+#endif
+
+#if defined _actions_constructor_included
+enum ActionCtorConfType {
+    ConfType_ActionConstructor = 0,
+    ConfType_Signatures = 1,
+    ConfType_Addresses = 2
+}
+
+enum struct ActionParamsWrapper {
+    ACPassType passType;
+    ACPassFlags flags;
+    ACEncoder encoder;
+}
+
+static const char k_sActionCstorConfSource[3][] = { "ActionConstructor", "Signatures", "Addresses" };
 #endif
 
 methodmap GameDataWrapper < GameData {
@@ -493,8 +513,70 @@ methodmap GameDataWrapper < GameData {
         if (pAdr == Address_Null) SetFailState("[MidHooks] The given address is NULL.");
 
         MidHook hHook = new MidHook(pAdr, callback, enable);
-        if (!hHook) SetFailState("[MidHooks] Failed to create Midhook for the given address.");
+        if (!hHook) SetFailState("[MidHooks] Failed to create Midhook for the given address. Address: \"0x%x\", \"%d\"", pAdr, pAdr);
         return hHook;
     }
 #endif
+
+#if defined _actions_constructor_included
+    /**
+     * Create a new action constructor.
+     * Handle must be freed manually.
+     * 
+     * @param type              The type of the config to setup.
+     * @param key               The section name.
+     * @param params            The parametaers to fill in if need. Only use when using ConfType_Signatures, ConfType_Addresses.
+     * @param numParams         Number of parametaers.
+     * 
+     * @return                  An action constructor handle.
+     * 
+     * @error                   Plugin failed if failed to create action constructor.
+    */
+    public ActionConstructor CreateActionConstructorOrFailed(   ActionCtorConfType type, 
+                                                                const char[] key, 
+                                                                const ActionParamsWrapper[] params = {}, 
+                                                                int numParams = 0) {
+        switch (type) {
+            case ConfType_ActionConstructor: {
+                ActionConstructor ctor = ActionConstructor.SetupFromConf(this, key);
+                if (!ctor) SetFailState("[ActionConstructor]: Faied to create action constructor with the given key: \"%s\" on section: \"%s\"", key, k_sActionCstorConfSource[type]);
+            }
+
+            case ConfType_Signatures, ConfType_Addresses: {
+                ActionConstructor ctor = new ActionConstructor();
+                if (!ctor) SetFailState("[ActionConstructor]: Failed to create a new ActionConstructor handle.");
+                if (type == ConfType_Signatures) {
+                    if (!ctor.SignatureFromConf(this, key)) SetFailState("[ActionConstructor]: Failed to set up action constructor with the given key: \"%s\" on section: \"%s\"", key, k_sActionCstorConfSource[type]);
+                } else if (type == ConfType_Addresses) {
+                    if (!ctor.AddressesFromConf(this, key)) SetFailState("[ActionConstructor]: Failed to set up action constructor with the given key: \"%s\" on section: \"%s\"", key, k_sActionCstorConfSource[type]);
+                }
+                
+                for (int i = 0; i < numParams; ++i) {
+                    if (!ctor.AddParameter(params[i].passType, params[i].flags, params[i].encoder))
+                        SetFailState("[ActionConstructor]: Failed to add parameters for action constructor with the given key: \"%s\" on section: \"%s\" of parameters: num: \"%d\", passType: \"%d\", flags: \"%d\", encoder: \"%d\"", key, k_sActionCstorConfSource[type], i, params[i].passType, params[i].flags, params[i].encoder);
+                }
+
+                if (!ctor.Finish()) {
+                    SetFailState("[ActionConstructor]: Failed to finish set up for action constructor.");
+                }
+            }
+        }
+
+        return ctor;
+    }
+#endif
 }
+
+#if defined __sourcescramble_ext_included && defined _midhook_included
+stock MidHook PatchToMidHook(MemoryPatch hPatch, int iOff, MidHookCB callback, bool enable = true) {
+    if (!hPatch) SetFailState("[MidHooks] Failed to create Midhook for the given patch.");
+
+    Address pAdr = hPatch.Address + view_as<Address>(iOff);
+    if (pAdr == Address_Null) SetFailState("[MidHooks] The given address is NULL.");
+
+    MidHook hHook = new MidHook(pAdr, callback, enable);
+    if (!hHook) SetFailState("[MidHooks] Failed to create Midhook for the given address.");
+
+    return hHook;
+}
+#endif
