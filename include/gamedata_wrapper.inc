@@ -12,6 +12,7 @@
  * https://github.com/jensewe
  * 
  * Summarized and extended by: @blueblur0730.
+ * https://github.com/blueblur0730
 */
 
 enum OperatingSystem
