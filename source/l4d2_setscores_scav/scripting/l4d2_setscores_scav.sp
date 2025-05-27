@@ -5,6 +5,7 @@
 #include <sdktools>
 #include <builtinvotes>
 #include <colors>
+#include <l4d2_scav_stocks>
 
 #define L4D_TEAM_SPECTATE 1
 #define L4D_TEAM_SURVIVOR 2
@@ -30,6 +31,8 @@ ConVar
 	g_minimumPlayersForVote,
 	g_allowPlayersToVote,
 	g_forceAdminsToVote;
+
+ScavStocksWrapper g_Wrapper;
 
 public Plugin myinfo =
 {
@@ -336,7 +339,7 @@ void StartRoundVote(int round, const int initiator, bool IsAdmin)
 
 		// Set the text for the vote, initiating client and handler
 		char sBuffer[256];
-		Format(sBuffer, sizeof(sBuffer), "%t", "ChangeRound", GetScavengeRoundNumber(), round);
+		Format(sBuffer, sizeof(sBuffer), "%t", "ChangeRound", g_Wrapper.m_nRoundNumber, round);
 		// Change round from %d to %d?
 		// 设置局数由 %d 变为 %d?
 		SetBuiltinVoteArgument(g_voteHandler_round, sBuffer);
@@ -386,7 +389,7 @@ void StartTeamScoreVote(int round, int team, int score, const int initiator, boo
 		g_voteHandler_teamscores = CreateBuiltinVote(VoteActionHandler, BuiltinVoteType_Custom_YesNo, BuiltinVoteAction_Cancel | BuiltinVoteAction_VoteEnd | BuiltinVoteAction_End);
 
 		char sBuffer[512];
-		Format(sBuffer, sizeof(sBuffer), "%t", "ChangeTeamScore", team, GetScavengeTeamScore(team, round), score, round);
+		Format(sBuffer, sizeof(sBuffer), "%t", "ChangeTeamScore", team, g_Wrapper.GetTeamScore(team, round), score, round);
 		// Change team%d's round score from %d to %d on round %d?
 		// 将队伍%d在第%d局的小局分数从%d 设置为 %d?
 		SetBuiltinVoteArgument(g_voteHandler_teamscores, sBuffer);
@@ -432,7 +435,7 @@ void StartMatchScoreVote(int team, int score, const int initiator, bool IsAdmin)
 		g_voteHandler_matchscores = CreateBuiltinVote(VoteActionHandler, BuiltinVoteType_Custom_YesNo, BuiltinVoteAction_Cancel | BuiltinVoteAction_VoteEnd | BuiltinVoteAction_End);
 
 		char sBuffer[256];
-		Format(sBuffer, sizeof(sBuffer), "%t", "ChangeMatchScore", team, GetScavengeMatchScore(team), score);
+		Format(sBuffer, sizeof(sBuffer), "%t", "ChangeMatchScore", team, g_Wrapper.GetMatchScore(team), score);
 		// Change team%d's match score from %d to %d?
 		// 将队伍%d的比赛分数从%d 设置为 %d?
 		SetBuiltinVoteArgument(g_voteHandler_matchscores, sBuffer);
@@ -477,7 +480,7 @@ void StartGoalVote(int goal, const int initiator, bool IsAdmin)
 		g_voteHandler_goal = CreateBuiltinVote(VoteActionHandler, BuiltinVoteType_Custom_YesNo, BuiltinVoteAction_Cancel | BuiltinVoteAction_VoteEnd | BuiltinVoteAction_End);
 
 		char sBuffer[256];
-		Format(sBuffer, sizeof(sBuffer), "%t", "ChangeGoal", GetScavengeItemsGoal(), goal);
+		Format(sBuffer, sizeof(sBuffer), "%t", "ChangeGoal", g_Wrapper.m_nScavengeItemsGoal, goal);
 		// Change gascan goal from %d to %d?
 		// 将油桶目标数从%d 设置为 %d?
 		SetBuiltinVoteArgument(g_voteHandler_goal, sBuffer);
@@ -566,8 +569,8 @@ public void VoteResultHandler(Handle vote, int num_votes, int num_clients, const
 
 void SetRounds(int round, const int iAdminIndex)
 {
-	int old_round = GetScavengeRoundNumber();
-	SetScavengeRoundNumber(round);
+	int old_round = g_Wrapper.m_nRoundNumber;
+	g_Wrapper.m_nRoundNumber = round;
 
 	if (iAdminIndex != -1)	  // This works well for an index '0' as well, if the initiator is CONSOLE
 	{
@@ -589,8 +592,8 @@ void SetRounds(int round, const int iAdminIndex)
 
 void SetTeamScores(int round, int team, int score, const int iAdminIndex)
 {
-	int old_score = GetScavengeTeamScore(team, round);
-	SetScavengeTeamScore(team, round, score);
+	int old_score = g_Wrapper.GetTeamScore(team, round);
+	g_Wrapper.SetTeamScore(team, round, score);
 
 	if (iAdminIndex != -1)
 	{
@@ -640,8 +643,8 @@ void SetTeamScores(int round, int team, int score, const int iAdminIndex)
 
 void SetMatchScores(int team, int score, const int iAdminIndex)
 {
-	int old_score = GetScavengeMatchScore(team);
-	SetScavengeMatchScore(team, score);
+	int old_score = g_Wrapper.GetMatchScore(team);
+	g_Wrapper.SetMatchScore(team, score);
 
 	if (iAdminIndex != -1)
 	{
@@ -690,8 +693,8 @@ void SetMatchScores(int team, int score, const int iAdminIndex)
 
 void SetGoal(int goal, const int iAdminIndex)
 {
-	int old_goal = GetScavengeItemsGoal();
-	SetScavengeItemsGoal(goal);
+	int old_goal = g_Wrapper.m_nScavengeItemsGoal;
+	g_Wrapper.m_nScavengeItemsGoal = goal;
 
 	if (iAdminIndex != -1)
 	{
