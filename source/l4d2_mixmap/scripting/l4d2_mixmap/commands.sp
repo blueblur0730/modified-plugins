@@ -194,10 +194,10 @@ void CreateMapSetTypeMenu(int client)
 	Menu menu = new Menu(MenuHandler_MapSetType);
 	menu.SetTitle(sBuffer);
 
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_OfficialMapSet", client)
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_OfficialMapSet", client);
 	menu.AddItem("", sBuffer);
 
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_CustomMapSet", client)
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_CustomMapSet", client);
 	menu.AddItem("", sBuffer);
 
 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuItem_MixtapeMapSet", client);

@@ -42,13 +42,13 @@ MapSetType g_iMapsetType		 = MapSet_None;
 char	   g_sPresetName[256];
 
 // Modules
-#include <l4d2_mixmap/setup.sp>
-#include <l4d2_mixmap/util.sp>
-#include <l4d2_mixmap/hooks.sp>
-#include <l4d2_mixmap/actions.sp>
-#include <l4d2_mixmap/commands.sp>
-#include <l4d2_mixmap/mappool.sp>
-#include <l4d2_mixmap/vote.sp>
+#include "l4d2_mixmap/setup.sp"
+#include "l4d2_mixmap/util.sp"
+#include "l4d2_mixmap/hooks.sp"
+#include "l4d2_mixmap/actions.sp"
+#include "l4d2_mixmap/commands.sp"
+#include "l4d2_mixmap/mappool.sp"
+#include "l4d2_mixmap/vote.sp"
 
 public Plugin myinfo =
 {
