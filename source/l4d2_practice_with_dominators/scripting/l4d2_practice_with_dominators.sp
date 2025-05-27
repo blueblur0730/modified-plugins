@@ -315,7 +315,7 @@ void CleanGetUp(int client, int weapon)
 	*/
 	float oldNextAttack = GetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack");
 	float newNextAttack = oldNextAttack - DEPLOY_ANIM_TIME + 0.1;
-	float playBackRate	= DEPLOY_ANIM_TIME / 0.1;
+	//float playBackRate	= DEPLOY_ANIM_TIME / 0.1;
 
 #if DEBUG
 	PrintToServer("### oldNextAttack: %.1f, newNextAttack: %.1f", oldNextAttack, newNextAttack);
