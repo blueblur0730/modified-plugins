@@ -76,8 +76,11 @@ import shutil
 import subprocess
 
 parser = argparse.ArgumentParser('Configures the project.')
-parser.add_argument('--spcomp-dir',
+parser.add_argument('--spcomp-dir', type = str,
 		help = 'Directory with the SourcePawn compiler.  Will check PATH if not specified.')
+
+parser.add_argument('--no-source', action = 'store_true', default = False, 
+					help = 'Do not copy the source file into the build result.')
 
 args = parser.parse_args()
 
@@ -148,12 +151,13 @@ with contextlib.closing(ninja_syntax.Writer(open('build.ninja', 'wt'))) as build
 	for dest_dir in destination_dir:
 		dir = os.path.normpath(os.path.join(vars['root'], dest_dir, 'scripting'))
 		for root, dirs, files in os.walk(dir):
-			for file in files:
-				# Copy all files 
-				file_path = os.path.join(root, file)
-				dist_sp = os.path.normpath(os.path.join(vars['builddir'], file_path))
-				build.build(dist_sp, 'copy', file_path)
-				build.newline()
+			if not args.no_source:
+				for file in files:
+					# Copy all files 
+					file_path = os.path.join(root, file)
+					dist_sp = os.path.normpath(os.path.join(vars['builddir'], file_path))
+					build.build(dist_sp, 'copy', file_path)
+					build.newline()
 
 			for subdir in dirs:
 				# Add this directory as an include path
