@@ -59,7 +59,7 @@ release_include_dirs = [
 ]
 
 # required version of spcomp (presumably pinned to SM version)
-spcomp_min_version = (1, 12)
+# spcomp_min_version = (1, 12)
 
 ########################
 # build.ninja script generation below.
@@ -92,13 +92,13 @@ if 'x86_64' in platform.machine():
 if not spcomp:
 	raise FileNotFoundError('Could not find SourcePawn compiler.')
 
-available_version = misc.spcomp_util.extract_version(spcomp)
-version_string = '.'.join(map(str, available_version))
-print('Found SourcePawn compiler version', version_string, 'at', os.path.abspath(spcomp))
+# available_version = misc.spcomp_util.extract_version(spcomp)
+# version_string = '.'.join(map(str, available_version))
+# print('Found SourcePawn compiler version', version_string, 'at', os.path.abspath(spcomp))
 
-if spcomp_min_version > available_version:
-	raise ValueError("Failed to meet required compiler version "
-			+ '.'.join(map(str, spcomp_min_version)))
+# if spcomp_min_version > available_version:
+# 	raise ValueError("Failed to meet required compiler version "
+# 			+ '.'.join(map(str, spcomp_min_version)))
 
 # properly handle quoting within params
 if platform.system() == "Windows":
