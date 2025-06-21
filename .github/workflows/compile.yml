@@ -57,7 +57,7 @@ jobs:
 
       - name: Configure and Build
         run: |
-          python3 configure.py --spcomp-dir
+          python3 configure.py --spcomp-dir "$scriptingPath"
           ninja
 
       - uses: actions/upload-artifact@v4
