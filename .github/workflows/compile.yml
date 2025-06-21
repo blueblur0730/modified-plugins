@@ -1,0 +1,73 @@
+# This is a basic workflow that is manually triggered
+
+name: Compile and Upload
+
+on:
+  pull_request:
+    paths:
+      - 'source/**/scripting/'
+      - 'include/**/*.inc'
+
+    branches:
+      - master
+      - main
+      - workflow
+
+  push:
+    paths:
+      - 'source/**/scripting/'
+      - 'include/**/*.inc'
+
+    branches:
+      - master
+      - main
+      - workflow
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build with sm${{ matrix.sm_version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        sm_version:
+          - "1.12"
+          - "1.13"
+            
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout Repo
+        with:
+          submodules: recursive
+          
+      - uses: actions/setup-python@v5
+        name: Prepare Python
+        with:
+          python-version: 3.11
+
+      - name: Install NinjaBuild
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+
+      - uses: rumblefrog/setup-sp@v1.2.4
+        name: Install SourcePawn Compiler
+        with:
+          version: ${{ matrix.sm_version }}
+
+      - name: Configure and Build
+        run: |
+          python3 configure.py --spcomp-dir "$scriptingPath"
+          ninja
+
+      - uses: actions/upload-artifact@v4
+        name: Upload the Package
+        with:
+          name: ${{ github.repository }}-${{ matrix.sm_version }}-${{ github.run_started_at }}
+          path: |
+            build/source/
+            build/include/
+            LICENSE
+            README.md
+            README-cn.md
+          
