@@ -57,6 +57,7 @@ jobs:
 
       - name: Configure and Build
         run: |
+          chmod +x "$scriptingPath"
           python3 configure.py --spcomp-dir "$scriptingPath"
           ninja
 
