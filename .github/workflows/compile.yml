@@ -7,10 +7,22 @@ on:
     paths:
       - 'source/**/scripting/'
       - 'include/**/*.inc'
+
+    branches:
+      - master
+      - main
+      - workflow
+
   push:
     paths:
       - 'source/**/scripting/'
       - 'include/**/*.inc'
+
+    branches:
+      - master
+      - main
+      - workflow
+
   workflow_dispatch:
 
 jobs:
