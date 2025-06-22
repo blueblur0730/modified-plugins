@@ -99,6 +99,9 @@ jobs:
           done; 
           wait
 
+      - name: Retrive Date
+        run: echo "DATE=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
       - name: Release
         uses: xresloader/upload-to-github-release@v1.6.0
         with:
@@ -108,6 +111,6 @@ jobs:
           branches: main
           tag_name: latest
           update_latest_release: false
-          default_release_name: modified-plugins_${{ env.GITHUB_SHA_SHORT }}_${{ github.run_id }}
+          default_release_name: modified-plugins_${{ env.DATE }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
