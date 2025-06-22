@@ -1,53 +1,5 @@
 #!/usr/bin/python
 
-# destination directory for sourcepawn files. relative to root.
-destination_dir = [
-	'source/command_menu',
-	'source/confogl_system',
-	'source/fix_null_activator',
-	'source/l4d_spectator_prefix',
-	'source/l4d_stats',
-	'source/l4d_stucked_tank_teleport',
-	'source/l4d2_block_aid_healing',
-	'source/l4d2_block_no_steam_logon',
-	'source/l4d2_cheer',
-	'source/l4d2_dynamic_tank_health',
-	'source/l4d2_ff_announcer_controller',
-	'source/l4d2_getitem',
-	'source/l4d2_hp_distributing',
-	'source/l4d2_inputkill_block',
-	'source/l4d2_item_hint',
-	'source/l4d2_jockey_ride_stuck_fix',
-	'source/l4d2_map_manager',
-	'source/l4d2_mixmap',
-	'source/l4d2_nightvision',
-	'source/l4d2_playercount_based_supplies',
-	'source/l4d2_playermanagement',
-	'source/l4d2_practice_with_dominators',
-	'source/l4d2_resolve_witch_ci_collision',
-	'source/l4d2_scav_gascan_selfburn',
-	'source/l4d2_scav_remove_blur_rumble',
-	'source/l4d2_scav_weapon_consistency',
-	'source/l4d2_setscores_scav',
-	'source/l4d2_shove_kill_adjustment',
-	'source/l4d2_tank_damage_control',
-	'source/l4d2_throw_announce',
-	'source/l4d2_welcome_message',
-	'source/map_configs',
-	'source/punch_angle',
-	'source/saferoom_teleport',
-	'source/savechat',
-	'source/scavenge_quick_end',
-	'source/sm_advertisement',
-	'source/sm_hours_limiter',
-	'source/sm_player_info',
-	'source/sm_restarter',
-	'source/spechud',
-	'source/survivor_chat_select',
-	'source/transition_restore_fix',
-	'source/vote_manager',
-]
-
 # additional directories for sourcepawn include lookup. relative to root.
 include_dirs = [
 	'personal_sourcepawn_library_env'
@@ -57,9 +9,6 @@ include_dirs = [
 release_include_dirs = [
 	'include',
 ]
-
-# required version of spcomp (presumably pinned to SM version)
-# spcomp_min_version = (1, 12)
 
 ########################
 # build.ninja script generation below.
@@ -74,6 +23,12 @@ import platform
 import shlex
 import shutil
 import subprocess
+import glob
+
+# destination directory for sourcepawn files. relative to root.
+destination_dir = [
+	os.path.relpath(d, '.') for d in glob.glob('source/*') if os.path.isdir(d)
+]
 
 parser = argparse.ArgumentParser('Configures the project.')
 parser.add_argument('--spcomp-dir', type = str,
@@ -91,6 +46,9 @@ if 'x86_64' in platform.machine():
 	spcomp = shutil.which('spcomp64', path = args.spcomp_dir) or spcomp
 if not spcomp:
 	raise FileNotFoundError('Could not find SourcePawn compiler.')
+
+# required version of spcomp (presumably pinned to SM version)
+# spcomp_min_version = (1, 12)
 
 # available_version = misc.spcomp_util.extract_version(spcomp)
 # version_string = '.'.join(map(str, available_version))
