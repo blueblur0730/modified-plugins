@@ -52,7 +52,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         name: Upload the Package
         with:
-          name: modified-plugins_${{ matrix.sm_version }}-${{ github.sha }}
+          name: modified-plugins_${{ matrix.sm_version }}
           path: |
             build/source/
             build/include/
@@ -79,11 +79,16 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Prepare env
+        shell: bash
+        run: |
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
       - name: Download package
         uses: actions/download-artifact@v4
         with:
           path: tmp/
-          pattern: modified-plugins_${{ matrix.sm_version }}-${{ github.sha }}
+          pattern: modified-plugins_${{ matrix.sm_version }}
 
       - name: Prepare Release
         working-directory: tmp/
@@ -103,5 +108,5 @@ jobs:
           branches: main
           tag_name: latest
           update_latest_release: false
-          default_release_name: modified-plugins_${{ matrix.sm_version }}
+          default_release_name: modified-plugins_${{ matrix.sm_version }}.${{ env.GITHUB_SHA_SHORT }}
           token: ${{ secrets.GITHUB_TOKEN }}
