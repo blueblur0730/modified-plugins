@@ -8,6 +8,8 @@
   
 依兴趣撰写或修改, 请在 **保留代码原作者名称** 的条件下随意使用这些代码.
 
+你可以在 [发布页面这儿](https://github.com/blueblur0730/modified-plugins/releases) 直接获取不同sourcemod版本下编译的二进制文件.
+
 ## 构建
 
 此仓库使用了 [nosoop 的 NinjaBuild-SMPlugins](https://github.com/nosoop/NinjaBuild-SMPlugin) 模板项目来构建编译插件. 在此十分感谢他. 你可以前往他的仓库去了解更多有关构建系统的信息. `modified-plugins` 仓库使用了修改后的模板版本来编译构建插件.
