@@ -95,8 +95,13 @@ jobs:
           wait
 
       - name: Release
-        uses: googleapis/release-please-action@v3.1.2
+        uses: xresloader/upload-to-github-release@v1.6.0
         with:
-          package-name: modified-plugins_${{ matrix.sm_version }}
-          path: tmp/modified-plugins_*.zip
-          command: github-release
+          file: tmp/modified-plugins_*.zip
+          draft: false
+          prerelease: false
+          branches: main
+          tag_name: latest
+          update_latest_release: false
+          default_release_name: modified-plugins_${{ matrix.sm_version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
