@@ -52,7 +52,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         name: Upload the Package
         with:
-          name: modified-plugins_${{ matrix.sm_version }}-${{ github.sha }}
+          name: modified-plugins_${{ matrix.sm_version }}
           path: |
             build/source/
             build/include/
@@ -65,9 +65,10 @@ jobs:
 
     # only release if the workflow is manually triggered
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name)
+    needs: build
+    runs-on: ubuntu-latest
 
     strategy:
-      needs: build
       fail-fast: false
       matrix:
         sm_version: ["1.12", "1.13"]
@@ -80,16 +81,20 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Prepare env
+        shell: bash
+        run: |
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
       - name: Download package
         uses: actions/download-artifact@v4
         with:
           path: tmp/
-          pattern: modified-plugins_${{ matrix.sm_version }}}-${{ github.sha }}
+          pattern: modified-plugins_${{ matrix.sm_version }}
 
       - name: Prepare Release
         working-directory: tmp/
         run: |
-          # https://unix.stackexchange.com/questions/68489/command-to-zip-multiple-directories-into-individual-zip-files
           for i in */; 
           do 
             zip -0 -r "${i%/}.zip" "$i" & 
@@ -97,8 +102,14 @@ jobs:
           wait
 
       - name: Release
-        uses: googleapis/release-please-action@v3.1.2
+        uses: xresloader/upload-to-github-release@v1.6.0
         with:
-          package-name: modified-plugins_${{ matrix.sm_version }}
-          path: tmp/modified-plugins_*.zip
-          command: github-release
+          file: tmp/modified-plugins_*.zip
+          draft: false
+          prerelease: false
+          branches: main
+          tag_name: latest
+          update_latest_release: false
+          default_release_name: modified-plugins_${{ env.GITHUB_SHA_SHORT }}_%{{ github.run_id }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
