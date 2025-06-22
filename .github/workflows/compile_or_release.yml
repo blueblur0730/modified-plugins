@@ -73,6 +73,8 @@ jobs:
       matrix:
         sm_version: ["1.12", "1.13"]
 
+    runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
         name: Checkout Repo
@@ -110,3 +112,4 @@ jobs:
           update_latest_release: false
           default_release_name: modified-plugins_${{ env.GITHUB_SHA_SHORT }}_%{{ github.run_id }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
