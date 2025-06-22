@@ -83,12 +83,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: tmp/
-          pattern: modified-plugins_${{ matrix.sm_version }}}-${{ github.sha }}
+          pattern: modified-plugins_${{ matrix.sm_version }}-${{ github.sha }}
 
       - name: Prepare Release
         working-directory: tmp/
         run: |
-          # https://unix.stackexchange.com/questions/68489/command-to-zip-multiple-directories-into-individual-zip-files
           for i in */; 
           do 
             zip -0 -r "${i%/}.zip" "$i" & 
