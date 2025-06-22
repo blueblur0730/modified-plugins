@@ -73,8 +73,6 @@ jobs:
       matrix:
         sm_version: ["1.12", "1.13"]
 
-    runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
         name: Checkout Repo
