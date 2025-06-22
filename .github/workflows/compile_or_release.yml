@@ -110,6 +110,7 @@ jobs:
           prerelease: false
           branches: main
           tag_name: release
+          tags: true
           update_latest_release: true
           default_release_name: modified-plugins_${{ env.DATE }}
           token: ${{ secrets.GITHUB_TOKEN }}
