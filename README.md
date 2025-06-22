@@ -8,6 +8,8 @@ All Compiled with
   
 Written or modified in interest, feel free to use these codes by **keeping their original author name**.
 
+You can fetch the plugin binaries through [releases here](https://github.com/blueblur0730/modified-plugins/releases) compiling against different sourcemod version.
+
 ## Build
 
 This respository uses [nosoop's NinjaBuild-SMPlugins](https://github.com/nosoop/NinjaBuild-SMPlugin) template project to build plugins. Big thanks to him. Check out his repo for more detail about the build system. `modified-plugins` repo uses a modified template version to build plugins.
