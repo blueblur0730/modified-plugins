@@ -29,7 +29,7 @@ jobs:
   build:
     name: Build with sm${{ matrix.sm_version }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         sm_version:
           - "1.12"
@@ -50,7 +50,7 @@ jobs:
       - name: Install NinjaBuild
         run: sudo apt-get update && sudo apt-get install -y ninja-build
 
-      - uses: rumblefrog/setup-sp@v1.2.4
+      - uses: rumblefrog/setup-sp@master
         name: Install SourcePawn Compiler
         with:
           version: ${{ matrix.sm_version }}
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         name: Upload the Package
         with:
-          name: ${{ github.repository }}-${{ matrix.sm_version }}-${{ github.run_started_at }}
+          name: modified-plugins_${{ matrix.sm_version }}-${{ github.sha }}
           path: |
             build/source/
             build/include/
