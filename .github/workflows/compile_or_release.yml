@@ -100,7 +100,7 @@ jobs:
           wait
 
       - name: Retrive Date
-        run: echo "DATE=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
       - name: Release
         uses: xresloader/upload-to-github-release@v1.6.0
