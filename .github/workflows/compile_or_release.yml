@@ -65,14 +65,13 @@ jobs:
 
     # only release if the workflow is manually triggered
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name)
+    needs: build
+    runs-on: ubuntu-latest
 
     strategy:
-      needs: build
       fail-fast: false
       matrix:
         sm_version: ["1.12", "1.13"]
-
-    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
