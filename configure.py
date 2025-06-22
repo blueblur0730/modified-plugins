@@ -202,11 +202,11 @@ with contextlib.closing(ninja_syntax.Writer(open('build.ninja', 'wt'))) as build
 				build.newline()
 
 		dir_gamedata = os.path.normpath(os.path.join(vars['root'], filepath, 'gamedata'))
-		for root, subdir_configs, files in os.walk(dir_configs):
+		for root, subdir_gamedata, files in os.walk(dir_gamedata):
 			for file in files:
-				filepath_configs = os.path.join(root, file)
-				dist_to_copy = os.path.normpath(os.path.join(vars['builddir'], filepath_configs))
-				build.build(dist_to_copy, 'copy', os.path.normpath(os.path.join(vars['root'], filepath_configs)))
+				filepath_gamedata = os.path.join(root, file)
+				dist_to_copy = os.path.normpath(os.path.join(vars['builddir'], filepath_gamedata))
+				build.build(dist_to_copy, 'copy', os.path.normpath(os.path.join(vars['root'], filepath_gamedata)))
 				build.newline()
 
 		dir_translations = os.path.normpath(os.path.join(vars['root'], filepath, 'translations'))
