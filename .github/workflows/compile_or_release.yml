@@ -104,13 +104,14 @@ jobs:
         uses: xresloader/upload-to-github-release@v1.6.0
         with:
           file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
+          delete_file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip # Remove first, then upload.
           draft: false
           prerelease: false
           branches: main
           tag_name: release
           tags: true
           update_latest_release: true
-          overwrite: true
+          # overwrite: true
           default_release_name: modified-plugins
           token: ${{ secrets.GITHUB_TOKEN }}
 
