@@ -104,7 +104,7 @@ jobs:
         uses: xresloader/upload-to-github-release@v1
         with:
           file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
-          delete_file: modified-plugins-sm-${{ matrix.sm_version }}-*.zip
+          # delete_file: modified-plugins-sm-${{ matrix.sm_version }}-*.zip
           draft: false
           prerelease: false
           branches: main
