@@ -101,10 +101,10 @@ jobs:
           wait
 
       - name: Release
-        uses: xresloader/upload-to-github-release@v1.6.0
+        uses: xresloader/upload-to-github-release@main
         with:
           file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
-          delete_file: modified-plugins-sm-${{ matrix.sm_version }}-*.zip # Remove first, then upload.
+          delete_file: modified-plugins-sm-${{ matrix.sm_version }}-*.zip
           draft: false
           prerelease: false
           branches: main
@@ -112,7 +112,7 @@ jobs:
           tags: true
           update_latest_release: true
           # verbose: true
-          # overwrite: true
+          overwrite: true
           default_release_name: modified-plugins
           token: ${{ secrets.GITHUB_TOKEN }}
 
