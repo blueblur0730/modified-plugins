@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    name: Build with sm${{ matrix.sm_version }}
+    name: Build with sm-${{ matrix.sm_version }}
 
     strategy:
       fail-fast: false
@@ -30,7 +30,10 @@ jobs:
         name: Checkout Repo
         with:
           submodules: recursive
-          
+
+      - name: Retrive Date
+        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
       - uses: actions/setup-python@v5
         name: Prepare Python
         with:
@@ -52,7 +55,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         name: Upload the Package
         with:
-          name: modified-plugins_${{ matrix.sm_version }}
+          name: modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}
           path: |
             build/source/
             build/include/
@@ -61,7 +64,7 @@ jobs:
             README-cn.md
 
   release:
-    name: Release with sm${{ matrix.sm_version }}
+    name: Release with sm-${{ matrix.sm_version }}
 
     # only release if the workflow is manually triggered
     if: contains(fromJson('["workflow_dispatch"]'), github.event_name)
@@ -79,16 +82,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Prepare env
-        shell: bash
-        run: |
-          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+      - name: Retrive Date
+        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
       - name: Download package
         uses: actions/download-artifact@v4
         with:
           path: tmp/
-          pattern: modified-plugins_${{ matrix.sm_version }}
+          pattern: modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}
 
       - name: Prepare Release
         working-directory: tmp/
@@ -99,13 +100,10 @@ jobs:
           done; 
           wait
 
-      - name: Retrive Date
-        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-
       - name: Release
         uses: xresloader/upload-to-github-release@v1.6.0
         with:
-          file: tmp/modified-plugins_*.zip
+          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
           draft: false
           prerelease: false
           branches: main
@@ -113,6 +111,6 @@ jobs:
           tags: true
           update_latest_release: true
           overwrite: true
-          default_release_name: modified-plugins_${{ env.DATE }}
+          default_release_name: modified-plugins
           token: ${{ secrets.GITHUB_TOKEN }}
 
