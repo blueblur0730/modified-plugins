@@ -111,6 +111,7 @@ jobs:
           tag_name: release
           tags: true
           update_latest_release: true
+          verbose: true
           # overwrite: true
           default_release_name: modified-plugins
           token: ${{ secrets.GITHUB_TOKEN }}
