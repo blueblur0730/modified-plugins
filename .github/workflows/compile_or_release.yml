@@ -86,7 +86,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: tmp/
-          pattern: modified-plugins-sm-${{ matrix.sm_version }}
+          pattern: modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}
 
       - name: Prepare Release
         working-directory: tmp/
