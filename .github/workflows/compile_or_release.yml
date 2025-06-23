@@ -82,6 +82,9 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Retrive Date
+        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
       - name: Download package
         uses: actions/download-artifact@v4
         with:
