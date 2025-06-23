@@ -103,7 +103,7 @@ jobs:
       - name: Release
         uses: xresloader/upload-to-github-release@v1.6.0
         with:
-          file: tmp/modified-plugins_*.zip
+          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
           draft: false
           prerelease: false
           branches: main
