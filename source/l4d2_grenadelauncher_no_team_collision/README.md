@@ -1,6 +1,6 @@
 **[English](./README.md) | [中文](./README-cn.md)**
 
-# [L4D2] Grenadeluncher No Team Collision
+# [L4D2] Grenadelauncher No Team Collision
 
 Pass your grenade launcher projectile through teammates.
 
@@ -15,3 +15,7 @@ Pass your grenade launcher projectile through teammates.
 // enable plugin.
 l4d2_genade_launcher_no_collision_enable 1
 ```
+
+## Demostration
+
+[Link Here](https://www.bilibili.com/video/BV18pudz7Esj)

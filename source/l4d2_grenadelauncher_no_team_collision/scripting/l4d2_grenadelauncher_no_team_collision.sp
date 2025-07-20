@@ -9,18 +9,16 @@
 #include <sdkhooks>
 #include <collisionhook>
 
-#define PLUGIN_NAME			"l4d2_genade_launcher_no_collision"
-#define PLUGIN_VERSION 	"1.0"
+#define PLUGIN_NAME		"l4d2_genade_launcher_no_collision"
+#define PLUGIN_VERSION 	"1.1"
 
 #define CVAR_FLAGS 		 FCVAR_NOTIFY
 
 ConVar 
 	g_cvEnable;
 
-bool 
-	g_bEnable;
-
-public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) {
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) 
+{
 	EngineVersion test = GetEngineVersion();
 
 	if( test != Engine_Left4Dead2 )
@@ -37,7 +35,7 @@ public Plugin myinfo =
 	author = "qy087, blueblur",
 	description = "Pass your grenade launcher projectile through teammates.",
 	version = PLUGIN_VERSION,
-	url = "https://github.com/blueblur0730/modified-plugins"
+	url = "https://github.com/qy087/l4d2-littleplugins"
 };
 
 public void OnPluginStart()
@@ -45,29 +43,14 @@ public void OnPluginStart()
 	CreateConVar( PLUGIN_NAME ... "_version", PLUGIN_VERSION, "L4D2 Genade Launcher No Team Collision Version", FCVAR_DONTRECORD|FCVAR_NOTIFY);
 	g_cvEnable = CreateConVar( PLUGIN_NAME ... "_enable","1", "Enable/Disable the Genade Launcher Team Collision", CVAR_FLAGS, true, 0.0, true, 1.0);
 	//AutoExecConfig(true, PLUGIN_NAME);
-	
-	GetCvars();
-	g_cvEnable.AddChangeHook(ConVarChanged_Cvars);
-}
-
-public void OnConfigsExecuted() 
-{
-	GetCvars();
-}
-
-void ConVarChanged_Cvars(ConVar convar, const char[] oldValue, const char[] newValue)
-{
-	GetCvars();
-}
-
-void GetCvars()
-{
-	g_bEnable = g_cvEnable.BoolValue;
 }
 
 public void OnEntityCreated(int entity, const char[] classname)
 {
-	if(strncmp(classname, "grenade_launcher_projectile", 27) == 0)
+	if (!g_cvEnable.BoolValue)
+		return;
+
+	if(strcmp(classname, "grenade_launcher_projectile") == 0)
 	{
 		SDKHook(entity, SDKHook_Touch, OnTouch);
 		SDKHook(entity, SDKHook_EndTouchPost, OnEndTouchPost);
@@ -93,12 +76,16 @@ void OnEndTouchPost(int entity, int other)
 
     if (GetClientTeam(other) != 2)
         return;
-        
-    RequestFrame(NextFrame_OnEndTouchPost, entity);
+    
+    RequestFrame(NextFrame_OnEndTouchPost, EntIndexToEntRef(entity));
 }
 
-void NextFrame_OnEndTouchPost(int entity)
+void NextFrame_OnEndTouchPost(int ref)
 {
+	if (!IsValidEdict(ref))
+		return;
+
+	int entity = EntRefToEntIndex(ref);
     SetEntProp(entity, Prop_Data, "m_CollisionGroup", 0);
 }
 
@@ -107,15 +94,14 @@ void NextFrame_OnEndTouchPost(int entity)
 // @blueblur0730: 能否穿透生还者身上的物品? 
 public Action CH_PassFilter(int entity1, int entity2, bool &result)
 {
-	if (!IsValidGLPJEntityIndex(entity1) || !g_bEnable) return Plugin_Continue;
-
-	if(!IsValidClient(entity2)) return Plugin_Continue;
-	
-	if(GetClientTeam(entity2) == 3)
-	{
-		SetEntProp(entity1, Prop_Data, "m_CollisionGroup", 0);
+	if (!g_cvEnable.BoolValue)
 		return Plugin_Continue;
-	}
+
+	if (!IsValidGLPJEntityIndex(entity1)) 
+		return Plugin_Continue;
+
+	if(!IsValidClient(entity2)) 
+		return Plugin_Continue;
 	
 	SetEntProp(entity1, Prop_Data, "m_CollisionGroup", 1);
 	//result = false; // @qy087: 此处更改无效只能通过改属性解决
@@ -130,7 +116,8 @@ bool IsValidClient(int client)
 
 bool IsValidEntityIndex(int entity)
 {
-    return (MaxClients+1 <= entity <= GetMaxEntities());
+    //return (MaxClients + 1 <= entity <= GetMaxEntities());
+	return (entity > MaxClients && entity <= GetMaxEntities() && IsValidEdict(entity));
 }
 
 bool IsValidGLPJEntityIndex(int entity)
