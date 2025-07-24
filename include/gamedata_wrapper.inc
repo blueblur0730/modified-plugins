@@ -5,7 +5,7 @@
 
 #include <sourcemod>
 
-#define GAMEDATA_WRAPPER_VERSION "3.0"
+#define GAMEDATA_WRAPPER_VERSION "3.0.1"
 
 /**
  * This include file was inspired by @Forgetest.
@@ -337,7 +337,7 @@ methodmap GameDataWrapper < GameData {
      * @error                   Plugin failed if the dynamic hook setup section is missing, or failed to enable the dynamic hook.
     */
     public DynamicHook CreateDynamicHookOrFail( const char[] name,
-                                                HookType type,
+                                                HookType type = HookType_Entity,
                                                 int entity = -1,
                                                 Address pAdr = Address_Null,
                                                 bool bNow = true,
