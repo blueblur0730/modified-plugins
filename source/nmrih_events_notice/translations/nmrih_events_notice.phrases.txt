@@ -1,0 +1,79 @@
+"Phrases"
+{
+    "Suicided"
+    {
+        "#format"   "{1:N}"
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} suicided."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 自杀了."
+    }
+
+    "Killed"
+    {
+        "#format"   "{1:N}"
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} died due to something mysterious.."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 因为奇奇怪怪的东西死掉了.."
+    }
+
+    "KilledByShambler"
+    {
+        "#format"   "{1:N}"
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} was killed by Shambler Zombie."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 被普通丧尸杀死了."
+    }
+
+    "KilledByRunner"
+    {
+        "#format"   "{1:N}"
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} was killed by Runner Zombie."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 被跑尸杀死了."
+    }
+
+    "KilledByKid"
+    {
+        "#format"   "{1:N}"
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} was killed by Kid Zombie."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 被小丧尸杀死了."
+    }
+
+    "KilledByTurned"
+    {
+        "#format"   "{1:N}"
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} was killed by Turned Zombie."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 被转变丧尸杀死了."
+    }
+
+    "MapCompleted"
+    {
+        "#format"   "{1:.02f}"
+        "en"        "{green}[SM]{default} Map completed, Time comsumed: {orange}{1}{default}"
+        "chi"       "{green}[SM]{default} 已完成地图, 花费时间: {orange}{1}{default}"
+    }
+
+    "Extracted"
+    {
+        "#format"   "{1:N}"
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} was extracted successfully."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 已成功逃离."
+    }
+
+    "AppliedBandage"
+    {
+        "#format"   "{1:N}"
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} applied bandage and stopped bleeding."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 使用了绷带并停止了流血."
+    }
+
+    "AppliedFirstAidKit"
+    {
+        "#format"   "{1:N}"
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} healed themselves with First Aid Kit."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 使用医疗包治疗了自己."
+    }
+
+    "AppliedVaccine"
+    {
+        "#format"   "{1:N}"
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} applied vaccine and cured the infection."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 使用了疫苗并治愈了感染."
+    }
+}
