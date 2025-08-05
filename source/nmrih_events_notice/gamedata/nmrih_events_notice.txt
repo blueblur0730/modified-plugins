@@ -1,0 +1,32 @@
+"Games"
+{
+    "nmrih"
+    {
+        "Functions"
+        {
+            "CNMRiH_BaseMedicalItem::GiveToPlayer"
+            {
+				"offset"	"CNMRiH_BaseMedicalItem::GiveToPlayer"
+				"hooktype"	"entity"
+				"this"		"entity"
+				"return"	"void"
+				"arguments"
+				{
+					"pTarget"
+					{
+						"type"	"cbaseentity"
+					}
+				}
+            }
+        }
+
+        "Offsets"
+        {
+            "CNMRiH_BaseMedicalItem::GiveToPlayer"
+            {
+                "linux"     "438"
+                "windows"   "437"
+            }
+        }
+    }
+}

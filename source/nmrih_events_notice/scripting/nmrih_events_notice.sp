@@ -2,12 +2,16 @@
 #pragma newdecls required
 
 #include <sourcemod>
+#include <dhooks>
+#include <sdkhooks>
 #include <nmrih_player>
 #include <multicolors>
 
 #define TRANSLATION_FILE "nmrih_events_notice.phrases"
+#define GAMEDATA_FILE "nmrih_events_notice"
 
 float g_flRoundTime;
+DynamicHook g_hDynamicHook;
 
 enum NPCType {
 	Type_Shambler = 1,
@@ -16,11 +20,25 @@ enum NPCType {
 	Type_Turned = 4
 }
 
-#define PLUGIN_VERSION "1.0"
+static const char g_sSharableItem[][] = {
+	"item_bandages",
+	"item_first_aid",
+	"item_pills",
+	"item_gene_therapy"
+};
+
+static const char g_sReadableWord[][] = {
+	"Bandages",
+	"First Aid Kit",
+	"Pills",
+	"Gene Therapy"
+};
+
+#define PLUGIN_VERSION "1.1"
 
 public Plugin myinfo =
 {
-	name = "[NMRiH] Events Notices",
+	name = "[NMRiH] Event Notices",
 	author = "blueblur",
 	description = "In association with nmrih-notice by F1F88.",
 	version = PLUGIN_VERSION,
@@ -32,6 +50,7 @@ public void OnPluginStart()
 	CreateConVar("nmrih_events_notice_version", PLUGIN_VERSION, "Plugin Version", FCVAR_NOTIFY | FCVAR_DONTRECORD);
 
 	LoadTranslation(TRANSLATION_FILE);
+	LoadGameData(GAMEDATA_FILE);
 
     HookEvent("player_death", Event_PlayerDeath);
 	HookEvent("map_complete", Event_MapComplete);
@@ -129,6 +148,44 @@ public void OnPlayerApplyVaccinePost(int client)
 	CPrintToChatAll("%t", "AppliedVaccine", client);
 }
 
+public void OnEntityCreated(int entity, const char[] classname)
+{
+	for (int i = 0; i < sizeof(g_sSharableItem); i++)
+	{
+		if (!strcmp(classname, g_sSharableItem[i]))
+			g_hDynamicHook.HookEntity(Hook_Pre, entity, DHook_OnGiveToPlayer);
+	}
+}
+
+// pre hook here. 'cause we need to know its owner before given away.
+MRESReturn DHook_OnGiveToPlayer(int pThis, DHookParam hParams)
+{
+	if (hParams.IsNull(1))
+		return MRES_Ignored;
+
+	int target = hParams.Get(1);
+	if (!IsValidClient(target))
+		return MRES_Ignored;
+
+	int owner = GetEntPropEnt(pThis, Prop_Send, "m_hOwner");
+	if (!IsValidClient(owner))
+		return MRES_Ignored;
+
+	char sName[64];
+	GetEntityClassname(pThis, sName, sizeof(sName));
+
+	for (int i = 0; i < sizeof(g_sSharableItem); i++)
+	{
+		if (!strcmp(sName, g_sSharableItem[i]))
+		{
+			CPrintToChatAll("%t", "GaveItem", owner, target, g_sReadableWord[i]);
+			break;
+		}
+	}
+	
+	return MRES_Ignored;
+}
+
 stock void FormatSeconds(float flSeconds, char[] string, int size)
 {
     int hours = RoundToFloor(flSeconds / 3600.0);
@@ -154,4 +211,16 @@ stock void LoadTranslation(const char[] translation)
 		SetFailState("Missing translation file %s.txt", translation);
 
 	LoadTranslations(translation);
+}
+
+void LoadGameData(const char[] gamedata)
+{
+	GameData gd = new GameData(gamedata);
+	if (!gd) SetFailState("Failed to load gamedata file: \"%d\".");
+
+	g_hDynamicHook = DynamicHook.FromConf(gd, "CNMRiH_BaseMedicalItem::GiveToPlayer");
+	if (!g_hDynamicHook)
+		SetFailState("Failed to hook function: \"CNMRiH_BaseMedicalItem::GiveToPlayer\"");
+
+	delete gd;
 }

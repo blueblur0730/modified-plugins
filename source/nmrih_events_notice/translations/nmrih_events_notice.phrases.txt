@@ -76,4 +76,35 @@
         "en"        "{green}[SM]{default} Player {gray}{1}{default} applied vaccine and cured the infection."
         "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 使用了疫苗并治愈了感染."
     }
+
+    "GaveItem"
+    {
+        "#format"   "{1:N},{2:N},{3:t}"
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} gave the item {lightred}{3}{default} to player {gray}{2}{default}."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 向玩家 {gray}{2}{default} 给予了 {lightred}{3}{default}."
+    }
+
+    "Bandages"
+    {
+        "en"    "Bandage"
+        "chi"   "绷带"
+    }
+
+    "First Aid Kit"
+    {
+        "en"    "First Aid Kit"
+        "chi"   "医疗包"
+    }
+
+    "Pills"
+    {
+        "en"    "Pill"
+        "chi"   "抗感染药"
+    }
+
+    "Gene Therapy"
+    {
+        "en"    "Gene Therapy"
+        "chi"   "疫苗"
+    }
 }
