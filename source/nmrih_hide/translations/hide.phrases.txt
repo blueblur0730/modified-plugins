@@ -1,0 +1,15 @@
+"Phrases"
+{
+	"Usage"
+	{
+		"en"	"{lightpink}[SM] {default}Usage: sm_hide <{orange}range{default}>, {orange}0{default} means off."
+		"chi"	"{lightpink}[SM] {default}用法: sm_hide <{orange}范围{default}>, {orange}0{default} 代表关闭."
+	}
+
+	"SetRange"
+	{
+		"#format"	"{1:d}"
+		"en"		"{lightpink}[SM] {default}Set range to: {green}{1}{default}."
+		"chi"		"{lightpink}[SM] {default}设置范围为: {green}{1}{default}."
+	}
+}
