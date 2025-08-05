@@ -52,6 +52,8 @@ public void OnPluginStart()
 				OnClientPutInServer(i);
 			}
 		}
+
+		OnMapStart();
 	}
 }
 
@@ -95,7 +97,7 @@ public void OnClientCookiesCached(int client)
 
 void Timer_ThinkDistance(Handle hTimer)
 {
-	for (int i = 0; i < MaxClients; i++)
+	for (int i = 1; i < MaxClients; i++)
 	{
 		if (g_iHideRange[i] == 0)
 			continue;
@@ -103,7 +105,7 @@ void Timer_ThinkDistance(Handle hTimer)
 		if (!IsClientInGame(i) || (IsClientObserver(i) && !g_bEnableHideForSpec))
 			continue;
 
-		for (int j = 0; j < MaxClients; j++)
+		for (int j = 1; j < MaxClients; j++)
 		{
 			if (i == j)
 				continue;
@@ -144,7 +146,11 @@ Action OnClientTransmit(int client, int recipient)
 Action Cmd_Hide(int client, int args)
 {
 	if (GetCmdArgs() != 1)
+	{
 		CReplyToCommand(client, "%t", "Usage");
+		return Plugin_Handled;
+	}	
+
 
 	g_iHideRange[client] = GetCmdArgInt(1);
 
