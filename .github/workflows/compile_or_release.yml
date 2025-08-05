@@ -106,6 +106,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # tagPrefix:
           tag: release
+          deleteOnlyFromDrafts: false
 
       - name: Release
         uses: xresloader/upload-to-github-release@v1
