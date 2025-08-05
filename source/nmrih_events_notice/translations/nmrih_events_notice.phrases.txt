@@ -44,7 +44,7 @@
 
     "MapCompleted"
     {
-        "#format"   "{1:.02f}"
+        "#format"   "{1:s}"
         "en"        "{green}[SM]{default} Map completed, Time comsumed: {orange}{1}{default}"
         "chi"       "{green}[SM]{default} 已完成地图, 花费时间: {orange}{1}{default}"
     }
@@ -54,6 +54,13 @@
         "#format"   "{1:N}"
         "en"        "{green}[SM]{default} Player {gray}{1}{default} was extracted successfully."
         "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 已成功逃离."
+    }
+
+    "TokenPills"
+    {
+        "#format"   "{1:N}"
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} took the pill."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 吃下了抗感染药."
     }
 
     "AppliedBandage"
@@ -80,8 +87,8 @@
     "GaveItem"
     {
         "#format"   "{1:N},{2:N},{3:t}"
-        "en"        "{green}[SM]{default} Player {gray}{1}{default} gave the item {lightred}{3}{default} to player {gray}{2}{default}."
-        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 向玩家 {gray}{2}{default} 给予了 {lightred}{3}{default}."
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} gave the item {red}{3}{default} to player {gray}{2}{default}."
+        "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 向玩家 {gray}{2}{default} 给予了 {red}{3}{default}."
     }
 
     "Bandages"
