@@ -3,7 +3,7 @@
     "Suicided"
     {
         "#format"   "{1:N}"
-        "en"        "{green}[SM]{default} Player {gray}{1}{default} suicided."
+        "en"        "{green}[SM]{default} Player {gray}{1}{default} committed suicide."
         "chi"       "{green}[SM]{default} 玩家 {gray}{1}{default} 自杀了."
     }
 
