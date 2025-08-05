@@ -63,6 +63,18 @@ jobs:
             README.md
             README-cn.md
 
+  delete:
+    name: delete old assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete current release assets
+        uses: andreaswilli/delete-release-assets-action@v4.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # tagPrefix:
+          tag: release
+          deleteOnlyFromDrafts: false
+
   release:
     strategy:
       fail-fast: false
@@ -99,14 +111,6 @@ jobs:
             zip -0 -r "${i%/}.zip" "$i" & 
           done; 
           wait
-
-      - name: Delete current release assets
-        uses: andreaswilli/delete-release-assets-action@v4.0.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # tagPrefix:
-          tag: release
-          deleteOnlyFromDrafts: false
 
       - name: Release
         uses: xresloader/upload-to-github-release@v1
