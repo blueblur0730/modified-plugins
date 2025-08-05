@@ -5,11 +5,11 @@ name: Compile or Release
 
 on:
   pull_request:
-    paths: ["source/**/scripting/", "include/**/*.inc"]
+    paths: ["source/**", "include/**"]
     branches: [master, main, workflow]
 
   push:
-    paths: ["source/**/scripting/", "include/**/*.inc"]
+    paths: ["source/**", "include/**"]
     branches: [master, main, workflow]
 
   workflow_dispatch:
