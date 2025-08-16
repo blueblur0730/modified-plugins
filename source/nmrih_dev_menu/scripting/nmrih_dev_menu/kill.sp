@@ -125,6 +125,8 @@ static int Kill_TargetSelect_MenuHandler(Menu menu, MenuAction action, int clien
 
                     slaymenu.ExitBackButton = true;
                     slaymenu.Display(client, MENU_TIME_FOREVER);
+                    g_iKillMenuPos[client] = menu.Selection;
+                    return 0;
                 }
 
                 case 7:

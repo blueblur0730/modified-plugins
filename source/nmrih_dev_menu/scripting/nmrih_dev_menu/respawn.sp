@@ -9,7 +9,7 @@ void Respawn_TargetSelect(int client)
 	char sName[128], sUserid[16];
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (i != client && IsClientInGame(i) && !IsPlayerAlive(i) && GetClientTeam(i) == 2)
+		if (i != client && IsClientInGame(i) && !IsPlayerAlive(i))
 		{
 			FormatEx(sName, sizeof(sName), "%N", i);
 			FormatEx(sUserid, sizeof(sUserid), "%i", GetClientUserId(i));
@@ -31,7 +31,7 @@ static int Respawn_TargetSelect_MenuHandler(Menu menu, MenuAction action, int cl
 			{
 				case 0:
 				{
-					if (!IsPlayerAlive(client) && GetClientTeam(client) == 2)
+					if (!IsPlayerAlive(client))
 					{
 						NMR_Player(client).RespawnPlayer();
 						PrintToChat(client, "[DevMenu] 复活: %N", client);

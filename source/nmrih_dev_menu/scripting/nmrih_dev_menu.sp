@@ -55,7 +55,7 @@ int
 #include "nmrih_dev_menu/freeze.sp"
 #include "nmrih_dev_menu/drop.sp"
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.0.1"
 
 public Plugin myinfo =
 {
