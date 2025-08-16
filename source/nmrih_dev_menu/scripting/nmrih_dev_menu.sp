@@ -39,7 +39,13 @@ int
 	g_iGodModeMenuPos[NMR_MAXPLAYERS + 1],
 	g_iKillMenuPos[NMR_MAXPLAYERS + 1],
 	g_iInfectMenuPos[NMR_MAXPLAYERS + 1],
-	g_iBleedMenuPos[NMR_MAXPLAYERS + 1];
+	g_iBleedMenuPos[NMR_MAXPLAYERS + 1],
+	g_iHealMenuPos[NMR_MAXPLAYERS + 1],
+	g_iTeleportMenuPos[NMR_MAXPLAYERS + 1],
+	g_iRespawnMenuPos[NMR_MAXPLAYERS + 1],
+	g_DepriveMenuPos[NMR_MAXPLAYERS + 1],
+	g_iFreezeMenuPos[NMR_MAXPLAYERS + 1],
+	g_iDropMenuPos[NMR_MAXPLAYERS + 1];
 
 #include "nmrih_dev_menu/kill.sp"
 #include "nmrih_dev_menu/spawnzombies.sp"
@@ -55,26 +61,28 @@ int
 #include "nmrih_dev_menu/freeze.sp"
 #include "nmrih_dev_menu/drop.sp"
 
-#define PLUGIN_VERSION "1.0.1"
+#define PLUGIN_VERSION "1.0.2"
 
 public Plugin myinfo =
 {
-	name = "[NMRiH] Dev Menu",
-	author = "blueblur",
-	version	= PLUGIN_VERSION,
+	name		= "[NMRiH] Dev Menu",
+	author		= "blueblur",
+	version		= PLUGIN_VERSION,
 	description = "Admin menu for nmrih. Ported from L4D2 Dev Menu by fdxx.",
-	url	= "https://github.com/blueblur0730/modified-plugins"
+	url			= "https://github.com/blueblur0730/modified-plugins"
+
 }
 
-public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+public APLRes
+	AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    char name[64];
-    GetGameFolderName(name, sizeof(name));
-    if ((GetEngineVersion() != Engine_SDK2013) || strcmp(name, "nmrih") != 0)
-    {
-        strcopy(error, err_max, "This plugin is only for NMRiH.");
-        return APLRes_SilentFailure;
-    }
+	char name[64];
+	GetGameFolderName(name, sizeof(name));
+	if ((GetEngineVersion() != Engine_SDK2013) || strcmp(name, "nmrih") != 0)
+	{
+		strcopy(error, err_max, "This plugin is only for NMRiH.");
+		return APLRes_SilentFailure;
+	}
 
 	return APLRes_Success;
 }
@@ -104,8 +112,8 @@ public void OnConfigsExecuted()
 		g_TopObj_Teleport			 = g_TopMenu.AddItem("nmrih_dev_menu_teleport", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_teleport", ADMFLAG_ROOT, "传送");
 		g_TopObj_GiveItem			 = g_TopMenu.AddItem("nmrih_dev_menu_giveitem", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_giveitem", ADMFLAG_ROOT, "产生物品");
 		g_TopObj_GiveHp				 = g_TopMenu.AddItem("nmrih_dev_menu_givehp", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_givehp", ADMFLAG_ROOT, "回血");
-		g_TopObj_Infect			     = g_TopMenu.AddItem("nmrih_dev_menu_infect", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_infect", ADMFLAG_ROOT, "切换感染");
-		g_TopObj_Bleed			     = g_TopMenu.AddItem("nmrih_dev_menu_bleed", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_bleed", ADMFLAG_ROOT, "切换流血");
+		g_TopObj_Infect				 = g_TopMenu.AddItem("nmrih_dev_menu_infect", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_infect", ADMFLAG_ROOT, "切换感染");
+		g_TopObj_Bleed				 = g_TopMenu.AddItem("nmrih_dev_menu_bleed", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_bleed", ADMFLAG_ROOT, "切换流血");
 		g_TopObj_Respawn			 = g_TopMenu.AddItem("nmrih_dev_menu_respawn", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_respawn", ADMFLAG_ROOT, "复活");
 		g_TopObj_Deprive			 = g_TopMenu.AddItem("nmrih_dev_menu_deprive", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_deprive", ADMFLAG_ROOT, "装备剥夺");
 		g_TopObj_Freeze				 = g_TopMenu.AddItem("nmrih_dev_menu_freeze", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_freeze", ADMFLAG_ROOT, "切换冻结");
@@ -172,10 +180,16 @@ void ResetSubMenuPos(int client)
 		g_iGiveItemMenuPos[client][i] = 0;
 	}
 
-	g_iZombieClassMenuPos[client] 	= 0;
-	g_iNoClipMenuPos[client]	   	= 0;
-	g_iGodModeMenuPos[client]	   	= 0;
-	g_iKillMenuPos[client]		   	= 0;
-	g_iInfectMenuPos[client]	 	= 0;
-	g_iBleedMenuPos[client]		   	= 0;
+	g_iZombieClassMenuPos[client] = 0;
+	g_iNoClipMenuPos[client]	  = 0;
+	g_iGodModeMenuPos[client]	  = 0;
+	g_iKillMenuPos[client]		  = 0;
+	g_iInfectMenuPos[client]	  = 0;
+	g_iBleedMenuPos[client]		  = 0;
+	g_iHealMenuPos[client]		  = 0;
+	g_iTeleportMenuPos[client]	  = 0;
+	g_iRespawnMenuPos[client]	  = 0;
+	g_DepriveMenuPos[client]	  = 0;
+	g_iFreezeMenuPos[client]	  = 0;
+	g_iDropMenuPos[client]		  = 0;
 }

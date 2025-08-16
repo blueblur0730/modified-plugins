@@ -18,7 +18,7 @@ void Respawn_TargetSelect(int client)
 	}
 
 	menu.ExitBackButton = true;
-	menu.Display(client, MENU_TIME_FOREVER);
+	menu.DisplayAt(client, g_iRespawnMenuPos[client], MENU_TIME_FOREVER);
 }
 
 static int Respawn_TargetSelect_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
@@ -68,6 +68,7 @@ static int Respawn_TargetSelect_MenuHandler(Menu menu, MenuAction action, int cl
 				}
 			}
 
+			g_iRespawnMenuPos[client] = menu.Selection;
 			Respawn_TargetSelect(client);
 		}
 

@@ -51,7 +51,7 @@ stock const char g_sItem[][][] = {
 	{ "item_gene_therapy",	   	"疫苗"},
 	{ "item_maglite",		  	"手电筒"},
 	{ "item_walkietalkie",	   	"Walkie Talkie"},
-	{ "item_inventory_box",		"补给包"},
+	{ "item_inventory_box",		"维修包补给站"},
 	{ "nmrih_health_station",  	"医疗箱"},
 	{ "nmrih_safezone_supply", 	"补给站"},
 	{ "tool_barricade",			"锤子"},

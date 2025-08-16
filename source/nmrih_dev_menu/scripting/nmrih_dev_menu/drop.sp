@@ -18,7 +18,7 @@ void Drop_TargetSelect(int client)
 	}
 
 	menu.ExitBackButton = true;
-	menu.Display(client, MENU_TIME_FOREVER);
+	menu.DisplayAt(client, g_iDropMenuPos[client], MENU_TIME_FOREVER);
 }
 
 static int Drop_TargetSelect_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
@@ -46,7 +46,7 @@ static int Drop_TargetSelect_MenuHandler(Menu menu, MenuAction action, int clien
 				{
 					char sUserid[16];
 					menu.GetItem(itemNum, sUserid, sizeof(sUserid));
-					int userid = StringToInt(sUserid);
+					int userid	= StringToInt(sUserid);
 					int iTarget = GetClientOfUserId(userid);
 					if (iTarget > 0 && iTarget <= MaxClients && IsClientInGame(iTarget) && IsPlayerAlive(iTarget))
 					{
@@ -58,6 +58,8 @@ static int Drop_TargetSelect_MenuHandler(Menu menu, MenuAction action, int clien
 					}
 				}
 			}
+
+			g_iDropMenuPos[client] = menu.Selection;
 		}
 
 		case MenuAction_Cancel:
@@ -72,6 +74,8 @@ static int Drop_TargetSelect_MenuHandler(Menu menu, MenuAction action, int clien
 
 	return 0;
 }
+
+int	g_iInnerDropMenuPos[NMR_MAXPLAYERS + 1];
 
 static void SelectDropType(int client = -1, int userid = -1, int itemNum)
 {
@@ -90,7 +94,7 @@ static void SelectDropType(int client = -1, int userid = -1, int itemNum)
 	menu.AddItem(sItemNUm, "", ITEMDRAW_IGNORE);
 
 	menu.ExitBackButton = true;
-	menu.Display(client, MENU_TIME_FOREVER);
+	menu.DisplayAt(client, g_iInnerDropMenuPos[client], MENU_TIME_FOREVER);
 }
 
 static void SelectDropType_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
@@ -102,7 +106,7 @@ static void SelectDropType_MenuHandler(Menu menu, MenuAction action, int client,
 	menu.GetItem(4, sUpperItemNum, sizeof(sUpperItemNum));
 	int iUpperItemNum = StringToInt(sUpperItemNum);
 
-	int iTarget = GetClientOfUserId(StringToInt(sUserid));
+	int iTarget		  = GetClientOfUserId(StringToInt(sUserid));
 	if ((iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget)) && iUpperItemNum != 1)
 	{
 		PrintToChat(client, "[DevMenu] 无效的目标.");
@@ -183,6 +187,7 @@ static void SelectDropType_MenuHandler(Menu menu, MenuAction action, int client,
 				}
 			}
 
+			g_iInnerDropMenuPos[client] = menu.Selection;
 			Drop_TargetSelect(client);
 		}
 

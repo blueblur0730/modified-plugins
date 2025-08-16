@@ -14,12 +14,12 @@ void GiveHp_TargetSelect(int client)
 		{
 			FormatEx(sName, sizeof(sName), "%N", i);
 			FormatEx(sUserid, sizeof(sUserid), "%i", GetClientUserId(i));
-			menu.AddItem(sUserid, sName);	
+			menu.AddItem(sUserid, sName);
 		}
 	}
 
 	menu.ExitBackButton = true;
-	menu.Display(client, MENU_TIME_FOREVER);
+	menu.DisplayAt(client, g_iHealMenuPos[client], MENU_TIME_FOREVER);
 }
 
 int GiveHp_TargetSelect_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
@@ -35,7 +35,7 @@ int GiveHp_TargetSelect_MenuHandler(Menu menu, MenuAction action, int client, in
 					SetEntProp(client, Prop_Send, "m_iHealth", GetEntProp(client, Prop_Data, "m_iMaxHealth"));
 					PrintToChat(client, "[DevMenu] 回血: %N", client);
 				}
-				
+
 				case 1:
 				{
 					for (int i = 1; i <= MaxClients; i++)
@@ -65,6 +65,7 @@ int GiveHp_TargetSelect_MenuHandler(Menu menu, MenuAction action, int client, in
 				}
 			}
 
+			g_iHealMenuPos[client] = menu.Selection;
 			GiveHp_TargetSelect(client);
 		}
 

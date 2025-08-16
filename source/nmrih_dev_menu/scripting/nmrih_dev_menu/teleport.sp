@@ -8,10 +8,10 @@ void Teleport_TypeSelect(int client)
 	menu.AddItem("", "传送所有幸存者至撤离点");
 	menu.AddItem("", "传送指定幸存者");
 	menu.ExitBackButton = true;
-	menu.Display(client, MENU_TIME_FOREVER);
+	menu.DisplayAt(client, g_iTeleportMenuPos[client], MENU_TIME_FOREVER);
 }
 
-int Teleport_TypeSelect_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
+static int Teleport_TypeSelect_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
 {
 	switch (action)
 	{
@@ -19,11 +19,14 @@ int Teleport_TypeSelect_MenuHandler(Menu menu, MenuAction action, int client, in
 		{
 			switch (itemNum)
 			{
-				case 0, 1, 2: {
+				case 0, 1, 2:
+				{
 					DoTeleport(client, itemNum);
+
+					g_iTeleportMenuPos[client] = menu.Selection;
 					Teleport_TypeSelect(client);
-				} 
-				
+				}
+
 				case 3: DoTeleportSelected(client);
 			}
 		}
@@ -40,7 +43,7 @@ int Teleport_TypeSelect_MenuHandler(Menu menu, MenuAction action, int client, in
 	return 0;
 }
 
-void DoTeleport(int client, int iType)
+static void DoTeleport(int client, int iType)
 {
 	switch (iType)
 	{
@@ -85,7 +88,7 @@ void DoTeleport(int client, int iType)
 			{
 				float fPos[3];
 				GetEntPropVector(nmrih_extract_point, Prop_Data, "m_vecAbsOrigin", fPos);
-				
+
 				for (int i = 1; i <= MaxClients; i++)
 				{
 					if (IsClientInGame(i) && IsPlayerAlive(i))
@@ -103,7 +106,7 @@ void DoTeleport(int client, int iType)
 	}
 }
 
-void DoTeleportSelected(int client)
+static void DoTeleportSelected(int client)
 {
 	Menu menu = new Menu(MenuHandler_TeleportSelected);
 	menu.SetTitle("选择指定的玩家:");
@@ -126,7 +129,9 @@ void DoTeleportSelected(int client)
 	menu.Display(client, MENU_TIME_FOREVER);
 }
 
-void MenuHandler_TeleportSelected(Menu menu, MenuAction action, int client, int itemNum)
+int	g_iInnerTeleportMenuPos[NMR_MAXPLAYERS + 1];
+
+static void MenuHandler_TeleportSelected(Menu menu, MenuAction action, int client, int itemNum)
 {
 	switch (action)
 	{
@@ -143,8 +148,8 @@ void MenuHandler_TeleportSelected(Menu menu, MenuAction action, int client, int 
 			newmenu.AddItem(sUserid, "", ITEMDRAW_IGNORE);
 
 			newmenu.ExitBackButton = true;
-			newmenu.Display(client, MENU_TIME_FOREVER);
-			//DoTeleportSelected(client);
+			newmenu.DisplayAt(client, g_iInnerTeleportMenuPos[client], MENU_TIME_FOREVER);
+			// DoTeleportSelected(client);
 		}
 
 		case MenuAction_Cancel:
@@ -158,7 +163,7 @@ void MenuHandler_TeleportSelected(Menu menu, MenuAction action, int client, int 
 	}
 }
 
-void MenuHandler_ChooseMethod(Menu menu, MenuAction action, int client, int itemNum)
+static void MenuHandler_ChooseMethod(Menu menu, MenuAction action, int client, int itemNum)
 {
 	char sUserid[16];
 	menu.GetItem(3, sUserid, sizeof(sUserid));
@@ -168,7 +173,6 @@ void MenuHandler_ChooseMethod(Menu menu, MenuAction action, int client, int item
 
 	if (!target || !IsClientInGame(target) || !IsPlayerAlive(target))
 	{
-		delete menu;
 		PrintToChat(client, "[DevMenu] 目标不再有效.");
 		DoTeleportSelected(client);
 		return;
@@ -178,17 +182,18 @@ void MenuHandler_ChooseMethod(Menu menu, MenuAction action, int client, int item
 	{
 		case MenuAction_Select:
 		{
-
 			switch (itemNum)
 			{
-				case 0: {
+				case 0:
+				{
 					float fPos[3];
 					GetClientAbsOrigin(client, fPos);
 					TeleportEntity(target, fPos);
 					PrintToChat(client, "[DevMenu] 已传送 %N 到自己.", target);
 				}
 
-				case 1: {
+				case 1:
+				{
 					float fPos[3];
 					if (GetCrosshairPos(client, fPos))
 					{
@@ -201,7 +206,8 @@ void MenuHandler_ChooseMethod(Menu menu, MenuAction action, int client, int item
 					}
 				}
 
-				case 2: {
+				case 2:
+				{
 					int nmrih_extract_point = FindEntityByClassname(-1, "nmrih_extract_point");
 					if (nmrih_extract_point != INVALID_ENT_REFERENCE && IsValidEntity(nmrih_extract_point))
 					{
@@ -218,6 +224,7 @@ void MenuHandler_ChooseMethod(Menu menu, MenuAction action, int client, int item
 				}
 			}
 
+			g_iInnerTeleportMenuPos[client] = menu.Selection;
 			DoTeleportSelected(client);
 		}
 

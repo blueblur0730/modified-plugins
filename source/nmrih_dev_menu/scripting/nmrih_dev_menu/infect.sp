@@ -5,22 +5,22 @@ void Infect_TargetSelect(int client)
 	menu.AddItem("", "自己");
 	menu.AddItem("", "所有幸存者");
 
-    for (int i = 1; i < MaxClients; i++)
-    {
-        if (i == client)
-            continue;
+	for (int i = 1; i < MaxClients; i++)
+	{
+		if (i == client)
+			continue;
 
-        if (!IsClientInGame(i) || !IsPlayerAlive(i))
-            continue;
+		if (!IsClientInGame(i) || !IsPlayerAlive(i))
+			continue;
 
-        static char sUserid[16];
-        IntToString(GetClientUserId(i), sUserid, sizeof(sUserid));
+		static char sUserid[16];
+		IntToString(GetClientUserId(i), sUserid, sizeof(sUserid));
 
-        static char sName[128];
-        GetClientName(i, sName, sizeof(sName));
+		static char sName[128];
+		GetClientName(i, sName, sizeof(sName));
 
-        menu.AddItem(sUserid, sName);
-    }
+		menu.AddItem(sUserid, sName);
+	}
 
 	menu.ExitBackButton = true;
 	menu.DisplayAt(client, g_iInfectMenuPos[client], MENU_TIME_FOREVER);
@@ -68,9 +68,10 @@ static void MenuHandler_Infect(Menu menu, MenuAction action, int client, int ite
 
 static void DoInfect(int client, int itemNum, int iTarget = -1)
 {
-    switch (itemNum)
-    {
-        case 0: {
+	switch (itemNum)
+	{
+		case 0:
+		{
 			if (NMR_Player(client).IsInfected())
 			{
 				NMR_Player(client).CureInfection();
@@ -78,24 +79,26 @@ static void DoInfect(int client, int itemNum, int iTarget = -1)
 			}
 			else
 			{
-            	NMR_Player(client).BecomeInfected();
-            	PrintToChat(client, "[DevMenu] 已感染目标: %N", client);
+				NMR_Player(client).BecomeInfected();
+				PrintToChat(client, "[DevMenu] 已感染目标: %N", client);
 			}
-        }
+		}
 
-        case 1: {
-            for (int i = 1; i < MaxClients; i++)
-            {
-                if (!IsClientInGame(i) || !IsPlayerAlive(i))
-                    continue;
+		case 1:
+		{
+			for (int i = 1; i < MaxClients; i++)
+			{
+				if (!IsClientInGame(i) || !IsPlayerAlive(i))
+					continue;
 
-                NMR_Player(i).BecomeInfected();
-            }
+				NMR_Player(i).BecomeInfected();
+			}
 
-            PrintToChat(client, "[DevMenu] 已感染所有幸存者.");
-        }
+			PrintToChat(client, "[DevMenu] 已感染所有幸存者.");
+		}
 
-		default: {
+		default:
+		{
 			if (NMR_Player(iTarget).IsInfected())
 			{
 				NMR_Player(iTarget).CureInfection();
@@ -103,9 +106,9 @@ static void DoInfect(int client, int itemNum, int iTarget = -1)
 			}
 			else
 			{
-            	NMR_Player(iTarget).BecomeInfected();
-            	PrintToChat(client, "[DevMenu] 已感染目标: %N", client);
+				NMR_Player(iTarget).BecomeInfected();
+				PrintToChat(client, "[DevMenu] 已感染目标: %N", client);
 			}
 		}
-    }
+	}
 }

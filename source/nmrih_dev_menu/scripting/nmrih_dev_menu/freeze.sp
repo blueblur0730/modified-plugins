@@ -17,7 +17,7 @@ void Freeze_TargetSelect(int client)
 	}
 
 	menu.ExitBackButton = true;
-	menu.Display(client, MENU_TIME_FOREVER);
+	menu.DisplayAt(client, g_iFreezeMenuPos[client], MENU_TIME_FOREVER);
 }
 
 static int Freeze_TargetSelect_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
@@ -59,6 +59,7 @@ static int Freeze_TargetSelect_MenuHandler(Menu menu, MenuAction action, int cli
 				}
 			}
 
+			g_iFreezeMenuPos[client] = menu.Selection;
 			Freeze_TargetSelect(client);
 		}
 

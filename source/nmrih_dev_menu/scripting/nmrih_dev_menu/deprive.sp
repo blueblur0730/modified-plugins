@@ -18,7 +18,7 @@ void Deprive_TargetSelect(int client)
 	}
 
 	menu.ExitBackButton = true;
-	menu.Display(client, MENU_TIME_FOREVER);
+	menu.DisplayAt(client, g_DepriveMenuPos[client], MENU_TIME_FOREVER);
 }
 
 static int Deprive_TargetSelect_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
@@ -47,7 +47,7 @@ static int Deprive_TargetSelect_MenuHandler(Menu menu, MenuAction action, int cl
 					char sUserid[16];
 					menu.GetItem(itemNum, sUserid, sizeof(sUserid));
 
-					int userid = StringToInt(sUserid);
+					int userid	= StringToInt(sUserid);
 					int iTarget = GetClientOfUserId(userid);
 
 					if (iTarget > 0 && iTarget <= MaxClients && IsClientInGame(iTarget) && IsPlayerAlive(iTarget))
@@ -60,6 +60,8 @@ static int Deprive_TargetSelect_MenuHandler(Menu menu, MenuAction action, int cl
 					}
 				}
 			}
+
+			g_DepriveMenuPos[client] = menu.Selection;
 		}
 
 		case MenuAction_Cancel:
@@ -74,6 +76,8 @@ static int Deprive_TargetSelect_MenuHandler(Menu menu, MenuAction action, int cl
 
 	return 0;
 }
+
+int	g_iInnerDepriveMenuPos[NMR_MAXPLAYERS + 1];
 
 static void SelectDepriveType(int client = -1, int userid = -1, int itemNum)
 {
@@ -92,7 +96,7 @@ static void SelectDepriveType(int client = -1, int userid = -1, int itemNum)
 	menu.AddItem(sItemNUm, "", ITEMDRAW_IGNORE);
 
 	menu.ExitBackButton = true;
-	menu.Display(client, MENU_TIME_FOREVER);
+	menu.DisplayAt(client, g_iInnerDepriveMenuPos[client], MENU_TIME_FOREVER);
 }
 
 static void SelectDepriveType_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
@@ -104,7 +108,7 @@ static void SelectDepriveType_MenuHandler(Menu menu, MenuAction action, int clie
 	menu.GetItem(4, sUpperItemNum, sizeof(sUpperItemNum));
 	int iUpperItemNum = StringToInt(sUpperItemNum);
 
-	int iTarget = GetClientOfUserId(StringToInt(sUserid));
+	int iTarget		  = GetClientOfUserId(StringToInt(sUserid));
 	if ((iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget)) && iUpperItemNum != 1)
 	{
 		PrintToChat(client, "[DevMenu] 无效的目标.");
@@ -194,6 +198,7 @@ static void SelectDepriveType_MenuHandler(Menu menu, MenuAction action, int clie
 				}
 			}
 
+			g_iInnerDepriveMenuPos[client] = menu.Selection;
 			Deprive_TargetSelect(client);
 		}
 
