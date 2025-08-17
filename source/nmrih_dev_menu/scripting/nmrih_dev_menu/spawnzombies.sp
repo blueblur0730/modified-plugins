@@ -36,10 +36,52 @@ bool g_bAutoSpawn[NMR_MAXPLAYERS + 1];
  * 		Instantly spawn zombies across all active spawn brushes, ignoring visibility.  Optionally specify a spawn target name as well.
  */
 
+/*
+ * func_zombie_spawn
+ * 
+ * InputInstantSpawn <integer> 
+ * 		Instantly spawn zombies at this brush
+ * 
+ * InputSetTarget <string> 
+ * 		Set target entity
+ * 
+ * InputEnable 
+ * 		Enable this spawn brush
+ * 
+ * InputDisable 
+ * 		Disable this spawn brush
+ * 
+ * InputSetIgnoreVisibility <integer> 
+ * 		Set ignore visibility
+ * 
+ * InputSetSpawnDensity <float> 
+ * 		Set Spawn Density
+ * 
+ * InputSetSpawnTarget <string> 
+ * 		Set Smart Spawn Target
+ * 
+ * InputSetRegenTarget <float> 
+ * 		Set Regeneration Fraction Goal
+*/
+
+/**
+ * 	Event Name:	instant_zombie_spawn
+ *	Structure:	
+ *		short	spawn_amount	
+ *		short	spawn_brush		// the target func_zombie_spawn brush entity, pass index.
+ *		string	spawn_target	// the targetname once the zombie spawned to attack to.
+ *		bool	ignore_visibility	
+ *		bool	check_proximity	// check distance.
+ *		bool	track	
+ *		float	runner_chance	
+ *		float	child_chance
+ * 
+*/
+
 void SpawnZombie_ClassSelect(int client)
 {
 	static char sAutoSpawn[128];
-	FormatEx(sAutoSpawn, sizeof(sAutoSpawn), "%s", g_bAutoSpawn[client] ? "设置产生位置 [当前: 自动找位]" : "设置产生位置 [当前: 十字准星处]");
+	FormatEx(sAutoSpawn, sizeof(sAutoSpawn), "%s", g_bAutoSpawn[client] ? "设置产生方式 [当前: 通过实体或事件]" : "设置产生方式 [当前: 十字准星处生成]");
 
 	Menu menu = new Menu(SpawnZombie_ClassSelect_MenuHandler);
 	menu.SetTitle("产生丧尸:");
@@ -47,7 +89,9 @@ void SpawnZombie_ClassSelect(int client)
 
 	if (g_bAutoSpawn[client])
 	{
-		menu.AddItem("overlord_zombie_helper", "随机生成");
+		menu.AddItem("overlord_zombie_helper", "使用实体 overlord_zombie_helper");
+		menu.AddItem("func_zombie_spawn", "使用实体 func_zombie_spawn");
+		menu.AddItem("instant_zombie_spawn", "使用事件 instant_zombie_spawn");
 	}
 	else
 	{
@@ -73,16 +117,80 @@ static int SpawnZombie_ClassSelect_MenuHandler(Menu menu, MenuAction action, int
 				{
 					if (g_bAutoSpawn[client])
 					{
-						// 自动找位
-						int overlord_zombie_helper = FindEntityByClassname(-1, "overlord_zombie_helper");
-						if (overlord_zombie_helper != INVALID_ENT_REFERENCE && IsValidEntity(overlord_zombie_helper))
+						char sName[64], sDisplayName[64];
+						menu.GetItem(itemNum, sName, sizeof(sName), _, sDisplayName, sizeof(sDisplayName));
+
+						switch (itemNum)
 						{
-							AcceptEntityInput(overlord_zombie_helper, "InputSpawn");
-							PrintToChat(client, "[DevMenu] 已随机产生丧尸.");
-						}
-						else
-						{
-							PrintToChat(client, "[DevMenu] 错误: 找不到 overlord_zombie_helper 实体.");
+							case 1:
+							{
+								int overlord_zombie_helper = FindEntityByClassname(-1, "overlord_zombie_helper");
+								if (overlord_zombie_helper != INVALID_ENT_REFERENCE && IsValidEntity(overlord_zombie_helper))
+								{
+									SetVariantString("");
+									if (AcceptEntityInput(overlord_zombie_helper, "InputSpawn"))
+									{
+										PrintToChat(client, "[DevMenu] 已随机产生丧尸.");
+									}
+									else
+									{
+										PrintToChat(client, "[DevMenu] 错误: 无法触发输入 InputSpawn.");
+									}
+								}
+								else
+								{
+									PrintToChat(client, "[DevMenu] 错误: 找不到 overlord_zombie_helper 实体.");
+								}
+							}
+
+							case 2:
+							{
+								Menu funcmenu = new Menu(Entity_MenuHandler);
+								funcmenu.SetTitle("选择 func_zombie_spawn 实体:");
+
+								ArrayList array = CollectFuncZombieSpawnEntities();
+								for (int i = 0; i < array.Length; i++)
+								{
+									FuncZombieSpawnInfo info;
+									array.GetArray(i, info, sizeof(FuncZombieSpawnInfo));
+
+									char sInfo[128];
+									FormatEx(sInfo, sizeof(sInfo), "%s (Index: %d) (Origin: %.02f %.02f %.02f)", info.targetname[0] != '\0' ? info.targetname : "<no_name>", info.index, info.vecOrigin[0], info.vecOrigin[1], info.vecOrigin[2]);
+
+									char sPass[128];
+									IntToString(info.index, sPass, sizeof(sPass));
+										
+									funcmenu.AddItem(sPass, sInfo);
+								}
+
+								delete array;
+								funcmenu.ExitBackButton = true;
+								funcmenu.Display(client, MENU_TIME_FOREVER);
+
+								return 0;
+							}
+
+							case 3:
+							{
+								Event instant_zombie_spawn = CreateEvent("instant_zombie_spawn");
+								if (instant_zombie_spawn != null)
+								{
+									instant_zombie_spawn.SetInt("spawn_amount", 1);
+									instant_zombie_spawn.SetInt("spawn_brush", 0);
+									instant_zombie_spawn.SetString("spawn_target", "");
+									instant_zombie_spawn.SetBool("ignore_visibility", false);
+									instant_zombie_spawn.SetBool("check_proximity", true);
+									instant_zombie_spawn.SetBool("track", false);
+									instant_zombie_spawn.SetFloat("runner_chance", 1.0);
+									instant_zombie_spawn.SetFloat("child_chance", 1.0);
+									instant_zombie_spawn.Fire();
+									PrintToChat(client, "[DevMenu] 已随机产生丧尸.");
+								}
+								else
+								{
+									PrintToChat(client, "[DevMenu] 错误: 无法创建事件 instant_zombie_spawn.");
+								}
+							}
 						}
 					}
 					else
@@ -114,7 +222,7 @@ static int SpawnZombie_ClassSelect_MenuHandler(Menu menu, MenuAction action, int
 
 								case 2:
 								{
-									if (CreateZombie(ZOMBIE_RUNNER, fPos, _, _, _, _, _, _, _, _, _, TwentyPercentTrue(), TwentyPercentTrue()) == INVALID_ENT_REFERENCE)
+									if (CreateZombie(ZOMBIE_RUNNER, fPos, _, _, _, _, _, _, _, _, _, false, TwentyPercentTrue()) == INVALID_ENT_REFERENCE)
 									{
 										PrintToChat(client, "[DevMenu] 错误: 无法产生跑尸");
 									}
@@ -156,4 +264,37 @@ static int SpawnZombie_ClassSelect_MenuHandler(Menu menu, MenuAction action, int
 	}
 
 	return 0;
+}
+
+static void Entity_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
+{
+	switch (action)
+	{
+		case MenuAction_Select:
+		{
+			char sIndex[128];
+			menu.GetItem(itemNum, sIndex, sizeof(sIndex));
+			int func_zombie_spawn = StringToInt(sIndex);
+			if (func_zombie_spawn <= 0 || !IsValidEntity(func_zombie_spawn))
+			{
+				PrintToChat(client, "[DevMenu] 错误: 无法找到实体 func_zombie_spawn (TargetName: %s)", sIndex);
+				return;
+			}
+
+			SetVariantInt(1);
+			AcceptEntityInput(func_zombie_spawn, "InputInstantSpawn");
+			PrintToChat(client, "[DevMenu] 已随机产生丧尸.");
+
+			SpawnZombie_ClassSelect(client);
+		}
+
+		case MenuAction_Cancel:
+		{
+			if (itemNum == MenuCancel_ExitBack)
+				g_TopMenu.Display(client, TopMenuPosition_LastCategory);
+		}
+
+		case MenuAction_End:
+			delete menu;
+	}
 }

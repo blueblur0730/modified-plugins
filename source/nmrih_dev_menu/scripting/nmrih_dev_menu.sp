@@ -4,7 +4,9 @@
 #include <sourcemod>
 #include <sdkhooks>
 #include <adminmenu>
+#include <dhooks>
 #include <nmrih_player>
+#include <gamedata_wrapper>
 
 #include "nmrih_dev_menu/utils/consts.sp"
 #include "nmrih_dev_menu/utils/utils.sp"
@@ -30,7 +32,8 @@ TopMenuObject
 	g_TopObj_Respawn,
 	g_TopObj_Deprive,
 	g_TopObj_Freeze,
-	g_TopObj_Drop;
+	g_TopObj_Drop,
+	g_TopObj_Stamina;
 
 int
 	g_iGiveItemMenuPos[NMR_MAXPLAYERS + 1][4],
@@ -45,7 +48,11 @@ int
 	g_iRespawnMenuPos[NMR_MAXPLAYERS + 1],
 	g_DepriveMenuPos[NMR_MAXPLAYERS + 1],
 	g_iFreezeMenuPos[NMR_MAXPLAYERS + 1],
-	g_iDropMenuPos[NMR_MAXPLAYERS + 1];
+	g_iDropMenuPos[NMR_MAXPLAYERS + 1],
+	g_iStaminaMenuPos[NMR_MAXPLAYERS + 1];
+
+DynamicDetour g_hDetour_SetStamina;
+int g_iOff_m_pPlayer = -1; 
 
 #include "nmrih_dev_menu/kill.sp"
 #include "nmrih_dev_menu/spawnzombies.sp"
@@ -60,8 +67,9 @@ int
 #include "nmrih_dev_menu/deprive.sp"
 #include "nmrih_dev_menu/freeze.sp"
 #include "nmrih_dev_menu/drop.sp"
+#include "nmrih_dev_menu/stamina.sp"
 
-#define PLUGIN_VERSION "1.0.2"
+#define PLUGIN_VERSION "1.1"
 
 public Plugin myinfo =
 {
@@ -70,11 +78,9 @@ public Plugin myinfo =
 	version		= PLUGIN_VERSION,
 	description = "Admin menu for nmrih. Ported from L4D2 Dev Menu by fdxx.",
 	url			= "https://github.com/blueblur0730/modified-plugins"
-
 }
 
-public APLRes
-	AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	char name[64];
 	GetGameFolderName(name, sizeof(name));
@@ -89,7 +95,23 @@ public APLRes
 
 public void OnPluginStart()
 {
+	LoadGameData();
 	CreateConVar("nmrih_dev_menu_version", PLUGIN_VERSION, "Plugin Version", FCVAR_NONE | FCVAR_DONTRECORD);
+}
+
+public void OnPluginEnd()
+{
+	if (g_hDetour_SetStamina)
+	{
+		g_hDetour_SetStamina.Disable(Hook_Pre, DTR_SetStamina);
+		delete g_hDetour_SetStamina;
+	}
+}
+
+public void OnClientDisconnect(int client)
+{
+	ResetSubMenuPos(client);
+	g_bInfiniteStamina[client] = false;
 }
 
 public void OnConfigsExecuted()
@@ -118,6 +140,7 @@ public void OnConfigsExecuted()
 		g_TopObj_Deprive			 = g_TopMenu.AddItem("nmrih_dev_menu_deprive", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_deprive", ADMFLAG_ROOT, "装备剥夺");
 		g_TopObj_Freeze				 = g_TopMenu.AddItem("nmrih_dev_menu_freeze", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_freeze", ADMFLAG_ROOT, "切换冻结");
 		g_TopObj_Drop				 = g_TopMenu.AddItem("nmrih_dev_menu_drop", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_drop", ADMFLAG_ROOT, "装备掉落");
+		g_TopObj_Stamina			 = g_TopMenu.AddItem("nmrih_dev_menu_stamina", Item_TopMenuHandler, TopObj_DevMenu, "nmrih_dev_menu_stamina", ADMFLAG_ROOT, "切换无限体力");
 	}
 }
 
@@ -169,6 +192,8 @@ void Item_TopMenuHandler(TopMenu topmenu, TopMenuAction action, TopMenuObject to
 				Freeze_TargetSelect(client);
 			else if (topobj_id == g_TopObj_Drop)
 				Drop_TargetSelect(client);
+			else if (topobj_id == g_TopObj_Stamina)
+				Stamina_TargetSelect(client);
 		}
 	}
 }
@@ -192,4 +217,15 @@ void ResetSubMenuPos(int client)
 	g_DepriveMenuPos[client]	  = 0;
 	g_iFreezeMenuPos[client]	  = 0;
 	g_iDropMenuPos[client]		  = 0;
+	g_iStaminaMenuPos[client]	  = 0;
+}
+
+void LoadGameData()
+{
+	GameDataWrapper gd = new GameDataWrapper("nmrih_dev_menu");
+
+	g_hDetour_SetStamina = gd.CreateDetourOrFail("CSDKPlayerShared::SetStamina", true, DTR_SetStamina);
+	g_iOff_m_pPlayer = gd.GetOffset("CSDKPlayerShared->m_pPlayer");
+	
+	delete gd;
 }

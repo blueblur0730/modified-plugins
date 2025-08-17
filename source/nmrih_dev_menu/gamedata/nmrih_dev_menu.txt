@@ -1,0 +1,47 @@
+"Games"
+{
+    "nmrih"
+    {
+        "Functions"
+        {
+            "CSDKPlayerShared::SetStamina"
+            {
+                "signature"     "CSDKPlayerShared::SetStamina"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"address"
+				"arguments"
+				{
+					"flStamina"
+					{
+						"type"	"float"
+					}
+				}
+            }
+        }
+
+        "Offsets"
+        {
+            "CSDKPlayerShared->m_pPlayer"
+            {
+                "linux"     "40"
+                "windows"   "40"
+            }
+        }
+
+        "Signatures"
+        {
+            // windwos sig:
+            // search for string "zombie_shoved" to find CNMRiH_WeaponBase::DoShove
+            // at the buttom of the function, the one below the traceray stuff.
+            // or search for immediate value 4820 and you will find a one.
+            "CSDKPlayerShared::SetStamina"
+            {
+                "library"   "server"
+                "linux"     "@_ZN16CSDKPlayerShared10SetStaminaEf"
+                "windows"   "\x53\x8B\xDC\x83\xEC\x2A\x83\xE4\x2A\x83\xC4\x2A\x55\x8B\x6B\x2A\x89\x6C\x24\x2A\x8B\xEC\x83\xEC\x2A\xA1\x2A\x2A\x2A\x2A\x0F\x57\xD2"
+                /* 53 8B DC 83 EC ? 83 E4 ? 83 C4 ? 55 8B 6B ? 89 6C 24 ? 8B EC 83 EC ? A1 ? ? ? ? 0F 57 D2 */
+            }
+        }
+    }
+}

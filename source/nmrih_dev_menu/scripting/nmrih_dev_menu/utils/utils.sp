@@ -233,3 +233,50 @@ stock void SetActiveWeapon(int client, int weapon)
 	SetEntPropEnt(client, Prop_Data, "m_hActiveWeapon", weapon);
 	ChangeEdictState(client, FindDataMapInfo(client, "m_hActiveWeapon"));
 }
+
+enum struct FuncZombieSpawnInfo
+{
+	int index;
+	float vecOrigin[3];
+	char targetname[128];
+}
+
+stock ArrayList CollectFuncZombieSpawnEntities()
+{
+	ArrayList array = new ArrayList(sizeof(FuncZombieSpawnInfo));
+
+	int ent = INVALID_ENT_REFERENCE;
+	while ((ent = FindEntityByClassname(ent, "func_zombie_spawn")) != INVALID_ENT_REFERENCE)
+	{
+		if (IsValidEntity(ent))
+		{
+			FuncZombieSpawnInfo info;
+
+			info.index = ent;
+			GetEntPropVector(ent, Prop_Data, "m_vecOrigin", info.vecOrigin);
+			GetEntPropString(ent, Prop_Data, "m_iName", info.targetname, sizeof(info.targetname));
+
+			array.PushArray(info);
+		}
+	}
+
+	return array;
+}
+
+// from Fallout Limbo Manager by Dysphie
+stock int FindEntityByTargetname(const char[] classname, const char[] targetname)
+{
+	int e = -1;
+	while ((e = FindEntityByClassname(e, classname)) != -1)
+	{
+		char buffer[32];
+		GetEntPropString(e, Prop_Data, "m_iName", buffer, sizeof(buffer));
+
+		if (StrEqual(buffer, targetname))
+		{
+			return e;
+		}
+	}
+
+	return -1;
+}
