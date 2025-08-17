@@ -115,7 +115,7 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
 		{
 			for (int i = 1; i < MaxClients; i++)
 			{
-				if (i == client || !IsClientInGame(i) || !IsPlayerAlive(i))
+				if (i == client || !IsClientInGame(i) || (IsClientObserver(i) && !g_bEnableHideForSpec))
 					continue;
 
 				g_bHideStatus[client][i] = false;
@@ -128,7 +128,7 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
 		{
 			for (int i = 1; i < MaxClients; i++)
 			{
-				if (i == client || !IsClientInGame(i) || !IsPlayerAlive(i))
+				if (i == client || !IsClientInGame(i) || (IsClientObserver(i) && !g_bEnableHideForSpec))
 					continue;
 
 				g_bHideStatus[client][i] = true;
