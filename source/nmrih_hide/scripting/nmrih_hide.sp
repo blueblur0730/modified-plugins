@@ -19,8 +19,12 @@ public Plugin myinfo =
 
 bool g_bHideStatus[NMR_MAXPLAYERS + 1][NMR_MAXPLAYERS + 1];
 int g_iHideRange[NMR_MAXPLAYERS + 1];
+
 bool g_bLate = false;
+
 bool g_bEnableHideForSpec;
+float g_flUseHoldSeconds;
+
 Cookie g_hCookie;
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -34,6 +38,7 @@ public void OnPluginStart()
 	LoadTranslation("hide.phrases");
 	RegConsoleCmd("sm_hide", Cmd_Hide, "Show or hide other players. Usage: sm_hide <range>, 0 means off.");
 	CreateConVarHook("sm_hide_enable_for_spec", "0", "Always applies hiding for spectators? 1 = yes, 0 = no.", _, true, 0.0, true, 1.0, OnConVarChanged);
+	CreateConVarHook("sm_hide_use_hold_seconds", "0.5", "Seconds to hold on +use to reveal the hided player.", _, true, 0.0, _, _, OnHoldingSecondsChanged);
 
 	g_hCookie = Cookie.Find("nmrih_hide");
 	if (!g_hCookie)
@@ -43,7 +48,7 @@ public void OnPluginStart()
 			SetFailState("Unable to create cookie.");
 	}
 
-	if (!g_bLate)
+	if (g_bLate)
 	{
 		OnMapStart();
 		for (int i = 1; i < MaxClients; i++)
@@ -57,8 +62,11 @@ public void OnPluginStart()
 	}
 }
 
+Handle g_hTimer;
+
 public void OnPluginEnd()
 {
+	KillTimer(g_hTimer);
 	delete g_hCookie;
 }
 
@@ -72,13 +80,16 @@ public void OnMapStart()
 		}
 	}
 
-	CreateTimer(0.1, Timer_ThinkDistance, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hTimer = CreateTimer(0.1, Timer_ThinkDistance, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public void OnClientPutInServer(int client)
 {
+	g_iHideRange[client] = g_hCookie.GetInt(client, 0);
 	SDKHook(client, SDKHook_SetTransmit, OnClientTransmit);
 }
+
+bool g_bHoldingAlt[NMR_MAXPLAYERS + 1];
 
 public void OnClientDisconnect(int client)
 {
@@ -87,6 +98,7 @@ public void OnClientDisconnect(int client)
 		g_bHideStatus[client][j] = false;
 	}
 	
+	g_bHoldingAlt[client] = false;
 	g_iHideRange[client] = 0;
 }
 
@@ -95,7 +107,6 @@ public void OnClientCookiesCached(int client)
 	g_iHideRange[client] = g_hCookie.GetInt(client, 0);
 }
 
-bool g_bHoldingAlt[NMR_MAXPLAYERS + 1];
 float g_flLastAltPress[NMR_MAXPLAYERS + 1];
 
 public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float vel[3], const float angles[3], int weapon, int subtype, int cmdnum, int tickcount, int seed, const int mouse[2])
@@ -103,15 +114,16 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
 	if (g_iHideRange[client] == 0)
 		return;
 
-	if (buttons & IN_ALT1)
+	if (buttons & IN_USE)
 	{
 		if (!g_bHoldingAlt[client])
 		{
 			g_bHoldingAlt[client] = true;
 			g_flLastAltPress[client] = GetGameTime();
+			//PrintToServer("Player %d is now holding USE", client);
 		}
 
-		if (GetGameTime() - g_flLastAltPress[client] > 1.0)
+		if (GetGameTime() - g_flLastAltPress[client] > g_flUseHoldSeconds)
 		{
 			for (int i = 1; i < MaxClients; i++)
 			{
@@ -134,6 +146,7 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
 				g_bHideStatus[client][i] = true;
 			}
 
+			//PrintToServer("Player %d is no longer holding USE", client);
 			g_bHoldingAlt[client] = false;
 			g_flLastAltPress[client] = 0.0;
 		}
@@ -150,6 +163,9 @@ void Timer_ThinkDistance(Handle hTimer)
 		if (!IsClientInGame(i) || (IsClientObserver(i) && !g_bEnableHideForSpec))
 			continue;
 
+		float vecMyself[3];
+		GetClientAbsOrigin(i, vecMyself);
+
 		for (int j = 1; j < MaxClients; j++)
 		{
 			if (i == j)
@@ -161,11 +177,11 @@ void Timer_ThinkDistance(Handle hTimer)
 				continue;
 			}
 				
-			float vecMyself[3], vecTarget[3];
-			GetClientAbsOrigin(i, vecMyself);
+			float vecTarget[3];
 			GetClientAbsOrigin(j, vecTarget);
 
 			g_bHideStatus[i][j] = (RoundToFloor(GetVectorDistance(vecMyself, vecTarget)) < g_iHideRange[i]);
+			//PrintToServer("Player %d is %svisible to player %d", j, g_bHideStatus[i][j] ? "not " : "", i);
 		}
 	}
 }
@@ -199,6 +215,8 @@ Action Cmd_Hide(int client, int args)
 	if (GetCmdArgs() != 1)
 	{
 		CReplyToCommand(client, "%t", "Usage");
+		CReplyToCommand(client, "%t", "Current", g_iHideRange[client]);
+
 		return Plugin_Handled;
 	}	
 
@@ -215,6 +233,13 @@ Action Cmd_Hide(int client, int args)
 void OnConVarChanged(ConVar hConVar, const char[] strOldValue, const char[] strNewValue)
 {
 	g_bEnableHideForSpec = hConVar.BoolValue;
+}
+
+void OnHoldingSecondsChanged(ConVar hConVar, const char[] strOldValue, const char[] strNewValue)
+{
+	g_flUseHoldSeconds = hConVar.FloatValue;
+	if (g_flUseHoldSeconds < 0.0)
+		g_flUseHoldSeconds = 0.0;
 }
 
 stock void CreateConVarHook(const char[] name,

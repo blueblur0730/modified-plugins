@@ -6,6 +6,13 @@
 		"chi"	"{lightpink}[SM] {default}用法: sm_hide <{orange}范围{default}>, {orange}0{default} 代表关闭."
 	}
 
+	"Current"
+	{
+		"#format"	"{1:d}"
+		"en"		"{lightpink}[SM] {default}Current range: {green}{1}{default}."
+		"chi"		"{lightpink}[SM] {default}当前范围为: {green}{1}{default}."
+	}
+
 	"SetRange"
 	{
 		"#format"	"{1:d}"
