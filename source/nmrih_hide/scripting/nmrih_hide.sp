@@ -13,7 +13,7 @@ public Plugin myinfo =
     name = "[NMRiH] Hide Players",
     author = "Dysphie, blueblur",
     description = "Adds command to show or hide other players.",
-    version = "1.2",
+    version = "1.2.1",
     url = "https://github.com/blueblur0730/modified-plugins"
 };
 
@@ -45,15 +45,15 @@ public void OnPluginStart()
 
 	if (!g_bLate)
 	{
+		OnMapStart();
 		for (int i = 1; i < MaxClients; i++)
 		{
 			if (IsClientInGame(i))
 			{
 				OnClientPutInServer(i);
+				OnClientCookiesCached(i);
 			}
 		}
-
-		OnMapStart();
 	}
 }
 
