@@ -13,12 +13,12 @@ public Plugin myinfo =
     name = "[NMRiH] Hide Players",
     author = "Dysphie, blueblur",
     description = "Adds command to show or hide other players.",
-    version = "1.1",
+    version = "1.2",
     url = "https://github.com/blueblur0730/modified-plugins"
 };
 
-bool g_bHideStatus[NMR_MAXPLAYERS][NMR_MAXPLAYERS];
-int g_iHideRange[NMR_MAXPLAYERS];
+bool g_bHideStatus[NMR_MAXPLAYERS + 1][NMR_MAXPLAYERS + 1];
+int g_iHideRange[NMR_MAXPLAYERS + 1];
 bool g_bLate = false;
 bool g_bEnableHideForSpec;
 Cookie g_hCookie;
@@ -72,7 +72,7 @@ public void OnMapStart()
 		}
 	}
 
-	CreateTimer(0.1, Timer_ThinkDistance, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(0.1, Timer_ThinkDistance, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public void OnClientPutInServer(int client)
@@ -93,6 +93,51 @@ public void OnClientDisconnect(int client)
 public void OnClientCookiesCached(int client)
 {
 	g_iHideRange[client] = g_hCookie.GetInt(client, 0);
+}
+
+bool g_bHoldingAlt[NMR_MAXPLAYERS + 1];
+float g_flLastAltPress[NMR_MAXPLAYERS + 1];
+
+public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float vel[3], const float angles[3], int weapon, int subtype, int cmdnum, int tickcount, int seed, const int mouse[2])
+{
+	if (g_iHideRange[client] == 0)
+		return;
+
+	if (buttons & IN_ALT1)
+	{
+		if (!g_bHoldingAlt[client])
+		{
+			g_bHoldingAlt[client] = true;
+			g_flLastAltPress[client] = GetGameTime();
+		}
+
+		if (GetGameTime() - g_flLastAltPress[client] > 1.0)
+		{
+			for (int i = 1; i < MaxClients; i++)
+			{
+				if (i == client || !IsClientInGame(i) || !IsPlayerAlive(i))
+					continue;
+
+				g_bHideStatus[client][i] = false;
+			}	
+		}
+	}
+	else
+	{
+		if (g_bHoldingAlt[client])
+		{
+			for (int i = 1; i < MaxClients; i++)
+			{
+				if (i == client || !IsClientInGame(i) || !IsPlayerAlive(i))
+					continue;
+
+				g_bHideStatus[client][i] = true;
+			}
+
+			g_bHoldingAlt[client] = false;
+			g_flLastAltPress[client] = 0.0;
+		}
+	}
 }
 
 void Timer_ThinkDistance(Handle hTimer)
@@ -120,24 +165,30 @@ void Timer_ThinkDistance(Handle hTimer)
 			GetClientAbsOrigin(i, vecMyself);
 			GetClientAbsOrigin(j, vecTarget);
 
-			g_bHideStatus[i][j] = RoundToFloor(GetVectorDistance(vecMyself, vecTarget)) < g_iHideRange[i];
+			g_bHideStatus[i][j] = (RoundToFloor(GetVectorDistance(vecMyself, vecTarget)) < g_iHideRange[i]);
 		}
 	}
 }
 
-Action OnClientTransmit(int client, int recipient)
+Action OnClientTransmit(int target, int recipient)
 {
-	if (client == recipient) 
+	if (target == recipient) 
 		return Plugin_Continue;
 
-	if (!g_iHideRange[recipient])
+	if ((target <= 0 || target > MaxClients) || (recipient <= 0 || recipient > MaxClients))
+		return Plugin_Continue;
+
+	if (g_iHideRange[recipient] == 0)
+		return Plugin_Continue;
+
+	if (!IsClientInGame(target) || !IsClientInGame(recipient))
 		return Plugin_Continue;
 
 	// transmit for the observer.
-	if (IsClientObserver(recipient) && !g_bEnableHideForSpec)
-		return Plugin_Continue;
+	if (IsClientObserver(recipient))
+		return g_bEnableHideForSpec ? Plugin_Handled : Plugin_Continue;
 
-	if (g_bHideStatus[recipient][client])
+	if (g_bHideStatus[recipient][target])
 		return Plugin_Handled;
 
 	return Plugin_Continue; 
@@ -150,7 +201,6 @@ Action Cmd_Hide(int client, int args)
 		CReplyToCommand(client, "%t", "Usage");
 		return Plugin_Handled;
 	}	
-
 
 	g_iHideRange[client] = GetCmdArgInt(1);
 
