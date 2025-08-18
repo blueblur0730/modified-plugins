@@ -1,0 +1,68 @@
+"Phrases"
+{
+	"Usage"
+	{
+		"en"	"[SM] {default}Usage: sm_Test <{orange}range{default}>, {orange}0{default} means off."
+		"chi"	"[SM] {default}用法: sm_Test <{orange}范围{default}>, {orange}0{default} 代表关闭."
+	}
+
+	"Current"
+	{
+		"#format"	"{1:d}"
+		"en"		"[SM] {default}Current range: {green}{1}{default}."
+		"chi"		"[SM] {default}当前范围为: {green}{1}{default}."
+	}
+
+	"SetRange"
+	{
+		"#format"	"{1:d}"
+		"en"		"[SM] {default}Set range to: {green}{1}{default}."
+		"chi"		"[SM] {default}设置范围为: {green}{1}{default}."
+	}
+
+	"MenuTitle"
+	{
+		"en"		"[Hide] Miscs Menu"
+		"chi"		"[Hide] 杂项菜单"
+	}
+
+	"CurrentRange_Menu"
+	{
+		"#format"	"{1:d}"
+		"en"		"Current Hide Range: {1}"
+		"chi"		"当前隐藏距离: {1}"
+	}
+
+	"ToggleHide_Menu"
+	{
+		"#format"	"{1:T}"
+		"en"		"Hide - {1}"
+		"chi"		"开关隐藏 - {1}"
+	}
+
+	"ToggleHideMed_Menu"
+	{
+		"#format"	"{1:T}"
+		"en"		"Hide When Holding Medits - {1}"
+		"chi"		"当拿着医疗物品时, 是否隐藏 - {1}"
+	}
+
+	"ToggleHideBlackWhite_Menu"
+	{
+		"#format"	"{1:T}"
+		"en"		"Hide When Teammate's Black and White - {1}"
+		"chi"		"当队友黑白时, 是否隐藏 - {1}"
+	}
+
+	"Yes"
+	{
+		"en"		"Yes"
+		"chi"		"是"
+	}
+
+	"No"
+	{
+		"en"		"No"
+		"chi"		"否"
+	}
+}
