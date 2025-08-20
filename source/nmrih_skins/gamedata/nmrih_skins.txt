@@ -1,0 +1,106 @@
+"Games"
+{
+    "nmrih"
+    {
+        "Functions"
+        {
+            "CNMRiH_TurnedZombie_Watcher::TurnThink"
+            {
+				"signature"	"CNMRiH_TurnedZombie_Watcher::TurnThink"
+				"callconv"	"thiscall"
+				"this"		"address"
+				"return"	"void"
+            }
+        }
+
+        "Offsets"
+        {
+            "sizeof(TurnedZombieEntry_t)"
+            {
+                "linux"     "292"
+                "windows"   "292"
+            }
+
+            "CNMRiH_TurnedZombie_Watcher->m_TurnedZombieEntry"
+            {
+                "linux"     "924"
+                "windows"   "924"
+            }
+
+            "TurnedZombieEntry_t->m_hRagDollHandle"
+            {
+                "linux"     "0"
+                "windows"   "0"
+            }
+
+            "TurnedZombieEntry_t->m_vecTurnedPosition"
+            {
+                "linux"     "4"
+                "windows"   "4"
+            }
+
+            "TurnedZombieEntry_t->m_angTurnedAngle"
+            {
+                "linux"     "16"
+                "windows"   "16"
+            }
+
+            "TurnedZombieEntry_t->m_flTurnedTime"
+            {
+                "linux"     "28"
+                "windows"   "28"
+            }
+
+            "TurnedZombieEntry_t->m_szModel"
+            {
+                "linux"     "32"
+                "windows"   "32"
+            }
+        }
+
+        "Signatures"
+        {
+            "CNMRiH_TurnedZombie_Watcher::TurnThink"
+            {
+                "library"   "server"
+                "linux"     "@_ZN27CNMRiH_TurnedZombie_Watcher9TurnThinkEv"
+                "windows"   ""
+            }
+
+            "UTIL_RemoveImmediate"
+            {
+                "library"   "server"
+                "linux"     "@_Z20UTIL_RemoveImmediateP11CBaseEntity"
+                "windows"   ""
+            }
+
+            "CAI_BaseNPC::InitRelationshipTable"
+            {
+                "library"   "server"
+                "linux"     "@_ZN11CAI_BaseNPC21InitRelationshipTableEv"
+                "windows"   ""
+            }
+
+            "CAI_BaseNPC::SetCondition"
+            {
+                "library"   "server"
+                "linux"     "@_ZN11CAI_BaseNPC12SetConditionEi"
+                "windows"   ""
+            }
+
+            "CAI_BaseNPC::SetSequenceByName"
+            {
+                "library"   "server"
+                "linux"     "@_ZN11CAI_BaseNPC17SetSequenceByNameEPKc"
+                "windows"   ""
+            }
+
+            "CBaseEntity::SetNextThink"
+            {
+                "library"   "server"
+                "linux"     "@_ZN11CBaseEntity12SetNextThinkEfPKc"
+                "windows"   ""
+            }
+        }
+    }
+}
