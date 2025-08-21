@@ -232,7 +232,7 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
                 DispatchSpawn(npc_nmrih_turnedzombie);
 
                 //PrintToServer("Setting Turned Model: %s, %d", g_sTurnedModel[i + 1], i + 1);
-                if (strcmp(g_sTurnedModel[i + 1], "") != 0)
+                if (strcmp(g_sTurnedModel[i + 1], "") != 0 && g_bCVar[CV_UseTurned])
                 {
                     SetEntityModel(npc_nmrih_turnedzombie,  g_sTurnedModel[i + 1]);
                 }

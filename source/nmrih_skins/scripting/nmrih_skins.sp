@@ -18,6 +18,7 @@ enum
 	CV_Group,
 	CV_Admin,
 	CV_Timer,
+	CV_UseTurned,
 
 	CV_Total
 };
@@ -50,7 +51,7 @@ Cookie
 	g_hCookie_TurnedModel;
 
 #define	PL_NAME	"[NMRiH] Skins"
-#define	PL_VER "2.0"
+#define	PL_VER "2.1"
 
 #include "nmrih_skins/parse.sp"
 #include "nmrih_skins/menu.sp"
@@ -82,6 +83,8 @@ public void OnPluginStart()
 	CreateConVarHookEx("nmrih_skins_admingroup","1",	"Enable/Disable the possebility to use the Groupsystem", _, CVarChange_AdminGroup, CV_Group);
 	CreateConVarHookEx("nmrih_skins_adminonly",	"0",	"Enable/Disable deny of access to the menu except for admins", _, CVarChange_AdminOnly, CV_Admin);
 	CreateConVarHookEx("nmrih_skins_spawntimer","1",	"Enable/Disable a timer that changes the model a second after the event 'player_spawn'", _, CVarChange_SpawnTimer, CV_Timer);
+	CreateConVarHookEx("nmrih_skins_useturned", "0", 	"Enable/Disable the turned model being applied?", _, CVarChange_TurnedModel, CV_UseTurned);
+
 
 	RegConsoleCmd("sm_model", Cmd_Model);
 
@@ -255,6 +258,11 @@ void CVarChange_AdminOnly(ConVar cvar, const char[] oldValue, const char[] newVa
 void CVarChange_SpawnTimer(ConVar cvar, const char[] oldValue, const char[] newValue)
 {
 	g_bCVar[CV_Timer] = cvar.BoolValue;
+}
+
+void CVarChange_TurnedModel(ConVar cvar, const char[] oldValue, const char[] newValue)
+{
+	g_bCVar[CV_UseTurned] = cvar.BoolValue;
 }
 
 stock void ToggleView(int client)

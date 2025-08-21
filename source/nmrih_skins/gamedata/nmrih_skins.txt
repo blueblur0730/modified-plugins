@@ -60,46 +60,62 @@
 
         "Signatures"
         {
+            // windows sig: search string "models/nmr_zombie/%s.mdl"
             "CNMRiH_TurnedZombie_Watcher::TurnThink"
             {
                 "library"   "server"
                 "linux"     "@_ZN27CNMRiH_TurnedZombie_Watcher9TurnThinkEv"
-                "windows"   ""
+                "windows"   "\x55\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\x8B\x15"
+                /* 55 8B EC 81 EC ? ? ? ? 8B 15 */
             }
 
+            // windows sig:
+            // search string "Couldn't set relationship to unknown entity or class (%s)!\n"
+            // to find CAI_BaseNPC::AddRelationship
+            // at the buttom of function, the one above this string.
+            // or see CNMRiH_TurnedZombie_Watcher::TurnThink.
             "UTIL_RemoveImmediate"
             {
                 "library"   "server"
                 "linux"     "@_Z20UTIL_RemoveImmediateP11CBaseEntity"
-                "windows"   ""
+                "windows"   "\x55\x8B\xEC\x56\x8B\x75\x2A\x85\xF6\x74\x2A\xF6\x86"
+                /* 55 8B EC 56 8B 75 ? 85 F6 74 ? F6 86 */
             }
 
+            // windows sig: see CNMRiH_TurnedZombie_Watcher::TurnThink.
             "CAI_BaseNPC::InitRelationshipTable"
             {
                 "library"   "server"
                 "linux"     "@_ZN11CAI_BaseNPC21InitRelationshipTableEv"
-                "windows"   ""
+                "windows"   "\x8B\x81\x2A\x2A\x2A\x2A\xBA\x2A\x2A\x2A\x2A\x85\xC0"
+                /* 8B 81 ? ? ? ? BA ? ? ? ? 85 C0 */
             }
 
+            // windows sig: see CNMRiH_TurnedZombie_Watcher::TurnThink.
             "CAI_BaseNPC::SetCondition"
             {
                 "library"   "server"
                 "linux"     "@_ZN11CAI_BaseNPC12SetConditionEi"
-                "windows"   ""
+                "windows"   "\x55\x8B\xEC\x56\x8B\x75\x08\x57\x8B\xF9\x81\xFE\x00\xCA\x9A\x3B\x7D\x2A\x8B\x07\xFF\x90\x24\x09\x00\x00\x56\x8D\x48\x34\xE8\x2A\x2A\x2A\x2A\x8B\xF0\x83\xFE\xFF\x74\x2A\x8D\x8E\x00\x36\x65\xC4\x83\xF9\xFF\x74\x2A\x8B\xC1\x83\xE1\x1F\xC1\xF8\x05\x8D\x14\x87\xB8\x01\x00\x00\x00\xD3\xE0\x09\x82\xEC\x08\x00\x00"
+                /* 55 8B EC 56 8B 75 08 57 8B F9 81 FE 00 CA 9A 3B 7D ? 8B 07 FF 90 24 09 00 00 56 8D 48 34 E8 ? ? ? ? 8B F0 83 FE FF 74 ? 8D 8E 00 36 65 C4 83 F9 FF 74 ? 8B C1 83 E1 1F C1 F8 05 8D 14 87 B8 01 00 00 00 D3 E0 09 82 EC 08 00 00 */
             }
 
+            // windows sig: see CNMRiH_TurnedZombie_Watcher::TurnThink.
             "CAI_BaseNPC::SetSequenceByName"
             {
                 "library"   "server"
                 "linux"     "@_ZN11CAI_BaseNPC17SetSequenceByNameEPKc"
-                "windows"   ""
+                "windows"   "\x55\x8B\xEC\x56\xFF\x75\x2A\x8B\xF1\xE8\x2A\x2A\x2A\x2A\x83\xF8"
+                /* 55 8B EC 56 FF 75 ? 8B F1 E8 ? ? ? ? 83 F8 */
             }
 
+            // windows sig: see CNMRiH_TurnedZombie_Watcher::TurnThink.
             "CBaseEntity::SetNextThink"
             {
                 "library"   "server"
                 "linux"     "@_ZN11CBaseEntity12SetNextThinkEfPKc"
-                "windows"   ""
+                "windows"   "\x55\x8B\xEC\xF3\x0F\x10\x45\x2A\x0F\x2E\x05\x2A\x2A\x2A\x2A\x53"
+                /* 55 8B EC F3 0F 10 45 ? 0F 2E 05 ? ? ? ? 53 */
             }
         }
     }
