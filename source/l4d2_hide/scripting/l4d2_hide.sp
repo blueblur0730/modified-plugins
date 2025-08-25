@@ -277,9 +277,9 @@ void vMiscCookieSelected(int client)
 {
     Menu menu = new Menu(MiscPrefsMenuHandler);
 
-	// adding a title will make this menu invisiable. wth?
-    // Format(title, sizeof(title), "[Hide]控制菜单\n");
-    // menu.SetTitle(title);
+	char title[256];
+    FormatEx(title, sizeof(title), "%T", "MenuTitle", client);
+    menu.SetTitle(title);
 
 	char displayDesc[256];
 	FormatEx(displayDesc, sizeof(displayDesc), "%T", "CurrentRange_Menu", client, g_hCookie.GetInt(client, g_iHideRange[client]));

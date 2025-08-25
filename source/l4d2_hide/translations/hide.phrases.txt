@@ -2,8 +2,8 @@
 {
 	"Usage"
 	{
-		"en"	"[SM] {default}Usage: sm_hide <{orange}range{default}>, {orange}0{default} means off."
-		"chi"	"[SM] {default}用法: sm_hide <{orange}范围{default}>, {orange}0{default} 代表关闭."
+		"en"		"[SM] {default}Usage: sm_hide <{orange}range{default}>, {orange}0{default} means off."
+		"chi"		"[SM] {default}用法: sm_hide <{orange}范围{default}>, {orange}0{default} 代表关闭."
 	}
 
 	"Current"
@@ -22,8 +22,8 @@
 
 	"MenuTitle"
 	{
-		"en"		"[Hide] Miscs Menu"
-		"chi"		"[Hide] 杂项菜单"
+		"en"		"<Hide> Miscs Menu"
+		"chi"		"<Hide> 杂项菜单"
 	}
 
 	"CurrentRange_Menu"
