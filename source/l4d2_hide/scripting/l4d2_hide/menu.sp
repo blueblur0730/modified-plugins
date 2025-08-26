@@ -9,7 +9,7 @@ void MiscCookieSelected(int client)
     Menu menu = new Menu(MiscPrefsMenuHandler);
 
 	char sBuffer[256];
-    FormatEx(title, sizeof(sBuffer), "%T", "MenuTitle", client);
+    FormatEx(sBuffer, sizeof(sBuffer), "%T", "MenuTitle", client);
     menu.SetTitle(sBuffer);
 
 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "CurrentRange_Menu", client, g_hCookie.GetInt(client, g_iHideRange[client]));
