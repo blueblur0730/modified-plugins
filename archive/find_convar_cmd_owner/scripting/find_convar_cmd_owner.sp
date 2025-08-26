@@ -24,7 +24,7 @@ enum struct CmdInfo
 {
 	char PluginName[256];
 	char cmd[256];
-	char flags[256];
+	char adminFlags[256];
 	char description[256];	
 }
 
@@ -37,6 +37,15 @@ static const char g_sFlags[][] = {
 	"FCVAR_NOT_CONNECTED", "FCVAR_MATERIAL_SYSTEM_THREAD", //"FCVAR_ARCHIVE_XBOX",
 	"FCVAR_ARCHIVE_GAMECONSOLE", "FCVAR_ACCESSIBLE_FROM_THREADS", "_", "_", "FCVAR_SERVER_CAN_EXECUTE",
 	"FCVAR_SERVER_CANNOT_QUERY", "FCVAR_CLIENTCMD_CAN_EXECUTE"
+};
+
+static const char g_sAdminFlags[][] = {
+    "ADMFLAG_RESERVATION", "ADMFLAG_GENERIC", "ADMFLAG_KICK", "ADMFLAG_BAN",
+    "ADMFLAG_UNBAN", "ADMFLAG_SLAY", "ADMFLAG_CHANGEMAP", "ADMFLAG_CONVARS",
+    "ADMFLAG_CONFIG", "ADMFLAG_CHAT", "ADMFLAG_VOTE", "ADMFLAG_PASSWORD",
+    "ADMFLAG_RCON", "ADMFLAG_CHEATS", "ADMFLAG_ROOT", "ADMFLAG_CUSTOM1",
+    "ADMFLAG_CUSTOM2", "ADMFLAG_CUSTOM3", "ADMFLAG_CUSTOM4", "ADMFLAG_CUSTOM5",
+    "ADMFLAG_CUSTOM6"
 };
 
 bool	  g_bIsAllPluginLoaded = false, g_bIsAllConfigExecuted = false;
@@ -302,25 +311,26 @@ void CollectCmds()
 
 			esCmdInfo.PluginName = sPluginName;
 
-			if (CmdIter.Flags == 0)
-				Format(esCmdInfo.flags, sizeof(esCmdInfo.flags), "FCVAR_NONE");
+			if (CmdIter.AdminFlags == 0)
+				Format(esCmdInfo.adminFlags, sizeof(esCmdInfo.adminFlags), "ADMFLAG_NULL");
 			else
-			{	
-				int flags = CmdIter.Flags; int i = 0;
-				while (i < sizeof(g_sFlags))
+			{
+                // Get the highest admin flag of the command
+				int admFlags = CmdIter.AdminFlags;
+                int i = AdminFlags_TOTAL;
+
+				while (i > 0)
 				{
-					if (flags & (1 << i))
+					if (admFlags & (1 << i))
 					{
 						#if DEBUG_MSG
-							PrintToServer("i: %d, flags: %s", i, g_sFlags[i]);
+							PrintToServer("i: %d, name: %s, flags: %s", i, esCmdInfo.cmd, g_sAdminFlags[i]);
 						#endif
-						Format(esCmdInfo.flags, sizeof(esCmdInfo.flags), "%s | %s", esCmdInfo.flags, g_sFlags[i]);
+						Format(esCmdInfo.adminFlags, sizeof(esCmdInfo.adminFlags), "%s", g_sAdminFlags[i]);
+                        break;
 					}
-					i++;
+					i--;
 				}
-
-				if (StrContains(esCmdInfo.flags, "FCVAR_NONE | ") > -1)
-					ReplaceString(esCmdInfo.flags, sizeof(esCmdInfo.flags), "FCVAR_NONE | ", "");
 			}
 		}
 		g_harrCmdInfo.PushArray(esCmdInfo);
@@ -396,7 +406,7 @@ void SetKvString_Cmds()
 			{
 				kv.Rewind();
 				Format(flags, sizeof(flags), "%s/%s/flags", esCmdInfo.PluginName, esCmdInfo.cmd);
-				kv.SetString(flags, esCmdInfo.flags);
+				kv.SetString(flags, esCmdInfo.adminFlags);
 				Format(description, sizeof(description), "%s/%s/description", esCmdInfo.PluginName, esCmdInfo.cmd);
 				kv.SetString(description, esCmdInfo.description);
 			}
@@ -404,7 +414,7 @@ void SetKvString_Cmds()
 			{
 				kv.Rewind();
 				Format(key, sizeof(key), "%s/%s", esCmdInfo.PluginName, esCmdInfo.cmd);
-				kv.SetString(key, esCmdInfo.flags);
+				kv.SetString(key, esCmdInfo.adminFlags);
 			}
 		}
 		kv.Rewind();
@@ -553,26 +563,27 @@ void FindConCommand(const char[] sConCommand, bool bIsCommand, Handle hPlugin, i
 
 				CmdIter.GetName(esCmdInfo.cmd, sizeof(esCmdInfo.cmd));
 				if (flags == 0)
-					Format(esCmdInfo.flags, sizeof(esCmdInfo.flags), "FCVAR_NONE");
-				else
-				{	
-					int i = 0;
-					while (i < sizeof(g_sFlags))
-					{
-						if (flags & (1 << i))
-						{
-							#if DEBUG_MSG
-								PrintToServer("i: %d, flags: %s", i, g_sFlags[i]);
-							#endif
-							Format(esCmdInfo.flags, sizeof(esCmdInfo.flags), "%s | %s", esCmdInfo.flags, g_sFlags[i]);
-						}
-						i++;
-					}
+					Format(esCmdInfo.adminFlags, sizeof(esCmdInfo.adminFlags), "N/A");
+                else
+                {
+                    // Get the highest admin flag of the command
+                    int admFlags = CmdIter.AdminFlags;
+                    int i = AdminFlags_TOTAL;
 
-					if (StrContains(esCmdInfo.flags, "FCVAR_NONE | ") > -1)
-						ReplaceString(esCmdInfo.flags, sizeof(esCmdInfo.flags), "FCVAR_NONE | ", "");
-				}
-			}
+                    while (i > 0)
+                    {
+                        if (admFlags & (1 << i))
+                        {
+                            #if DEBUG_MSG
+                                PrintToServer("i: %d, name: %s, flags: %s", i, esCmdInfo.cmd, g_sAdminFlags[i]);
+                            #endif
+                            Format(esCmdInfo.adminFlags, sizeof(esCmdInfo.adminFlags), "%s", g_sAdminFlags[i]);
+                            break;
+                        }
+                        i--;
+                    }
+                }
+            }
 			g_harrFindOwnerCmd.PushArray(esCmdInfo);
 		}
 		delete CmdIter;
@@ -597,7 +608,7 @@ void SetKvString_FindOwner(const char[] sPluginName)
 				{
 					kv.Rewind();
 					Format(flags, sizeof(flags), "Commands/%s/flags", esCmdInfo.cmd);
-					kv.SetString(flags, esCmdInfo.flags);
+					kv.SetString(flags, esCmdInfo.adminFlags);
 					Format(description, sizeof(description), "Commands/%s/description", esCmdInfo.cmd);
 					kv.SetString(description, esCmdInfo.description);
 				}
@@ -605,7 +616,7 @@ void SetKvString_FindOwner(const char[] sPluginName)
 				{
 					kv.Rewind();
 					Format(key, sizeof(key), "Commands/%s", esCmdInfo.cmd);
-					kv.SetString(key, esCmdInfo.flags);
+					kv.SetString(key, esCmdInfo.adminFlags);
 				}
 			}
 		}
