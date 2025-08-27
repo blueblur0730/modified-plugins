@@ -1,12 +1,17 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+#define TEST_TURNEDMODEL 0
+
 #include <sourcemod>
 #include <sdktools>
-#include <dhooks>
 #include <clientprefs>
 #include <nmrih_player>
-#include <gamedata_wrapper>
+
+#if TEST_TURNEDMODEL
+	#include <dhooks>
+	#include <gamedata_wrapper>
+#endif
 
 // Paths to configuration files
 #define	CFG_DL "configs/nmrih_skins/downloads_list.ini"
@@ -55,7 +60,9 @@ Cookie
 
 #include "nmrih_skins/parse.sp"
 #include "nmrih_skins/menu.sp"
-#include "nmrih_skins/turned_process.sp"
+#if TEST_TURNEDMODEL
+	#include "nmrih_skins/turned_process.sp"
+#endif
 
 // Based on the code of the plugin "SM Skinchooser HL2DM" v2.3 by Andi67
 public Plugin myinfo =
@@ -76,7 +83,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
+#if TEST_TURNEDMODEL
 	LoadGameData();
+#endif
 	CreateConVar("nmrih_skins_version", PL_VER, PL_NAME, FCVAR_DONTRECORD | FCVAR_NOTIFY | FCVAR_SPONLY);
 
 	CreateConVarHookEx("nmrih_skins_enable",	"1",	"Enable/Disable plugin", FCVAR_NOTIFY, CVarChange_Enable, CV_Enable);
@@ -108,8 +117,10 @@ public void OnPluginEnd()
 {
 	delete g_kvList;
 
-	g_hDetour.Disable(Hook_Pre, DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre);
-	delete g_hDetour;
+	//g_hDetour.Disable(Hook_Pre, DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre);
+	//delete g_hDetour;
+
+	//delete g_hHook;
 }
 
 public void OnMapStart()

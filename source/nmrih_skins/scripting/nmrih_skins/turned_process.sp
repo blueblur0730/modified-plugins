@@ -41,11 +41,13 @@ static int g_iOff_m_flTurnedTime = -1;
 static int g_iOff_m_szModel = -1;
 
 DynamicDetour g_hDetour = null;
+//DynamicHook g_hHook = null;
 
 static Handle g_hSDKCall_UTIL_RemoveImmediate;
 static Handle g_hSDKCall_InitRelationshipTable;
 static Handle g_hSDKCall_SetCondition;
 static Handle g_hSDKCall_SetSequenceByName;
+static Handle g_hSDKCall_SetullSizeNormal;
 static Handle g_hSDKCall_SetNextThink;
 
 static const char g_sDefaultTurnedModel[][] = {
@@ -149,6 +151,10 @@ methodmap CAI_BaseNPC {
     public void SetSequenceByName(const char[] name) {
         SDKCall(g_hSDKCall_SetSequenceByName, this, name);
     }
+
+    public void SetHullSizeNormal(int size) {
+        SDKCall(g_hSDKCall_SetullSizeNormal, this, size);
+    }
 }
 
 methodmap CBaseEntity {
@@ -162,6 +168,7 @@ void LoadGameData()
     GameDataWrapper gd = new GameDataWrapper("nmrih_skins");
 
     g_hDetour = gd.CreateDetourOrFail("CNMRiH_TurnedZombie_Watcher::TurnThink", true, DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre);
+    //g_hHook = gd.CreateDynamicHookOrFail("CNMRiH_ZombieRunner::SetZombieModel", _, _, _, false);
 
     g_iOff_TurnedZombieEntry_t_size = gd.GetOffset("sizeof(TurnedZombieEntry_t)");
     g_iOff_m_TurnedZombieEntry = gd.GetOffset("CNMRiH_TurnedZombie_Watcher->m_TurnedZombieEntry");
@@ -184,6 +191,9 @@ void LoadGameData()
 
     SDKCallParamsWrapper param4[] = {{SDKType_Float, SDKPass_Plain}, {SDKType_String, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL}}
     g_hSDKCall_SetNextThink = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CBaseEntity::SetNextThink", param4, sizeof(param4));
+
+    SDKCallParamsWrapper param5[] = {{SDKType_PlainOldData, SDKPass_Plain}};
+    g_hSDKCall_SetullSizeNormal = gd.CreateSDKCallOrFail(SDKCall_Entity, SDKConf_Signature, "CAI_BaseNPC::SetCondition", param5, sizeof(param5));
 
     delete gd;
 }
@@ -226,22 +236,26 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
 
                 //PrintToServer("origin: %.02f, %.02f, %.02f / angle: %.02f, %.02f, %.02f", vec[0], vec[1], vec[2], ang[0], ang[1], ang[2]);
 
-                CAI_BaseNPC npc = CAI_BaseNPC(npc_nmrih_turnedzombie);
-                npc.InitRelationshipTable();
-
-                DispatchSpawn(npc_nmrih_turnedzombie);
-
-                //PrintToServer("Setting Turned Model: %s, %d", g_sTurnedModel[i + 1], i + 1);
+                //PrecacheModel(g_sTurnedModel[i + 1]);
+                
+                PrintToServer("Setting Turned Model: %s, %d", g_sTurnedModel[i + 1], i + 1);
                 if (strcmp(g_sTurnedModel[i + 1], "") != 0 && g_bCVar[CV_UseTurned])
                 {
-                    SetEntityModel(npc_nmrih_turnedzombie,  g_sTurnedModel[i + 1]);
+                    DispatchKeyValue(npc_nmrih_turnedzombie, "modeloverride", g_sTurnedModel[i + 1]);
                 }
                 else
                 {
                     int random = GetRandomInt(0, sizeof(g_sDefaultTurnedModel) - 1);
-                    SetEntityModel(npc_nmrih_turnedzombie, g_sDefaultTurnedModel[random]);                                  
+                    DispatchKeyValue(npc_nmrih_turnedzombie, "modeloverride", g_sDefaultTurnedModel[random]);                            
                 }
 
+                DispatchSpawn(npc_nmrih_turnedzombie);
+                ActivateEntity(npc_nmrih_turnedzombie);
+
+                CAI_BaseNPC npc = CAI_BaseNPC(npc_nmrih_turnedzombie);
+
+                npc.InitRelationshipTable();
+                npc.SetHullSizeNormal(1);
                 npc.SetCondition(88);
                 npc.SetSequenceByName("infectionrise");
 
@@ -259,7 +273,13 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
     CBaseEntity.SetNextThink(pThis, GetGameTime() + 0.30000001, NULL_STRING);
     return MRES_Supercede;
 }
-
+/*
+MRESReturn DHook_SetZombieModel_Pre(int pThis)
+{
+    PrintToServer("Superceding spawn set model.");
+    return MRES_Supercede;
+}
+*/
 void UTIL_RemoveImmediate(int entity)
 {
     SDKCall(g_hSDKCall_UTIL_RemoveImmediate, entity);

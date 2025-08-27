@@ -110,6 +110,15 @@
             }
 
             // windows sig: see CNMRiH_TurnedZombie_Watcher::TurnThink.
+            "CAI_BaseNPC::SetHullSizeNormal"
+            {
+                "library"   "server"
+                "linux"     "@_ZN11CAI_BaseNPC17SetHullSizeNormalEb"
+                "windows"   "\x55\x8B\xEC\x83\xEC\x2A\x56\x8B\xF1\x80\xBE\x2A\x2A\x2A\x2A\x2A\x75\x2A\x80\x7D"
+                /* 55 8B EC 83 EC ? 56 8B F1 80 BE ? ? ? ? ? 75 ? 80 7D */
+            }
+
+            // windows sig: see CNMRiH_TurnedZombie_Watcher::TurnThink.
             "CBaseEntity::SetNextThink"
             {
                 "library"   "server"
