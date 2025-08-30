@@ -454,6 +454,8 @@ Action Command_FindItsConConvar(int args)
 	char sPluginName[256]; Handle hPlugin;
 	while (hIter.Next())
 	{
+        // Mitigate crash, more info: 
+        // https://github.com/alliedmodders/sourcemod/issues/1880
 		if (hIter.Plugin != null)
 		{
 			GetPluginFilename(hIter.Plugin, sPluginName, sizeof(sPluginName));
@@ -562,8 +564,9 @@ void FindConCommand(const char[] sConCommand, bool bIsCommand, Handle hPlugin, i
 				}
 
 				CmdIter.GetName(esCmdInfo.cmd, sizeof(esCmdInfo.cmd));
-				if (flags == 0)
-					Format(esCmdInfo.adminFlags, sizeof(esCmdInfo.adminFlags), "N/A");
+
+                if (CmdIter.AdminFlags == 0)
+				    Format(esCmdInfo.adminFlags, sizeof(esCmdInfo.adminFlags), "ADMFLAG_NULL");
                 else
                 {
                     // Get the highest admin flag of the command
