@@ -6,24 +6,25 @@
 #include <sdkhooks>
 #include <colors>
 
-#define PLUGIN_VERSION "3.0"
 #define CONFIG_PATH	"configs/l4d2_scav_gascan_selfburn.txt"
-
-#define DEBUG 0
 #define MAX_ENTITIES 2048
 
-ConVar
-	g_hcvarEnableLimit,
-	g_hcvarBurnLimit;
-
 StringMap g_hCoordinateMap;
-Handle g_hTimer[MAX_ENTITIES] = {null, ...};
+KeyValues g_hKv;
+Handle g_hTimer[MAX_ENTITIES + 1];
 
-bool g_bEnableLimit, g_bIsOutBound[MAX_ENTITIES];
-int g_iBurnLimit, g_iBurnedCount = 0;
+bool g_bIsOutBound[MAX_ENTITIES + 1];
+bool g_bIgnited[MAX_ENTITIES + 1];
+int g_iBurnedCount = 0;
 
 char g_sPath[128];
 bool g_bLateLoad;
+
+float g_flFrequency;
+bool g_bEnableLimit;
+int g_iBurnLimit;
+
+#define PLUGIN_VERSION "3.1"
 
 public Plugin myinfo =
 {
@@ -42,106 +43,80 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
 
 public void OnPluginStart()
 {
-	CreateConVar("l4d2_scav_gascan_selfburn_version", PLUGIN_VERSION, "Plugin version", FCVAR_NOTIFY | FCVAR_DONTRECORD);
+	LoadTranslation("l4d2_scav_gascan_selfburn.phrases");
 
-	g_hcvarEnableLimit = CreateConVar("l4d2_scav_gascan_burned_limit_enable", "0", "Enable Limited Gascan burn", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_hcvarBurnLimit = CreateConVar("l4d2_scav_gascan_burned_limit", "4", "Limits the max amount of gascan that can get burned if they are out of bounds.", FCVAR_NOTIFY, true, 0.0);
-
-	g_hcvarEnableLimit.AddChangeHook(OnCvarChanged);
-	g_hcvarBurnLimit.AddChangeHook(OnCvarChanged);
-	SetCvar();
+	g_hCoordinateMap = new StringMap();
+	g_hKv = new KeyValues("");
 
 	BuildPath(Path_SM, g_sPath, sizeof(g_sPath), CONFIG_PATH);
-	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
-	HookEvent("round_end", Event_RoundEnd, EventHookMode_PostNoCopy);
-	LoadTranslations("l4d2_scav_gascan_selfburn.phrases");
+	if (!g_hKv.ImportFromFile(g_sPath))
+		SetFailState("Failed to import from file '%s'!", g_sPath);
 
+	CreateConVar("l4d2_scav_gascan_selfburn_version", PLUGIN_VERSION, "Plugin version", FCVAR_NOTIFY | FCVAR_DONTRECORD);
+	CreateConVarHook("l4d2_scav_gascan_burned_limit_enable", "0", "Enable Limited Gascan burn", FCVAR_NOTIFY, true, 0.0, true, 1.0, OnEnableLimitChanged);
+	CreateConVarHook("l4d2_scav_gascan_burned_limit", "4", "Limits the max amount of gascan that can get burned if they are out of bounds.", FCVAR_NOTIFY, true, 0.0, false, 0.0, OnLimitChanged);
+	CreateConVarHook("l4d2_scav_gascan_check_frequency", "3.0", "The frequency on checking the igniting condition", FCVAR_NOTIFY, true, 0.1, false, 0.0, OnFrequencyChanged);
+
+	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
+	
 	if (g_bLateLoad)
 	{
-		OnMapStart_Post();
-		HookEntityPost();
+		OnMapStart();
+		HookEntities();
 	}
 }
 
-void OnCvarChanged(ConVar hConVar, const char[] sOldValue, const char[] sNewValue)
+void OnEnableLimitChanged(ConVar hConVar, const char[] sOldValue, const char[] sNewValue)
 {
-	SetCvar();
+	g_bEnableLimit = hConVar.BoolValue;
 }
 
-void SetCvar()
+void OnLimitChanged(ConVar hConVar, const char[] sOldValue, const char[] sNewValue)
 {
-	g_bEnableLimit = g_hcvarEnableLimit.BoolValue;
-	g_iBurnLimit = g_hcvarBurnLimit.IntValue;
+	g_iBurnLimit = hConVar.IntValue;
+}
+
+void OnFrequencyChanged(ConVar hConVar, const char[] sOldValue, const char[] sNewValue)
+{
+	g_flFrequency = hConVar.FloatValue;
 }
 
 public void OnMapStart()
 {
-	OnMapStart_Post();
-}
-
-void OnMapStart_Post()
-{
 	if (!IsScavengeMode())
 		return;
-
-	if (g_hCoordinateMap == null)
-		g_hCoordinateMap = new StringMap();
 
 	char sMapName[128];
 	GetCurrentMap(sMapName, sizeof(sMapName));
-
-#if DEBUG
-	ParseMapCoordinateInfo_DEBUG(sMapName);
-#else
 	ParseMapCoordinateInfo(sMapName);
-#endif
 }
 
-void HookEntityPost()
+void HookEntities()
 {
 	if (!IsScavengeMode())
 		return;
 
-	for (int i = 0; i < MAX_ENTITIES; i++)
+	int ent = INVALID_ENT_REFERENCE;
+	while ((ent = FindEntityByClassname(-1, "weapon_gascan")) != INVALID_ENT_REFERENCE)
 	{
-		if (!IsValidEntity(i))
+		if (!IsValidEntity(ent))
 			continue;
 
-		char sBuffer[64];
-		if (i != 0 && i > MaxClients && GetEntityClassname(i, sBuffer, sizeof(sBuffer)))
-		{
-			if (strcmp(sBuffer, "weapon_gascan") == 0)
-				SDKHook(i, SDKHook_VPhysicsUpdatePost, OnVPhysicsUpdatePost);
-		}
+		SDKHook(ent, SDKHook_VPhysicsUpdatePost, OnVPhysicsUpdatePost);
+		g_hTimer[ent] = CreateTimer(g_flFrequency, Timer_Ignite, ent, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
 	}
 }
 
-public void OnMapEnd()
+public void OnPluginEnd()
 {
-	if (g_hCoordinateMap != null)
-		delete g_hCoordinateMap;
-}
-
-public void OnPluginEnd()	// you wont unload this plugin during the map right?
-{
-	if (g_hCoordinateMap != null)
-		delete g_hCoordinateMap;
+	delete g_hCoordinateMap;
+	delete g_hKv;
 }
 
 // reset count on every round start, which is triggered in every scavenge round start.
 void Event_RoundStart(Event hEvent, const char[] sName, bool dontBroadcast)
 {
 	g_iBurnedCount = 0;
-}
-
-// if a repeatted timer is created and the round is end, free all timer handles.
-void Event_RoundEnd(Event hEvent, const char[] sName, bool dontBroadcast)
-{
-	for (int i = 0; i < MAX_ENTITIES; i++)
-	{
-		if (g_hTimer[i - 1] != null && g_hTimer[i - 1] != INVALID_HANDLE)
-			delete g_hTimer[i];
-	}
 }
 
 public void OnEntityCreated(int entity, const char[] className)
@@ -152,17 +127,24 @@ public void OnEntityCreated(int entity, const char[] className)
 	if (!IsValidEntity(entity))
 		return;
 
+	// track gascans's movement.
 	if (strcmp(className, "weapon_gascan") == 0)
 	{
-	#if !DEBUG
-		SDKHook(entity, SDKHook_VPhysicsUpdatePost, OnVPhysicsUpdatePost);	// track gascans's movement.
-	#else
-		SDKHook(entity, SDKHook_VPhysicsUpdatePost, OnVPhysicsUpdatePost_DEBUG);
-	#endif
+		// set up a repeatted timer.
+		g_hTimer[entity] = CreateTimer(g_flFrequency, Timer_Ignite, entity, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
+		SDKHook(entity, SDKHook_VPhysicsUpdatePost, OnVPhysicsUpdatePost);
+		g_bIgnited[entity] = false;
 	}
 }
 
-#if !DEBUG
+public void OnEntityDestroyed(int entity)
+{
+	static char classname[256];
+	GetEntityClassname(entity, classname, sizeof(classname));
+	if (strcmp(classname, "weapon_gascan") == 0 && !g_bIgnited[entity])
+		KillTimer(g_hTimer[entity]);
+}
+
 void OnVPhysicsUpdatePost(int entity)
 {
 	if (!IsValidEntity(entity))
@@ -178,85 +160,79 @@ void OnVPhysicsUpdatePost(int entity)
 	float vec[3];
 	GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", vec);
 
-	if (g_hTimer[entity] == null)
-		g_hTimer[entity] = CreateTimer(3.0, Timer_Ignite, entity, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);	// set up a repeatted timer with 3.0s countdown.
-
-	float z[2], x[2], y[2];
-	if (g_hCoordinateMap.GetValue("z_min", z[0]))	// if key is not set (set as a string when parsing keyvalues), we do nothing on this coodinate boundery.
+	float vecMax[3], vecMin[3];
+	// if key is not set (set as a string when parsing keyvalues), we do nothing on this coodinate boundery.
+	if (g_hCoordinateMap.GetValue("x_max", vecMax[0])) 
 	{
-		if (vec[2] < z[0])
+		if (vec[0] > vecMax[0])
 		{
-			g_bIsOutBound[entity] = true;			// found gascan out of bound, return for next check
+			// found gascan out of bound, return for next check
+			g_bIsOutBound[entity] = true;
 			return;
 		}
 	}
 
-	if (g_hCoordinateMap.GetValue("z_max", z[1]))
+	if (g_hCoordinateMap.GetValue("y_max", vecMax[1]))
 	{
-		if (vec[2] > z[1])
+		if (vec[1] > vecMax[1])
 		{
 			g_bIsOutBound[entity] = true;
 			return;
 		}
 	}
 
-	if (g_hCoordinateMap.GetValue("x_min", x[0]))
+	if (g_hCoordinateMap.GetValue("z_max", vecMax[2]))
 	{
-		if (vec[0] < x[0])
+		if (vec[2] > vecMax[2])
 		{
 			g_bIsOutBound[entity] = true;
 			return;
 		}
 	}
 
-	if (g_hCoordinateMap.GetValue("x_max", x[1]))
+	if (g_hCoordinateMap.GetValue("x_min", vecMin[0]))
 	{
-		if (vec[0] > x[1])
+		if (vec[0] < vecMin[0])
 		{
 			g_bIsOutBound[entity] = true;
 			return;
 		}
 	}
 
-	if (g_hCoordinateMap.GetValue("y_min", y[0]))
+	if (g_hCoordinateMap.GetValue("y_min", vecMin[1]))
 	{
-		if (vec[1] < y[0])
+		if (vec[1] < vecMin[1])
 		{
 			g_bIsOutBound[entity] = true;
 			return;
 		}
 	}
 
-	if (g_hCoordinateMap.GetValue("y_max", y[1]))
+	if (g_hCoordinateMap.GetValue("z_min", vecMin[2]))
 	{
-		if (vec[1] > y[1])
+		if (vec[2] < vecMin[2])
 		{
-			g_bIsOutBound[entity] = true;
+			g_bIsOutBound[entity] = true;			
 			return;
 		}
 	}
 
-	g_bIsOutBound[entity] = false;		// eventually gascan goes back to the valid position, reset the boolean and dont let the timer ignite it.
+	// eventually gascan goes back to the valid position, reset the boolean and dont let the timer ignite it.
+	g_bIsOutBound[entity] = false;
 }
-#else
-void OnVPhysicsUpdatePost_DEBUG(int entity)
-{
-	if (!IsValidEntity(entity))
-		return;
-
-	float vec[3];
-	GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", vec);
-	PrintToServer("Entity %d is at %f %f %f", entity, vec[0], vec[1], vec[2]);
-}
-#endif
 
 Action Timer_Ignite(Handle hTimer, int entity)
 {
 	if (!g_bIsOutBound[entity])
 		return Plugin_Continue;
-	else
-		Ignite(entity);
 
+	if (!IsValidEntity(entity))
+		return Plugin_Stop;
+
+	if (IsReachedLimit() && g_bEnableLimit)
+		return Plugin_Stop;
+
+	Ignite(entity);
 	return Plugin_Stop;
 }
 
@@ -274,87 +250,97 @@ void Ignite(int entity)
 		CPrintToChatAll("%t", "IgniteInLimit", g_iBurnedCount, g_iBurnLimit);	
 	}
 	else
+	{
 		CPrintToChatAll("%t", "Ignite");
+	}
 
+	g_bIgnited[entity] = true;
 	AcceptEntityInput(entity, "ignite");
 }
 
-#if !DEBUG
 void ParseMapCoordinateInfo(const char[] sMapName)
 {
-	KeyValues Kv = new KeyValues("");
-
-	if (!Kv.ImportFromFile(g_sPath))
-		SetFailState("Failed to import from file '%s'!", g_sPath);
-
-	if (Kv.JumpToKey(sMapName))
+	if (g_hKv.JumpToKey(sMapName))
 	{
 		// directly assign a keyvalue to 0.0 resulting to ignore this boundery since Kv.GetFloat set the defualt value to 0.0.
-		if (FloatCompare(Kv.GetFloat("height_zlimit_min"), 0.0) == 0)
+		if (FloatCompare(g_hKv.GetFloat("height_zlimit_min"), 0.0) == 0)
 			g_hCoordinateMap.SetString("z_min", "none");
 		else
-			g_hCoordinateMap.SetValue("z_min", Kv.GetFloat("height_zlimit_min"));
+			g_hCoordinateMap.SetValue("z_min", g_hKv.GetFloat("height_zlimit_min"));
 
-		if (FloatCompare(Kv.GetFloat("height_zlimit_max"), 0.0) == 0)
+		if (FloatCompare(g_hKv.GetFloat("height_zlimit_max"), 0.0) == 0)
 			g_hCoordinateMap.SetString("z_max", "none");
 		else
-			g_hCoordinateMap.SetValue("z_max", Kv.GetFloat("height_zlimit_max"));
+			g_hCoordinateMap.SetValue("z_max", g_hKv.GetFloat("height_zlimit_max"));
 
-		if (FloatCompare(Kv.GetFloat("width_xlimit_max"), 0.0) == 0)
+		if (FloatCompare(g_hKv.GetFloat("width_xlimit_max"), 0.0) == 0)
 			g_hCoordinateMap.SetString("x_max", "none");
 		else
-			g_hCoordinateMap.SetValue("x_max", Kv.GetFloat("width_xlimit_max"));
+			g_hCoordinateMap.SetValue("x_max", g_hKv.GetFloat("width_xlimit_max"));
 
-		if (FloatCompare(Kv.GetFloat("width_xlimit_min"), 0.0) == 0)
+		if (FloatCompare(g_hKv.GetFloat("width_xlimit_min"), 0.0) == 0)
 			g_hCoordinateMap.SetString("x_min", "none");
 		else
-			g_hCoordinateMap.SetValue("x_min", Kv.GetFloat("width_xlimit_min"));
+			g_hCoordinateMap.SetValue("x_min", g_hKv.GetFloat("width_xlimit_min"));
 
-		if (FloatCompare(Kv.GetFloat("width_ylimit_max"), 0.0) == 0)
+		if (FloatCompare(g_hKv.GetFloat("width_ylimit_max"), 0.0) == 0)
 			g_hCoordinateMap.SetString("y_max", "none");
 		else
-			g_hCoordinateMap.SetValue("y_max", Kv.GetFloat("width_ylimit_max"));
+			g_hCoordinateMap.SetValue("y_max", g_hKv.GetFloat("width_ylimit_max"));
 
-		if (FloatCompare(Kv.GetFloat("width_ylimit_min"), 0.0) == 0)
+		if (FloatCompare(g_hKv.GetFloat("width_ylimit_min"), 0.0) == 0)
 			g_hCoordinateMap.SetString("y_min", "none");
 		else
-			g_hCoordinateMap.SetValue("y_min", Kv.GetFloat("width_ylimit_min"));
+			g_hCoordinateMap.SetValue("y_min", g_hKv.GetFloat("width_ylimit_min"));
 	}
 	else
+	{
 		LogError("Couldn't find map name '%s' in the config file!", sMapName);
+	}
 
-	delete Kv;
+	g_hKv.Rewind();
 }
-#else
-void ParseMapCoordinateInfo_DEBUG(const char[] sMapName)
-{
-	KeyValues Kv = new KeyValues("");
-
-	if (!Kv.ImportFromFile(g_sPath))
-		SetFailState("Failed to import from file '%s'!", g_sPath);
-
-	if (!Kv.JumpToKey(sMapName))
-		LogError("Couldn't find map name '%s' in the config file!", sMapName);
-
-	PrintToServer("Successfully parsed info.");
-	PrintToServer("--------------- Parsed mapname %s and coordinates. ---------------", sMapName);
-	PrintToServer("z_max = %f\nz_min = %f", Kv.GetFloat("height_zlimit_max"), Kv.GetFloat("height_zlimit_min"));
-	PrintToServer("x_max = %f\nx_min = %f", Kv.GetFloat("width_xlimit_max"), Kv.GetFloat("width_xlimit_min"));
-	PrintToServer("y_max = %f\ny_min = %f", Kv.GetFloat("width_ylimit_max"), Kv.GetFloat("width_ylimit_min"));
-	PrintToServer("------------------------------------------------------------------");
-}
-#endif
 
 bool IsReachedLimit()
 {
 	return (g_iBurnedCount >= g_iBurnLimit);
 }
 
-bool IsScavengeMode()
+stock bool IsScavengeMode()
 {
 	char sGameMode[32];
 	ConVar hcvarGameMode = FindConVar("mp_gamemode");
 	hcvarGameMode.GetString(sGameMode, sizeof(sGameMode));
 
 	return (strcmp(sGameMode, "scavenge") == 0);
+}
+
+stock void CreateConVarHook(const char[] name,
+	const char[] defaultValue,
+	const char[] description="",
+	int flags=0,
+	bool hasMin=false, float min=0.0,
+	bool hasMax=false, float max=0.0,
+	ConVarChanged callback)
+{
+	ConVar cv = CreateConVar(name, defaultValue, description, flags, hasMin, min, hasMax, max);
+	
+	Call_StartFunction(INVALID_HANDLE, callback);
+	Call_PushCell(cv);
+	Call_PushNullString();
+	Call_PushNullString();
+	Call_Finish();
+
+	cv.AddChangeHook(callback);
+}
+
+stock void LoadTranslation(const char[] translation)
+{
+	char sPath[PLATFORM_MAX_PATH], sName[PLATFORM_MAX_PATH];
+	Format(sName, sizeof(sName), "translations/%s.txt", translation);
+	BuildPath(Path_SM, sPath, sizeof(sPath), sName);
+	if (!FileExists(sPath))
+		SetFailState("Missing translation file %s.txt", translation);
+
+	LoadTranslations(translation);
 }
