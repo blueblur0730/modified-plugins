@@ -83,11 +83,11 @@ void SendMainMenu(int client)
 	if (!items)
 	{
 		delete menu;
-		PrintToChat(client, "\x01[\x04Skins\x01] \x03No skins available");
+		CPrintToChat(client, "%t", "NoSkins");
 		return;
 	}
 
-	menu.SetTitle("%s (%i categories):\n ", PL_NAME, items);
+	menu.SetTitle("%s\n ", PL_NAME);
 	menu.Display(client, MENU_TIME_FOREVER);
 }
 
@@ -109,7 +109,7 @@ void Menu_Group(Menu menu, MenuAction action, int client, int param)
 
 			if (GetClientTeam(client))
 			{
-				PrintToChat(client, "\x01[\x04Skins\x01] \x03Cannot select skins while in spectator mode.");
+				CPrintToChat(client, "%t", "NoSpectator");
 				return;
 			}
 
@@ -214,12 +214,12 @@ void Menu_Model(Menu menu, MenuAction action, int client, int param)
 			// how did you get there?
 			if (GetClientTeam(client))
 			{
-				PrintToChat(client, "\x01[\x04Skins\x01] \x03Cannot select skins while in spectator mode.");
+				CPrintToChat(client, "%t", "NoSpectator");
 				return;
 			}
 
-			char model[PLATFORM_MAX_PATH];
-			if (!menu.GetItem(param, model, sizeof(model))) 
+			char model[PLATFORM_MAX_PATH], name[PLATFORM_MAX_PATH];
+			if (!menu.GetItem(param, model, sizeof(model), _, name, sizeof(name))) 
 				return;
 
             char sTemp[8];
@@ -231,6 +231,7 @@ void Menu_Model(Menu menu, MenuAction action, int client, int param)
                 ApplyvModel(client, model);
 				strcopy(g_sViewModel[client], sizeof(g_sViewModel[client]), model);
 				g_hCookie_VModel.Set(client, model);
+				CPrintToChat(client, "%t", "SetViewModel", name);
             }
             else
             {
@@ -240,23 +241,34 @@ void Menu_Model(Menu menu, MenuAction action, int client, int param)
 
 				static char sWModel[128];
 				static char sTurnedModel[128];
+				bool bFound = false;
 				for (int i = items; i < menu.ItemCount - 1; i++)
 				{
 					//PrintToServer("items: %d, i: %d, menu.ItemCount: %d", items, i, menu.ItemCount);
 					menu.GetItem(i, sWModel, sizeof(sWModel), style, sTurnedModel, sizeof(sTurnedModel));
+
+					// this means this world model has a turned model.
 					if (!strcmp(sWModel, model) && style == ITEMDRAW_IGNORE)
 					{
 						g_hCookie_TurnedModel.Set(client, sTurnedModel);
 						strcopy(g_sTurnedModel[client], sizeof(g_sTurnedModel[client]), sTurnedModel);
 						//PrintToServer("Setting Turned Model: %s, %s, %d", sTurnedModel, g_sTurnedModel[client], client);
+						bFound = true;
 						break;
 					}
 				}
 
-				
+				if (!bFound)
+				{
+					// else set turned model to nothing, finally it will pick the original randomly.
+					g_sTurnedModel[client][0] = '\0';
+					g_hCookie_TurnedModel.Set(client, g_sTurnedModel[client]);
+				}
+
                 ApplyModel(client, model);
 				g_hCookie_WModel.Set(client, model);
 				strcopy(g_sModel[client], sizeof(g_sModel[client]), model);
+				CPrintToChat(client, "%t", "SetModel", name);
 
 				g_bRandom[client] = false;
             }

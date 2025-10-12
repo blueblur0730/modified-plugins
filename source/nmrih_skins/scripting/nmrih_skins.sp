@@ -4,9 +4,10 @@
 #include <sourcemod>
 #include <sdktools>
 #include <clientprefs>
-#include <nmrih_player>
 #include <dhooks>
+#include <nmrih_player>
 #include <gamedata_wrapper>
+#include <multicolors>
 
 // Paths to configuration files
 //#define	CFG_DL "configs/nmrih_skins/downloads_list.ini"
@@ -49,7 +50,7 @@ Cookie
 	g_hCookie_TurnedModel;
 
 #define	PL_NAME	"[NMRiH] Skins"
-#define	PL_VER "2.2"
+#define	PL_VER "2.2.1"
 
 #include "nmrih_skins/parse.sp"
 #include "nmrih_skins/menu.sp"
@@ -84,6 +85,7 @@ public void OnPluginStart()
 	CreateConVarHookEx("nmrih_skins_useturned", "1", 	"Enable/Disable the turned model being applied?", _, CVarChange_TurnedModel, CV_UseTurned);
 
 	RegConsoleCmd("sm_model", Cmd_Model);
+	RegConsoleCmd("sm_skin", Cmd_Model);
 	HookEvent("player_spawn", Event_PlayerSpawn);
 
 	g_hCookie_WModel = FindOrCreateCookie("nmrih_skins_wmodel", "World Model Prefs", CookieAccess_Protected);
@@ -94,7 +96,7 @@ public void OnPluginStart()
 	{
 		for (int i; ++i <= MaxClients; i++) 
 		{
-			if (IsClientAuthorized(i)) 
+			if (IsClientAuthorized(i))
 				OnClientPostAdminCheck(i);
 		}
 	}
@@ -136,6 +138,7 @@ public void OnClientDisconnect(int client)
 {
 	// Reset the model for the client entry
 	g_sModel[client][0] = '\0';
+	g_sViewModel[client][0] = '\0';
 	g_sTurnedModel[client][0] = '\0';
 
 	g_iFOV[client] = 0;

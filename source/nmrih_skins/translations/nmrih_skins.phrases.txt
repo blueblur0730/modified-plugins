@@ -1,0 +1,28 @@
+"Phrases"
+{
+    "SetModel"
+    {
+        "#format"   "{1:s}"
+        "en"        "[{green}NMRiH Skins{default}] Your model has been set to: {pink}{1}{default}."
+        "chi"       "[{green}NMRiH Skins{default}] 已将模型设置为: {pink}{1}{default}."
+    }
+
+    "SetViewModel"
+    {
+        "#format"   "{1:s}"
+        "en"        "[{green}NMRiH Skins{default}] Your view model has been set to: {pink}{1}{default}}."
+        "chi"       "[{green}NMRiH Skins{default}] 已将手部模型设置为: {pink}{1}{default}."
+    }
+
+    "NoSpectator"
+    {
+        "en"        "[{green}NMRiH Skins{default}] Cannot select skins while in spectator mode."
+        "chi"       "[{green}NMRiH Skins{default}] 不能在观察者模式下选择皮肤."
+    }
+
+    "NoSkins"
+    {
+        "en"        "[{green}NMRiH Skins{default}] No skins available."
+        "chi"       "[{green}NMRiH Skins{default}] 没有可用的皮肤."
+    }
+}
