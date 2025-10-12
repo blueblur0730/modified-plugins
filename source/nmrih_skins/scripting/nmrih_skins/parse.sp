@@ -43,6 +43,7 @@ void ParseMenuModels()
     g_kvList.Rewind();
 }
 
+/*
 void ParseDownloadList()
 {
 	if (g_bCVar[CV_Enable])
@@ -132,8 +133,9 @@ void ReadItem(char[] sBuffer)
 		if (StrContains(sBuffer, "//") > -1) 
 			ReplaceString(sBuffer, 255, "//", "");
 	}
-	else if (sBuffer[0]/* && FileExists(sBuffer)*/) 
+	else if (sBuffer[0] && FileExists(sBuffer)) 
 	{
 		AddFileToDownloadsTable(sBuffer);
 	}
 }
+*/

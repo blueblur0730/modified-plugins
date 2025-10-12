@@ -1,7 +1,10 @@
 
 /**
- * The problem comes to that there's no connection between the infected player and the turned zombie.
- * Might be a little be hacky.
+ * The problem comes to that there's no direct connection between the infected player and the turned zombie.
+ * The watcher has 9 entries, each represents the client index of each player.
+ * By overriding and rebuilding the think function of the watcher, we can set the model to the desired one.
+ * 
+ * Note: Your custom model must be placed in the game's file system search path (nmrih/download e.g.), since the turned model is not used for players.
 */
 
 #if 0 
@@ -41,7 +44,6 @@ static int g_iOff_m_flTurnedTime = -1;
 static int g_iOff_m_szModel = -1;
 
 DynamicDetour g_hDetour = null;
-//DynamicHook g_hHook = null;
 
 static Handle g_hSDKCall_UTIL_RemoveImmediate;
 static Handle g_hSDKCall_InitRelationshipTable;
@@ -235,22 +237,25 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
                 DispatchKeyValueVector(npc_nmrih_turnedzombie, "angle", ang);
 
                 //PrintToServer("origin: %.02f, %.02f, %.02f / angle: %.02f, %.02f, %.02f", vec[0], vec[1], vec[2], ang[0], ang[1], ang[2]);
-
                 //PrecacheModel(g_sTurnedModel[i + 1]);
                 
-                PrintToServer("Setting Turned Model: %s, %d", g_sTurnedModel[i + 1], i + 1);
+                char sModel[260];
+                entry.GetModelName(sModel, sizeof(sModel));
+                //PrintToServer("Original Model: %s", sModel);
+                //PrintToServer("Setting Turned Model: %s, %d", g_sTurnedModel[i + 1], i + 1);
+
+                DispatchSpawn(npc_nmrih_turnedzombie);
+                ActivateEntity(npc_nmrih_turnedzombie);
+
                 if (strcmp(g_sTurnedModel[i + 1], "") != 0 && g_bCVar[CV_UseTurned])
                 {
-                    DispatchKeyValue(npc_nmrih_turnedzombie, "modeloverride", g_sTurnedModel[i + 1]);
+                    SetEntityModel(npc_nmrih_turnedzombie, g_sTurnedModel[i + 1]);
                 }
                 else
                 {
                     int random = GetRandomInt(0, sizeof(g_sDefaultTurnedModel) - 1);
-                    DispatchKeyValue(npc_nmrih_turnedzombie, "modeloverride", g_sDefaultTurnedModel[random]);                            
+                    SetEntityModel(npc_nmrih_turnedzombie, g_sDefaultTurnedModel[random]);                            
                 }
-
-                DispatchSpawn(npc_nmrih_turnedzombie);
-                ActivateEntity(npc_nmrih_turnedzombie);
 
                 CAI_BaseNPC npc = CAI_BaseNPC(npc_nmrih_turnedzombie);
 
@@ -273,13 +278,7 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
     CBaseEntity.SetNextThink(pThis, GetGameTime() + 0.30000001, NULL_STRING);
     return MRES_Supercede;
 }
-/*
-MRESReturn DHook_SetZombieModel_Pre(int pThis)
-{
-    PrintToServer("Superceding spawn set model.");
-    return MRES_Supercede;
-}
-*/
+
 void UTIL_RemoveImmediate(int entity)
 {
     SDKCall(g_hSDKCall_UTIL_RemoveImmediate, entity);

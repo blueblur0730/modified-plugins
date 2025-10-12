@@ -1,20 +1,15 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define TEST_TURNEDMODEL 0
-
 #include <sourcemod>
 #include <sdktools>
 #include <clientprefs>
 #include <nmrih_player>
-
-#if TEST_TURNEDMODEL
-	#include <dhooks>
-	#include <gamedata_wrapper>
-#endif
+#include <dhooks>
+#include <gamedata_wrapper>
 
 // Paths to configuration files
-#define	CFG_DL "configs/nmrih_skins/downloads_list.ini"
+//#define	CFG_DL "configs/nmrih_skins/downloads_list.ini"
 #define	CFG_MENU "configs/nmrih_skins/skins_menu.ini"
 
 enum
@@ -35,7 +30,6 @@ KeyValues
 
 bool
 	g_bLate,
-	g_bDLType,
 	g_bCVar[CV_Total],
 	g_bTPView[NMR_MAXPLAYERS + 1],
 	g_bRandom[NMR_MAXPLAYERS + 1];
@@ -45,7 +39,6 @@ int
 	g_iTotalSkins;
 
 char
-	g_sSID[NMR_MAXPLAYERS + 1][36],
 	g_sModel[NMR_MAXPLAYERS + 1][PLATFORM_MAX_PATH],
 	g_sTurnedModel[NMR_MAXPLAYERS + 1][PLATFORM_MAX_PATH],
 	g_sViewModel[NMR_MAXPLAYERS + 1][PLATFORM_MAX_PATH];
@@ -56,13 +49,11 @@ Cookie
 	g_hCookie_TurnedModel;
 
 #define	PL_NAME	"[NMRiH] Skins"
-#define	PL_VER "2.1"
+#define	PL_VER "2.2"
 
 #include "nmrih_skins/parse.sp"
 #include "nmrih_skins/menu.sp"
-#if TEST_TURNEDMODEL
-	#include "nmrih_skins/turned_process.sp"
-#endif
+#include "nmrih_skins/turned_process.sp"
 
 // Based on the code of the plugin "SM Skinchooser HL2DM" v2.3 by Andi67
 public Plugin myinfo =
@@ -83,20 +74,16 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-#if TEST_TURNEDMODEL
 	LoadGameData();
-#endif
 	CreateConVar("nmrih_skins_version", PL_VER, PL_NAME, FCVAR_DONTRECORD | FCVAR_NOTIFY | FCVAR_SPONLY);
 
 	CreateConVarHookEx("nmrih_skins_enable",	"1",	"Enable/Disable plugin", FCVAR_NOTIFY, CVarChange_Enable, CV_Enable);
 	CreateConVarHookEx("nmrih_skins_admingroup","1",	"Enable/Disable the possebility to use the Groupsystem", _, CVarChange_AdminGroup, CV_Group);
 	CreateConVarHookEx("nmrih_skins_adminonly",	"0",	"Enable/Disable deny of access to the menu except for admins", _, CVarChange_AdminOnly, CV_Admin);
 	CreateConVarHookEx("nmrih_skins_spawntimer","1",	"Enable/Disable a timer that changes the model a second after the event 'player_spawn'", _, CVarChange_SpawnTimer, CV_Timer);
-	CreateConVarHookEx("nmrih_skins_useturned", "0", 	"Enable/Disable the turned model being applied?", _, CVarChange_TurnedModel, CV_UseTurned);
-
+	CreateConVarHookEx("nmrih_skins_useturned", "1", 	"Enable/Disable the turned model being applied?", _, CVarChange_TurnedModel, CV_UseTurned);
 
 	RegConsoleCmd("sm_model", Cmd_Model);
-
 	HookEvent("player_spawn", Event_PlayerSpawn);
 
 	g_hCookie_WModel = FindOrCreateCookie("nmrih_skins_wmodel", "World Model Prefs", CookieAccess_Protected);
@@ -117,8 +104,8 @@ public void OnPluginEnd()
 {
 	delete g_kvList;
 
-	//g_hDetour.Disable(Hook_Pre, DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre);
-	//delete g_hDetour;
+	g_hDetour.Disable(Hook_Pre, DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre);
+	delete g_hDetour;
 
 	//delete g_hHook;
 }
@@ -129,21 +116,18 @@ public void OnMapStart()
 	g_iTurnedSkins = 0;
 
 	ParseMenuModels();
-	ParseDownloadList();
+	//ParseDownloadList();
 
 	PrintToServer("%s:\n	Total: %d\n	Turned: %d", PL_NAME, g_iTotalSkins, g_iTurnedSkins);
 }
 
 public void OnMapEnd()
 {
-	//g_iWatcher = INVALID_ENT_REFERENCE;
 	delete g_kvList;
 }
 
 public void OnClientPostAdminCheck(int client)
 {
-	// Save the client auth string(steam)
-	GetClientAuthId(client, AuthId_Steam2, g_sSID[client], sizeof(g_sSID[]));
 	g_bRandom[client] = true;
 	g_bTPView[client] = false;
 }
@@ -199,6 +183,9 @@ void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 
 	if (!IsValidClient(client)) 
 		return;
+
+	// player_spawn may be fired earlier than cookies cahched.
+	OnClientCookiesCached(client);
 
 	if (g_bCVar[CV_Timer]) 
 	{
