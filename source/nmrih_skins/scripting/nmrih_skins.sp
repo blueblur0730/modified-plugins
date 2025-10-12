@@ -75,7 +75,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
+	LoadTranslation("nmrih_skins.phrases");
 	LoadGameData();
+	
 	CreateConVar("nmrih_skins_version", PL_VER, PL_NAME, FCVAR_DONTRECORD | FCVAR_NOTIFY | FCVAR_SPONLY);
 
 	CreateConVarHookEx("nmrih_skins_enable",	"1",	"Enable/Disable plugin", FCVAR_NOTIFY, CVarChange_Enable, CV_Enable);
@@ -307,4 +309,15 @@ stock Cookie FindOrCreateCookie(const char[] name, const char[] description = ""
 	}
 
 	return hCookie;
+}
+
+stock void LoadTranslation(const char[] translation)
+{
+	char sPath[PLATFORM_MAX_PATH], sName[PLATFORM_MAX_PATH];
+	Format(sName, sizeof(sName), "translations/%s.txt", translation);
+	BuildPath(Path_SM, sPath, sizeof(sPath), sName);
+	if (!FileExists(sPath))
+		SetFailState("Missing translation file %s.txt", translation);
+
+	LoadTranslations(translation);
 }

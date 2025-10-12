@@ -10,7 +10,7 @@
     "SetViewModel"
     {
         "#format"   "{1:s}"
-        "en"        "[{green}NMRiH Skins{default}] Your view model has been set to: {pink}{1}{default}}."
+        "en"        "[{green}NMRiH Skins{default}] Your view model has been set to: {pink}{1}{default}."
         "chi"       "[{green}NMRiH Skins{default}] 已将手部模型设置为: {pink}{1}{default}."
     }
 
