@@ -16,6 +16,10 @@ void ShowAllObjectives(int client)
     Format(buffer, sizeof(buffer), "Objectives in Total: %d", obj_count);
     menu.AddItem("obj_count", buffer, ITEMDRAW_DISABLED);
 
+    int anti_obj_count = manager._iAntiObjectivesCount;
+    Format(buffer, sizeof(buffer), "Anti-Objectives in Total: %d", anti_obj_count);
+    menu.AddItem("anti_obj_count", buffer, ITEMDRAW_DISABLED);
+
     int chain_count = manager._iObjectiveChainCount;
     Format(buffer, sizeof(buffer), "Objective Chains(Links) in Total: %d", chain_count);
     menu.AddItem("chain_count", buffer, ITEMDRAW_DISABLED);
@@ -23,6 +27,11 @@ void ShowAllObjectives(int client)
     if (obj_count > 0)
     {
         menu.AddItem("all_obj", "View Every Objective->");
+    }
+
+    if (anti_obj_count > 0)
+    {
+        menu.AddItem("all_anti_obj", "View Every Anti-Objective->");
     }
 
     if (chain_count > 0)
@@ -53,6 +62,10 @@ void ShowAllObjectivesMenuHandler(Menu menu, MenuAction action, int client, int 
             if (strcmp(info, "all_obj") == 0)
             {
                 ShowObjectiveListMenu(client);
+            }
+            else if (strcmp(info, "all_anti_obj") == 0)
+            {
+                ShowAntiObjectiveListMenu(client);
             }
             else if (strcmp(info, "all_chain") == 0)
             {
@@ -149,6 +162,47 @@ void ShowObjectiveListMenu(int client)
     }
 }
 
+void ShowAntiObjectiveListMenu(int client)
+{
+    char buffer[256];
+    ObjectiveManager manager = ObjectiveManager.Instance();
+    if (manager.IsNull())
+    {
+        PrintToChat(client, "[Objective Manager] Manager instance is null, cannot show the menu.");
+        return;
+    }
+
+    int anti_obj_count = manager._iAntiObjectivesCount;
+    UtlVector antiObjectives = manager._pAntiObjectivesVector;
+
+    if (anti_obj_count != 0 && !antiObjectives.IsNull())
+    {
+        Menu submenu = new Menu(AllAntiObjectiveMenuHandler);
+        submenu.SetTitle("Select an Anti-Objective to View:");
+
+        for (int i = 1; i < anti_obj_count; i++)
+        {
+            Objective obj = antiObjectives.Get(i - 1);
+            if (obj.IsNull())
+                continue;
+
+            obj._sName.ToCharArray(buffer, sizeof(buffer));
+
+            int id = obj.m_iId;
+            static char sId[8];
+            IntToString(id, sId, sizeof(sId));
+            submenu.AddItem(sId, buffer);
+        }
+
+        submenu.ExitBackButton = true;
+        submenu.Display(client, MENU_TIME_FOREVER); 
+    }
+    else
+    {
+        PrintToChat(client, "[Objective Manager] There's no anti-objective, or the list is null.");
+    }
+}
+
 void AllObjectiveMenuHandler(Menu menu, MenuAction action, int client, int item)
 {
     switch (action)
@@ -167,6 +221,31 @@ void AllObjectiveMenuHandler(Menu menu, MenuAction action, int client, int item)
                 return;
 
             ShowAllObjectives(client);
+        }
+            
+        case MenuAction_End:
+            delete menu;
+    }
+}
+
+void AllAntiObjectiveMenuHandler(Menu menu, MenuAction action, int client, int item)
+{
+    switch (action)
+    {
+        case MenuAction_Select:
+        {
+            char info[8], name[256];
+            menu.GetItem(item, info, sizeof(info), _, name, sizeof(name));
+
+            ShowSelectedAntiObjectiveMenu(client, info, name);
+        }
+
+        case MenuAction_Cancel:
+        {
+            if (item == MenuCancel_Exit)
+                return;
+
+            ShowAntiObjectiveListMenu(client);
         }
             
         case MenuAction_End:
@@ -212,10 +291,6 @@ void ShowSelectedObjectiveMenu(int client, const char[] info, const char[] name)
     Format(buffer, sizeof(buffer), "Is End Objective: %s", isend ? "Yes" : "No");
     submenu.AddItem("is_end", buffer, ITEMDRAW_DISABLED);
 
-    bool isanti = obj._bIsAntiObjective;
-    Format(buffer, sizeof(buffer), "Is Anti Objective: %s", isanti ? "Yes" : "No");
-    submenu.AddItem("is_anti", buffer, ITEMDRAW_DISABLED);
-
     obj._sObjectiveBoundaryName.ToCharArray(buffer, sizeof(buffer));
     Format(buffer, sizeof(buffer), "Objective Boundary Name: %s", buffer);
     submenu.AddItem("boundary", buffer, ITEMDRAW_DISABLED);
@@ -247,6 +322,102 @@ void ShowSelectedObjectiveMenu(int client, const char[] info, const char[] name)
     submenu.Display(client, MENU_TIME_FOREVER);
 }
 
+void ShowSelectedAntiObjectiveMenu(int client, const char[] info, const char[] name)
+{
+    int id = StringToInt(info);
+    UtlVector antiObjectives = ObjectiveManager.Instance()._pAntiObjectivesVector;
+    int anti_obj_count = ObjectiveManager.Instance()._iAntiObjectivesCount;
+
+    Objective obj;
+    if (anti_obj_count != 0 && !antiObjectives.IsNull())
+    {
+        for (int i = 1; i < anti_obj_count; i++)
+        {
+            obj = antiObjectives.Get(i - 1);
+            if (obj.IsNull())
+                continue;
+
+            if (obj.m_iId == id)
+            {
+                break;
+            }
+        }
+    }
+
+    if (obj.IsNull())
+    {
+        PrintToChat(client, "[Objective Manager] Anti-Objective instance is null, cannot show the menu.");
+        return;
+    }
+
+    char buffer[256];
+    Menu submenu = new Menu(SelectedObjectiveMenuHandler);
+    submenu.SetTitle("Selected Anti-Objective's Detail");
+
+    Format(buffer, sizeof(buffer), "Name: %s", name);
+    submenu.AddItem(name, buffer, ITEMDRAW_DISABLED);
+
+    Stringt desc = obj._sDescription;
+    if (!desc.IsNull())
+    {
+        obj._sDescription.ToCharArray(buffer, sizeof(buffer));
+        submenu.AddItem(buffer, "Show Description->");
+    }
+    else
+    {
+        submenu.AddItem("anti", "", ITEMDRAW_IGNORE);
+    }
+
+    Format(buffer, sizeof(buffer), "Objective Id: %d", id);
+    submenu.AddItem("id", buffer, ITEMDRAW_DISABLED);
+
+    Format(buffer, sizeof(buffer), "%d", id);
+    submenu.AddItem(buffer, "", ITEMDRAW_IGNORE);    // pass the id for the callback.
+
+    int link_count = obj._iLinksCount;
+    Format(buffer, sizeof(buffer), "Link Count: %d", link_count);
+    submenu.AddItem("link_count", buffer, ITEMDRAW_DISABLED);
+
+    int entity_count = obj._iEntitysCount;
+    Format(buffer, sizeof(buffer), "Entity Count: %d", entity_count);
+    submenu.AddItem("entity_count", buffer, ITEMDRAW_DISABLED);
+
+    bool isanti = obj._bIsAntiObjective;
+    Format(buffer, sizeof(buffer), "Is Anti Objective: %s", isanti ? "Yes" : "No");
+    submenu.AddItem("is_anti", buffer, ITEMDRAW_DISABLED);
+
+    Stringt boundary_name = obj._sObjectiveBoundaryName;
+    if (!boundary_name.IsNull())
+    {
+        obj._sObjectiveBoundaryName.ToCharArray(buffer, sizeof(buffer));
+        Format(buffer, sizeof(buffer), "Objective Boundary Name: %s", buffer);
+        submenu.AddItem("boundary", buffer, ITEMDRAW_DISABLED);
+    }
+
+    ObjectiveBoundary boundary = obj.GetObjectiveBoundary();
+    if (!boundary.IsNull())
+    {
+        int boundray_entity = GetEntityFromAddress(boundary.addr);
+        if (boundray_entity > MaxClients && IsValidEntity(boundray_entity))
+        {
+            Format(buffer, sizeof(buffer), "Boundary Entity Index: %d", boundray_entity);
+            submenu.AddItem("boundary_entity", buffer, ITEMDRAW_DISABLED);
+        }
+    }
+
+    Format(buffer, sizeof(buffer), "Show All Entities->");
+    submenu.AddItem("entities", buffer, entity_count != 0 ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+
+    if (IsClientAdmin(client, ADMFLAG_ROOT))
+    {
+        submenu.AddItem("update", "Update Boundary->");
+        submenu.AddItem("control_boundray", "Control Objective Boundary->");
+    }
+
+    submenu.ExitBackButton = true;
+    submenu.Display(client, MENU_TIME_FOREVER);
+}
+
 void SelectedObjectiveMenuHandler(Menu menu, MenuAction action, int client, int item)
 {
     switch (action)
@@ -256,7 +427,10 @@ void SelectedObjectiveMenuHandler(Menu menu, MenuAction action, int client, int 
             char info[256];
             menu.GetItem(item, info, sizeof(info));
 
-            if (item == 1)
+            char anti[8];
+            menu.GetItem(1, anti, sizeof(anti));
+
+            if (item == 1 && strcmp(info, "anti") != 0)
             {
                 char mapname[64];
                 GetCurrentMap(mapname, sizeof(mapname));
@@ -334,12 +508,43 @@ void SelectedObjectiveMenuHandler(Menu menu, MenuAction action, int client, int 
                 char sIndex[8];
                 menu.GetItem(3, sIndex, sizeof(sIndex));
 
+                Objective obj;
                 int iIndex = StringToInt(sIndex);
-                Objective obj = ObjectiveManager.GetObjectiveById(iIndex);
-                if (obj.IsNull())
+
+                if (strcmp(anti, "anti") != 0)
                 {
-                    PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
-                    return;
+                    obj = ObjectiveManager.GetObjectiveById(iIndex);
+                    if (obj.IsNull())
+                    {
+                        PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
+                        return;
+                    }
+                }
+                else
+                {
+                    UtlVector antiObjectives = ObjectiveManager.Instance()._pAntiObjectivesVector;
+                    int anti_obj_count = ObjectiveManager.Instance()._iAntiObjectivesCount;
+
+                    if (anti_obj_count != 0 && !antiObjectives.IsNull())
+                    {
+                        for (int i = 1; i < anti_obj_count; i++)
+                        {
+                            obj = antiObjectives.Get(i - 1);
+                            if (obj.IsNull())
+                                continue;
+
+                            if (obj.m_iId == iIndex)
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (obj.IsNull())
+                    {
+                        PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
+                        return;
+                    }
                 }
 
                 int count = obj._iLinksCount;
@@ -365,6 +570,7 @@ void SelectedObjectiveMenuHandler(Menu menu, MenuAction action, int client, int 
 
                 linkmenu.AddItem(sIndex, "", ITEMDRAW_IGNORE);
                 linkmenu.AddItem(name, "", ITEMDRAW_IGNORE);
+                linkmenu.AddItem(anti, "", ITEMDRAW_IGNORE);
                 linkmenu.ExitBackButton = true;
                 linkmenu.Display(client, MENU_TIME_FOREVER);
             }
@@ -373,12 +579,43 @@ void SelectedObjectiveMenuHandler(Menu menu, MenuAction action, int client, int 
                 char sIndex[8];
                 menu.GetItem(3, sIndex, sizeof(sIndex));
 
+                Objective obj;
                 int iIndex = StringToInt(sIndex);
-                Objective obj = ObjectiveManager.GetObjectiveById(iIndex);
-                if (obj.IsNull())
+
+                if (strcmp(anti, "anti") != 0)
                 {
-                    PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
-                    return;
+                    obj = ObjectiveManager.GetObjectiveById(iIndex);
+                    if (obj.IsNull())
+                    {
+                        PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
+                        return;
+                    }
+                }
+                else
+                {
+                    UtlVector antiObjectives = ObjectiveManager.Instance()._pAntiObjectivesVector;
+                    int anti_obj_count = ObjectiveManager.Instance()._iAntiObjectivesCount;
+
+                    if (anti_obj_count != 0 && !antiObjectives.IsNull())
+                    {
+                        for (int i = 1; i < anti_obj_count; i++)
+                        {
+                            obj = antiObjectives.Get(i - 1);
+                            if (obj.IsNull())
+                                continue;
+
+                            if (obj.m_iId == iIndex)
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (obj.IsNull())
+                    {
+                        PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
+                        return;
+                    }
                 }
 
                 UtlVector entities = obj._pEntitysVector;
@@ -399,25 +636,12 @@ void SelectedObjectiveMenuHandler(Menu menu, MenuAction action, int client, int 
                     Stringt name = entities.Get(i - 1);
                     name.ToCharArray(buffer, sizeof(buffer));
 
-                    int entity = CGlobalEntityList.FindEntityByName(_, buffer);
-                    //PrintToServer("name: %s, entity: %d", buffer, entity);
-
-                    if (entity == -1 || !IsValidEntity(entity))
+                    int entity = obj.GetEntity(i - 1);
+                    if (!IsValidEntity(entity))
                     {
                         entity = FindEntityByTargetName(buffer);
-                        //PrintToServer("Refinding: name: %s, entity: %d", buffer, entity);
-                        if (entity == -1 || !IsValidEntity(entity))
+                        if (!IsValidEntity(entity))
                             continue;
-                    }
-                    
-                    // wired. why you return the ref?
-                    if (entity < -1 || entity > 2048)
-                    {
-                        entity = EntRefToEntIndex(entity);
-
-                        // something wrong with the ref conversion?
-                        if (entity > 2048)
-                            entity -= 2048; // i just gusse.
                     }
 
                     static float vecOrigin[3];
@@ -433,7 +657,7 @@ void SelectedObjectiveMenuHandler(Menu menu, MenuAction action, int client, int 
 
                 entitymenu.AddItem(sIndex, "", ITEMDRAW_IGNORE);
                 entitymenu.AddItem(name, "", ITEMDRAW_IGNORE);
-
+                entitymenu.AddItem(anti, "", ITEMDRAW_IGNORE);
                 entitymenu.ExitBackButton = true;
                 entitymenu.Display(client, MENU_TIME_FOREVER);
             }
@@ -442,12 +666,43 @@ void SelectedObjectiveMenuHandler(Menu menu, MenuAction action, int client, int 
                 char sIndex[8];
                 menu.GetItem(3, sIndex, sizeof(sIndex));
 
+                Objective obj;
                 int iIndex = StringToInt(sIndex);
-                Objective obj = ObjectiveManager.GetObjectiveById(iIndex);
-                if (obj.IsNull())
+
+                if (strcmp(anti, "anti") != 0)
                 {
-                    PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
-                    return;
+                    obj = ObjectiveManager.GetObjectiveById(iIndex);
+                    if (obj.IsNull())
+                    {
+                        PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
+                        return;
+                    }
+                }
+                else
+                {
+                    UtlVector antiObjectives = ObjectiveManager.Instance()._pAntiObjectivesVector;
+                    int anti_obj_count = ObjectiveManager.Instance()._iAntiObjectivesCount;
+
+                    if (anti_obj_count != 0 && !antiObjectives.IsNull())
+                    {
+                        for (int i = 1; i < anti_obj_count; i++)
+                        {
+                            obj = antiObjectives.Get(i - 1);
+                            if (obj.IsNull())
+                                continue;
+
+                            if (obj.m_iId == iIndex)
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (obj.IsNull())
+                    {
+                        PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
+                        return;
+                    }
                 }
 
                 obj.UpdateBoundary();
@@ -458,12 +713,43 @@ void SelectedObjectiveMenuHandler(Menu menu, MenuAction action, int client, int 
                 char sIndex[8];
                 menu.GetItem(3, sIndex, sizeof(sIndex));
 
+                Objective obj;
                 int iIndex = StringToInt(sIndex);
-                Objective obj = ObjectiveManager.GetObjectiveById(iIndex);
-                if (obj.IsNull())
+
+                if (strcmp(anti, "anti") != 0)
                 {
-                    PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
-                    return;
+                    obj = ObjectiveManager.GetObjectiveById(iIndex);
+                    if (obj.IsNull())
+                    {
+                        PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
+                        return;
+                    }
+                }
+                else
+                {
+                    UtlVector antiObjectives = ObjectiveManager.Instance()._pAntiObjectivesVector;
+                    int anti_obj_count = ObjectiveManager.Instance()._iAntiObjectivesCount;
+
+                    if (anti_obj_count != 0 && !antiObjectives.IsNull())
+                    {
+                        for (int i = 1; i < anti_obj_count; i++)
+                        {
+                            obj = antiObjectives.Get(i - 1);
+                            if (obj.IsNull())
+                                continue;
+
+                            if (obj.m_iId == iIndex)
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (obj.IsNull())
+                    {
+                        PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
+                        return;
+                    }
                 }
 
                 ObjectiveBoundary boundary = obj.GetObjectiveBoundary();
@@ -473,18 +759,19 @@ void SelectedObjectiveMenuHandler(Menu menu, MenuAction action, int client, int 
                     return;
                 }
 
-                Menu boundaryMenu = new Menu(BoundrayMenuHandler2);
-                boundaryMenu.SetTitle("Objective Boundary Control:");
-                boundaryMenu.AddItem("start", "Start");
-                boundaryMenu.AddItem("finish", "Finish");
+                Menu boundrayMenu = new Menu(BoundrayMenuHandler2);
+                boundrayMenu.SetTitle("Objective Boundary Control:");
+                boundrayMenu.AddItem("start", "Start");
+                boundrayMenu.AddItem("finish", "Finish");
 
                 char name[256];
                 menu.GetItem(0, name, sizeof(name));
 
-                boundaryMenu.AddItem(sIndex, "", ITEMDRAW_IGNORE); // pass the id for the callback.
-                boundaryMenu.AddItem(name, "", ITEMDRAW_IGNORE);
-                boundaryMenu.ExitBackButton = true;
-                boundaryMenu.Display(client, MENU_TIME_FOREVER);
+                boundrayMenu.AddItem(sIndex, "", ITEMDRAW_IGNORE); // pass the id for the callback.
+                boundrayMenu.AddItem(name, "", ITEMDRAW_IGNORE);
+                boundrayMenu.AddItem(anti, "", ITEMDRAW_IGNORE);
+                boundrayMenu.ExitBackButton = true;
+                boundrayMenu.Display(client, MENU_TIME_FOREVER);
             }
         }
 
@@ -493,7 +780,17 @@ void SelectedObjectiveMenuHandler(Menu menu, MenuAction action, int client, int 
             if (item == MenuCancel_Exit)
                 return;
 
-            ShowObjectiveListMenu(client);
+            char anti[8];
+            menu.GetItem(1, anti, sizeof(anti));
+
+            if (strcmp(anti, "anti") != 0)
+            {
+                ShowObjectiveListMenu(client);
+            }
+            else
+            {
+                ShowAntiObjectiveListMenu(client);
+            }
         }
 
         case MenuAction_End:
@@ -513,12 +810,46 @@ void BoundrayMenuHandler2(Menu menu, MenuAction action, int client, int item)
             char sIndex[8];
             menu.GetItem(2, sIndex, sizeof(sIndex));
 
+            char anti[8];
+            menu.GetItem(4, anti, sizeof(anti));
+
+            Objective obj;
             int iIndex = StringToInt(sIndex);
-            Objective obj = ObjectiveManager.GetObjectiveById(iIndex);
-            if (obj.IsNull())
+
+            if (strcmp(anti, "anti") != 0)
             {
-                PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
-                return;
+                obj = ObjectiveManager.GetObjectiveById(iIndex);
+                if (obj.IsNull())
+                {
+                    PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
+                    return;
+                }
+            }
+            else
+            {
+                UtlVector antiObjectives = ObjectiveManager.Instance()._pAntiObjectivesVector;
+                int anti_obj_count = ObjectiveManager.Instance()._iAntiObjectivesCount;
+
+                if (anti_obj_count != 0 && !antiObjectives.IsNull())
+                {
+                    for (int i = 1; i < anti_obj_count; i++)
+                    {
+                        obj = antiObjectives.Get(i - 1);
+                        if (obj.IsNull())
+                            continue;
+
+                        if (obj.m_iId == iIndex)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                if (obj.IsNull())
+                {
+                    PrintToChat(client, "[Objective Manager] There is no objective with id: %d.", iIndex);
+                    return;
+                }
             }
 
             ObjectiveBoundary boundary = obj.GetObjectiveBoundary();
@@ -551,7 +882,17 @@ void BoundrayMenuHandler2(Menu menu, MenuAction action, int client, int item)
             char name[256]
             menu.GetItem(3, name, sizeof(name));
 
-            ShowSelectedObjectiveMenu(client, sIndex, name);
+            char anti[8];
+            menu.GetItem(4, anti, sizeof(anti));
+
+            if (strcmp(anti, "anti") != 0)
+            {
+                ShowSelectedObjectiveMenu(client, sIndex, name);
+            }
+            else
+            {
+                ShowSelectedAntiObjectiveMenu(client, sIndex, name);
+            }
         }
         
         case MenuAction_End:
@@ -611,10 +952,19 @@ void DummyHandler4(Menu menu, MenuAction action, int client, int item)
             if (item == MenuCancel_Exit)
                 return;
 
-            char name[256], id[8];
-            menu.GetItem(menu.ItemCount - 1, name, sizeof(name));
-            menu.GetItem(menu.ItemCount - 2, id, sizeof(id));
-            ShowSelectedObjectiveMenu(client, id, name);
+            char name[256], id[8], anti[8];
+            menu.GetItem(menu.ItemCount - 1, anti, sizeof(anti));
+            menu.GetItem(menu.ItemCount - 2, name, sizeof(name));
+            menu.GetItem(menu.ItemCount - 3, id, sizeof(id));
+
+            if (strcmp(anti, "anti") != 0)
+            {
+                ShowSelectedObjectiveMenu(client, id, name);
+            }
+            else
+            {
+                ShowSelectedAntiObjectiveMenu(client, id, name);
+            }
         }
             
         case MenuAction_End:

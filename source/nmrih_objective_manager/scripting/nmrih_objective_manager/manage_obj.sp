@@ -7,7 +7,14 @@ void ShowManageObjectivesMenu(int client)
     menu.AddItem("2", "Fail Current Objective");
     menu.AddItem("3", "Update All Objective Boundary");
 
-    ObjectiveManager.GetCurrentObjective().IsEndObjective() ?
+    Objective obj = ObjectiveManager.Instance()._pCurrentObjective;
+    if (obj.IsNull())
+    {
+        PrintToChat(client, "[Objective Manager] There is no current objective.");
+        return;
+    }
+
+    obj.IsEndObjective() ?
     menu.AddItem("4", "Finish The Mission") :
     menu.AddItem("4", "Finish The Mission (Currently not in End Objective)", ITEMDRAW_DISABLED);
 

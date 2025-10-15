@@ -1,4 +1,6 @@
 
+#include <sdktools>
+
 /**
  * From smmem by Scags.
 */
