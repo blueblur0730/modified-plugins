@@ -5,7 +5,7 @@
 #include <sdkhooks>
 #include <uservector>
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 public Plugin myinfo =
 {
@@ -96,6 +96,17 @@ void OnWeaponDropPost(int client, int weapon)
     g_hArrayChargeData.Erase(weapon_ref);
 }
 
+public void OnEntityDestroyed(int entity)
+{
+    if (entity <= MaxClients || !IsValidEntity(entity))
+        return;
+
+    if (!IsMeleeWeapon(entity))
+        return;
+
+    int weapon_ref = EntIndexToEntRef(entity);
+    g_hArrayChargeData.Erase(weapon_ref);
+}
 
 void Timer_CheckCharging(Handle timer)
 {
