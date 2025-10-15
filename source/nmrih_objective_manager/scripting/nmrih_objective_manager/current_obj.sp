@@ -211,19 +211,24 @@ void CurrentObjectiveMenuHandler(Menu menu, MenuAction action, int client, int i
                     name.ToCharArray(buffer, sizeof(buffer));
 
                     int entity = CGlobalEntityList.FindEntityByName(_, buffer);
-                    PrintToServer("name: %s, entity: %d", buffer, entity);
+                    //PrintToServer("name: %s, entity: %d", buffer, entity);
 
                     if (entity == -1 || !IsValidEntity(entity))
                     {
                         entity = FindEntityByTargetName(buffer);
-                        PrintToServer("Refinding: name: %s, entity: %d", buffer, entity);
+                        //PrintToServer("Refinding: name: %s, entity: %d", buffer, entity);
                         if (entity == -1 || !IsValidEntity(entity))
                             continue;
                     }
                     
-                    if (entity < -1)
+                    // wired. why you return the ref?
+                    if (entity < -1 || entity > 2048)
                     {
                         entity = EntRefToEntIndex(entity);
+
+                        // something wrong with the ref conversion?
+                        if (entity > 2048)
+                            entity -= 2048; // i just gusse.
                     }
 
                     static float vecOrigin[3];
