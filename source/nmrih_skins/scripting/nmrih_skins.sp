@@ -50,7 +50,7 @@ Cookie
 	g_hCookie_TurnedModel;
 
 #define	PL_NAME	"[NMRiH] Skins"
-#define	PL_VER "2.2.1"
+#define	PL_VER "2.2.2"
 
 #include "nmrih_skins/parse.sp"
 #include "nmrih_skins/menu.sp"
@@ -110,8 +110,6 @@ public void OnPluginEnd()
 
 	g_hDetour.Disable(Hook_Pre, DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre);
 	delete g_hDetour;
-
-	//delete g_hHook;
 }
 
 public void OnMapStart()

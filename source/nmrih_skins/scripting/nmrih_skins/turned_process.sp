@@ -217,10 +217,9 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
             {
                 // actually every time it returns -1. why? the handle not valid? or no such thing like ragdoll (but the handle in not invalid though)?
                 // in actual performance, the ragdoll indeed gone thongh.
-                int ragdoll = EntRefToEntIndex(GetHandleEntryIndex(entry.m_hRagDollHandle));
+                int ragdoll = GetEntityFromHandle(entry.m_hRagDollHandle);
                 if (ragdoll > MaxClients && IsValidEntity(ragdoll))
                 {
-                    //PrintToServer("Removing Ragdoll: %d", ragdoll);
                     UTIL_RemoveImmediate(ragdoll);
                 }
             }
@@ -237,15 +236,13 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
                 DispatchKeyValueVector(npc_nmrih_turnedzombie, "angle", ang);
 
                 //PrintToServer("origin: %.02f, %.02f, %.02f / angle: %.02f, %.02f, %.02f", vec[0], vec[1], vec[2], ang[0], ang[1], ang[2]);
-                //PrecacheModel(g_sTurnedModel[i + 1]);
                 
-                char sModel[260];
-                entry.GetModelName(sModel, sizeof(sModel));
+                //char sModel[260];
+                //entry.GetModelName(sModel, sizeof(sModel));
                 //PrintToServer("Original Model: %s", sModel);
                 //PrintToServer("Setting Turned Model: %s, %d", g_sTurnedModel[i + 1], i + 1);
 
                 DispatchSpawn(npc_nmrih_turnedzombie);
-                ActivateEntity(npc_nmrih_turnedzombie);
 
                 if (strcmp(g_sTurnedModel[i + 1], "") != 0 && g_bCVar[CV_UseTurned])
                 {
@@ -284,19 +281,10 @@ void UTIL_RemoveImmediate(int entity)
     SDKCall(g_hSDKCall_UTIL_RemoveImmediate, entity);
 }
 
-#if 0
-inline int CBaseHandle::GetEntryIndex() const
+stock int GetEntityFromHandle(any handle)
 {
-	if ( !IsValid() )
-		return NUM_ENT_ENTRIES-1;
-	return m_Index & ENT_ENTRY_MASK;
-}
-#endif
-
-stock int GetHandleEntryIndex(Address hndl) 
-{
-    if (!(view_as<int>(hndl) != INVALID_EHANDLE_INDEX))
-        return NUM_ENT_ENTRIES - 1;
-
-    return (view_as<int>(hndl)) & ENT_ENTRY_MASK;
+	int ent = handle & 0xFFF;
+	if (ent == 0xFFF)
+		ent = -1;
+	return ent;
 }
