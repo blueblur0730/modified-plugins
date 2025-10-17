@@ -50,7 +50,7 @@ Cookie
 	g_hCookie_TurnedModel;
 
 #define	PL_NAME	"[NMRiH] Skins"
-#define	PL_VER "2.2.2"
+#define	PL_VER "2.3.0"
 
 #include "nmrih_skins/parse.sp"
 #include "nmrih_skins/menu.sp"

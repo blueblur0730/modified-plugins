@@ -25,15 +25,7 @@ class CNMRiH_TurnedZombie_Watcher {
 
 #include <stringt>
 
-// How many bits to use to encode an edict.
-#define	MAX_EDICT_BITS				11			// # of bits needed to represent max edicts
-
-#define NUM_ENT_ENTRY_BITS		(MAX_EDICT_BITS + 2)
-#define NUM_ENT_ENTRIES			(1 << NUM_ENT_ENTRY_BITS)
-#define INVALID_EHANDLE_INDEX	0xFFFFFFFF
-
-#define NUM_SERIAL_NUM_BITS		16 // (32 - NUM_ENT_ENTRY_BITS)
-#define ENT_ENTRY_MASK			(( 1 << NUM_SERIAL_NUM_BITS) - 1)
+#define INVALID_EHANDLE_INDEX 0xFFFFFFFF
 
 static int g_iOff_TurnedZombieEntry_t_size = -1;
 static int g_iOff_m_TurnedZombieEntry = -1;
@@ -44,6 +36,7 @@ static int g_iOff_m_flTurnedTime = -1;
 static int g_iOff_m_szModel = -1;
 
 DynamicDetour g_hDetour = null;
+static Address g_pEntityList = Address_Null;
 
 static Handle g_hSDKCall_UTIL_RemoveImmediate;
 static Handle g_hSDKCall_InitRelationshipTable;
@@ -136,7 +129,6 @@ methodmap CNMRiH_TurnedZombie_Watcher {
     }
 }
 
-
 methodmap CAI_BaseNPC {
     public CAI_BaseNPC(int entity) {
         return view_as<CAI_BaseNPC>(entity);
@@ -170,7 +162,7 @@ void LoadGameData()
     GameDataWrapper gd = new GameDataWrapper("nmrih_skins");
 
     g_hDetour = gd.CreateDetourOrFail("CNMRiH_TurnedZombie_Watcher::TurnThink", true, DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre);
-    //g_hHook = gd.CreateDynamicHookOrFail("CNMRiH_ZombieRunner::SetZombieModel", _, _, _, false);
+    g_pEntityList = gd.GetAddress("g_pEntityList");
 
     g_iOff_TurnedZombieEntry_t_size = gd.GetOffset("sizeof(TurnedZombieEntry_t)");
     g_iOff_m_TurnedZombieEntry = gd.GetOffset("CNMRiH_TurnedZombie_Watcher->m_TurnedZombieEntry");
@@ -207,20 +199,22 @@ void LoadGameData()
 MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
 {
     // fun fact: this is: for (int i = 0; i < MaxClients; i++)
+    // On CNMRiH_TurnedZombie_Watcher::RegisterPlayerTurnInfo,
+    // infected player's edict index is used to fill the corresponding entry in the watcher's m_TurnedZombieEntry array.
+    // this is why we can locate exactly the infected player's entry by looping through the array.
     for (int i = 0; i < NMR_MAXPLAYERS; i++)
     {
         TurnedZombieEntry_t entry = CNMRiH_TurnedZombie_Watcher(pThis).GetEntry(i);
         if (entry.m_flTurnedTime != -1.0 && GetGameTime() > entry.m_flTurnedTime)
         {
-            //PrintToServer("Found an infected entry, time: %.02f, index: %d, handle: %d/%x", entry.m_flTurnedTime, i, entry.m_hRagDollHandle, entry.m_hRagDollHandle);
-            if (view_as<int>(entry.m_hRagDollHandle) != INVALID_EHANDLE_INDEX)
+            any hndl = entry.m_hRagDollHandle;
+            if (hndl != INVALID_EHANDLE_INDEX)
             {
-                // actually every time it returns -1. why? the handle not valid? or no such thing like ragdoll (but the handle in not invalid though)?
-                // in actual performance, the ragdoll indeed gone thongh.
-                int ragdoll = GetEntityFromHandle(entry.m_hRagDollHandle);
-                if (ragdoll > MaxClients && IsValidEntity(ragdoll))
+                Address pEntInfo = Address_Null;
+                if (HasSerialNumber(hndl, pEntInfo))
                 {
-                    UTIL_RemoveImmediate(ragdoll);
+                    Address pEntity = LoadFromAddress(pEntInfo + view_as<Address>(4), NumberType_Int32);
+                    UTIL_RemoveImmediate(pEntity);
                 }
             }
 
@@ -242,6 +236,8 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
                 //PrintToServer("Original Model: %s", sModel);
                 //PrintToServer("Setting Turned Model: %s, %d", g_sTurnedModel[i + 1], i + 1);
 
+                CAI_BaseNPC npc = CAI_BaseNPC(npc_nmrih_turnedzombie);
+                npc.InitRelationshipTable();
                 DispatchSpawn(npc_nmrih_turnedzombie);
 
                 if (strcmp(g_sTurnedModel[i + 1], "") != 0 && g_bCVar[CV_UseTurned])
@@ -254,9 +250,6 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
                     SetEntityModel(npc_nmrih_turnedzombie, g_sDefaultTurnedModel[random]);                            
                 }
 
-                CAI_BaseNPC npc = CAI_BaseNPC(npc_nmrih_turnedzombie);
-
-                npc.InitRelationshipTable();
                 npc.SetHullSizeNormal(1);
                 npc.SetCondition(88);
                 npc.SetSequenceByName("infectionrise");
@@ -276,15 +269,39 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
     return MRES_Supercede;
 }
 
-void UTIL_RemoveImmediate(int entity)
+void UTIL_RemoveImmediate(Address pEntity)
 {
-    SDKCall(g_hSDKCall_UTIL_RemoveImmediate, entity);
+    if (pEntity == Address_Null)
+        return;
+
+    SDKCall(g_hSDKCall_UTIL_RemoveImmediate, pEntity);
 }
 
-stock int GetEntityFromHandle(any handle)
+#if 0
+inline IHandleEntity* CBaseHandle::Get() const
+{
+	extern CBaseEntityList *g_pEntityList;
+	return g_pEntityList->LookupEntity( *this );
+}
+
+inline IHandleEntity* CBaseEntityList::LookupEntity( const CBaseHandle &handle ) const
+{
+	if ( handle.m_Index == INVALID_EHANDLE )
+		return NULL;
+
+	const CEntInfo *pInfo = &m_EntPtrArray[ handle.GetEntryIndex() ];
+	if ( pInfo && pInfo->m_SerialNumber == handle.GetSerialNumber() )
+		return pInfo->m_pEntity;
+	else
+		return NULL;
+}
+#endif
+stock bool HasSerialNumber(any handle, Address &pEntInfo = Address_Null)
 {
 	int ent = handle & 0xFFF;
 	if (ent == 0xFFF)
-		ent = -1;
-	return ent;
+		return false;
+
+    pEntInfo = view_as<Address>(ent * 16) + g_pEntityList;
+    return (LoadFromAddress(pEntInfo + view_as<Address>(8), NumberType_Int32) == (handle >> 12) + 1);
 }

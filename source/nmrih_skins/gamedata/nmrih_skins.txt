@@ -2,6 +2,22 @@
 {
     "nmrih"
     {
+        "Addresses"
+        {
+            "g_pEntityList"
+            {
+                "linux"
+                {
+                    "signature"     "g_pEntityList"
+                }
+
+                "windows"
+                {
+                    "signature"     "CNMRiH_TurnedZombie_Watcher::TurnThink"
+                    "read"          "79"
+                }
+            }
+        }
         "Functions"
         {
             "CNMRiH_TurnedZombie_Watcher::TurnThink"
@@ -24,7 +40,7 @@
             "CNMRiH_TurnedZombie_Watcher->m_TurnedZombieEntry"
             {
                 "linux"     "924"
-                "windows"   "924"
+                "windows"   "904"
             }
 
             "TurnedZombieEntry_t->m_hRagDollHandle"
@@ -125,6 +141,12 @@
                 "linux"     "@_ZN11CBaseEntity12SetNextThinkEfPKc"
                 "windows"   "\x55\x8B\xEC\xF3\x0F\x10\x45\x2A\x0F\x2E\x05\x2A\x2A\x2A\x2A\x53"
                 /* 55 8B EC F3 0F 10 45 ? 0F 2E 05 ? ? ? ? 53 */
+            }
+
+            "g_pEntityList"
+            {
+                "library"   "server"
+                "linux"     "@gEntList"
             }
         }
     }
