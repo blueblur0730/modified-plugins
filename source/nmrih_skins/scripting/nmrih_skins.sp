@@ -50,7 +50,7 @@ Cookie
 	g_hCookie_TurnedModel;
 
 #define	PL_NAME	"[NMRiH] Skins"
-#define	PL_VER "2.3.0"
+#define	PL_VER "2.3.1"
 
 #include "nmrih_skins/parse.sp"
 #include "nmrih_skins/menu.sp"
@@ -99,7 +99,10 @@ public void OnPluginStart()
 		for (int i; ++i <= MaxClients; i++) 
 		{
 			if (IsClientAuthorized(i))
+			{
+				OnClientCookiesCached(i);
 				OnClientPostAdminCheck(i);
+			}
 		}
 	}
 }
