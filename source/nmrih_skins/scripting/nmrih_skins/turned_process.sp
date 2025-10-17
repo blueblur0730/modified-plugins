@@ -223,7 +223,7 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
             {
                 float vec[3];
                 entry.GetTurnedPosition(vec);
-                vec[2] += 60.0; // move the turned zombie up a bit to avoid clipping into the ground.
+                vec[2] += 20.0; // move the turned zombie up a bit to avoid clipping into the ground.
                 DispatchKeyValueVector(npc_nmrih_turnedzombie, "origin", vec);
 
                 float ang[3];
