@@ -85,6 +85,14 @@
                 /* 55 8B EC 81 EC ? ? ? ? 8B 15 */
             }
 
+            "CNMRiH_TurnedZombie_Watcher::GetZombieModelForModel"
+            {
+                "library"   "server"
+                "linux"     "@_ZN27CNMRiH_TurnedZombie_Watcher22GetZombieModelForModelEPKc"
+                "windows"   "\x55\x8B\xEC\x56\x33\xF6\x57\x39\x35\x2A\x2A\x2A\x2A\x74\x2A\x8B\x7D\x2A\xB8\x2A\x2A\x2A\x2A\xFF\x30"
+                /* 55 8B EC 56 33 F6 57 39 35 ? ? ? ? 74 ? 8B 7D ? B8 ? ? ? ? FF 30 */
+            }
+
             // windows sig:
             // search string "Couldn't set relationship to unknown entity or class (%s)!\n"
             // to find CAI_BaseNPC::AddRelationship

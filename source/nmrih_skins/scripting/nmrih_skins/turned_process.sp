@@ -38,6 +38,7 @@ static int g_iOff_m_szModel = -1;
 DynamicDetour g_hDetour = null;
 static Address g_pEntityList = Address_Null;
 
+static Handle g_hSDKCall_GetZombieModelForModel;
 static Handle g_hSDKCall_UTIL_RemoveImmediate;
 static Handle g_hSDKCall_InitRelationshipTable;
 static Handle g_hSDKCall_SetCondition;
@@ -57,12 +58,12 @@ static const char g_sDefaultTurnedModel[][] = {
 };
 
 methodmap TurnedZombieEntry_t {
-    property Address m_hRagDollHandle {
+    property int m_hRagDollHandle {
         public get() {
             return LoadFromAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_hRagDollHandle), NumberType_Int32);
         }
 
-        public set(Address value) {
+        public set(int value) {
             StoreToAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_hRagDollHandle), value, NumberType_Int32);
         }
     }
@@ -101,7 +102,7 @@ methodmap TurnedZombieEntry_t {
         }
     }
 
-    // as the give, the size should be 260.
+    // as the given, the size should be 260.
     public void GetModelName(char[] buffer, int size) {
         Stringt(view_as<Address>(this) + view_as<Address>(g_iOff_m_szModel)).ToCharArray(buffer, size);
     }
@@ -113,11 +114,6 @@ methodmap TurnedZombieEntry_t {
 }
 
 methodmap CNMRiH_TurnedZombie_Watcher {
-/*
-    public CNMRiH_TurnedZombie_Watcher(int entity) {
-        return view_as<CNMRiH_TurnedZombie_Watcher>(entity);
-    }
-*/
     public CNMRiH_TurnedZombie_Watcher(Address pThis) {
         return view_as<CNMRiH_TurnedZombie_Watcher>(pThis);
     }
@@ -126,6 +122,11 @@ methodmap CNMRiH_TurnedZombie_Watcher {
         return view_as<TurnedZombieEntry_t>(view_as<Address>(this) + 
                                             view_as<Address>(g_iOff_m_TurnedZombieEntry) + 
                                             view_as<Address>((index) * g_iOff_TurnedZombieEntry_t_size));
+    }
+
+    // return number of bytes written.
+    public Stringt GetZombieModelForModel(const char[] szModel) {
+        return view_as<Stringt>(SDKCall(g_hSDKCall_GetZombieModelForModel, view_as<Address>(this), szModel));
     }
 }
 
@@ -154,6 +155,22 @@ methodmap CAI_BaseNPC {
 methodmap CBaseEntity {
     public static void SetNextThink(Address pThis, float flNextThinkTime, const char[] szContext) {
         SDKCall(g_hSDKCall_SetNextThink, pThis, flNextThinkTime, szContext);
+    }
+}
+
+methodmap CBaseEntityList {
+    public static Address LookupEntity(any handle) {
+        int ent = handle & 0xFFF;
+        if (ent == 0xFFF)
+            return Address_Null;
+
+        Address pEntInfo = view_as<Address>(ent * 16) + g_pEntityList;
+        if (pEntInfo != Address_Null && LoadFromAddress(pEntInfo + view_as<Address>(8), NumberType_Int32) == (handle >> 12) + 1)
+        {
+            return view_as<Address>(LoadFromAddress(pEntInfo + view_as<Address>(4), NumberType_Int32));
+        }
+
+        return Address_Null;
     }
 }
 
@@ -189,15 +206,20 @@ void LoadGameData()
     SDKCallParamsWrapper param5[] = {{SDKType_PlainOldData, SDKPass_Plain}};
     g_hSDKCall_SetullSizeNormal = gd.CreateSDKCallOrFail(SDKCall_Entity, SDKConf_Signature, "CAI_BaseNPC::SetCondition", param5, sizeof(param5));
 
-    delete gd;
-}
+    SDKCallParamsWrapper param6[] = {{SDKType_String, SDKPass_Pointer}};
+    SDKCallParamsWrapper ret = {SDKType_PlainOldData, SDKPass_Plain};   // pass the raw string pointer.
+    g_hSDKCall_GetZombieModelForModel = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CNMRiH_TurnedZombie_Watcher::GetZombieModelForModel", param6, sizeof(param6), true, ret);
 
-// for some reason, entity nmrih_turnedzombie_watcher can not return a valid index or ref.
+    delete gd;
+}   
+
+// for some reason, entity nmrih_turnedzombie_watcher can not return a valid index.
 // so we call these by raw address.
-// I still have no better idea than rebuilding the whole think function
-// to find the specific turned zombie & player relationship, and set the model. perhaps this is the only reasonable way.
 MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
 {
+    if (pThis == Address_Null)
+        return MRES_Ignored;
+
     // fun fact: this is: for (int i = 0; i < MaxClients; i++)
     // On CNMRiH_TurnedZombie_Watcher::RegisterPlayerTurnInfo,
     // infected player's edict index is used to fill the corresponding entry in the watcher's m_TurnedZombieEntry array.
@@ -210,10 +232,9 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
             any hndl = entry.m_hRagDollHandle;
             if (hndl != INVALID_EHANDLE_INDEX)
             {
-                Address pEntInfo = Address_Null;
-                if (HasSerialNumber(hndl, pEntInfo))
+                Address pEntity = CBaseEntityList.LookupEntity(hndl);
+                if (pEntity != Address_Null)
                 {
-                    Address pEntity = LoadFromAddress(pEntInfo + view_as<Address>(4), NumberType_Int32);
                     UTIL_RemoveImmediate(pEntity);
                 }
             }
@@ -231,31 +252,38 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
                 DispatchKeyValueVector(npc_nmrih_turnedzombie, "angle", ang);
 
                 //PrintToServer("origin: %.02f, %.02f, %.02f / angle: %.02f, %.02f, %.02f", vec[0], vec[1], vec[2], ang[0], ang[1], ang[2]);
-                
-                //char sModel[260];
-                //entry.GetModelName(sModel, sizeof(sModel));
-                //PrintToServer("Original Model: %s", sModel);
-                //PrintToServer("Setting Turned Model: %s, %d", g_sTurnedModel[i + 1], i + 1);
 
                 CAI_BaseNPC npc = CAI_BaseNPC(npc_nmrih_turnedzombie);
                 npc.InitRelationshipTable();
+                
                 DispatchSpawn(npc_nmrih_turnedzombie);
 
-                if (strcmp(g_sTurnedModel[i + 1], "") != 0 && g_bCVar[CV_UseTurned])
+                if (g_bCVar[CV_UseTurned] && strcmp(g_sTurnedModel[i + 1], "") != 0 && IsModelPrecached(g_sTurnedModel[i + 1]))
                 {
                     SetEntityModel(npc_nmrih_turnedzombie, g_sTurnedModel[i + 1]);
                 }
                 else
                 {
-                    int random = GetRandomInt(0, sizeof(g_sDefaultTurnedModel) - 1);
-                    SetEntityModel(npc_nmrih_turnedzombie, g_sDefaultTurnedModel[random]);                            
+                    char szModel[260], szTurnedModel[260];
+                    entry.GetModelName(szModel, sizeof(szModel));
+                    Stringt pModel = CNMRiH_TurnedZombie_Watcher(pThis).GetZombieModelForModel(szModel);
+                    if (!pModel.IsNull())
+                    {
+                        pModel.ToCharArray(szTurnedModel, sizeof(szTurnedModel));
+                        SetEntityModel(npc_nmrih_turnedzombie, szTurnedModel);   
+                    }
+                    else
+                    {
+                        int random = GetRandomInt(0, sizeof(g_sDefaultTurnedModel) - 1);
+                        SetEntityModel(npc_nmrih_turnedzombie, g_sDefaultTurnedModel[random]);   
+                    }
                 }
 
                 npc.SetHullSizeNormal(1);
                 npc.SetCondition(88);
                 npc.SetSequenceByName("infectionrise");
 
-                entry.m_hRagDollHandle = view_as<Address>(INVALID_EHANDLE_INDEX);
+                entry.m_hRagDollHandle = INVALID_EHANDLE_INDEX;
                 entry.SetTurnedAngle({0.0, 0.0, 0.0});
                 entry.SetTurnedPosition({0.0, 0.0, 0.0});
                 entry.m_flTurnedTime = -1.0;
@@ -276,33 +304,4 @@ void UTIL_RemoveImmediate(Address pEntity)
         return;
 
     SDKCall(g_hSDKCall_UTIL_RemoveImmediate, pEntity);
-}
-
-#if 0
-inline IHandleEntity* CBaseHandle::Get() const
-{
-	extern CBaseEntityList *g_pEntityList;
-	return g_pEntityList->LookupEntity( *this );
-}
-
-inline IHandleEntity* CBaseEntityList::LookupEntity( const CBaseHandle &handle ) const
-{
-	if ( handle.m_Index == INVALID_EHANDLE )
-		return NULL;
-
-	const CEntInfo *pInfo = &m_EntPtrArray[ handle.GetEntryIndex() ];
-	if ( pInfo && pInfo->m_SerialNumber == handle.GetSerialNumber() )
-		return pInfo->m_pEntity;
-	else
-		return NULL;
-}
-#endif
-stock bool HasSerialNumber(any handle, Address &pEntInfo = Address_Null)
-{
-	int ent = handle & 0xFFF;
-	if (ent == 0xFFF)
-		return false;
-
-    pEntInfo = view_as<Address>(ent * 16) + g_pEntityList;
-    return (LoadFromAddress(pEntInfo + view_as<Address>(8), NumberType_Int32) == (handle >> 12) + 1);
 }
