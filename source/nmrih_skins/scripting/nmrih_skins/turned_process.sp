@@ -189,7 +189,7 @@ void LoadGameData()
     g_iOff_m_flTurnedTime = gd.GetOffset("TurnedZombieEntry_t->m_flTurnedTime");
     g_iOff_m_szModel = gd.GetOffset("TurnedZombieEntry_t->m_szModel");
 
-    SDKCallParamsWrapper param1[] = {{SDKType_CBaseEntity, SDKPass_Pointer}};
+    SDKCallParamsWrapper param1[] = {{SDKType_PlainOldData, SDKPass_Pointer}};
     g_hSDKCall_UTIL_RemoveImmediate = gd.CreateSDKCallOrFail(SDKCall_Static, SDKConf_Signature, "UTIL_RemoveImmediate", param1, sizeof(param1));
 
     g_hSDKCall_InitRelationshipTable = gd.CreateSDKCallOrFail(SDKCall_Entity, SDKConf_Signature, "CAI_BaseNPC::InitRelationshipTable");
