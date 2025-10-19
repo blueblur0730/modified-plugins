@@ -4,9 +4,7 @@
 #include <sourcemod>
 #include <nmrih_objective>
 
-#define NMR_MAXPLAYERS 9
-
-#define PLUGIN_VERSION "1.1"
+#define PLUGIN_VERSION "1.2"
 
 public Plugin myinfo = 
 {
@@ -24,6 +22,7 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
+    LoadTranslation("nmrih_objective_manager.phrases");
     CreateConVar("nmrih_objective_manager_version", PLUGIN_VERSION, "Version of the Objective Manager plugin.", FCVAR_DONTRECORD | FCVAR_NOTIFY);
 
     RegConsoleCmd("sm_objmenu", Command_ObjectiveMenu, "Open the objective menu.");
@@ -41,14 +40,17 @@ Action Command_ObjectiveMenu(int client, int args)
 void ShowObjectiveMenu(int client)
 {
     Menu menu = new Menu(ObjectiveMenuHandler);
-    menu.SetTitle("Objective Menu");
-    menu.AddItem("1", "View Current Objectives' Detail");
-    menu.AddItem("2", "View all Objectives' Detail");
+    menu.SetTitle("%T", "Menu_Main", client);
 
-    if (IsClientAdmin(client, ADMFLAG_ROOT))
-    {
-        menu.AddItem("3", "Manage Objectives");
-    }
+    char buffer[256];
+    Format(buffer, sizeof(buffer), "%T", "Menu_ViewCurrentObjDetail", client);
+    menu.AddItem("1", buffer);
+
+    Format(buffer, sizeof(buffer), "%T", "Menu_ViewAllObjDetail", client);
+    menu.AddItem("2", buffer);
+
+    Format(buffer, sizeof(buffer), "%T", "Menu_ManageObj", client);
+    menu.AddItem("3", buffer, IsClientAdmin(client, ADMFLAG_ROOT) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
 
     menu.ExitButton = true;
     menu.Display(client, MENU_TIME_FOREVER);
@@ -85,4 +87,16 @@ void ObjectiveMenuHandler(Menu menu, MenuAction action, int client, int itemNum)
 		case MenuAction_End:
 			delete menu;
     }
+}
+
+stock void LoadTranslation(const char[] translation)
+{
+	char sPath[PLATFORM_MAX_PATH], sName[64];
+
+	Format(sName, sizeof(sName), "translations/%s.txt", translation);
+	BuildPath(Path_SM, sPath, sizeof(sPath), sName);
+	if (!FileExists(sPath))
+		SetFailState("Missing translation file %s.txt", translation);
+
+	LoadTranslations(translation);
 }

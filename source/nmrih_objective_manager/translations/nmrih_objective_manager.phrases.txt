@@ -1,0 +1,466 @@
+"Phrases"
+{
+    "Menu_Main"
+    {
+        "en"        "Objective Menu"
+        "chi"       "任务目标菜单"
+    }
+
+    "Menu_ViewCurrentObjDetail"
+    {
+        "en"        "View Current Objectives' Detail"
+        "chi"       "查看当前任务目标详细信息"
+    }
+
+    "Menu_ViewAllObjDetail"
+    {
+        "en"        "View all Objectives' Detail"
+        "chi"       "查看全部任务目标详细信息"
+    }
+    
+    "Menu_ManageObj"
+    {
+        "en"        "Manage Objectives"
+        "chi"       "管理任务目标"
+    }
+
+    "NoSuchCurrentObjective"
+    {
+        "en"        "[Objective Manager] There is no such a current objective."
+        "chi"       "[Objective Manager] 没有当前这样的任务目标。"
+    }
+
+    "Menu_CurrentObjDetail"
+    {
+        "en"        "Current Objective's Detail:"
+        "chi"       "当前任务目标详细信息:"
+    }
+
+    "Menu_Name"
+    {
+        "#format"   "{1:s}"
+        "en"        "Name: {1}"
+        "chi"       "名称: {1}"
+    }
+    
+    "Menu_ShowDescription"
+    {
+        "en"        "Show Description->"
+        "chi"       "展开描述->"
+    }
+
+    "Menu_ObjectiveId"
+    {
+        "#format"   "{1:d}"
+        "en"        "Objective ID: {1}"
+        "chi"       "任务目标 ID: {1}"
+    }
+
+    "Menu_LinkCount"
+    {
+        "#format"   "{1:d}"
+        "en"        "Link Count: {1}"
+        "chi"       "链接数量: {1}"
+    }
+
+    "Menu_EntityCount"
+    {
+        "#format"   "{1:d}"
+        "en"        "Entity Count: {1}"
+        "chi"       "实体数量: {1}"
+    }
+
+    "Menu_IsEndObjective"
+    {
+        "#format"   "{1:T}"
+        "en"        "Is End Objective: {1}"
+        "chi"       "是否为最后任务目标: {1}"
+    }
+
+    "Menu_IsAntiObjective"
+    {
+        "#format"   "{1:T}"
+        "en"        "Is Anti Objective: {1}"
+        "chi"       "是否为反任务目标: {1}"
+    }
+
+    "Menu_ObjectiveBoundaryName"
+    {
+        "#format"   "{1:s}"
+        "en"        "Objective Boundary Name: {1}"
+        "chi"       "任务目标边界名称: {1}"
+    }
+
+    "Menu_BoundaryEntityIndex"
+    {
+        "#format"   "{1:d}"
+        "en"        "Boundary Entity Index: {1}"
+        "chi"       "边界实体索引: {1}"
+    }
+
+    "Menu_ShowAllLinks"
+    {
+        "en"        "Show All Links->"
+        "chi"       "展开所有链接->"
+    }
+
+    "Menu_ShowAllEntities"
+    {
+        "en"        "Show All Entities->"
+        "chi"       "展开所有实体->"
+    }
+
+    "Menu_UpdateBoundary"
+    {
+        "en"        "Update Boundary->"
+        "chi"       "更新边界->"
+    }
+
+    "Menu_ControlBoundary"
+    {
+        "en"        "Control Objective Boundary->"
+        "chi"       "控制任务目标边界->"
+    }
+
+    "NoDescriptionFound"
+    {
+        "en"        "[Objective Manager] No description file found for this map or your language."
+        "chi"       "[Objective Manager] 没有在当前地图以及您的语言上发现描述文件."
+    }
+
+    "Menu_ObjectiveDescription"
+    {
+        "en"        "Objective Description:"
+        "chi"       "任务目标描述:"
+    }
+
+    "NoDescriptionFound2"
+    {
+        "en"        "[Objective Manager] No description found for this objective."
+        "chi"       "[Objective Manager] 没有找到当前任务目标的描述。"
+    }
+
+    "NoDescriptionFound3"
+    {
+        "en"        "[Objective Manager] No description found for this objective, decoded file missing."
+        "chi"       "[Objective Manager] 没有找到当前任务目标的描述，解码文件丢失."
+    }
+
+    "NoObjectiveWithId"
+    {
+        "#format"   "{1:d}"
+        "en"        "[Objective Manager] There is no objective with id: {1}."
+        "chi"       "[Objective Manager] 没有找到 ID 为 {1} 的任务目标."
+    }
+
+    "LinkInstanceIsNull"
+    {
+        "en"        "[Objective Manager] This objective's link instance is null."
+        "chi"       "[Objective Manager] 该任务目标的链接实例为空."
+    }
+
+    "Menu_ObjectiveLinkList"
+    {
+        "en"        "Objective Link List:"
+        "chi"       "任务目标链接表:"
+    }
+
+    "Menu_LinkIndexAndId"
+    {
+        "#format"   "{1:d},{2:d}"
+        "en"        "Index {1} | ID: {2}"
+        "chi"       "索引 {1} | ID: {2}"
+    }
+
+    "EntityInstanceIsNull"
+    {
+        "en"        "[Objective Manager] This objective's entity container instance is null."
+        "chi"       "[Objective Manager] 该任务目标的实体容器实例为空."
+    }
+
+    "Menu_ObjectiveEntityList"
+    {
+        "en"        "Objective Entity List:"
+        "chi"       "任务目标实体表:"
+    }
+
+    "Menu_EntityDetails"
+    {
+        "#format"   "{1:s},{2:d},{3:s},{4:.02f},{5:.02f},{6:.02f}"
+        "en"        "Name: {1}\nEntity Index/Ref: {2} | Classname: {3}\nCoordinates: {4}, {5}, {6}\n "
+        "chi"       "名称: {1}\n实体索引/引用: {2} | 类名: {3}\n坐标: {4}, {5}, {6}\n "
+    }
+
+    "ObjectiveBoundaryUpdated"
+    {
+        "en"        "[Objective Manager] Objective boundary updated."
+        "chi"       "[Objective Manager] 任务目标边界已更新."
+    }
+
+    "ObjectiveBoundaryInvalid"
+    {
+        "en"        "[Objective Manager] This objective's boundary is invalid."
+        "chi"       "[Objective Manager] 该任务目标边界无效."
+    }
+
+    "Menu_BoundaryControl"
+    {
+        "en"        "Objective Boundary Control:"
+        "chi"       "任务目标边界控制:"
+    }
+
+    "Menu_Start"
+    {
+        "en"        "Start"
+        "chi"       "开始"
+    }
+
+    "Menu_Finish"
+    {
+        "en"        "Finish"
+        "chi"       "完成"
+    }
+
+    "StartedBoundary"
+    {
+        "en"        "[Objective Manager] Started the current objective boundary."
+        "chi"       "[Objective Manager] 已开始当前任务目标边界."
+    }
+
+    "FinishedBoundary"
+    {
+        "en"        "[Objective Manager] Finished the current objective boundary."
+        "chi"       "[Objective Manager] 已完成当前任务目标边界."
+    }
+
+    "ManagerInstanceIsNull"
+    {
+        "en"        "[Objective Manager] Manager instance is null, cannot show the menu."
+        "chi"       "[Objective Manager] 管理器实例为空, 不能打开菜单."
+    }
+
+    "Menu_ObjectivesDetail"
+    {
+        "en"        "Objectives Detail:"
+        "chi"       "合计任务目标详细信息:"
+    }
+
+    "Menu_ObjectivesInTotal"
+    {
+        "#format"   "{1:d}"
+        "en"        "Objectives in Total: {1}"
+        "chi"       "任务目标数: {1}"
+    }
+
+    "Menu_AntiObjectivesInTotal"
+    {
+        "#format"   "{1:d}"
+        "en"        "Anti-Objectives in Total: {1}"
+        "chi"       "反任务目标数: {1}"
+    }
+
+    "Menu_ObjectiveChainsInTotal"
+    {
+        "#format"   "{1:d}"
+        "en"        "Objective Chains in Total: {1}"
+        "chi"       "任务目标链接总数: {1}"
+    }
+
+    "Menu_ViewEveryObjective"
+    {
+        "en"        "View Every Objective->"
+        "chi"       "浏览所有任务目标->"
+    }
+
+    "Menu_ViewEveryAntiObjective"
+    {
+        "en"        "View Every Anti-Objective->"
+        "chi"       "浏览所有反任务目标->"
+    }
+
+    "Menu_ViewEveryObjectiveChain"
+    {
+        "en"        "View Every Objective Chain->"
+        "chi"       "浏览所有任务目标链接->"
+    }
+
+    "Menu_AllObjectiveIds"
+    {
+        "en"        "All Objective Chain IDs:"
+        "chi"       "所有任务目标链接 ID:"
+    }
+
+    "TheChainListIsNull"
+    {
+        "en"        "[Objective Manager] The chain list instance is null."
+        "chi"       "[Objective Manager] 链接表实例为空."
+    }
+
+    "Menu_SelectToView"
+    {
+        "en"        "Select an Objective to View:"
+        "chi"       "选择一个任务目标进行查看:"
+    }
+
+    "NoObjectiveOrListIsNull"
+    {
+        "en"        "[Objective Manager] There's no such objective, or the list is null."
+        "chi"       "[Objective Manager] 没有这样的任务目标, 或表实例为空."
+    }
+
+    "Menu_SelectAntiToView"
+    {
+        "en"        "Select an Anti-Objective to View:"
+        "chi"       "选择一个反任务目标进行查看:"
+    }
+
+    "NoAntiObjectiveOrListIsNull"
+    {
+        "en"        "[Objective Manager] There's no anti-objective, or the list is null."
+        "chi"       "[Objective Manager] 没有这样的反任务目标, 或表实例为空."
+    }
+
+    "Menu_SelectObjectiveDetails"
+    {
+        "en"        "Selected Objective's Detail:"
+        "chi"       "当前选择任务目标详细信息:"
+    }
+
+    "AntiObjectiveIsNull"
+    {
+        "en"        "[Objective Manager] Anti-Objective instance is null, cannot show the menu."
+        "chi"       "[Objective Manager] 反任务目标实例为空, 不能打开菜单."
+    }
+
+    "Menu_SelectAntiObjectiveDetails"
+    {
+        "en"        "Selected Anti-Objective's Detail:"
+        "chi"       "当前选择反任务目标详细信息:"
+    }
+
+    "EntitiesMayNotCreated"
+    {
+        "en"        "[Objective Manager] Entities may not have created, or something went wrong."
+        "chi"       "[Objective Manager] 实体可能未被创建, 或其他地方出了问题."
+    }
+
+    "Menu_ManageObjectives"
+    {
+        "en"        "Manage Objectives:"
+        "chi"       "管理任务目标:"
+    }
+
+    "Menu_CompleteAndStartNextOne"
+    {
+        "en"        "Complete Current Objective and Start the Next One"
+        "chi"       "完成当前任务目标并开始下一个"
+    }
+
+    "Menu_FailCurrentOne"
+    {
+        "en"        "Fail Current Objective"
+        "chi"       "令当前任务目标失败"
+    }
+
+    "Menu_UpdateAllObjectiveBoundary"
+    {
+        "en"        "Update All Objective Boundary"
+        "chi"       "更新所有任务目标边界"
+    }
+
+    "Menu_FinishTheMission"
+    {
+        "en"        "Finish The Mission"
+        "chi"       "完成地图"
+    }
+
+    "Menu_CurrentlyNotEndObjective"
+    {
+        "en"        "(Currently not in End Objective)"
+        "chi"       "(当前并不处于最后的任务目标)"
+    }
+
+    "Menu_ClearAllObjectives"
+    {
+        "en"        "Clear All Objectives"
+        "chi"       "清除所有任务目标"
+    }
+
+    "Menu_AreYouSure1"
+    {
+        "en"        "Are you sure to complete the current objective and start next one?"
+        "chi"       "你确定要完成当前任务目标并开始下一个?"
+    }
+
+    "Menu_AreYouSure2"
+    {
+        "en"        "Are you sure to fail the current objective?"
+        "chi"       "你确定要令当前任务目标失败?"
+    }
+
+    "Menu_AreYouSure3"
+    {
+        "en"        "Are you sure to update all objective boundary?"
+        "chi"       "你确定要更新所有任务目标边界?"
+    }
+
+    "Menu_AreYouSure4"
+    {
+        "en"        "Are you sure to finish the mission?"
+        "chi"       "你确定要完成地图?"
+    }
+
+    "Menu_AreYouSure5"
+    {
+        "en"        "Are you sure to clear all objectives? (Think Twice!)"
+        "chi"       "你确定要清除所有任务目标? (三思而后行!)"
+    }
+
+    "CompletedCurrentObjective"
+    {
+        "en"        "[Objective Manager] Completed the current objective."
+        "chi"       "[Objective Manager] 已完成当前任务目标."
+    }
+
+    "FailedCurrentObjective"
+    {
+        "en"        "[Objective Manager] Failed the current objective."
+        "chi"       "[Objective Manager] 已令当前任务目标失败."
+    }
+
+    "UpdatedAllObjectiveBoundary"
+    {
+        "en"        "[Objective Manager] Updated all objective boundary."
+        "chi"       "[Objective Manager] 已更新所有任务目标边界."
+    }
+
+    "FinishedMission"
+    {
+        "en"        "[Objective Manager] Finished the mission."
+        "chi"       "[Objective Manager] 已完成地图."
+    }
+
+    "ClearedAllObjectives"
+    {
+        "en"        "[Objective Manager] Cleared all objectives."
+        "chi"       "[Objective Manager] 已清除所有任务目标."
+    }
+
+    "Current"
+    {
+        "en"        "(Current)"
+        "chi"       "(当前)"
+    }
+
+    "Yes"
+    {
+        "en"        "Yes"
+        "chi"       "是"
+    }
+
+    "No"
+    {
+        "en"        "No"
+        "chi"       "否"
+    }
+}

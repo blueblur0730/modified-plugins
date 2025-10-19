@@ -2,23 +2,35 @@
 void ShowManageObjectivesMenu(int client)
 {
     Menu menu = new Menu(ManageObjectivesMenuHandler);
-    menu.SetTitle("Manage Objectives:");
-    menu.AddItem("1", "Complete Current Objective and Start the Next One");
-    menu.AddItem("2", "Fail Current Objective");
-    menu.AddItem("3", "Update All Objective Boundary");
+    menu.SetTitle("%T", "Menu_ManageObjectives", client);
+
+    char buffer[256];
+    Format(buffer, sizeof(buffer), "%T", "Menu_CompleteAndStartNextOne", client);
+    menu.AddItem("1", buffer);
+
+    Format(buffer, sizeof(buffer), "%T", "Menu_FailCurrentOne", client);
+    menu.AddItem("2", buffer);
+
+    Format(buffer, sizeof(buffer), "%T", "Menu_UpdateAllObjectiveBoundary", client);
+    menu.AddItem("3", buffer);
 
     Objective obj = ObjectiveManager.Instance()._pCurrentObjective;
-    if (obj.IsNull())
+    if (!obj.IsNull())
     {
-        PrintToChat(client, "[Objective Manager] There is no current objective.");
-        return;
+        if (obj.IsEndObjective())
+        {
+            Format(buffer, sizeof(buffer), "%T", "Menu_FinishTheMission", client);
+            menu.AddItem("4", buffer);
+        }
+        else
+        {
+            Format(buffer, sizeof(buffer), "%T %T", "Menu_FinishTheMission", client, "Menu_CurrentlyNotEndObjective", client);
+            menu.AddItem("4", buffer, ITEMDRAW_DISABLED);
+        }
     }
 
-    obj.IsEndObjective() ?
-    menu.AddItem("4", "Finish The Mission") :
-    menu.AddItem("4", "Finish The Mission (Currently not in End Objective)", ITEMDRAW_DISABLED);
-
-    menu.AddItem("5", "Clear All Objectives");
+    Format(buffer, sizeof(buffer), "%T", "Menu_ClearAllObjectives", client);
+    menu.AddItem("5", buffer);
     
     menu.ExitBackButton = true;
     menu.Display(client, MENU_TIME_FOREVER);
@@ -35,45 +47,78 @@ void ManageObjectivesMenuHandler(Menu menu, MenuAction action, int client, int i
                 case 0:
                 {
                     Menu submenu = new Menu(CompleteObjectivesMenuHandler);
-                    submenu.SetTitle("Are you sure to complete the current objective and start next one?");
-                    submenu.AddItem("yes", "Yes");
-                    submenu.AddItem("no", "No");
+                    submenu.SetTitle("%T", "Menu_AreYouSure1", client);
+
+                    char buffer[64];
+                    Format(buffer, sizeof(buffer), "%T", "Yes", client);
+                    submenu.AddItem("yes", buffer);
+
+                    Format(buffer, sizeof(buffer), "%T", "No", client);
+                    submenu.AddItem("no", buffer);
+
                     submenu.Display(client, MENU_TIME_FOREVER);
                 }
 
                 case 1:
                 {
                     Menu submenu = new Menu(FailCurrentObjectivesMenuHandler);
-                    submenu.SetTitle("Are you sure to fail the current objective?");
-                    submenu.AddItem("yes", "Yes");
-                    submenu.AddItem("no", "No");
+
+                    char buffer[64];
+                    submenu.SetTitle("%T", "Menu_AreYouSure2", client);
+                    Format(buffer, sizeof(buffer), "%T", "Yes", client);
+                    submenu.AddItem("yes", buffer);
+
+                    Format(buffer, sizeof(buffer), "%T", "No", client);
+                    submenu.AddItem("no", buffer);
+
                     submenu.Display(client, MENU_TIME_FOREVER);
                 }
 
                 case 2:
                 {
                     Menu submenu = new Menu(UpdateAllObjectiveBoundaryMenuHandler);
-                    submenu.SetTitle("Are you sure to update all objective boundary?");
-                    submenu.AddItem("yes", "Yes");
-                    submenu.AddItem("no", "No");
+                    submenu.SetTitle("%T", "Menu_AreYouSure3", client);
+
+                    char buffer[64];
+                    submenu.SetTitle("%T", "Menu_AreYouSure2", client);
+                    Format(buffer, sizeof(buffer), "%T", "Yes", client);
+                    submenu.AddItem("yes", buffer);
+
+                    Format(buffer, sizeof(buffer), "%T", "No", client);
+                    submenu.AddItem("no", buffer);
+
                     submenu.Display(client, MENU_TIME_FOREVER);
                 }
 
                 case 3:
                 {
                     Menu submenu = new Menu(FinishTheMissionMenuHandler);
-                    submenu.SetTitle("Are you sure to finish the mission?");
-                    submenu.AddItem("yes", "Yes");
-                    submenu.AddItem("no", "No");
+                    submenu.SetTitle("%T", "Menu_AreYouSure4", client);
+
+                    char buffer[64];
+                    submenu.SetTitle("%T", "Menu_AreYouSure2", client);
+                    Format(buffer, sizeof(buffer), "%T", "Yes", client);
+                    submenu.AddItem("yes", buffer);
+
+                    Format(buffer, sizeof(buffer), "%T", "No", client);
+                    submenu.AddItem("no", buffer);
+
                     submenu.Display(client, MENU_TIME_FOREVER);
                 }
 
                 case 4:
                 {
                     Menu submenu = new Menu(ClearAllObjectivesMenuHandler);
-                    submenu.SetTitle("Are you sure to clear all objectives? (Think Twice!)");
-                    submenu.AddItem("yes", "Yes");
-                    submenu.AddItem("no", "No");
+                    submenu.SetTitle("%T", "Menu_AreYouSure5", client);
+
+                    char buffer[64];
+                    submenu.SetTitle("%T", "Menu_AreYouSure2", client);
+                    Format(buffer, sizeof(buffer), "%T", "Yes", client);
+                    submenu.AddItem("yes", buffer);
+
+                    Format(buffer, sizeof(buffer), "%T", "No", client);
+                    submenu.AddItem("no", buffer);
+
                     submenu.Display(client, MENU_TIME_FOREVER);
                 }
             }
@@ -103,7 +148,7 @@ void CompleteObjectivesMenuHandler(Menu menu, MenuAction action, int client, int
                 case 0:
                 {
                     ObjectiveManager.CompleteCurrentObjective();
-                    PrintToChat(client, "[Objective Manager] Completed the current objective.");
+                    PrintToChat(client, "%t", "CompletedCurrentObjective");
                 }
 
                 case 1:
@@ -129,7 +174,7 @@ void FailCurrentObjectivesMenuHandler(Menu menu, MenuAction action, int client, 
                 case 0:
                 {
                     ObjectiveManager.FailCurrentObjective();
-                    PrintToChat(client, "[Objective Manager] Failed the current objective.");
+                    PrintToChat(client, "%t", "FailedCurrentObjective");
                 }
 
                 case 1:
@@ -155,7 +200,7 @@ void UpdateAllObjectiveBoundaryMenuHandler(Menu menu, MenuAction action, int cli
                 case 0:
                 {
                     ObjectiveManager.UpdateObjectiveBoundaries();
-                    PrintToChat(client, "[Objective Manager] Updated all objective boundary.");
+                    PrintToChat(client, "%t", "UpdatedAllObjectiveBoundary");
                 }
 
                 case 1:
@@ -181,7 +226,7 @@ void FinishTheMissionMenuHandler(Menu menu, MenuAction action, int client, int i
                 case 0:
                 {
                     ObjectiveManager.Finish();
-                    PrintToChat(client, "[Objective Manager] Finished the mission.");
+                    PrintToChat(client, "%t", "FinishedMission");
                 }
 
                 case 1:
@@ -207,7 +252,7 @@ void ClearAllObjectivesMenuHandler(Menu menu, MenuAction action, int client, int
                 case 0:
                 {
                     ObjectiveManager.Clear();
-                    PrintToChat(client, "[Objective Manager] Cleared all objectives.");
+                    PrintToChat(client, "%t", "ClearedAllObjectives");
                 }
 
                 case 1:
