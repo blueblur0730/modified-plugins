@@ -1,0 +1,104 @@
+"Games"
+{
+    "nmrih"
+    {
+        "Functions"
+        {
+            "CBaseCombatCharacter::Weapon_OwnsThisType"
+            {
+				"signature"		"CBaseCombatCharacter::Weapon_OwnsThisType"
+				"callconv"		"thiscall"
+				"return"		"cbaseentity"
+				"this"			"entity"
+				"arguments"
+				{
+					"pszWeapon"
+					{
+						"type"	"charptr"
+					}
+					"iSubType"
+					{
+						"type"	"int"
+					}
+				}
+            }
+
+            "CBasePlayer::BumpWeapon"
+            {
+				"signature"		"CBasePlayer::BumpWeapon"
+				"callconv"		"thiscall"
+				"return"		"bool"
+				"this"			"entity"
+				"arguments"
+				{
+					"pWeapon"
+					{
+						"type"	"cbaseentity"
+					}
+                    "a2"
+                    {
+                        "type"  "bool"
+                    }
+				}
+            }
+        }
+
+        "Offsets"
+        {
+            "CBaseCombatWeapon->m_iSubType"
+            {
+                "linux"     "1332"
+                "windows"   "1332"
+            }
+
+            //"CBaseCombatWeapon::GetWeight"
+            //{
+                //"linux"     "322"
+                //"windows"   "321"
+            //}
+
+            //"CNMRiH_WeaponBase->m_iWeight"
+            //{
+                //"linux"     "1580"
+                //"windows"   "1580"
+            //}
+        }
+
+        "Signatures"
+        {
+            // windows sig: find inside of BumpWeapons.
+            "CBaseCombatCharacter::Weapon_OwnsThisType"
+            {
+                "library"   "server"
+                "linux"     "@_ZNK20CBaseCombatCharacter19Weapon_OwnsThisTypeEPKci"
+                "windows"   ""
+            }
+
+            // windows sig: search for string "Not picking up: not allowed!\n"
+            "CBasePlayer::BumpWeapon"
+            {
+                "library"   "server"
+                "linux"     "@_ZN11CBasePlayer10BumpWeaponEP17CBaseCombatWeaponb"
+                "windows"   ""
+            }
+
+            // windows sig:
+            // search for string "Player.PickupItem" to find CNMRiH_Player::Weapon_PickedUp
+            // it has only one xref function, which is CNMRiH_Player::BumpWeapon.
+            "CNMRiH_Player::BumpWeapon" // [clone]
+            {
+                "library"   "server"
+                "linux"     "@_ZN13CNMRiH_Player10BumpWeaponEP17CBaseCombatWeaponb.part.63"
+                "windows"   ""
+            }
+
+            // windows sig: it has only one xref function, which is CNMRiH_Player::BumpWeapon.
+            "CNMRiH_Player::Weapon_PickedUp"
+            {
+                "library"   "server"
+                "linux"     "@_ZN13CNMRiH_Player15Weapon_PickedUpEP17CBaseCombatWeapon"
+                "windows"   ""
+            }
+        }
+    }
+}
