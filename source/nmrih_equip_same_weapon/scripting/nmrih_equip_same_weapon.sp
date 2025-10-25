@@ -9,7 +9,7 @@
 
 #include "nmrih_equip_same_weapon/consts.sp"
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 public Plugin myinfo = 
 {
@@ -151,7 +151,7 @@ Action OnUse(int entity, int activator, int caller, UseType type, float value)
 
     // check if the player has enough weight to carry the weapon.
     NMR_Player player = NMR_Player(activator);
-    PrintToServer("%d, %d, %d", player.GetCarriedWeight(), weight, player.GetMaxCarriedWeight());
+    //PrintToServer("%d, %d, %d", player.GetCarriedWeight(), weight, player.GetMaxCarriedWeight());
     if (player.GetCarriedWeight() + weight > player.GetMaxCarriedWeight())
         return Plugin_Continue; // player can't carry this weapon. just pick it up.
     

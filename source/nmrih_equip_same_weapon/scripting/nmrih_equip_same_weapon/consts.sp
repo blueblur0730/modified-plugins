@@ -102,5 +102,5 @@ stock const char g_sWeaponWeights[][][] = {
 	{ "tool_barricade",			"80"},
 	{ "tool_extinguisher",	   	"400"},
 	{ "tool_flare_gun",			"50"},
-	{ "tool_welder",			"120"},
+	{ "tool_welder",			"120"}
 };
