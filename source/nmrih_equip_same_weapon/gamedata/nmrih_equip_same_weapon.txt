@@ -71,7 +71,9 @@
             {
                 "library"   "server"
                 "linux"     "@_ZNK20CBaseCombatCharacter19Weapon_OwnsThisTypeEPKci"
-                "windows"   ""
+                "windows"   "\x2A\x2A\x2A\x2A\x2A\x2A\x5D\x2A\x8B\xC1\x56\x57\x89\x45\x2A\x33\xFF"
+                /* 55 8B EC 51 53 8B 5D ? 8B C1 56 57 89 45 ? 33 FF */ // original sig.
+                /* ? ? ? ? ? ? 5D ? 8B C1 56 57 89 45 ? 33 FF */    // wildcarded for detour.
             }
 
             // windows sig: search for string "Not picking up: not allowed!\n"
@@ -79,25 +81,18 @@
             {
                 "library"   "server"
                 "linux"     "@_ZN11CBasePlayer10BumpWeaponEP17CBaseCombatWeaponb"
-                "windows"   ""
+                "windows"   "\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x56\x8B\x75\x2A\x57\x8B\xF9\x8B\xCE\xE8\2A\2A\2A\2A\x80\xBF\2A\2A\2A\2A\2A\x74\2A\x68\2A\2A\2A\2A\xFF\x15\2A\2A\2A\2A\x83\xC4"
+                /* 55 8B EC 81 EC ? ? ? ? 56 8B 75 ? 57 8B F9 8B CE */  // original sig.
+                /* ? ? ? ? ? ? ? ? ? 56 8B 75 ? 57 8B F9 8B CE E8 ? ? ? ? 80 BF ? ? ? ? ? 74 ? 68 ? ? ? ? FF 15 ? ? ? ? 83 C4 */ // wildcarded for detour, and extended to be unique.
             }
 
-            // windows sig:
-            // search for string "Player.PickupItem" to find CNMRiH_Player::Weapon_PickedUp
-            // it has only one xref function, which is CNMRiH_Player::BumpWeapon.
-            "CNMRiH_Player::BumpWeapon" // [clone]
-            {
-                "library"   "server"
-                "linux"     "@_ZN13CNMRiH_Player10BumpWeaponEP17CBaseCombatWeaponb.part.63"
-                "windows"   ""
-            }
-
-            // windows sig: it has only one xref function, which is CNMRiH_Player::BumpWeapon.
+            // windows sig: search for string "Player.PickupItem", choose the one have string "weapon_picked_up".
             "CNMRiH_Player::Weapon_PickedUp"
             {
                 "library"   "server"
                 "linux"     "@_ZN13CNMRiH_Player15Weapon_PickedUpEP17CBaseCombatWeapon"
-                "windows"   ""
+                "windows"   "\x55\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\x53\x57\x8B\x7D\x2A\x8B\xD9\x85\xFF\x0F\x84\x2A\x2A\x2A\x2A\x8B\x47"
+                /* 55 8B EC 81 EC ? ? ? ? 53 57 8B 7D ? 8B D9 85 FF 0F 84 ? ? ? ? 8B 47 */
             }
         }
     }
