@@ -48,7 +48,10 @@ stock const char g_sWeapons[][] = {
 	"tool_barricade",
 	"tool_extinguisher",
 	"tool_flare_gun",
-	"tool_welder"
+	"tool_welder",
+	"exp_grenade",
+	"exp_molotov",
+	"exp_tnt"
 };
 
 // this is hardcoded and ugly but we have no solution.
@@ -103,4 +106,7 @@ stock const char g_sWeaponWeights[][][] = {
 	{ "tool_extinguisher",	   	"400"},
 	{ "tool_flare_gun",			"50"},
 	{ "tool_welder",			"120"},
+	{ "exp_grenade",	"100"},
+	{ "exp_molotov",	"100"},
+	{ "exp_tnt",		"100"}
 };
