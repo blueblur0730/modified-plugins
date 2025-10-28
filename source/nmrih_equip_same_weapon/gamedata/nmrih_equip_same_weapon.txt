@@ -50,18 +50,6 @@
                 "linux"     "1332"
                 "windows"   "1332"
             }
-
-            //"CBaseCombatWeapon::GetWeight"
-            //{
-                //"linux"     "322"
-                //"windows"   "321"
-            //}
-
-            //"CNMRiH_WeaponBase->m_iWeight"
-            //{
-                //"linux"     "1580"
-                //"windows"   "1580"
-            //}
         }
 
         "Signatures"
