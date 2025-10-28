@@ -1,0 +1,39 @@
+"Games"
+{
+    "nmrih"
+    {
+        "Offsets"
+        {
+            "CBaseCombatWeapon::GetWeight"
+            {
+                "linux"     "322"
+                "windows"   "321"
+            }
+
+            "CNMRiH_WeaponBase->m_iWeight"
+            {
+                "linux"     "1580"
+                "windows"   "1580"
+            }
+        }
+
+        "Signatures"
+        {
+            // windows sig: it's a llite bit hard, but still possible.
+            // no string at all, so the related xrefs. vtable is too large, ignore it.
+            // search for the immediate value "4892" (which is the offset of '_carriedWeight') to find all occurences. (On linux it's 4916.)
+            // Note this on all results:
+            //   result = *(_DWORD *)(this + 4892);
+            //   v3 = (_DWORD *)(this + 4892);
+            //   v4 = result - a2;
+            // This is RemoveCarriedWeight, while AddCarriedWeight is '+' and has convars inside. the rest remain the same.
+            "CNMRiH_Player::RemoveCarriedWeight"
+            {
+                "library"   "server"
+                "linux"     "@_ZN13CNMRiH_Player19RemoveCarriedWeightEi"
+                "windows"   "\x55\x8B\xEC\x8B\x81\x2A\x2A\x2A\x2A\x56\x8D\xB1\x2A\x2A\x2A\x2A\x57\x8B\x3E\x8D\x4D\x2A\x2B\x7D"
+                /* 55 8B EC 8B 81 ? ? ? ? 56 8D B1 ? ? ? ? 57 8B 3E 8D 4D ? 2B 7D */
+            }
+        }
+    }
+}
