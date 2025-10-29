@@ -9,7 +9,7 @@
 
 #include "nmrih_equip_same_weapon/consts.sp"
 
-#define PLUGIN_VERSION "1.2"
+#define PLUGIN_VERSION "1.4"
 
 public Plugin myinfo = 
 {
@@ -25,11 +25,10 @@ DynamicDetour g_hDetour_CBasePlayer_BumpWeapon = null;
 
 Handle g_hSDKCall_OwnsThisType = null;
 Handle g_hSDKCall_CBasePlayer_BumpWeapon = null;
-//Handle g_hSDKCall_GetWeight = null;
 Handle g_hSDKCall_PickedUp = null;
+Handle g_hSDKCall_GetThrowVector = null;
 
 int g_iOff_m_iSubType = -1;
-//int g_Off_m_iWeight = -1;
 
 ConVar g_hCvar_Enable = null;
 StringMap g_hWeightMap = null;
@@ -49,7 +48,6 @@ public void OnPluginStart()
     g_hDetour_CBasePlayer_BumpWeapon = gd.CreateDetourOrFail("CBasePlayer::BumpWeapon", true, DTR_CBasePlayer_BumpWeapon_Pre, DTR_CBasePlayer_BumpWeapon_Post);
 
     g_iOff_m_iSubType = gd.GetOffset("CBaseCombatWeapon->m_iSubType");
-    //g_Off_m_iWeight = gd.GetOffset("CNMRiH_WeaponBase->m_iWeight");   // why not working? returning -1 always.
 
     SDKCallParamsWrapper param1[] = {{SDKType_String, SDKPass_Pointer}, {SDKType_PlainOldData, SDKPass_Plain}};
     SDKCallParamsWrapper ret1 = {SDKType_CBaseEntity, SDKPass_Pointer};
@@ -59,11 +57,16 @@ public void OnPluginStart()
     SDKCallParamsWrapper ret2 = {SDKType_Bool, SDKPass_Plain};
     g_hSDKCall_CBasePlayer_BumpWeapon = gd.CreateSDKCallOrFail(SDKCall_Player, SDKConf_Signature, "CBasePlayer::BumpWeapon", param2, sizeof(param2), true, ret2);
 
-    // why not working? returning 0 always.
-    //g_hSDKCall_GetWeight = gd.CreateSDKCallOrFail(SDKCall_Entity, SDKConf_Virtual, "CBaseCombatWeapon::GetWeight");
-
     SDKCallParamsWrapper param3[] = {{SDKType_CBaseEntity, SDKPass_Pointer}};
     g_hSDKCall_PickedUp = gd.CreateSDKCallOrFail(SDKCall_Player, SDKConf_Signature, "CNMRiH_Player::Weapon_PickedUp", param3, sizeof(param3));
+
+    // the original signature should be:
+    // Vector CNMRiH_Player::GetThrowVector(float fForce)
+    // but the compiler seems to optimize it like this:
+    // void CNMRiH_Player::GetThrowVector(Vector& vec, (CNMRiH_Player *)this, float fForce)
+    // so call this member function statically, and pass like this:
+    SDKCallParamsWrapper param4[] = {{SDKType_Vector, SDKPass_ByRef, 0, VENCODE_FLAG_COPYBACK}, {SDKType_CBaseEntity, SDKPass_Pointer}, {SDKType_Float, SDKPass_Plain}};
+    g_hSDKCall_GetThrowVector = gd.CreateSDKCallOrFail(SDKCall_Static, SDKConf_Signature, "CNMRiH_Player::GetThrowVector", param4, sizeof(param4));
 
     delete gd;
 
@@ -125,7 +128,8 @@ MRESReturn DTR_OwnsThisType_Post(int pThis, DHookReturn hReturn)
     {
         if (hReturn.Value != INVALID_ENT_REFERENCE)
         {
-            hReturn.Value = INVALID_ENT_REFERENCE;  // return null, tell the game we should equip it.
+            // return null, tell the game we should equip it.
+            hReturn.Value = INVALID_ENT_REFERENCE;
             return MRES_Supercede;
         }
     }
@@ -188,11 +192,10 @@ Action OnUse(int entity, int activator, int caller, UseType type, float value)
     if (strcmp(sClassname, "exp_grenade") == 0 || strcmp(sClassname, "exp_molotov") == 0 || strcmp(sClassname, "exp_tnt") == 0)
     {
         // basically, grenades only takes one slot.
-        int weapon = INVALID_ENT_REFERENCE;
-        if (HasWeapon(activator, sClassname, weapon))
+        if (HasWeapon(activator, sClassname))
         {
             // for grenades, we don't want it to occupy another weapon slot, instead, we add the ammo count on it.
-            SetPlayerWeaponAmmo(activator, weapon, GetAmmo(activator, entity) + 1);
+            SetPlayerWeaponAmmo(activator, entity, GetPlayerWeaponAmmo(activator, entity) + 1);
 
             // finally tell the game to add weight to the player, and send the event.
             SDKCall(g_hSDKCall_PickedUp, activator, entity);
@@ -216,15 +219,13 @@ Action OnUse(int entity, int activator, int caller, UseType type, float value)
 
 Action OnWeaponDrop(int client, int weapon)
 {
-    PrintToServer("OnWeaponDrop called");
-
     char sClassname[64];
     GetEntityClassname(weapon, sClassname, sizeof(sClassname));
     if (strcmp(sClassname, "exp_grenade") == 0 || strcmp(sClassname, "exp_molotov") == 0 || strcmp(sClassname, "exp_tnt") == 0)
     {
-        int ammo = GetAmmo(client, weapon);
-        PrintToServer("ammo: %d", ammo);
-        if (ammo > 1)   // only handle if grenades > 1.
+        // only handle if grenades > 1.
+        int ammo = GetPlayerWeaponAmmo(client, weapon);
+        if (ammo > 1)
         {
             int weight;
             bool bSuccess = g_hWeightMap.GetValue(sClassname, weight);
@@ -237,12 +238,23 @@ Action OnWeaponDrop(int client, int weapon)
 			float vecAngles[3];
 			GetClientAbsAngles(client, vecAngles);
 
+            static ConVar sv_weapon_dropforce = null;
+            if (sv_weapon_dropforce == null)
+                sv_weapon_dropforce = FindConVar("sv_weapon_dropforce");
+
+            float fForce = sv_weapon_dropforce.FloatValue;
+
+            float vecThrow[3];
+            GetThrowVector(client, vecThrow, GetRandomFloat(fForce * 0.5, fForce));
+
+            // throw it up a bit.
+            vecOrigin[2] += 60.0;
+
             // create one instead of dropping.
-			if (CreateDesiredThingFromRandomSpawner(sClassname, vecOrigin, vecAngles, 100, 100, 6))
+			if (CreateExplosives(sClassname, vecOrigin, vecAngles, vecThrow))
             {
                 // dropped one, reduce the ammo count.
                 SetPlayerWeaponAmmo(client, weapon, ammo - 1);
-                PrintToServer("Dropped one grenade. ammo: %d, weight: %d", ammo - 1, weight);
 
                 // remove the weight.
                 NMR_Player(client).RemoveCarriedWeight(weight);
@@ -284,7 +296,7 @@ stock bool IsWeaponSlotFull(int client)
     return true;
 }
 
-stock bool HasWeapon(int client, const char[] weaponName, int &weaponSelected)
+stock bool HasWeapon(int client, const char[] weaponName, int &weaponSelected = 0)
 {
     int size = GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons");
 
@@ -322,7 +334,7 @@ stock bool SetPlayerWeaponAmmo(int client, int weapon, int ammo = -1)
 	return true;
 }
 
-stock int GetAmmo(int client, int weapon)
+stock int GetPlayerWeaponAmmo(int client, int weapon)
 {
 	if (client == 0 || client > MaxClients || !IsClientInGame(client) || !IsPlayerAlive(client) || weapon == 0 || weapon <= MaxClients || !IsValidEntity(weapon) || !HasEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType"))
 		return -1;
@@ -332,31 +344,29 @@ stock int GetAmmo(int client, int weapon)
 	return GetEntData(client, iAmmoTable + iOffset);
 }
 
-stock bool CreateDesiredThingFromRandomSpawner(const char[] classname,
-											   float fPos[3]	= { 0.0, 0.0, 0.0 },
-											   float fAngle[3]	= { 0.0, 0.0, 0.0 },
-											   int	 ammo_max	= 0,
-											   int	 ammo_min	= 0,
-											   int	 spawnflags = 0)
+stock bool CreateExplosives(const char[] classname,
+							float fPos[3]	= NULL_VECTOR,
+							float fAngle[3]	= NULL_VECTOR,
+                            float fVelocity[3] = NULL_VECTOR)
 {
-	int spawner = CreateEntityByName("random_spawner");
-	if (spawner == INVALID_ENT_REFERENCE || !IsValidEntity(spawner))
+	int explosives = CreateEntityByName(classname);
+	if (explosives == INVALID_ENT_REFERENCE || !IsValidEntity(explosives))
 		return false;
 
-	DispatchKeyValue(spawner, classname, "100");	// the number is the percentage.
-	DispatchKeyValueInt(spawner, "spawnflags", spawnflags);
-	DispatchKeyValueInt(spawner, "ammo_fill_pct_max", ammo_max);	// also the percentage.
-	DispatchKeyValueInt(spawner, "ammo_fill_pct_min", ammo_min);
-
-	if (!DispatchSpawn(spawner))
+	if (!DispatchSpawn(explosives))
 	{
-		RemoveEntity(spawner);
+		RemoveEntity(explosives);
 		return false;
 	}
 
-	TeleportEntity(spawner, fPos, fAngle);
-	AcceptEntityInput(spawner, "InputSpawn");
-	RemoveEntity(spawner);
-
+	TeleportEntity(explosives, fPos, fAngle, fVelocity);
 	return true;
+}
+
+stock void GetThrowVector(int client, float vec[3], float fForce = 1.0)
+{
+    if (!IsClientInGame(client) || !IsPlayerAlive(client))
+        return;
+
+    SDKCall(g_hSDKCall_GetThrowVector, vec, client, fForce);
 }

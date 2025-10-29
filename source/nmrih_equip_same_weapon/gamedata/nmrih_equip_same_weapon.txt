@@ -82,6 +82,17 @@
                 "windows"   "\x55\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\x53\x57\x8B\x7D\x2A\x8B\xD9\x85\xFF\x0F\x84\x2A\x2A\x2A\x2A\x8B\x47"
                 /* 55 8B EC 81 EC ? ? ? ? 53 57 8B 7D ? 8B D9 85 FF 0F 84 ? ? ? ? 8B 47 */
             }
+
+            // windows sig: 
+            // search for string "Unknown ammo type '%s'!\n" to find CNMRiH_Player::Ammo_Drop
+            // the one above the 'return 1'.
+            "CNMRiH_Player::GetThrowVector"
+            {
+                "library"   "server"
+                "linux"     "@_ZN13CNMRiH_Player14GetThrowVectorEf"
+                "windows"   "\x55\x8B\xEC\x83\xEC\x2A\x56\x8B\xF1\x8B\x06\xFF\x90\x2A\x2A\x2A\x2A\xF3\x0F\x10\x00"
+                /* 55 8B EC 83 EC ? 56 8B F1 8B 06 FF 90 ? ? ? ? F3 0F 10 00 */
+            }
         }
     }
 }
