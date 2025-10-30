@@ -1,8 +1,7 @@
 name: Feature Request
-about: Suggest an idea for a plugin.
+description: Suggest an idea for a plugin.
 title: '[Feature Request]: '
 labels: ["Feature Request"]
-assignees: ''
 body:
   - type: markdown
     attributes:
