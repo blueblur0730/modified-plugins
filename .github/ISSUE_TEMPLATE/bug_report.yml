@@ -60,6 +60,15 @@ body:
         - label: I have updated SourceMod to the [repo version](https://github.com/blueblur0730/modified-plugins/blob/main/README.md?plain=1#L7) or the [latest build version](https://www.sourcemod.net/downloads.php) and the issue persists
         - label: I have updated the plugin to the [latest release](https://github.com/blueblur0730/modified-plugins/releases/tag/release) and the issue persists
 
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin to Report
+      description: Of which plugin do you want to report a bug?
+      placeholder: "e.g., nmrih_skins"
+    validations:
+      required: true
+
   - type: textarea
     id: description
     attributes:
