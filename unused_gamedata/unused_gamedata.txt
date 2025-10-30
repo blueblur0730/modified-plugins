@@ -2,6 +2,23 @@
 {
     "nmrih"
     {
+        "Addresses"
+        {
+            "g_pEntityList"
+            {
+                "linux"
+                {
+                    "signature"     "g_pEntityList"
+                }
+
+                "windows"
+                {
+                    "signature"     "CNMRiH_TurnedZombie_Watcher::TurnThink"
+                    "read"          "79"
+                }
+            }
+        }
+
         "Offsets"
         {
             "CBaseCombatWeapon::GetWeight"
@@ -19,6 +36,12 @@
 
         "Signatures"
         {
+            "g_pEntityList"
+            {
+                "library"   "server"
+                "linux"     "@gEntList"
+            }
+            
             // windows sig: it's a llite bit hard, but still possible.
             // no string at all, so the related xrefs. vtable is too large, ignore it.
             // search for the immediate value "4892" (which is the offset of '_carriedWeight') to find all occurences. (On linux it's 4916.)
