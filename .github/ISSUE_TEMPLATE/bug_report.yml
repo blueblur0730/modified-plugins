@@ -1,0 +1,101 @@
+name: Bug Report
+description: Sumbit the anomly you found as well as your environment information.
+title: "[BUG]: "
+labels: ["Bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to use these plugins and report an issue! Please make sure you provide all the requested information to help address the issue efficiently.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm these before submitting your issue
+      options:
+        - label: I have checked that my issue doesn't exist yet in the [issue tracker](https://github.com/blueblur0730/modified-plugins/issues)
+          required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: Operating System and Version
+      description: What operating system and version are you using?
+      placeholder: "e.g., Windows 10 21H2, Ubuntu 22.04"
+    validations:
+      required: true
+
+  - type: input
+    id: game-version
+    attributes:
+      label: Game / AppID and Version
+      description: Which game and version are you using?
+      placeholder: "e.g., CS:GO (730) version 1.38.2.5"
+    validations:
+      required: true
+
+  - type: input
+    id: sourcemod-version
+    attributes:
+      label: SourceMod Version
+      description: On which version of SourceMod did you first observe this?
+      placeholder: "e.g., 1.11.0.6936"
+    validations:
+      required: true
+
+  - type: input
+    id: metamod-version
+    attributes:
+      label: Metamod:Source Version
+      description: On which version of Metamod:Source did you first observe this?
+      placeholder: "e.g., 1.11.0-git1145"
+
+  - type: checkboxes
+    id: version-checks
+    attributes:
+      label: Version Verification
+      description: Please confirm you've tested with the latest versions
+      options:
+        - label: I have updated SourceMod to the [repo version](https://github.com/blueblur0730/modified-plugins/blob/main/README.md?plain=1#L7) or the [latest build version](https://www.sourcemod.net/downloads.php) and the issue persists
+        - label: I have updated the plugin to the [latest release](https://github.com/blueblur0730/modified-plugins/releases/tag/release) and the issue persists
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please provide a clear and concise description of the bug
+      placeholder: What happened? What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide the code or steps needed to reproduce the issue
+      placeholder: |
+        *If possible, please include the smallest possible test-case to reproduce the issue.*
+
+        *Also, please make it clear whether or not you can consistently reproduce this issue with the provided description*
+
+        1. First step...
+        2. Second step...
+        3. ...
+        
+        ```sourcepawn
+        // Add your code here if applicable
+        ```
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Log Output
+      description: |
+        Please provide any relevant log output. This will be automatically formatted into code, so no need for backticks.
+        Include:
+        - Game output (Console messages, etc.)
+        - Library logs
+        - Kernel logs
+        - Minidump or dump analyze output (in case of crashes)
+      render: shell

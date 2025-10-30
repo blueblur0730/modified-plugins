@@ -1,0 +1,44 @@
+name: Feature Request
+about: Suggest an idea for a plugin.
+title: '[Feature Request]: '
+labels: ["Feature Request"]
+assignees: ''
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to use these plugins and suggest an idea! Let me know how I can help you with the idea.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm these before submitting your Feature Request.
+      options:
+        - label: I have checked that my Feature Request doesn't exist yet in the [issue tracker](https://github.com/blueblur0730/modified-plugins/issues)
+          required: true
+
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin to Improve
+      description: Of which plugin do you want to suggest a feature?
+      placeholder: "e.g., nmrih_skins"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please provide a clear and concise description of the Feature Request.
+      placeholder: What would be better if the plugin did the thing you want? Additional functionality? Optimizations on the user interaction?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Describe alternatives you've considered.
+      description: A clear and concise description of any alternative solutions or features you've considered
+      placeholder: 
