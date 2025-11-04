@@ -8,9 +8,9 @@
 #include <nmrih_player>
 #include <gamedata_wrapper>
 #include <multicolors>
+#include <stringt>
 
 // Paths to configuration files
-//#define	CFG_DL "configs/nmrih_skins/downloads_list.ini"
 #define	CFG_MENU "configs/nmrih_skins/skins_menu.ini"
 
 enum
@@ -50,8 +50,9 @@ Cookie
 	g_hCookie_TurnedModel;
 
 #define	PL_NAME	"[NMRiH] Skins"
-#define	PL_VER "2.4.2"
+#define	PL_VER "2.5.0"
 
+#include "nmrih_skins/bodygroup.sp"
 #include "nmrih_skins/parse.sp"
 #include "nmrih_skins/menu.sp"
 #include "nmrih_skins/turned_process.sp"
@@ -77,6 +78,7 @@ public void OnPluginStart()
 {
 	LoadTranslation("nmrih_skins.phrases");
 	LoadGameData();
+	LoadBodyGroupGameData();
 	
 	CreateConVar("nmrih_skins_version", PL_VER, PL_NAME, FCVAR_DONTRECORD | FCVAR_NOTIFY | FCVAR_SPONLY);
 
@@ -96,7 +98,7 @@ public void OnPluginStart()
 
 	if (g_bLate) 
 	{
-		for (int i; ++i <= MaxClients; i++) 
+		for (int i = 1; i <= MaxClients; i++) 
 		{
 			if (IsClientAuthorized(i))
 			{
@@ -125,7 +127,6 @@ public void OnMapStart()
 	g_iTurnedSkins = 0;
 
 	ParseMenuModels();
-	//ParseDownloadList();
 
 	PrintToServer("%s:\n	Total: %d\n	Turned: %d", PL_NAME, g_iTotalSkins, g_iTurnedSkins);
 }

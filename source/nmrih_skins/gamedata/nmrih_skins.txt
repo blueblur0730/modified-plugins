@@ -13,6 +13,23 @@
             }
         }
 
+        "Addresses"
+        {
+            "g_pEntityList"
+            {
+                "linux"
+                {
+                    "signature"     "g_pEntityList"
+                }
+
+                "windows"
+                {
+                    "signature"     "CNMRiH_TurnedZombie_Watcher::TurnThink"
+                    "read"          "79"
+                }
+            }
+        }
+
         "Offsets"
         {
             "sizeof(TurnedZombieEntry_t)"
@@ -56,10 +73,72 @@
                 "linux"     "32"
                 "windows"   "32"
             }
+
+            // Animatings
+            "CBaseAnimating->m_pStudioHdr"
+            {
+                "linux"     "1204"
+                "windows"   "1204"
+            }
+
+            "CStudioHdr->cstudiohdr_t"
+            {
+                "linux"     "0"
+                "windows"   "0"
+            }
+
+            "cstudiohdr_t->numbodyparts"
+            {
+                "linux"     "232"
+                "windows"   "232"
+            }
+
+            "cstudiohdr_t->bodypartindex"
+            {
+                "linux"     "236"
+                "windows"   "236"
+            }
+
+            "mstudiobodyparts_t->nummodels"
+            {
+                "linux"     "4"
+                "windows"   "4"
+            }
+
+            "mstudiobodyparts_t->base"
+            {
+                "linux"     "8"
+                "windows"   "8"
+            }
+
+            "mstudiobodyparts_t->sznameindex"
+            {
+                "linux"     "0"
+                "windows"   "0"
+            }
+
+            "mstudiobodyparts_t->modelindex"
+            {
+                "linux"     "12"
+                "windows"   "12"
+            }
+
+            "mstudiomodel_t->name"
+            {
+                "linux"     "0"
+                "windows"   "0"
+            }
+            
         }
 
         "Signatures"
         {
+            "g_pEntityList"
+            {
+                "library"   "server"
+                "linux"     "@gEntList"
+            }
+
             // windows sig: search string "models/nmr_zombie/%s.mdl"
             "CNMRiH_TurnedZombie_Watcher::TurnThink"
             {

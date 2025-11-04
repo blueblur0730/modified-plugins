@@ -5,79 +5,15 @@ void SendMainMenu(int client)
 	if (!g_kvList.GotoFirstSubKey()) 
 		return;
 
-	static char sBuffer[30], accessFlag[12];
 	int items;
-
 	AdminId admin = GetUserAdmin(client);
 	Menu menu = new Menu(Menu_Group, MenuAction_Display);
 
 	do
 	{
-		static bool bDefault = false;
-		bDefault = view_as<bool>(g_kvList.GetNum("default", 0));
-
-		static bool bAdminGroup = false;
-		static bool bAdminAccess = false;
-
-		if (!bDefault)
-		{
-			if (g_bCVar[CV_Group])
-			{	
-				// check if they have access
-				static char group[30], temp[2];
-				g_kvList.GetString("AdminGroup", group, sizeof(group));
-				GroupId id = FindAdmGroup(group);
-
-				if (id == INVALID_GROUP_ID || group[0] == '\0')
-				{
-					bAdminGroup = true;
-				}
-				else
-				{
-					int count;
-					count = GetAdminGroupCount(admin);
-
-					for (int i; i < count; i++) 
-					{
-						if (id == GetAdminGroup(admin, i, temp, sizeof(temp)))
-						{
-							bAdminGroup = true;
-							break;
-						}
-					}
-				}
-			}
-
-			g_kvList.GetString("AdminFlag", accessFlag, sizeof(accessFlag));
-			if (accessFlag[0] == '\0' || !accessFlag[0])
-			{
-				bAdminAccess = true;
-			}
-			else
-			{
-				for (int i = 0; i < sizeof(accessFlag); i++)
-				{
-					if (CheckFlagAccess(client, accessFlag[i]))
-					{
-						bAdminAccess = true;
-						break;
-					}
-				}
-			}
-		}
-
-		if (!bDefault)
-		{
-			if (!bAdminGroup || !bAdminAccess)
-				continue;
-		}
-
-		g_kvList.GetSectionName(sBuffer, sizeof(sBuffer));
-		menu.AddItem(sBuffer, sBuffer);
-		items++;
+		ParseAdminAccess(menu, admin, client, items);
 	}
 	while (g_kvList.GotoNextKey());
-
 	g_kvList.Rewind();
 
 	if (!items)
@@ -87,11 +23,12 @@ void SendMainMenu(int client)
 		return;
 	}
 
+	menu.AddItem("bodygroup", "Choose a Bodygroup");
 	menu.SetTitle("%s\n ", PL_NAME);
 	menu.Display(client, MENU_TIME_FOREVER);
 }
 
-void Menu_Group(Menu menu, MenuAction action, int client, int param)
+static void Menu_Group(Menu menu, MenuAction action, int client, int param)
 {
 	switch (action)
 	{
@@ -110,6 +47,12 @@ void Menu_Group(Menu menu, MenuAction action, int client, int param)
 			if (GetClientTeam(client))
 			{
 				CPrintToChat(client, "%t", "NoSpectator");
+				return;
+			}
+
+			if (param == menu.ItemCount - 1)
+			{
+				CreateBodygroupMenu(client);
 				return;
 			}
 
@@ -195,7 +138,7 @@ void Menu_Group(Menu menu, MenuAction action, int client, int param)
 	}
 }
 
-void Menu_Model(Menu menu, MenuAction action, int client, int param)
+static void Menu_Model(Menu menu, MenuAction action, int client, int param)
 {
 	switch(action)
 	{
@@ -290,6 +233,137 @@ void Menu_Model(Menu menu, MenuAction action, int client, int param)
 		}
 
 		// If they picked exit, close the menu handle
+		case MenuAction_End: 
+			delete menu;
+	}
+}
+
+void CreateBodygroupMenu(int client)
+{
+	// Get the current model
+	char model[PLATFORM_MAX_PATH];
+	GetClientModel(client, model, sizeof(model));
+
+	if (model[0] == '\0')
+		return;
+
+	Menu menu = new Menu(Menu_Bodygroup);
+	menu.SetTitle("%s\n Select a Bodygroup for current model: %s", PL_NAME, model);
+
+	CBaseAnimating baseanimating = CBaseAnimating(client);
+	int numgroups = baseanimating.GetNumBodyGroups();
+	for (int i = 0; i < numgroups; i++)
+	{
+		char name[PLATFORM_MAX_PATH];
+		baseanimating.GetBodyGroupName(i, name, sizeof(name));
+		menu.AddItem(name, name);
+	}
+	
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+void Menu_Bodygroup(Menu menu, MenuAction action, int client, int param)
+{
+	switch(action)
+	{
+		case MenuAction_Select:
+		{
+			if (!IsValidClient(client)) 
+				return;
+
+			char bodygroup[PLATFORM_MAX_PATH];
+			if (!menu.GetItem(param, bodygroup, sizeof(bodygroup))) 
+				return;
+
+			PrintToServer("Selected Bodygroup: %s", bodygroup);
+			Menu tempmenu = new Menu(Menu_Bodygroup_Part);
+			tempmenu.SetTitle("%s\n Select a Bodygroup Part for current bodygroup: %s", PL_NAME, bodygroup);
+
+			CBaseAnimating baseanimating = CBaseAnimating(client);
+			int group = baseanimating.FindBodygroupByName(bodygroup);
+			int numgroups = baseanimating.GetBodyGroupCount(group);
+
+			PrintToServer("Group: %d, NumGroups: %d", group, numgroups);	
+
+			char sTemp[8];
+			for (int j = 0; j < numgroups; j++)
+			{
+				char name[PLATFORM_MAX_PATH];
+				baseanimating.GetBodyGroupPartName(group, j, name, sizeof(name));
+
+				PrintToServer("Bodygroup Part: %s, %d", name, j);
+				IntToString(j, sTemp, sizeof(sTemp))
+				tempmenu.AddItem(sTemp, name);
+			}
+
+			tempmenu.AddItem(bodygroup, "", ITEMDRAW_IGNORE);
+			tempmenu.ExitBackButton = true;
+			tempmenu.Display(client, MENU_TIME_FOREVER);
+		}
+
+		case MenuAction_Cancel:
+		{
+			if (param == MenuCancel_ExitBack) 
+			{
+				SendMainMenu(client);
+			}
+			else
+			{
+				g_bTPView[client] = false;
+				ToggleView(client);
+			}
+		}
+
+		case MenuAction_End: 
+			delete menu;
+	}
+}
+
+void Menu_Bodygroup_Part(Menu menu, MenuAction action, int client, int param)
+{
+	switch(action)
+	{
+		case MenuAction_Select:
+		{
+			if (!IsValidClient(client)) 
+				return;
+
+			if (GetClientTeam(client))
+			{
+				CPrintToChat(client, "%t", "NoSpectator");
+				return;
+			}
+
+			char bodygroup[PLATFORM_MAX_PATH];
+			if (!menu.GetItem(menu.ItemCount - 1, bodygroup, sizeof(bodygroup))) 
+				return;
+
+			char part[PLATFORM_MAX_PATH];
+			if (!menu.GetItem(param, part, sizeof(part))) 
+				return;
+
+			CBaseAnimating baseanimating = CBaseAnimating(client);
+			int group = baseanimating.FindBodygroupByName(bodygroup);
+
+			int partid = StringToInt(part);
+			baseanimating.SetBodyGroup(group, partid);
+			CPrintToChat(client, "%t", "SetBodygroupPart", part);
+		}
+
+		case MenuAction_Cancel:
+		{
+			if (param == MenuCancel_ExitBack) 
+			{
+				SendMainMenu(client);
+			}
+			else
+			{
+				g_bTPView[client] = false;
+				ToggleView(client);
+			}
+		}
+
 		case MenuAction_End: 
 			delete menu;
 	}

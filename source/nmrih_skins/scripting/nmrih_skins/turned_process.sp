@@ -7,24 +7,6 @@
  * Note: Your custom model must be placed in the game's file system search path (nmrih/download e.g.), since the turned model is not used for players.
 */
 
-#if 0 
-// total size 292 = 4 + 12 + 12 + 4 + 260
-struct TurnedZombieEntry_t {
-    CBaseHandle *m_hRagDollHandle;   // 924
-    Vector m_vecTurnedPosition;   // 928
-    QAngle m_angTurnedAngle;  // 940
-    float m_flTurnedTime; // 952
-    char m_szModel[260];  // 956
-}
-
-class CNMRiH_TurnedZombie_Watcher {
-    ... // inherited.
-    TurnedZombieEntry_t m_TurnedZombieEntry[9]; // entity size 3552
-}
-#endif
-
-#include <stringt>
-
 #define INVALID_EHANDLE_INDEX 0xFFFFFFFF
 
 static int g_iOff_TurnedZombieEntry_t_size = -1;
@@ -57,54 +39,54 @@ static const char g_sDefaultTurnedModel[][] = {
 	"models/nmr_zombie/wally_infected.mdl"
 };
 
-methodmap TurnedZombieEntry_t {
+methodmap TurnedZombieEntry_t < AddressBase {
     property int m_hRagDollHandle {
         public get() {
-            return LoadFromAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_hRagDollHandle), NumberType_Int32);
+            return LoadFromAddress(this.addr + g_iOff_m_hRagDollHandle, NumberType_Int32);
         }
 
         public set(int value) {
-            StoreToAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_hRagDollHandle), value, NumberType_Int32);
+            StoreToAddress(this.addr + g_iOff_m_hRagDollHandle, value, NumberType_Int32);
         }
     }
 
     public void GetTurnedPosition(float vec[3]) {
-        vec[0] = LoadFromAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_vecTurnedPosition), NumberType_Int32);
-        vec[1] = LoadFromAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_vecTurnedPosition) + view_as<Address>(4), NumberType_Int32);
-        vec[2] = LoadFromAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_vecTurnedPosition) + view_as<Address>(8), NumberType_Int32);
+        vec[0] = LoadFromAddress(this.addr + g_iOff_m_vecTurnedPosition, NumberType_Int32);
+        vec[1] = LoadFromAddress(this.addr + g_iOff_m_vecTurnedPosition + 4, NumberType_Int32);
+        vec[2] = LoadFromAddress(this.addr + g_iOff_m_vecTurnedPosition + 8, NumberType_Int32);
     }
 
     public void GetTurnedAngle(float ang[3]) {
-        ang[0] = LoadFromAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_angTurnedAngle), NumberType_Int32);
-        ang[1] = LoadFromAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_angTurnedAngle) + view_as<Address>(4), NumberType_Int32);
-        ang[2] = LoadFromAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_angTurnedAngle) + view_as<Address>(8), NumberType_Int32);
+        ang[0] = LoadFromAddress(this.addr + g_iOff_m_angTurnedAngle, NumberType_Int32);
+        ang[1] = LoadFromAddress(this.addr + g_iOff_m_angTurnedAngle + 4, NumberType_Int32);
+        ang[2] = LoadFromAddress(this.addr + g_iOff_m_angTurnedAngle + 8, NumberType_Int32);
     }
 
     public void SetTurnedPosition(float vec[3]) {
-        StoreToAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_vecTurnedPosition), vec[0], NumberType_Int32);
-        StoreToAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_vecTurnedPosition) + view_as<Address>(4), vec[1], NumberType_Int32);
-        StoreToAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_vecTurnedPosition) + view_as<Address>(8), vec[2], NumberType_Int32);
+        StoreToAddress(this.addr + g_iOff_m_vecTurnedPosition, vec[0], NumberType_Int32);
+        StoreToAddress(this.addr + g_iOff_m_vecTurnedPosition + 4, vec[1], NumberType_Int32);
+        StoreToAddress(this.addr + g_iOff_m_vecTurnedPosition + 8, vec[2], NumberType_Int32);
     }
 
     public void SetTurnedAngle(float ang[3]) {
-        StoreToAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_angTurnedAngle), ang[0], NumberType_Int32);
-        StoreToAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_angTurnedAngle) + view_as<Address>(4), ang[1], NumberType_Int32);
-        StoreToAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_angTurnedAngle) + view_as<Address>(8), ang[2], NumberType_Int32);
+        StoreToAddress(this.addr + g_iOff_m_angTurnedAngle, ang[0], NumberType_Int32);
+        StoreToAddress(this.addr + g_iOff_m_angTurnedAngle + 4, ang[1], NumberType_Int32);
+        StoreToAddress(this.addr + g_iOff_m_angTurnedAngle + 8, ang[2], NumberType_Int32);
     }
 
     property float m_flTurnedTime {
         public get() {
-            return LoadFromAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_flTurnedTime), NumberType_Int32);
+            return LoadFromAddress(this.addr + g_iOff_m_flTurnedTime, NumberType_Int32);
         }
 
         public set(float value) {
-            StoreToAddress(view_as<Address>(this) + view_as<Address>(g_iOff_m_flTurnedTime), value, NumberType_Int32);
+            StoreToAddress(this.addr + g_iOff_m_flTurnedTime, value, NumberType_Int32);
         }
     }
 
     // as the given, the size should be 260.
     public void GetModelName(char[] buffer, int size) {
-        Stringt(view_as<Address>(this) + view_as<Address>(g_iOff_m_szModel)).ToCharArray(buffer, size);
+        Stringt(this.addr + g_iOff_m_szModel).ToCharArray(buffer, size);
     }
 /*
     public void EmptyModelString() {
@@ -113,20 +95,20 @@ methodmap TurnedZombieEntry_t {
 */
 }
 
-methodmap CNMRiH_TurnedZombie_Watcher {
+methodmap CNMRiH_TurnedZombie_Watcher < AddressBase {
     public CNMRiH_TurnedZombie_Watcher(Address pThis) {
         return view_as<CNMRiH_TurnedZombie_Watcher>(pThis);
     }
 
     public TurnedZombieEntry_t GetEntry(int index) {
-        return view_as<TurnedZombieEntry_t>(view_as<Address>(this) + 
-                                            view_as<Address>(g_iOff_m_TurnedZombieEntry) + 
-                                            view_as<Address>((index) * g_iOff_TurnedZombieEntry_t_size));
+        return view_as<TurnedZombieEntry_t>(this.addr + 
+                                            g_iOff_m_TurnedZombieEntry + 
+                                            index * g_iOff_TurnedZombieEntry_t_size);
     }
 
     // return number of bytes written.
     public Stringt GetZombieModelForModel(const char[] szModel) {
-        return view_as<Stringt>(SDKCall(g_hSDKCall_GetZombieModelForModel, view_as<Address>(this), szModel));
+        return view_as<Stringt>(SDKCall(g_hSDKCall_GetZombieModelForModel, this.addr, szModel));
     }
 }
 

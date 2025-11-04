@@ -25,4 +25,18 @@
         "en"        "[{green}NMRiH Skins{default}] No skins available."
         "chi"       "[{green}NMRiH Skins{default}] 没有可用的皮肤."
     }
+
+    "InvalidBodygroupPart"
+    {
+        "#format"   "{1:d}"
+        "en"        "[{green}NMRiH Skins{default}] Invalid bodygroup part: {1}"
+        "chi"       "[{green}NMRiH Skins{default}] 无效的 bodygroup part: {1}"
+    }
+
+    "SetBodygroupPart"
+    {
+        "#format"   "{1:s}"
+        "en"        "[{green}NMRiH Skins{default}] Your bodygroup part has been set to: {pink}{1}{default}."
+        "chi"       "[{green}NMRiH Skins{default}] 已将 bodygroup part 设置为: {pink}{1}{default}."
+    }
 }

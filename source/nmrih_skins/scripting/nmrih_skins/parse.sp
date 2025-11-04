@@ -43,99 +43,69 @@ void ParseMenuModels()
     g_kvList.Rewind();
 }
 
-/*
-void ParseDownloadList()
+void ParseAdminAccess(Menu menu, AdminId admin, int client, int& items)
 {
-	if (g_bCVar[CV_Enable])
+	static char sBuffer[30], accessFlag[12];
+	static bool bDefault = false;
+	bDefault = view_as<bool>(g_kvList.GetNum("default", 0));
+
+	static bool bAdminGroup = false;
+	static bool bAdminAccess = false;
+
+	if (!bDefault)
 	{
-        char sBuffer[PLATFORM_MAX_PATH];
-		char path[PLATFORM_MAX_PATH], tmp_path[PLATFORM_MAX_PATH];
-		BuildPath(Path_SM, sBuffer, sizeof(sBuffer), CFG_DL);
+		if (g_bCVar[CV_Group])
+		{	
+			// check if they have access
+			static char group[30], temp[2];
+			g_kvList.GetString("AdminGroup", group, sizeof(group));
+			GroupId id = FindAdmGroup(group);
 
-		File hFile = OpenFile(sBuffer, "r");
-		if (!hFile)
-		{
-			LogError("Can't open file '%s'.", sBuffer);
-			return;
-		}
-
-		g_bDLType = true;
-		DirectoryListing hDir;
-		FileType type;
-
-        int len;
-		while (hFile.ReadLine(path, sizeof(path)))
-		{
-			len = strlen(path);
-			if (path[len - 1] == '\n') 
-				path[--len] = 0;
-
-			TrimString(path);
-
-			if (IsEndOfFile(hFile)) 
-				break;
-
-			if (!path[0]) 
-				continue;
-
-			if (DirExists(path))
+			if (id == INVALID_GROUP_ID || group[0] == '\0')
 			{
-				hDir = OpenDirectory(path);
-				if (!hDir)
+				bAdminGroup = true;
+			}
+			else
+			{
+				int count;
+				count = GetAdminGroupCount(admin);
+
+				for (int i; i < count; i++) 
 				{
-					LogError("Can't open directory '%s'.", path);
-					continue;
-				}
-
-				while (hDir.GetNext(sBuffer, sizeof(sBuffer), type))
-				{
-					len = strlen(sBuffer);
-					if (sBuffer[len - 1] == '\n') 
-						sBuffer[--len] = 0;
-
-					TrimString(sBuffer);
-
-					if (!StrEqual(sBuffer, "", false) && !StrEqual(sBuffer, ".", false) && !StrEqual(sBuffer, "..", false))
+					if (id == GetAdminGroup(admin, i, temp, sizeof(temp)))
 					{
-						strcopy(tmp_path, sizeof(tmp_path), path);
-						StrCat(tmp_path, sizeof(tmp_path), "/");
-						StrCat(tmp_path, sizeof(tmp_path), sBuffer);
-
-						if (type == FileType_File && g_bDLType) 
-							ReadItem(tmp_path);
+						bAdminGroup = true;
+						break;
 					}
 				}
 			}
-			else if (g_bDLType) 
-			{
-				ReadItem(path);
-			}
-
-			if (hDir) 
-				delete hDir;
 		}
 
-		if (hFile) 
-			delete hFile;
+		g_kvList.GetString("AdminFlag", accessFlag, sizeof(accessFlag));
+		if (accessFlag[0] == '\0' || !accessFlag[0])
+		{
+			bAdminAccess = true;
+		}
+		else
+		{
+			for (int i = 0; i < sizeof(accessFlag); i++)
+			{
+				if (CheckFlagAccess(client, accessFlag[i]))
+				{
+					bAdminAccess = true;
+					break;
+				}
+			}
+		}
 	}
-}
 
-void ReadItem(char[] sBuffer)
-{
-	int len = strlen(sBuffer);
-	if (sBuffer[len - 1] == '\n') 
-		sBuffer[--len] = 0;
-
-	TrimString(sBuffer);
-
-	if (len > 1 && sBuffer[0] == '/' && sBuffer[1] == '/')
+	if (!bDefault)
 	{
-		if (StrContains(sBuffer, "//") > -1) 
-			ReplaceString(sBuffer, 255, "//", "");
+		if (!bAdminGroup || !bAdminAccess)
+			return;
 	}
-	else if (sBuffer[0] && FileExists(sBuffer)) 
-	{
-		AddFileToDownloadsTable(sBuffer);
-	}
+
+	g_kvList.GetSectionName(sBuffer, sizeof(sBuffer));
+	menu.AddItem(sBuffer, sBuffer);
+	items++;
 }
-*/
