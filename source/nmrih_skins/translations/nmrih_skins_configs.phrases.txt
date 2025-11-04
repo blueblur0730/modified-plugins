@@ -1,0 +1,110 @@
+"Phrases"
+{
+    "Config_ThirdPartyWModels"
+    {
+        "en"        "Third-Party Models List"
+        "chi"       "三方模型列表"
+    }
+
+    "Config_Bodygroup_ChiffonFace"
+    {
+        "en"        "Chiffon's Face"
+        "chi"       "Chiffon 的脸部"
+    }
+
+    "Config_Bodygroup_BodyPart_Face1"
+    {
+        "en"        "Face 1"
+        "chi"       "脸部 1"
+    }
+
+    "Config_Bodygroup_ChiffonBody"
+    {
+        "en"        "Chiffon's Body"
+        "chi"       "Chiffon 的身体"
+    }
+
+    "Config_Bodygroup_BodyPart_Body1"
+    {
+        "en"        "Body 1"
+        "chi"       "身体 1"
+    }
+
+    "Config_Bodygroup_ChiffonHair"
+    {
+        "en"        "Chiffon's Hair"
+        "chi"       "Chiffon 的头发"
+    }
+
+    "Config_Bodygroup_BodyPart_Hair1"
+    {
+        "en"        "Hair 1"
+        "chi"       "头发 1"
+    }
+
+    "Config_Bodygroup_ChiffonSkirt"
+    {
+        "en"        "Chiffon's Skirt"
+        "chi"       "Chiffon 的裙子"
+    }
+
+    "Config_Bodygroup_BodyPart_Skirt1"
+    {
+        "en"        "Skirt 1"
+        "chi"       "裙子 1"
+    }
+
+    "Config_Bodygroup_ChiffonPants"
+    {
+        "en"        "Chiffon's Pants"
+        "chi"       "Chiffon 的裤子"
+    }
+
+    "Config_Bodygroup_BodyPart_Pants1"
+    {
+        "en"        "Pants 1"
+        "chi"       "裤子 1"
+    }
+
+    "Config_Bodygroup_ChiffonChest"
+    {
+        "en"        "Chiffon's Chest"
+        "chi"       "Chiffon 的胸部"
+    }
+
+    "Config_Bodygroup_BodyPart_Chestribbon1"
+    {
+        "en"        "Chest Ribbon 1"
+        "chi"       "胸前领带 1"
+    }
+
+    "Config_Bodygroup_BodyPart_Chestribbon2"
+    {
+        "en"        "Chest Ribbon 2"
+        "chi"       "胸前领带 2"
+    }
+    
+    "Config_Bodygroup_BodyPart_Chesttie1"
+    {
+        "en"        "Chest Tie 1"
+        "chi"       "胸前领结 1"
+    }
+
+    "Config_ThirdPartyVModels"
+    {
+        "en"        "Third-Party View Models List"
+        "chi"       "三方手部模型列表"
+    }
+
+    "Config_DefaultWModels"
+    {
+        "en"        "Default Models List"
+        "chi"       "默认模型列表"
+    }
+
+    "Config_DefaultVModels"
+    {
+        "en"        "Default View Models List"
+        "chi"       "默认手部模型列表"
+    }
+}

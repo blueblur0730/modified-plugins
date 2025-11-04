@@ -10,8 +10,9 @@
 #include <multicolors>
 #include <stringt>
 
-// Paths to configuration files
-#define	CFG_MENU "configs/nmrih_skins/skins_menu.ini"
+// Path to configuration files
+#define	CFG_MENU "configs/nmrih_skins/skins_menu.cfg"
+#define CFG_MENU_BODYGROUP "configs/nmrih_skins/skins_bodygroup_phrases.cfg"
 
 enum
 {
@@ -27,7 +28,7 @@ enum
 int g_iFOV[NMR_MAXPLAYERS + 1];
 
 KeyValues
-	g_kvList;
+	g_kvList[NMR_MAXPLAYERS + 1];
 
 bool
 	g_bLate,
@@ -42,12 +43,14 @@ int
 char
 	g_sModel[NMR_MAXPLAYERS + 1][PLATFORM_MAX_PATH],
 	g_sTurnedModel[NMR_MAXPLAYERS + 1][PLATFORM_MAX_PATH],
-	g_sViewModel[NMR_MAXPLAYERS + 1][PLATFORM_MAX_PATH];
+	g_sViewModel[NMR_MAXPLAYERS + 1][PLATFORM_MAX_PATH],
+	g_sWModelLabel[NMR_MAXPLAYERS + 1][PLATFORM_MAX_PATH];
 
 Cookie
 	g_hCookie_WModel,
 	g_hCookie_VModel,
-	g_hCookie_TurnedModel;
+	g_hCookie_TurnedModel,
+	g_hCookie_WModelLable;
 
 #define	PL_NAME	"[NMRiH] Skins"
 #define	PL_VER "2.5.0"
@@ -77,6 +80,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
 	LoadTranslation("nmrih_skins.phrases");
+	LoadTranslations("nmrih_skins_configs.phrases");
 	LoadGameData();
 	LoadBodyGroupGameData();
 	
@@ -95,6 +99,7 @@ public void OnPluginStart()
 	g_hCookie_WModel = FindOrCreateCookie("nmrih_skins_wmodel", "World Model Prefs", CookieAccess_Protected);
 	g_hCookie_VModel = FindOrCreateCookie("nmrih_skins_vmodel", "View Model Prefs", CookieAccess_Protected);
 	g_hCookie_TurnedModel = FindOrCreateCookie("nmrih_skins_turnedmodel", "Turned Zombie Model", CookieAccess_Protected);
+	g_hCookie_WModelLable = FindOrCreateCookie("nmrih_skins_wmodel_label", "World Model Label", CookieAccess_Protected);
 
 	if (g_bLate) 
 	{
@@ -104,6 +109,7 @@ public void OnPluginStart()
 			{
 				OnClientCookiesCached(i);
 				OnClientPostAdminCheck(i);
+				OnClientPutInServer(i);
 			}
 		}
 	}
@@ -111,7 +117,8 @@ public void OnPluginStart()
 
 public void OnPluginEnd()
 {
-	delete g_kvList;
+	for (int i = 1; i <= MaxClients; i++)
+		delete g_kvList[i];
 
 	g_hDetour.Disable(Hook_Pre, DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre);
 	delete g_hDetour;
@@ -119,6 +126,7 @@ public void OnPluginEnd()
 	delete g_hCookie_WModel;
 	delete g_hCookie_VModel;
 	delete g_hCookie_TurnedModel;
+	delete g_hCookie_WModelLable;
 }
 
 public void OnMapStart()
@@ -129,11 +137,6 @@ public void OnMapStart()
 	ParseMenuModels();
 
 	PrintToServer("%s:\n	Total: %d\n	Turned: %d", PL_NAME, g_iTotalSkins, g_iTurnedSkins);
-}
-
-public void OnMapEnd()
-{
-	delete g_kvList;
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -150,6 +153,9 @@ public void OnClientDisconnect(int client)
 	g_sTurnedModel[client][0] = '\0';
 
 	g_iFOV[client] = 0;
+
+	if (g_kvList[client])
+		delete g_kvList[client];
 }
 
 public void OnClientPutInServer(int client)
@@ -157,6 +163,15 @@ public void OnClientPutInServer(int client)
 	if (!IsClientInGame(client))
 		return;
 
+	if (!g_kvList[client])
+	{
+		char sBuffer[PLATFORM_MAX_PATH];
+		BuildPath(Path_SM, sBuffer, sizeof(sBuffer), CFG_MENU);
+
+		g_kvList[client] = new KeyValues("Models");
+		g_kvList[client].ImportFromFile(sBuffer);
+	}
+		
 	g_iFOV[client] = GetEntProp(client, Prop_Send, "m_iFOV");
 }
 
@@ -174,6 +189,9 @@ public void OnClientCookiesCached(int client)
 
 	g_hCookie_TurnedModel.Get(client, sBuffer, sizeof(sBuffer));
 	strcopy(g_sTurnedModel[client], sizeof(g_sTurnedModel[client]), sBuffer);
+
+	g_hCookie_WModelLable.Get(client, sBuffer, sizeof(sBuffer));
+	strcopy(g_sWModelLabel[client], sizeof(g_sWModelLabel[client]), sBuffer);
 }
 
 Action Cmd_Model(int client, int args)

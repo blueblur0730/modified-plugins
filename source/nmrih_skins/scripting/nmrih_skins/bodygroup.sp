@@ -71,6 +71,7 @@ methodmap STRUCT__cstudiohdr_t < AddressBase {
 		}
 	}
 
+	// 16 is the size of mstudiobodyparts_t.
 	public STRUCT__mstudiobodyparts_t pBodyPart(int i) {
 		return view_as<STRUCT__mstudiobodyparts_t>(this.addr + this.bodypartindex + (16 * i));
 	}
@@ -100,6 +101,7 @@ methodmap STRUCT__mstudiobodyparts_t < AddressBase {
 	}
 
 	// this was token from l4d2 decompiled binaries.
+	// 148 is the size of mstudiomodel_t.
 	public STRUCT__mstudiomodel_t pModel(int i) {
 		return view_as<STRUCT__mstudiomodel_t>(this.addr + this.modelindex + (148 * i));
 	}
@@ -277,5 +279,5 @@ static STRUCT__cstudiohdr_t __GetStudioHdr(int client)
 	if (__GetModelPtr(client) == Address_Null)
 		return view_as<STRUCT__cstudiohdr_t>(Address_Null);
 
-	return LoadFromAddress(__GetModelPtr(client) + view_as<Address>(g_iOff__cstudiohdr_t), NumberType_Int32);
+	return LoadFromAddress(__GetModelPtr(client) + g_iOff__cstudiohdr_t, NumberType_Int32);
 }

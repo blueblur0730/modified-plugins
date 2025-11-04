@@ -2,29 +2,31 @@
 
 void SendMainMenu(int client)
 {
-	if (!g_kvList.GotoFirstSubKey()) 
+	if (!g_kvList[client].GotoFirstSubKey()) 
 		return;
 
 	int items;
 	AdminId admin = GetUserAdmin(client);
 	Menu menu = new Menu(Menu_Group, MenuAction_Display);
+	menu.SetTitle("%s\n ", PL_NAME);
 
 	do
 	{
-		ParseAdminAccess(menu, admin, client, items);
+		ParseMainSection(menu, admin, client, items);
 	}
-	while (g_kvList.GotoNextKey());
-	g_kvList.Rewind();
+	while (g_kvList[client].GotoNextKey());
+	g_kvList[client].Rewind();
 
 	if (!items)
 	{
-		delete menu;
 		CPrintToChat(client, "%t", "NoSkins");
-		return;
 	}
 
-	menu.AddItem("bodygroup", "Choose a Bodygroup");
-	menu.SetTitle("%s\n ", PL_NAME);
+	char sBodyGroup[PLATFORM_MAX_PATH];
+	Format(sBodyGroup, sizeof(sBodyGroup), "%T", "Menu_ChooseBodyGroup", client);
+	menu.AddItem("bodygroup", sBodyGroup);
+
+	menu.ExitBackButton = true;
 	menu.Display(client, MENU_TIME_FOREVER);
 }
 
@@ -56,28 +58,28 @@ static void Menu_Group(Menu menu, MenuAction action, int client, int param)
 				return;
 			}
 
-			char info[30];
-			if (!menu.GetItem(param, info, sizeof(info))) 
+			char info[64], sDisplay[64];
+			if (!menu.GetItem(param, info, sizeof(info), _, sDisplay, sizeof(sDisplay)))
 				return;
 				
 			// User selected a group
 			// advance kv to this group
-			g_kvList.JumpToKey(info);
-            bool bVModel = view_as<bool>(g_kvList.GetNum("vmodel", 0));
+			g_kvList[client].JumpToKey(info);
+            bool bVModel = view_as<bool>(g_kvList[client].GetNum("vmodel", 0));
 
 			// Show models
-			g_kvList.JumpToKey("List");
+			g_kvList[client].JumpToKey("List");
 
 			Menu tempmenu = new Menu(Menu_Model, MenuAction_Display);
 			
 			// Add the models to the menu
-			static int items;
-			static char sBuffer[PLATFORM_MAX_PATH], path[PLATFORM_MAX_PATH], turned[PLATFORM_MAX_PATH];
-			items = 0;
+			int items = 0;
+			char sBuffer[PLATFORM_MAX_PATH], path[PLATFORM_MAX_PATH], turned[PLATFORM_MAX_PATH];
 
 			// Get the first model
-			if (!g_kvList.GotoFirstSubKey())
+			if (!g_kvList[client].GotoFirstSubKey())
 			{
+				CPrintToChat(client, "%t", "NoModels");
 				delete menu;
 				return;
 			}
@@ -85,15 +87,15 @@ static void Menu_Group(Menu menu, MenuAction action, int client, int param)
 			do
 			{
 				// Add the model to the menu
-				g_kvList.GetSectionName(sBuffer, sizeof(sBuffer));
-				g_kvList.GetString("path", path, sizeof(path));
+				g_kvList[client].GetSectionName(sBuffer, sizeof(sBuffer));
+				g_kvList[client].GetString("path", path, sizeof(path));
 				tempmenu.AddItem(path, sBuffer);
 				items++;
 			}
-			while (g_kvList.GotoNextKey());
+			while (g_kvList[client].GotoNextKey());
 
-			g_kvList.GoBack();
-			if (!g_kvList.GotoFirstSubKey())
+			g_kvList[client].GoBack();
+			if (!g_kvList[client].GotoFirstSubKey())
 			{
 				delete menu;
 				return;
@@ -102,17 +104,17 @@ static void Menu_Group(Menu menu, MenuAction action, int client, int param)
 			do
 			{
 				// Add the model to the menu
-				g_kvList.GetString("turned", turned, sizeof(turned), "");
-				g_kvList.GetString("path", path, sizeof(path));
+				g_kvList[client].GetString("turned", turned, sizeof(turned), "");
+				g_kvList[client].GetString("path", path, sizeof(path));
 				tempmenu.AddItem(path, turned, ITEMDRAW_IGNORE);
 			}
-			while (g_kvList.GotoNextKey());
+			while (g_kvList[client].GotoNextKey());
 
 			// Rewind the KVs
-			g_kvList.Rewind();
+			g_kvList[client].Rewind();
 
 			// Set the menu title to the model group name
-			tempmenu.SetTitle("%s\n  %s (%i pcs):\n ", PL_NAME, info, items);
+			tempmenu.SetTitle("%s\n  %s (%i skins):\n ", PL_NAME, sDisplay, items);
 
 			IntToString(items, sBuffer, sizeof(sBuffer));
 			tempmenu.AddItem(sBuffer, "", ITEMDRAW_IGNORE);
@@ -182,12 +184,11 @@ static void Menu_Model(Menu menu, MenuAction action, int client, int param)
 				menu.GetItem(menu.ItemCount - 1, sItems, sizeof(sItems));
 				int items = StringToInt(sItems);
 
-				static char sWModel[128];
-				static char sTurnedModel[128];
+				char sWModel[128];
+				char sTurnedModel[128];
 				bool bFound = false;
 				for (int i = items; i < menu.ItemCount - 1; i++)
 				{
-					//PrintToServer("items: %d, i: %d, menu.ItemCount: %d", items, i, menu.ItemCount);
 					menu.GetItem(i, sWModel, sizeof(sWModel), style, sTurnedModel, sizeof(sTurnedModel));
 
 					// this means this world model has a turned model.
@@ -195,7 +196,7 @@ static void Menu_Model(Menu menu, MenuAction action, int client, int param)
 					{
 						g_hCookie_TurnedModel.Set(client, sTurnedModel);
 						strcopy(g_sTurnedModel[client], sizeof(g_sTurnedModel[client]), sTurnedModel);
-						//PrintToServer("Setting Turned Model: %s, %s, %d", sTurnedModel, g_sTurnedModel[client], client);
+
 						bFound = true;
 						break;
 					}
@@ -210,7 +211,9 @@ static void Menu_Model(Menu menu, MenuAction action, int client, int param)
 
                 ApplyModel(client, model);
 				g_hCookie_WModel.Set(client, model);
+				g_hCookie_WModelLable.Set(client, name);
 				strcopy(g_sModel[client], sizeof(g_sModel[client]), model);
+				strcopy(g_sWModelLabel[client], sizeof(g_sWModelLabel[client]), name);
 				CPrintToChat(client, "%t", "SetModel", name);
 
 				g_bRandom[client] = false;
@@ -240,23 +243,18 @@ static void Menu_Model(Menu menu, MenuAction action, int client, int param)
 
 void CreateBodygroupMenu(int client)
 {
-	// Get the current model
-	char model[PLATFORM_MAX_PATH];
-	GetClientModel(client, model, sizeof(model));
-
-	if (model[0] == '\0')
-		return;
-
 	Menu menu = new Menu(Menu_Bodygroup);
-	menu.SetTitle("%s\n Select a Bodygroup for current model: %s", PL_NAME, model);
+	menu.SetTitle("%T", "Menu_BodyGroupTitle", client, PL_NAME);
 
 	CBaseAnimating baseanimating = CBaseAnimating(client);
 	int numgroups = baseanimating.GetNumBodyGroups();
+
+	char sTranslations[128];
 	for (int i = 0; i < numgroups; i++)
 	{
 		char name[PLATFORM_MAX_PATH];
 		baseanimating.GetBodyGroupName(i, name, sizeof(name));
-		menu.AddItem(name, name);
+		menu.AddItem(name, ParseBodyGroupName(name, sTranslations, sizeof(sTranslations), client) ? sTranslations : name);
 	}
 	
 	menu.ExitBackButton = true;
@@ -276,25 +274,22 @@ void Menu_Bodygroup(Menu menu, MenuAction action, int client, int param)
 			if (!menu.GetItem(param, bodygroup, sizeof(bodygroup))) 
 				return;
 
-			PrintToServer("Selected Bodygroup: %s", bodygroup);
 			Menu tempmenu = new Menu(Menu_Bodygroup_Part);
-			tempmenu.SetTitle("%s\n Select a Bodygroup Part for current bodygroup: %s", PL_NAME, bodygroup);
+			tempmenu.SetTitle("%T", "Menu_ChooseBodyPart", client, PL_NAME, bodygroup);
 
 			CBaseAnimating baseanimating = CBaseAnimating(client);
 			int group = baseanimating.FindBodygroupByName(bodygroup);
 			int numgroups = baseanimating.GetBodyGroupCount(group);
 
-			PrintToServer("Group: %d, NumGroups: %d", group, numgroups);	
-
 			char sTemp[8];
+			char sTranslations[128];
 			for (int j = 0; j < numgroups; j++)
 			{
 				char name[PLATFORM_MAX_PATH];
 				baseanimating.GetBodyGroupPartName(group, j, name, sizeof(name));
 
-				PrintToServer("Bodygroup Part: %s, %d", name, j);
 				IntToString(j, sTemp, sizeof(sTemp))
-				tempmenu.AddItem(sTemp, name);
+				tempmenu.AddItem(sTemp, ParseBodyPartName(name, sTranslations, sizeof(sTranslations), client, bodygroup) ? sTranslations : name);
 			}
 
 			tempmenu.AddItem(bodygroup, "", ITEMDRAW_IGNORE);
@@ -339,8 +334,8 @@ void Menu_Bodygroup_Part(Menu menu, MenuAction action, int client, int param)
 			if (!menu.GetItem(menu.ItemCount - 1, bodygroup, sizeof(bodygroup))) 
 				return;
 
-			char part[PLATFORM_MAX_PATH];
-			if (!menu.GetItem(param, part, sizeof(part))) 
+			char part[PLATFORM_MAX_PATH], sDisplay[PLATFORM_MAX_PATH];
+			if (!menu.GetItem(param, part, sizeof(part), _, sDisplay, sizeof(sDisplay))) 
 				return;
 
 			CBaseAnimating baseanimating = CBaseAnimating(client);
@@ -348,14 +343,16 @@ void Menu_Bodygroup_Part(Menu menu, MenuAction action, int client, int param)
 
 			int partid = StringToInt(part);
 			baseanimating.SetBodyGroup(group, partid);
-			CPrintToChat(client, "%t", "SetBodygroupPart", part);
+			CPrintToChat(client, "%t", "SetBodygroupPart", sDisplay);
+
+			CreateBodygroupMenu(client);
 		}
 
 		case MenuAction_Cancel:
 		{
 			if (param == MenuCancel_ExitBack) 
 			{
-				SendMainMenu(client);
+				CreateBodygroupMenu(client);
 			}
 			else
 			{

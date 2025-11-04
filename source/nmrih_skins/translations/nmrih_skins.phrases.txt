@@ -14,6 +14,12 @@
         "chi"       "[{green}NMRiH Skins{default}] 已将手部模型设置为: {pink}{1}{default}."
     }
 
+    "NoModels"
+    {
+        "en"        "[{green}NMRiH Skins{default}] No models available."
+        "chi"       "[{green}NMRiH Skins{default}] 没有可用的模型."
+    }
+
     "NoSpectator"
     {
         "en"        "[{green}NMRiH Skins{default}] Cannot select skins while in spectator mode."
@@ -31,6 +37,26 @@
         "#format"   "{1:d}"
         "en"        "[{green}NMRiH Skins{default}] Invalid bodygroup part: {1}"
         "chi"       "[{green}NMRiH Skins{default}] 无效的 bodygroup part: {1}"
+    }
+
+    "Menu_BodyGroupTitle"
+    {
+        "#format"   "{1:s}"
+        "en"        "{1}\n Select a Bodygroup for current model:"
+        "chi"       "{1}\n 为当前模型选择一个 bodygroup:"
+    }
+
+    "Menu_ChooseBodyGroup"
+    {
+        "en"        "Choose a Bodygroup"
+        "chi"       "选择一个 Bodygroup"
+    }
+
+    "Menu_ChooseBodyPart"
+    {
+        "#format"   "{1:s},{2:s}"
+        "en"        "{1}\n Select a Bodygroup Part for current bodygroup: {2}"
+        "chi"       "{1}\n 为当前 bodygroup 选择一个 bodygroup part: {2}"
     }
 
     "SetBodygroupPart"
