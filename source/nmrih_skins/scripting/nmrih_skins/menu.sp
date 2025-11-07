@@ -274,27 +274,7 @@ void Menu_Bodygroup(Menu menu, MenuAction action, int client, int param)
 			if (!menu.GetItem(param, bodygroup, sizeof(bodygroup))) 
 				return;
 
-			Menu tempmenu = new Menu(Menu_Bodygroup_Part);
-			tempmenu.SetTitle("%T", "Menu_ChooseBodyPart", client, PL_NAME, bodygroup);
-
-			CBaseAnimating baseanimating = CBaseAnimating(client);
-			int group = baseanimating.FindBodygroupByName(bodygroup);
-			int numgroups = baseanimating.GetBodyGroupCount(group);
-
-			char sTemp[8];
-			char sTranslations[128];
-			for (int j = 0; j < numgroups; j++)
-			{
-				char name[PLATFORM_MAX_PATH];
-				baseanimating.GetBodyGroupPartName(group, j, name, sizeof(name));
-
-				IntToString(j, sTemp, sizeof(sTemp))
-				tempmenu.AddItem(sTemp, ParseBodyPartName(name, sTranslations, sizeof(sTranslations), client, bodygroup) ? sTranslations : name);
-			}
-
-			tempmenu.AddItem(bodygroup, "", ITEMDRAW_IGNORE);
-			tempmenu.ExitBackButton = true;
-			tempmenu.Display(client, MENU_TIME_FOREVER);
+			CreateBodyPartMenu(client, bodygroup);
 		}
 
 		case MenuAction_Cancel:
@@ -313,6 +293,31 @@ void Menu_Bodygroup(Menu menu, MenuAction action, int client, int param)
 		case MenuAction_End: 
 			delete menu;
 	}
+}
+
+void CreateBodyPartMenu(int client, const char[] bodygroup)
+{
+	Menu tempmenu = new Menu(Menu_Bodygroup_Part);
+	tempmenu.SetTitle("%T", "Menu_ChooseBodyPart", client, PL_NAME, bodygroup);
+
+	CBaseAnimating baseanimating = CBaseAnimating(client);
+	int group = baseanimating.FindBodygroupByName(bodygroup);
+	int numgroups = baseanimating.GetBodyGroupCount(group);
+
+	char sTemp[8];
+	char sTranslations[128];
+	for (int j = 0; j < numgroups; j++)
+	{
+		char name[PLATFORM_MAX_PATH];
+		baseanimating.GetBodyGroupPartName(group, j, name, sizeof(name));
+
+		IntToString(j, sTemp, sizeof(sTemp))
+		tempmenu.AddItem(sTemp, ParseBodyPartName(name, sTranslations, sizeof(sTranslations), client, bodygroup) ? sTranslations : name);
+	}
+
+	tempmenu.AddItem(bodygroup, "", ITEMDRAW_IGNORE);
+	tempmenu.ExitBackButton = true;
+	tempmenu.Display(client, MENU_TIME_FOREVER);
 }
 
 void Menu_Bodygroup_Part(Menu menu, MenuAction action, int client, int param)
@@ -345,7 +350,7 @@ void Menu_Bodygroup_Part(Menu menu, MenuAction action, int client, int param)
 			baseanimating.SetBodyGroup(group, partid);
 			CPrintToChat(client, "%t", "SetBodygroupPart", sDisplay);
 
-			CreateBodygroupMenu(client);
+			CreateBodyPartMenu(client, bodygroup);
 		}
 
 		case MenuAction_Cancel:

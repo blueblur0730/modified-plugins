@@ -134,7 +134,15 @@ bool ParseBodyGroupName(const char[] sSection, char[] buffer, int maxlength, int
 		return false;
 	}
 
-	Format(sBuffer, sizeof(sBuffer), "%s/%s", g_sWModelLabel[client], sSection);
+	char sSectionStripped[256];
+	strcopy(sSectionStripped, sizeof(sSectionStripped), sSection);
+	StripSpaces(sSectionStripped, sizeof(sSectionStripped));
+
+	char sLabelStripped[256];
+	strcopy(sLabelStripped, sizeof(sLabelStripped), g_sWModelLabel[client]);
+	StripSpaces(sLabelStripped, sizeof(sLabelStripped));
+
+	Format(sBuffer, sizeof(sBuffer), "%s/%s", sLabelStripped, sSectionStripped);
 	if (!kvList.JumpToKey(sBuffer))
 	{
 		delete kvList;
@@ -168,16 +176,39 @@ bool ParseBodyPartName(const char[] sBodyPart, char[] buffer, int maxlength, int
 		return false;
 	}
 
-	Format(sBuffer, sizeof(sBuffer), "%s/%s/bodypart", g_sWModelLabel[client], sBodyGroup);
+	char sSectionStripped[256];
+	strcopy(sSectionStripped, sizeof(sSectionStripped), sBodyGroup);
+	StripSpaces(sSectionStripped, sizeof(sSectionStripped));
+
+	char sLabelStripped[256];
+	strcopy(sLabelStripped, sizeof(sLabelStripped), g_sWModelLabel[client]);
+	StripSpaces(sLabelStripped, sizeof(sLabelStripped));
+
+	Format(sBuffer, sizeof(sBuffer), "%s/%s/bodypart", sLabelStripped, sSectionStripped);
 	if (!kvList.JumpToKey(sBuffer))
 	{
 		delete kvList;
 		return false;
 	}
 
+	/**
+		$bodygroup "cape"
+		{
+			studio "cape.smd"
+			blank
+		}
+	*/
 	char sPhrase[64];
-	kvList.GetString(sBodyPart, sPhrase, sizeof(sPhrase));
-	if (sPhrase[0] != '\0' || TranslationPhraseExists(sPhrase) && IsTranslatedForLanguage(sPhrase, GetClientLanguage(client)))
+	if (sBodyPart[0] == '\0')
+	{
+		kvList.GetString("blank", sPhrase, sizeof(sPhrase));
+	}
+	else
+	{
+		kvList.GetString(sBodyPart, sPhrase, sizeof(sPhrase));
+	}
+
+	if (sPhrase[0] != '\0' && TranslationPhraseExists(sPhrase) && IsTranslatedForLanguage(sPhrase, GetClientLanguage(client)))
 	{
 		Format(buffer, maxlength, "%T", sPhrase, client);
 	}
@@ -188,4 +219,27 @@ bool ParseBodyPartName(const char[] sBodyPart, char[] buffer, int maxlength, int
 
 	delete kvList;
 	return true;
+}
+
+stock void StripSpaces(char[] str, int maxlen)
+{
+    int read = 0, write = 0;
+    int len = strlen(str);
+
+    if (len <= 0) 
+		return;
+
+    if (len > maxlen - 1) 
+		len = maxlen - 1;
+
+    for (read = 0; read < len; read++)
+    {
+        char c = str[read];
+        if (c != ' ')
+        {
+            str[write++] = c;
+        }
+    }
+
+    str[write] = '\0';
 }

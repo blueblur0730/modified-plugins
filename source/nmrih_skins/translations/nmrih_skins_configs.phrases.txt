@@ -6,6 +6,24 @@
         "chi"       "三方模型列表"
     }
 
+    "Config_ThirdPartyVModels"
+    {
+        "en"        "Third-Party View Models List"
+        "chi"       "三方手部模型列表"
+    }
+
+    "Config_DefaultWModels"
+    {
+        "en"        "Default Models List"
+        "chi"       "默认模型列表"
+    }
+
+    "Config_DefaultVModels"
+    {
+        "en"        "Default View Models List"
+        "chi"       "默认手部模型列表"
+    }
+
     "Config_Bodygroup_ChiffonFace"
     {
         "en"        "Chiffon's Face"
@@ -90,21 +108,124 @@
         "chi"       "胸前领结 1"
     }
 
-    "Config_ThirdPartyVModels"
+    "Config_Eku_NobleTrace_Bodygroup_Face"
     {
-        "en"        "Third-Party View Models List"
-        "chi"       "三方手部模型列表"
+        "en"        "Eku's Face"
+        "chi"       "Eku 的脸部"
     }
 
-    "Config_DefaultWModels"
+    "Config_Eku_NobleTrace_Bodygroup_BodyPart_Face1"
     {
-        "en"        "Default Models List"
-        "chi"       "默认模型列表"
+        "en"        "Face 1"
+        "chi"       "脸部 1"
     }
 
-    "Config_DefaultVModels"
+    "Config_Eku_NobleTrace_Bodygroup_Hair"
     {
-        "en"        "Default View Models List"
-        "chi"       "默认手部模型列表"
+        "en"        "Eku's Hair"
+        "chi"       "Eku 的头发"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_BodyPart_Hair1"
+    {
+        "en"        "Hair 1"
+        "chi"       "头发 1"
+    }
+    
+    "Config_Eku_NobleTrace_Bodygroup_Tail"
+    {
+        "en"        "Eku's Tail"
+        "chi"       "Eku 的尾巴"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_BodyPart_Tail1"
+    {
+        "en"        "Tail 1"
+        "chi"       "尾巴 1"
+    }
+    
+    "Config_Eku_NobleTrace_Bodygroup_Clothes"
+    {
+        "en"        "Eku's Clothes"
+        "chi"       "Eku 的服装"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_BodyPart_Clothes1"
+    {
+        "en"        "Clothes 1"
+        "chi"       "服装 1"
+    }
+    
+    "Config_Eku_NobleTrace_Bodygroup_Skirt"
+    {
+        "en"        "Eku's Skirt"
+        "chi"       "Eku 的裙子"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_BodyPart_Skirt1"
+    {
+        "en"        "Skirt"
+        "chi"       "裙子"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_BodyPart_Skirt2"
+    {
+        "en"        "Pants"
+        "chi"       "裤子"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_Vest"
+    {
+        "en"        "Eku's Vest"
+        "chi"       "Eku 的背心"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_BodyPart_Vest1"
+    {
+        "en"        "Vest"
+        "chi"       "背心"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_BodyPart_Vest2"
+    {
+        "en"        "Suspenders"
+        "chi"       "挂坠"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_Cape"
+    {
+        "en"        "Eku's Cape"
+        "chi"       "Eku 的斗篷"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_BodyPart_Cape1"
+    {
+        "en"        "Cape - On"
+        "chi"       "斗篷 - 开启"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_BodyPart_Cape2"
+    {
+        "en"        "Cape - Off"
+        "chi"       "斗篷 - 关闭"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_Hat"
+    {
+        "en"        "Eku's Hat"
+        "chi"       "Eku 的帽子"
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_BodyPart_Hat1"
+    {
+        "en"        "Hat - On"
+        "chi"       "帽子 - 开启"
+    
+    }
+
+    "Config_Eku_NobleTrace_Bodygroup_BodyPart_Hat2"
+    {
+        "en"        "Hat - Off"
+        "chi"       "帽子 - 关闭"
     }
 }

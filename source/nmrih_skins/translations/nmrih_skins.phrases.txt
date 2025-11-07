@@ -35,8 +35,8 @@
     "InvalidBodygroupPart"
     {
         "#format"   "{1:d}"
-        "en"        "[{green}NMRiH Skins{default}] Invalid bodygroup part: {1}"
-        "chi"       "[{green}NMRiH Skins{default}] 无效的 bodygroup part: {1}"
+        "en"        "[{green}NMRiH Skins{default}] Invalid Bodypart: {1}"
+        "chi"       "[{green}NMRiH Skins{default}] 无效的 Bodypart: {1}"
     }
 
     "Menu_BodyGroupTitle"
@@ -55,14 +55,14 @@
     "Menu_ChooseBodyPart"
     {
         "#format"   "{1:s},{2:s}"
-        "en"        "{1}\n Select a Bodygroup Part for current bodygroup: {2}"
-        "chi"       "{1}\n 为当前 bodygroup 选择一个 bodygroup part: {2}"
+        "en"        "{1}\n Select a Bodypart for the current bodygroup: {2}"
+        "chi"       "{1}\n 为当前 Bodygroup 选择一个 Bodypart: {2}"
     }
 
     "SetBodygroupPart"
     {
         "#format"   "{1:s}"
-        "en"        "[{green}NMRiH Skins{default}] Your bodygroup part has been set to: {pink}{1}{default}."
-        "chi"       "[{green}NMRiH Skins{default}] 已将 bodygroup part 设置为: {pink}{1}{default}."
+        "en"        "[{green}NMRiH Skins{default}] Your bodypart for the selected bodygroup has been set to: {pink}{1}{default}."
+        "chi"       "[{green}NMRiH Skins{default}] 已将当前选中的 Bodygroup 中的 Bodypart 设置为: {pink}{1}{default}."
     }
 }

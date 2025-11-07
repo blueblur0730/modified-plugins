@@ -53,7 +53,7 @@ Cookie
 	g_hCookie_WModelLable;
 
 #define	PL_NAME	"[NMRiH] Skins"
-#define	PL_VER "2.5.0"
+#define	PL_VER "2.5.1"
 
 #include "nmrih_skins/bodygroup.sp"
 #include "nmrih_skins/parse.sp"
