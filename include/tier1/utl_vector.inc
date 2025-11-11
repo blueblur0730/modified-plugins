@@ -5,6 +5,7 @@
 #define _utl_vector_included
 
 #include <address_base>
+#include "tier1/utl_memory"
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -20,7 +21,7 @@
  * 
  * Improved by blueblur
  * url      https://github.com/blueblur0730/modified-plugins
- * Version  2.0.0
+ * Version  2.0.1
  * 
  * Ported from: SM-Memory CUtlVector
  * url      https://github.com/Scags/SM-Memory/blob/main/pawn/sourcemod/scripting/include/smmem/vec.inc
@@ -46,10 +47,13 @@ enum
     EXTERNAL_CONST_BUFFER_MARKER = -2,
 }
 
-/*
- * @return              -1 if first should go before second
- *                      0 if first is equal to second
- *                      1 if first should go after second
+/** 
+ * @param elem1         The first obj of this element to compare.
+ * @param elem2         The second obj of this element to compare.
+ * 
+ * @return              < 0 if first < second
+ *                      = 0 if first = second
+ *                      > 0 if first > second
 */
 typedef UtlVectorSortFunc = function int (any elem1, any elem2);
 
@@ -57,10 +61,10 @@ typedef UtlVectorSortFunc = function int (any elem1, any elem2);
  * User defined destructor function for UtlVector elements.
  * 
  * @param elem          The element to be destroyed.
- * @param elementSize   The size of the element in bytes.
+ * @param addr          The address of the element.
  * @param obj           The object that the element owns.
 */
-typedef DestructorFunc = function void (int elem, NumberType elementSize, any obj);
+typedef UtlVectorDestructorFunc = function void (int elem, any addr, any obj);
 
 /**
  * all write access requires SM-Memory extension to work except for basic element writing.
@@ -143,79 +147,70 @@ methodmap UtlVector < AddressBase {
 
     }
 
-    public any Get(int index, NumberType elementSize = NumberType_Int32) {
+    public any Get(int index, int size = 4, NumberType elementSize = NumberType_Int32) {
         if (!this.IsValidIndex(index))
             ThrowError("Param index (%d) out of bounds. [0 - %d].", index, this.size);
 
-        int offset;
-        CheckSizeWithIndex(elementSize, offset, index);
-
-        return LoadFromAddress(this.m_pMemory + offset, elementSize);
+        return LoadFromAddress(this.m_pMemory + index * size, elementSize);
     }
 
-    public void Set(int index, any value, NumberType elementSize = NumberType_Int32) {
+    public void Set(int index, int size = 4, any value, NumberType elementSize = NumberType_Int32) {
         if (!this.IsValidIndex(index))
             ThrowError("Param index (%d) out of bounds. [0 - %d].", index, this.size);
 
-        int offset;
-        CheckSizeWithIndex(elementSize, offset, index);
-
-        StoreToAddress(this.m_pMemory + offset, value, elementSize);
+        StoreToAddress(this.m_pMemory + index * size, value, elementSize);
     }
 
     // this gets raw address of the element.
-    public any GetEx(int index, NumberType elementSize = NumberType_Int32) {
+    public any GetEx(int index, int size = 4) {
         if (!this.IsValidIndex(index))
             ThrowError("Param index (%d) out of bounds. [0 - %d].", index, this.size);
 
-        int offset;
-        CheckSizeWithIndex(elementSize, offset, index);
-
-        return (this.m_pMemory + offset);
+        return (this.m_pMemory + index * size);
     }
 
-    public any Element(int index, NumberType elementSize = NumberType_Int32) {
+    public any Element(int index, int size = 4, NumberType elementSize = NumberType_Int32) {
 
-        return this.Get(index, elementSize);
+        return this.Get(index, size, elementSize);
     }
 
-    public any Head(NumberType elementSize = NumberType_Int32) {
-        return this.Get(0, elementSize);
+    public any Head(int size = 4, NumberType elementSize = NumberType_Int32) {
+        return this.Get(0, size, elementSize);
     }
 
-    public any Tail(NumberType elementSize = NumberType_Int32) {
-        return this.Get(this.m_Size - 1, elementSize);
+    public any Tail(int size = 4, NumberType elementSize = NumberType_Int32) {
+        return this.Get(this.m_Size - 1, size, elementSize);
     }
 
     public int Count() {
         return this.m_Size;
     }
 
-    public any Random(NumberType elementSize = NumberType_Int32) {
-        return this.Get(GetRandomInt(0, this.m_Size - 1), elementSize);
+    public any Random(int size = 4, NumberType elementSize = NumberType_Int32) {
+        return this.Get(GetRandomInt(0, this.m_Size - 1), size, elementSize);
     }
 
     public bool IsEmpty() {
         return (this.m_Size == 0);
     }
 
-    public void Shuffle(NumberType elementSize = NumberType_Int32) {
+    public void Shuffle(int size = 4, NumberType elementSize = NumberType_Int32) {
         for (int i = 0; i < this.m_Size; i++) {
             int j = GetRandomInt(i, this.m_Size - 1);
             if (i != j) {
-                any temp = this.Get(i, elementSize);
-                this.Set(i, this.Get(j, elementSize), elementSize);
-                this.Set(j, temp, elementSize);
+                any temp = this.Get(i, size, elementSize);
+                this.Set(i, size, this.Get(j, size, elementSize), elementSize);
+                this.Set(j, size, temp, elementSize);
             }
         }
     }
 
-    public void Reverse(NumberType elementSize = NumberType_Int32) {
+    public void Reverse(int size = 4, NumberType elementSize = NumberType_Int32) {
         for (int i = 0; i < this.m_Size / 2; i++) {
             int j = this.m_Size - 1 - i;
-            any temp = this.Get(i, elementSize);
-            this.Set(i, this.Get(j, elementSize), elementSize);
-            this.Set(j, temp, elementSize);
+            any temp = this.Get(i, size, elementSize);
+            this.Set(i, size, this.Get(j, size, elementSize), elementSize);
+            this.Set(j, size, temp, elementSize);
         }
     }
 
@@ -228,27 +223,27 @@ methodmap UtlVector < AddressBase {
     }
 
     // should have something like std::sort or qsort.
-    public void Sort(UtlVectorSortFunc sortFunc, NumberType elementSize = NumberType_Int32) {
+    public void Sort(int size = 4, UtlVectorSortFunc sortFunc, NumberType elementSize = NumberType_Int32) {
         for (int i = this.m_Size - 1; i >= 0; i--) {
             for (int j = 1; j <= i; j++) {
-                int result = 1;
+                int result = 0;
                 Call_StartFunction(INVALID_HANDLE, sortFunc);
-                Call_PushCell(this.Get(j - 1, elementSize));
-                Call_PushCell(this.Get(j, elementSize));
+                Call_PushCell(this.Get(j - 1, size, elementSize));
+                Call_PushCell(this.Get(j, size, elementSize));
                 Call_Finish(result);
 
                 if (result < 0) {
-                    any temp = this.Get(j - 1, elementSize);
-                    this.Set(j - 1, this.Get(j, elementSize), elementSize);
-                    this.Set(j, temp, elementSize);
+                    any temp = this.Get(j - 1, size, elementSize);
+                    this.Set(j - 1, size, this.Get(j, size, elementSize), elementSize);
+                    this.Set(j, size, temp, elementSize);
                 }
             }
         }
     }
 
-    public int Find(any src, NumberType elementSize = NumberType_Int32) {
+    public int Find(any src, int size = 4, NumberType elementSize = NumberType_Int32) {
         for (int i = 0; i < this.m_Size; i++) {
-            if (this.Element(i, elementSize) == src) {
+            if (this.Element(i, size, elementSize) == src) {
                 return i;
             }
         }
@@ -257,43 +252,40 @@ methodmap UtlVector < AddressBase {
     }
 
     // this compares element address instead of value.
-    public int FindEx(any src, NumberType elementSize = NumberType_Int32)
+    public int FindEx(any src, int size = 4)
     {
         int count = this.m_Size;
         for (int i = 0; i < count; ++i) {
-            if (this.GetEx(i, elementSize) == src)
+            if (this.GetEx(i, size) == src)
                 return i;
         }
 
         return -1;
     }
 
-    public void FillWithValue(any src, NumberType elementSize = NumberType_Int32) {
+    public void FillWithValue(any src, int size = 4, NumberType elementSize = NumberType_Int32) {
         for (int i = 0; i < this.m_Size; i++) {
-            this.Set(i, src, elementSize);
+            this.Set(i, size, src, elementSize);
         }
     }
 
-    public void ToArray(any[] array) {
+    public void ToArray(int size = 4, any[] array, NumberType elementSize = NumberType_Int32) {
         int len = this.m_Size;
         for (int i = 0; i < len; ++i)
-            array[i] = this.Element(i);
+            array[i] = this.Element(i, size, elementSize);
     }
 
-    public ArrayList ToArrayList(NumberType elementSize = NumberType_Int32) {
-        int size;
-        CheckSize(elementSize, size);
-
+    public ArrayList ToArrayList(int size = 4, NumberType elementSize = NumberType_Int32) {
         ArrayList list = new ArrayList(ByteCountToCells(size));
         int len = this.m_Size;
         for (int i = 0; i < len; ++i)
-            list.Push(this.Element(i));
+            list.Push(this.Element(i, size, elementSize));
 
         return list;
     }
 
-    public bool HasElement(any src, NumberType elementSize = NumberType_Int32) {
-        return (this.Find(src, elementSize) >= 0);
+    public bool HasElement(any src, int size = 4, NumberType elementSize = NumberType_Int32) {
+        return (this.Find(src, size, elementSize) >= 0);
     }
 
     public bool IsReadOnly() {
@@ -307,11 +299,42 @@ methodmap UtlVector < AddressBase {
 // write access.
 // this is an extension to the original smmem/vec.inc
 #if defined _smmem_included_
-    public void Grow(int alloccount, NumberType elementSize = NumberType_Int32) {
-        this.m_nAllocationCount += alloccount;
+    public void Grow(int alloccount, int size = 4) {
+        if (alloccount <= 0)
+            ThrowError("Param alloccount (%d) invalid.", alloccount);
 
-        int size;
-        CheckSize(elementSize, size);
+        if (this.IsExternallyAllocated()) {
+            ThrowError("Can't grow a buffer whose memory was externally allocated .");
+            return;
+        }
+
+        // Make sure we have at least numallocated + num allocations.
+        // Use the grow rules specified for this memory (in m_nGrowSize)
+        int nAllocationRequested = this.m_nAllocationCount + alloccount;
+        int nNewAllocationCount = UtlMemory_CalcNewAllocationCount( this.m_nAllocationCount, this.m_nGrowSize, nAllocationRequested, size );
+
+        // if m_nAllocationRequested wraps index type I, recalculate
+        if ( nNewAllocationCount < nAllocationRequested )
+        {
+            if ( nNewAllocationCount == 0 && ( nNewAllocationCount - 1 ) >= nAllocationRequested )
+            {
+                --nNewAllocationCount; // deal w/ the common case of m_nAllocationCount == MAX_USHORT + 1
+            }
+            else
+            {
+                if ( nAllocationRequested != nAllocationRequested )
+                {
+                    // we've been asked to grow memory to a size s.t. the index type can't address the requested amount of memory
+                    return;
+                }
+                while ( nNewAllocationCount < nAllocationRequested )
+                {
+                    nNewAllocationCount = ( nNewAllocationCount + nAllocationRequested ) / 2;
+                }
+            }
+        }
+
+        this.m_nAllocationCount += nNewAllocationCount;
 
         if (this.m_pMemory) {
             this.m_pMemory = realloc(this.m_pMemory, this.m_nAllocationCount * size);
@@ -320,50 +343,42 @@ methodmap UtlVector < AddressBase {
         }
     }
 
-    public void GrowVector(int num = 1, NumberType elementSize = NumberType_Int32) {
+    public void GrowVector(int num = 1, int size = 4) {
         if (this.m_Size + num > this.m_nAllocationCount) {
-            this.Grow(this.m_Size + num - this.m_nAllocationCount, elementSize);
+            this.Grow(this.m_Size + num - this.m_nAllocationCount, size);
         }
     
         this.m_Size += num;
         this.ResetDbgInfo();
     }
 
-    public void Construct(int elem, any src = 0, NumberType elementSize = NumberType_Int32) {
-        int size;
-        CheckSize(elementSize, size);
+    public void Construct(int elem, any src = 0, int size = 4, NumberType elementSize = NumberType_Int32) {
         StoreToAddress(this.m_pMemory + elem * size, src, elementSize);
     }
 
-    public void ShiftElementsRight(int elem, int num = 1, NumberType elementSize = NumberType_Int32) {
+    public void ShiftElementsRight(int elem, int num = 1, int size = 4) {
         if (! (this.IsValidIndex(elem) || this.m_Size == 0 || num == 0) ) {
             ThrowError("Param elem (%d) out of bounds, [0 - %d], or num (%d) is zero.", elem, this.m_Size, num);
             return;
         }
-
-        int size;
-        CheckSize(elementSize, size);
 
         int numtomove = this.m_Size - elem - num;
         if (numtomove > 0 && num > 0)
             memmove(this.m_pMemory + (elem + num) * size, this.m_pMemory + elem * size, numtomove * size);
     }
 
-    public void ShiftElementsLeft(int elem, int num = 1, NumberType elementSize = NumberType_Int32) {
+    public void ShiftElementsLeft(int elem, int num = 1, int size = 4) {
         if (! (this.IsValidIndex(elem) || this.m_Size == 0 || num == 0) ) {
             ThrowError("Param elem (%d) out of bounds, [0 - %d], or num (%d) is zero.", elem, this.m_Size, num);
             return;
         }
-
-        int size;
-        CheckSize(elementSize, size);
 
         int numtomove = this.m_Size - elem - num;
         if (numtomove > 0 && num > 0)
             memmove(this.m_pMemory + elem * size, this.m_pMemory + (elem + num) * size, numtomove * size);
     }
 
-    public void EnsureCapacity(int num, NumberType elementSize = NumberType_Int32) {
+    public void EnsureCapacity(int num, int size = 4) {
         if (this.m_nAllocationCount >= num)
             return;
 
@@ -375,9 +390,6 @@ methodmap UtlVector < AddressBase {
             
         this.m_nAllocationCount = num;
 
-        int size;
-        CheckSize(elementSize, size);
-
         if (this.m_pMemory) {
             this.m_pMemory = realloc(this.m_pMemory, this.m_nAllocationCount * size);
         } else {
@@ -387,89 +399,82 @@ methodmap UtlVector < AddressBase {
         this.ResetDbgInfo();
     }
 
-    public void EnsureCount(int num, NumberType elementSize = NumberType_Int32) {
+    public void EnsureCount(int num, int size = 4, NumberType elementSize = NumberType_Int32) {
         if (this.size < num) {
-            this.AddMultipleToTail( num - this.m_Size, elementSize );
+            this.AddMultipleToTail( num - this.m_Size, size, elementSize );
         }
     }
 
-    public int InsertBefore(int elem, NumberType elementSize = NumberType_Int32) {
+    public int InsertBefore(int elem, int size = 4, NumberType elementSize = NumberType_Int32) {
         if (!( (elem == this.Count()) || this.IsValidIndex(elem) ))
             ThrowError("Param elem (%d) out of bounds. [0 - %d].", elem, this.m_Size);
 
-        this.GrowVector();
-        this.ShiftElementsRight(elem, elementSize);
+        this.GrowVector(_, size);
+        this.ShiftElementsRight(elem, _,size);
 
-        int size;
-        CheckSize(elementSize, size);
-        this.Construct(this.m_pMemory + elem * size, this.Element(elem, elementSize), elementSize);
+        this.Construct(this.m_pMemory + elem * size, this.Element(elem, size, elementSize), elementSize);
         return elem;
     }
 
-    public int InsertAfter(int elem, NumberType elementSize = NumberType_Int32) {
-        return this.InsertBefore(elem + 1, elementSize);
+    public int InsertAfter(int elem, int size = 4, NumberType elementSize = NumberType_Int32) {
+        return this.InsertBefore(elem + 1, size, elementSize);
     }
 
-    public int AddToHead(NumberType elementSize = NumberType_Int32) {
-        return this.InsertBefore(0, elementSize);
+    public int AddToHead(int size = 4, NumberType elementSize = NumberType_Int32) {
+        return this.InsertBefore(0, size, elementSize);
     }
 
-    public int AddToTail(NumberType elementSize = NumberType_Int32) {
-        return this.InsertBefore(this.m_Size, elementSize);
+    public int AddToTail(int size = 4, NumberType elementSize = NumberType_Int32) {
+        return this.InsertBefore(this.m_Size, size, elementSize);
     }
 
-    public any AddToTailGetPtr(NumberType elementSize = NumberType_Int32) {
-        int index = this.InsertBefore(this.m_Size, elementSize);
-        return this.Get(index, elementSize);
+    public any AddToTailGetPtr(int size = 4, NumberType elementSize = NumberType_Int32) {
+        int index = this.InsertBefore(this.m_Size, size, elementSize);
+        return this.Get(index, size, elementSize);
     }
 
-    public int InsertMultipleBefore(int elem, int num, NumberType elementSize = NumberType_Int32) {
+    public int InsertMultipleBefore(int elem, int num, int size = 4, NumberType elementSize = NumberType_Int32) {
         if (num == 0)
             return elem;
 
         if (!( (elem == this.m_Size) || this.IsValidIndex(elem) ))
             ThrowError("Param elem (%d) out of bounds. [0 - %d].", elem, this.m_Size);
 
-        this.GrowVector(num, elementSize);
-        this.ShiftElementsRight(elem, num, elementSize);
+        this.GrowVector(num, size);
+        this.ShiftElementsRight(elem, num, size);
 
-        int size;
-        CheckSize(elementSize, size);
         for (int i = 0; i < num; i++) {
-            this.Construct(elem + i, this.Element(elem + 1, elementSize), elementSize);
+            this.Construct(elem + i, this.Element(elem + 1, size, elementSize), elementSize);
         }
 
         return elem;
     }
 
-    public int AddMultipleToHead(int num, NumberType elementSize = NumberType_Int32) {
-        return this.InsertMultipleBefore(0, num, elementSize);
+    public int AddMultipleToHead(int num, int size = 4, NumberType elementSize = NumberType_Int32) {
+        return this.InsertMultipleBefore(0, num, size, elementSize);
     }
 
-    public int AddMultipleToTail(int num, NumberType elementSize = NumberType_Int32) {
-        return this.InsertMultipleBefore(this.m_Size, num, elementSize);
+    public int AddMultipleToTail(int num, int size = 4, NumberType elementSize = NumberType_Int32) {
+        return this.InsertMultipleBefore(this.m_Size, num, size, elementSize);
     }
 
-    public int InsertMultipleAfter(int elem, int num, NumberType elementSize = NumberType_Int32) {
-        return this.InsertMultipleBefore(elem + 1, num, elementSize);
+    public int InsertMultipleAfter(int elem, int num, int size = 4, NumberType elementSize = NumberType_Int32) {
+        return this.InsertMultipleBefore(elem + 1, num, size, elementSize);
     }
 
     // see 'void Destruct<T>(T * pMemory)' (src/public/tier0/platform.h)
     // when removing elements from the vector, we need to destruct the object stored first.
     // but how do we destruct these data that is all on your own.
-    public void Destruct(int elem, NumberType elementSize = NumberType_Int32, DestructorFunc destructor) {
+    public void Destruct(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
         Call_StartFunction(INVALID_HANDLE, destructor);
         Call_PushCell(elem);
-        Call_PushCell(elementSize);
-        Call_PushCell(this.Get(elem, elementSize));
+        Call_PushCell(this.GetEx(elem, size));
+        Call_PushCell(this.Get(elem, size, elementSize));
         Call_Finish();
     }
 
-    public void FastRemove(int elem, NumberType elementSize = NumberType_Int32, DestructorFunc destructor) {
-        int size;
-        CheckSize(elementSize, size);
-
-        this.Destruct(elem, elementSize, destructor);
+    public void FastRemove(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+        this.Destruct(elem, size, elementSize, destructor);
         if (this.m_Size > 0) {
             if (elem != this.m_Size - 1)
                 memcpy(this.m_pMemory + elem * size, this.m_pMemory + (this.m_Size - 1) * size, size);
@@ -478,79 +483,79 @@ methodmap UtlVector < AddressBase {
         }
     }
 
-    public void Remove(int elem, NumberType elementSize = NumberType_Int32, DestructorFunc destructor) {
-        this.Destruct(elem, elementSize, destructor);
-        this.ShiftElementsLeft(elem, _, elementSize);
+    public void Remove(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+        this.Destruct(elem, size, elementSize, destructor);
+        this.ShiftElementsLeft(elem, _, size);
         --this.m_Size;
     }
 
-    public bool FindAndRemove(any src, NumberType elementSize = NumberType_Int32, DestructorFunc destructor) {
-        int elem = this.Find(src, elementSize);
+    public bool FindAndRemove(any src, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+        int elem = this.Find(src, size, elementSize);
 
         if (elem != -1) {
-            this.Remove(elem, elementSize, destructor);
+            this.Remove(elem, size, elementSize, destructor);
             return true;
         }
 
         return false;
     }
 
-    public bool FindAndFastRemove(any src, NumberType elementSize = NumberType_Int32, DestructorFunc destructor) {
-        int elem = this.Find(src, elementSize);
+    public bool FindAndFastRemove(any src, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+        int elem = this.Find(src, size, elementSize);
 
         if (elem != -1) {
-            this.FastRemove(elem, elementSize, destructor);
+            this.FastRemove(elem, size, elementSize, destructor);
             return true;
         }
 
         return false;
     }
 
-    public void RemoveAll(NumberType elementSize = NumberType_Int32, DestructorFunc destructor) {
+    public void RemoveAll(int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
         for (int i = this.m_Size; --i >= 0;) {
-            this.Destruct(i, elementSize, destructor);
+            this.Destruct(i, size, elementSize, destructor);
         }
             
         this.m_Size = 0;
     }
 
-    public void RemoveMultiple(int elem, int num, NumberType elementSize = NumberType_Int32, DestructorFunc destructor) {
+    public void RemoveMultiple(int elem, int num, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
         for (int i = elem + num; --i >= elem; ) {
-            this.Destruct(i, elementSize, destructor);
+            this.Destruct(i, size, elementSize, destructor);
         }
 
-        this.ShiftElementsLeft(elem, num, elementSize);
+        this.ShiftElementsLeft(elem, num, size);
         this.m_Size -= num;
     }
 
-    public void RemoveMultipleFromHead(int num, NumberType elementSize = NumberType_Int32, DestructorFunc destructor) {
+    public void RemoveMultipleFromHead(int num, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
         for (int i = num; --i >= 0; ) {
-            this.Destruct(i, elementSize, destructor);
+            this.Destruct(i, size, elementSize, destructor);
         }
 
-        this.ShiftElementsLeft(0, num, elementSize);
+        this.ShiftElementsLeft(0, num, size);
         this.m_Size -= num;
     }
 
-    public void RemoveMultipleFromTail(int num, NumberType elementSize = NumberType_Int32, DestructorFunc destructor) {
+    public void RemoveMultipleFromTail(int num, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
         for (int i = this.m_Size - num; i < this.m_Size; i++) {
-            this.Destruct(i, elementSize, destructor);
+            this.Destruct(i, size, elementSize, destructor);
         }
 
         this.m_Size -= num;
     }
 
-    public void SetCount(int count, NumberType elementSize = NumberType_Int32, DestructorFunc destructor) {
-        this.RemoveAll(elementSize, destructor);
-        this.AddMultipleToTail(count, elementSize);
+    public void SetCount(int count, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+        this.RemoveAll(size, elementSize, destructor);
+        this.AddMultipleToTail(count, size, elementSize);
     }
 
-    public void SetCountNonDestructively(int count, NumberType elementSize = NumberType_Int32, DestructorFunc destructor) {
+    public void SetCountNonDestructively(int count, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
         int delta = count - this.m_Size;
         if (delta > 0) {
-            this.AddMultipleToTail(delta, elementSize);
+            this.AddMultipleToTail(delta, size, elementSize);
         } else if (delta < 0) {
-            this.RemoveMultipleFromTail(-delta, elementSize, destructor);
+            this.RemoveMultipleFromTail(-delta, size, elementSize, destructor);
         }
     }
 
@@ -558,8 +563,8 @@ methodmap UtlVector < AddressBase {
         return (this.m_nGrowSize < 0);
     }
 
-    public void Purge(NumberType elementSize = NumberType_Int32, DestructorFunc destructor) {
-        this.RemoveAll(elementSize, destructor);
+    public void Purge(int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+        this.RemoveAll(size, elementSize, destructor);
         
         // void CUtlMemory<T,I>::Purge()
         if (!this.IsExternallyAllocated())
@@ -606,44 +611,3 @@ methodmap UtlVector < AddressBase {
     }
 }
 
-static void CheckSizeWithIndex(NumberType elementSize, int& offset, int index)
-{
-    switch (elementSize) { 
-        case NumberType_Int8: { 
-            offset = index; 
-        } 
-
-        case NumberType_Int16: { 
-            offset = index * 2; 
-        } 
-
-        case NumberType_Int32: { 
-            offset = index * 4; 
-        } 
-
-        default: { 
-            ThrowError("Invalid elementSize (%d). [%d, %d, %d]", NumberType_Int8, NumberType_Int16, NumberType_Int32);
-        } 
-    } 
-}
-
-static void CheckSize(NumberType elementSize, int& offset)
-{
-    switch (elementSize) { 
-        case NumberType_Int8: { 
-            offset = 1; 
-        } 
-
-        case NumberType_Int16: { 
-            offset = 2; 
-        } 
-
-        case NumberType_Int32: { 
-            offset = 4; 
-        } 
-
-        default: { 
-            ThrowError("Invalid elementSize (%d). [%d, %d, %d]", NumberType_Int8, NumberType_Int16, NumberType_Int32);
-        } 
-    } 
-}
