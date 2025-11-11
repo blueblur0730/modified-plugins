@@ -22,7 +22,7 @@
  * Improved by blueblur
  * Date     2025-11-10
  * url      https://github.com/blueblur0730/modified-plugins
- * Version  2.2.0
+ * Version  2.2.1
  * 
  * Ported from: SM-Memory CUtlVector
  * url      https://github.com/Scags/SM-Memory/blob/main/pawn/sourcemod/scripting/include/smmem/vec.inc
@@ -610,7 +610,7 @@ methodmap UtlVector < AddressBase {
 
     property Address elements {
         public get() {
-            return this.m_pElements;
+            return this.m_pMemory;
         }
     }
 
