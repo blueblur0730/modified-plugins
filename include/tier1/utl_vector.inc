@@ -67,7 +67,7 @@ typedef UtlVectorSortFunc = function int (any elem1, any elem2);
 typedef UtlVectorDestructorFunc = function void (int elem, any addr, any obj);
 
 /**
- * all write access requires SM-Memory extension to work except for basic element writing.
+ * all allocation or deallocation access requires SM-Memory extension to work except for basic element writing.
  * be sure you know what you are doing before using this.
 */
 
@@ -296,7 +296,7 @@ methodmap UtlVector < AddressBase {
         return this.m_pMemory;
     }
 
-// write access.
+// allocation or deallocation access.
 // this is an extension to the original smmem/vec.inc
 #if defined _smmem_included_
     public void Grow(int alloccount, int size = 4) {
