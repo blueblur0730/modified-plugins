@@ -382,6 +382,7 @@ methodmap UtlVector < AddressBase {
         Call_StartFunction(INVALID_HANDLE, destructor);
         Call_PushCell(elem);
         Call_PushCell(this.GetEx(elem, size));
+        Call_PushCell(this.Get(elem, size, elementSize));
         Call_Finish();
     }
 
