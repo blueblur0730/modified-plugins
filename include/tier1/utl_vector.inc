@@ -22,7 +22,7 @@
  * Improved by blueblur
  * Date     2025-11-10
  * url      https://github.com/blueblur0730/modified-plugins
- * Version  2.0.1
+ * Version  2.2.0
  * 
  * Ported from: SM-Memory CUtlVector
  * url      https://github.com/Scags/SM-Memory/blob/main/pawn/sourcemod/scripting/include/smmem/vec.inc
@@ -59,6 +59,14 @@ enum
 typedef UtlVectorSortFunc = function int (any elem1, any elem2);
 
 /**
+ * User defined constructor function for UtlVector elements.
+ * 
+ * @param elem          The element to be constructed.
+ * @param addr          The address of the element.
+*/
+typedef UtlVectorConstructorFunc = function void (int elem, any addr);
+
+/**
  * User defined destructor function for UtlVector elements.
  * 
  * @param elem          The element to be destroyed.
@@ -71,6 +79,10 @@ typedef UtlVectorDestructorFunc = function void (int elem, any addr, any obj);
  * all allocation or deallocation access requires SM-Memory extension to work except for basic element writing.
  * be sure you know what you are doing before using this.
 */
+
+// all of this assumes using template:
+// template< class T, class A = CUtlMemory<T> >
+// otherwise you will need your own implementation.
 
 methodmap UtlVector < AddressBase {
     public UtlVector(Address addr) {
@@ -353,8 +365,24 @@ methodmap UtlVector < AddressBase {
         this.ResetDbgInfo();
     }
 
-    public void Construct(int elem, any src = 0, int size = 4, NumberType elementSize = NumberType_Int32) {
-        StoreToAddress(this.m_pMemory + elem * size, src, elementSize);
+    // see 'inline T* Construct( T* pMemory )' (src/public/tier0/platform.h)
+    // when adding elements to the vector, we need to construct the object stored first.
+    // but how do we construct these data that is all on your own.
+    public void Construct(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor) {
+        Call_StartFunction(INVALID_HANDLE, constructor);
+        Call_PushCell(elem);
+        Call_PushCell(this.GetEx(elem, size));
+        Call_Finish();
+    }
+
+    // see 'void Destruct<T>(T * pMemory)' (src/public/tier0/platform.h)
+    // when removing elements from the vector, we need to destruct the object stored first.
+    // but how do we destruct these data that is all on your own.
+    public void Destruct(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+        Call_StartFunction(INVALID_HANDLE, destructor);
+        Call_PushCell(elem);
+        Call_PushCell(this.GetEx(elem, size));
+        Call_Finish();
     }
 
     public void ShiftElementsRight(int elem, int num = 1, int size = 4) {
@@ -406,14 +434,14 @@ methodmap UtlVector < AddressBase {
         }
     }
 
-    public int InsertBefore(int elem, int size = 4, NumberType elementSize = NumberType_Int32) {
+    public int InsertBefore(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor) {
         if (!( (elem == this.Count()) || this.IsValidIndex(elem) ))
             ThrowError("Param elem (%d) out of bounds. [0 - %d].", elem, this.m_Size);
 
         this.GrowVector(_, size);
         this.ShiftElementsRight(elem, _,size);
 
-        this.Construct(this.m_pMemory + elem * size, this.Element(elem, size, elementSize), elementSize);
+        this.Construct(this.m_pMemory + elem * size, this.Element(elem, size, elementSize), elementSize, constructor);
         return elem;
     }
 
@@ -434,7 +462,7 @@ methodmap UtlVector < AddressBase {
         return this.Get(index, size, elementSize);
     }
 
-    public int InsertMultipleBefore(int elem, int num, int size = 4, NumberType elementSize = NumberType_Int32) {
+    public int InsertMultipleBefore(int elem, int num, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor) {
         if (num == 0)
             return elem;
 
@@ -445,7 +473,7 @@ methodmap UtlVector < AddressBase {
         this.ShiftElementsRight(elem, num, size);
 
         for (int i = 0; i < num; i++) {
-            this.Construct(elem + i, this.Element(elem + 1, size, elementSize), elementSize);
+            this.Construct(elem + i, this.Element(elem + 1, size, elementSize), elementSize, constructor);
         }
 
         return elem;
@@ -461,17 +489,6 @@ methodmap UtlVector < AddressBase {
 
     public int InsertMultipleAfter(int elem, int num, int size = 4, NumberType elementSize = NumberType_Int32) {
         return this.InsertMultipleBefore(elem + 1, num, size, elementSize);
-    }
-
-    // see 'void Destruct<T>(T * pMemory)' (src/public/tier0/platform.h)
-    // when removing elements from the vector, we need to destruct the object stored first.
-    // but how do we destruct these data that is all on your own.
-    public void Destruct(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
-        Call_StartFunction(INVALID_HANDLE, destructor);
-        Call_PushCell(elem);
-        Call_PushCell(this.GetEx(elem, size));
-        Call_PushCell(this.Get(elem, size, elementSize));
-        Call_Finish();
     }
 
     public void FastRemove(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
