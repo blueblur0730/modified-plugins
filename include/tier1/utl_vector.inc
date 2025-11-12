@@ -24,7 +24,7 @@
  * Reworked by blueblur
  * Date     2025-11-10
  * url      https://github.com/blueblur0730/modified-plugins
- * Version  2.4.0
+ * Version  2.4.1
  * 
  * Ported from: SM-Memory CUtlVector
  * url      https://github.com/Scags/SM-Memory/blob/main/pawn/sourcemod/scripting/include/smmem/vec.inc
@@ -37,22 +37,22 @@
 #define UTL_VECTOR_OFFSET_SIZE      0xC
 #define UTL_VECTOR_OFFSET_ELEMENTS  0x10
 
-#define FOR_EACH_VEC( %0, %1 )      for ( int %1 = 0; %1 < %0.Count(); %1++ )
-#define FOR_EACH_VEC_BACK( %0, %1 ) for ( int %1 = %0.Count()-1; %1 >= 0; %1-- )
+#define FOR_EACH_VEC( %0, %1 )      for ( %1 = 0; %1 < %0.Count(); %1++ )
+#define FOR_EACH_VEC_BACK( %0, %1 ) for ( %1 = %0.Count()-1; %1 >= 0; %1-- )
 
 // sourcepawn seems dont really like macros.
 
 /*
 #define Assert(%0, %1, %2)                                  if (!(%0)) { _Assert(%1, %2); }
-#define Assert(%0, %1, %2, %3)                       if (!(%0)) { _Assert(%1, %2, %3); }
-#define Assert(%0, %1, %2, %3, %4)                   if (!(%0)) { _Assert(%1, %2, %3, %4); }
-#define Assert(%0, %1, %2, %3, %4, %5)             if (!(%0)) { _Assert(%1, %2, %3, %4, %5); }
+#define Assert_OneArg(%0, %1, %2, %3)                       if (!(%0)) { _Assert(%1, %2, %3); }
+#define Assert_TwoArg(%0, %1, %2, %3, %4)                   if (!(%0)) { _Assert(%1, %2, %3, %4); }
+#define Assert_ThreeArg(%0, %1, %2, %3, %4, %5)             if (!(%0)) { _Assert(%1, %2, %3, %4, %5); }
 
 // warning 206: redundant test: constant expression is non-zero
 #define Assert_Zero(%0, %1)                         _Assert(%0, %1);
-#define Assert_Zero(%0, %1, %2)              _Assert(%0, %1, %2);
-#define Assert_Zero(%0, %1, %2, %3)          _Assert(%0, %1, %2, %3);
-#define Assert_Zero(%0, %1, %2, %3, %4)    _Assert(%0, %1, %2, %3, %4);
+#define Assert_Zero_OneArg(%0, %1, %2)              _Assert(%0, %1, %2);
+#define Assert_Zero_TwoArg(%0, %1, %2, %3)          _Assert(%0, %1, %2, %3);
+#define Assert_Zero_ThreeArg(%0, %1, %2, %3, %4)    _Assert(%0, %1, %2, %3, %4);
 */
 enum
 {
@@ -295,8 +295,7 @@ methodmap UtlVector < AddressBase {
     }
 
     // this compares element address instead of value.
-    public int FindEx(any src, int size = 4)
-    {
+    public int FindEx(any src, int size = 4) {
         int count = this.m_Size;
         for (int i = 0; i < count; ++i) {
             if (this.GetEx(i, size) == src)
