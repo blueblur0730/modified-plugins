@@ -17,7 +17,7 @@
  * Author: blueblur
  * Date: 2025-11-11
  * url: https://github.com/blueblur0730/modified-plugins
- * Version: 1.0.0
+ * Version: 1.1.1
 */
 
 /*
@@ -204,6 +204,14 @@ methodmap UtlRBTreeNode_t < UtlRBTreeLinks_t {
         }
     }
 
+    public any GetData(NumberType elementSize = NumberType_Int32) {
+        return LoadFromAddress(this.addr + UTL_RBTREE_NODE_OFFSET_DATA, elementSize);
+    }
+
+    public void SetData(any val, NumberType elementSize = NumberType_Int32) {
+        StoreToAddress(this.addr + UTL_RBTREE_NODE_OFFSET_DATA, val, elementSize);
+    }
+
     public any GetDataAddress() {
         return this.addr + UTL_RBTREE_NODE_OFFSET_DATA;
     }
@@ -346,14 +354,14 @@ methodmap UtlRBTree < AddressBase {
 
     }
 
-    public any Get(int i, int size = 4) {
+    public any Get(int i, int size = 4, NumberType elementSize = NumberType_Int32) {
         Assert(this.IsValidIndex(i, size), UTL_RBTREE_TAG, "Param index (%d) out of bounds. m_nAllocationCount: [0 - %d], m_LastAlloc: [0 - %d].", i, this.m_nAllocationCount, this.m_LastAlloc);
-        return view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).m_Data;
+        return view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).GetData(elementSize);
     }
 
-    public void Set(int i, int size = 4, any val) {
+    public void Set(int i, int size = 4, any val, NumberType elementSize = NumberType_Int32) {
         Assert(this.IsValidIndex(i, size), UTL_RBTREE_TAG, "Param index (%d) out of bounds. m_nAllocationCount: [0 - %d], m_LastAlloc: [0 - %d].", i, this.m_nAllocationCount, this.m_LastAlloc);
-        view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).m_Data = val;
+        view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).SetData(val, elementSize);
     }
 
     public any GetEx(int i, int size = 4) {
@@ -361,8 +369,8 @@ methodmap UtlRBTree < AddressBase {
         return view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).GetDataAddress();
     }
 
-    public any Element(int i, int size = 4) {
-        return this.Get(i, size);
+    public any Element(int i, int size = 4, NumberType elementSize = NumberType_Int32) {
+        return this.Get(i, size, elementSize);
     }
 
     public int Root() {
@@ -748,12 +756,12 @@ methodmap UtlRBTree < AddressBase {
         }
     }
 
-    public void Link(int elem, int size = 4) {
+    public void Link(int elem, int size = 4, NumberType elementSize = NumberType_Int32) {
         if (elem != UtlRBTree.InvalidIndex()) {
             int parent = UtlRBTree.InvalidIndex();
             bool leftchild = false;
 
-            this.FindInsertionPosition(this.Element(elem, size), parent, leftchild, size);
+            this.FindInsertionPosition(this.Element(elem, size, elementSize), parent, leftchild, size);
             this.LinkToParent(elem, parent, leftchild, size);
 
             Assert(this.IsValid(), UTL_RBTREE_TAG, "Invalid RBTree after Link");
@@ -878,7 +886,7 @@ methodmap UtlRBTree < AddressBase {
 
     public int LastPreorder(int size = 4) {
         int i = this.m_Root;
-        while (1) {
+        while (1) {     // you might need a -w 206 to your compiler.
             int left, right;
             while ((right = this.RightChild(i, size)) != UtlRBTree.InvalidIndex()) {
                 i = right;
@@ -986,7 +994,7 @@ methodmap UtlRBTree < AddressBase {
     }
 
     // Inserts a node into the tree, doesn't copy the data in.
-    public void FindInsertionPosition(any insert, int &parent, bool &leftchild, int size = 4) {
+    public void FindInsertionPosition(any insert, int &parent, bool &leftchild, int size = 4, NumberType elementSize = NumberType_Int32) {
         Assert(!!this.m_LessFunc, UTL_RBTREE_TAG, "LessFunc is not set.");
 
         /* find where node belongs */
@@ -996,7 +1004,7 @@ methodmap UtlRBTree < AddressBase {
 
         while (current != UtlRBTree.InvalidIndex()) {
             parent = current;
-            if (CallLessFunc(this.m_LessFunc, insert, this.Element(current, size))) {
+            if (CallLessFunc(this.m_LessFunc, insert, this.Element(current, size, elementSize))) {
                 leftchild = true;
                 current = this.LeftChild(current, size);
             } else {
@@ -1006,14 +1014,14 @@ methodmap UtlRBTree < AddressBase {
         }
     }
 
-    public int Find(any search, int size = 4) {
+    public int Find(any search, int size = 4, NumberType elementSize = NumberType_Int32) {
         Assert(!!this.m_LessFunc, UTL_RBTREE_TAG, "LessFunc is not set.");
 
         int current = this.m_Root;
         while (current != UtlRBTree.InvalidIndex())  {
-            if (CallLessFunc(this.m_LessFunc, search, this.Element(current, size))) {
+            if (CallLessFunc(this.m_LessFunc, search, this.Element(current, size, elementSize))) {
                 current = this.LeftChild(current, size);
-            } else if (CallLessFunc(this.m_LessFunc, this.Element(current, size), search)) {
+            } else if (CallLessFunc(this.m_LessFunc, this.Element(current, size, elementSize), search)) {
                 current = this.RightChild(current, size);
             } else {
                 break;
@@ -1023,15 +1031,15 @@ methodmap UtlRBTree < AddressBase {
         return current;
     }
 
-    public int FindFirst(any search, int size = 4) {
+    public int FindFirst(any search, int size = 4, NumberType elementSize = NumberType_Int32) {
         Assert(!!this.m_LessFunc, UTL_RBTREE_TAG, "LessFunc is not set.");
 
         int current = this.m_Root;
         int best = UtlRBTree.InvalidIndex();
         while (current != UtlRBTree.InvalidIndex()) {
-            if (CallLessFunc(this.m_LessFunc, search, this.Element(current, size))) {
+            if (CallLessFunc(this.m_LessFunc, search, this.Element(current, size, elementSize))) {
                 current = this.LeftChild(current, size);
-            } else if (CallLessFunc(this.m_LessFunc, this.Element(current, size), search)) {
+            } else if (CallLessFunc(this.m_LessFunc, this.Element(current, size, elementSize), search)) {
                 current = this.RightChild(current, size);
             } else {
                 best = current;
@@ -1042,7 +1050,7 @@ methodmap UtlRBTree < AddressBase {
         return best;
     }
 
-    public int FindClosest(any search, int size = 4, CompareOperands_t eFindCriteria) {
+    public int FindClosest(any search, int size = 4, NumberType elementSize = NumberType_Int32, CompareOperands_t eFindCriteria) {
         Assert(!!this.m_LessFunc, UTL_RBTREE_TAG, "LessFunc is not set.");
 
         // error 450: no viable conversion from "CompareOperands_t" to "bool"
@@ -1052,14 +1060,14 @@ methodmap UtlRBTree < AddressBase {
         int best = UtlRBTree.InvalidIndex();
 
         while (current != UtlRBTree.InvalidIndex()) {
-            if (CallLessFunc(this.m_LessFunc, search, this.Element(current, size))) {
+            if (CallLessFunc(this.m_LessFunc, search, this.Element(current, size, elementSize))) {
                 // current node is > key
                 if (eFindCriteria & k_EGreaterThan) {
                     best = current;
                 }
 
                 current = this.LeftChild(current, size);
-            } else if (CallLessFunc(this.m_LessFunc, this.Element(current, size), search)) {
+            } else if (CallLessFunc(this.m_LessFunc, this.Element(current, size, elementSize), search)) {
                 // current node is < key
                 if (eFindCriteria & k_ELessThan) {
                     best = current;
@@ -1193,7 +1201,7 @@ methodmap UtlRBTree < AddressBase {
         return newNode;
     }
 
-    public int InsertIfNotFound(any insert, int size = 4, UtlRBTreeConstructorFunc constructor) {
+    public int InsertIfNotFound(any insert, int size = 4, NumberType elementSize = NumberType_Int32, UtlRBTreeConstructorFunc constructor) {
         // use copy constructor to copy it in
         int parent;
         bool leftchild;
@@ -1203,9 +1211,9 @@ methodmap UtlRBTree < AddressBase {
         leftchild = false;
         while (current != UtlRBTree.InvalidIndex())  {
             parent = current;
-            if (CallLessFunc(this.m_LessFunc, insert, this.Element(current, size))) {
+            if (CallLessFunc(this.m_LessFunc, insert, this.Element(current, size, elementSize))) {
                 leftchild = true; current = this.LeftChild(current);
-            } else if (CallLessFunc(this.m_LessFunc, this.Element(current, size), insert)) {
+            } else if (CallLessFunc(this.m_LessFunc, this.Element(current, size, elementSize), insert)) {
                 leftchild = false; current = this.RightChild(current, size);
             } else {
                 // Match found, no insertion
@@ -1313,11 +1321,11 @@ methodmap UtlRBTree < AddressBase {
     // see 'void Destruct<T>(T * pMemory)' (src/public/tier0/platform.h)
     // when removing elements from the vector, we need to destruct the object stored first.
     // but how do we destruct these data that is all on your own.
-    public void Destruct(int elem, int size = 4, UtlRBTreeDestructorFunc destructor) {
+    public void Destruct(int elem, int size = 4, , NumberType elementSize = NumberType_Int32, UtlRBTreeDestructorFunc destructor) {
         Call_StartFunction(INVALID_HANDLE, destructor);
         Call_PushCell(elem);
         Call_PushCell(this.GetEx(elem, size));
-        Call_PushCell(this.Get(elem, size));
+        Call_PushCell(this.Get(elem, size, elementSize));
         Call_Finish();
     }
 
