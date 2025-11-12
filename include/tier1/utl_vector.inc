@@ -5,10 +5,12 @@
 #define _utl_vector_included
 
 #include <address_base>
-#include "tier1/utl_memory"
+#include "tier1/utl_memory.inc"
 
 #pragma newdecls required
 #pragma semicolon 1
+
+#define UTL_VECTOR_TAG "[UtlVector]"
 
 /**
  * Author   dysphie
@@ -19,10 +21,10 @@
  * url      https://github.com/F1F88
  * Version  1.0.0
  * 
- * Improved by blueblur
+ * Reworked by blueblur
  * Date     2025-11-10
  * url      https://github.com/blueblur0730/modified-plugins
- * Version  2.2.1
+ * Version  2.3.0
  * 
  * Ported from: SM-Memory CUtlVector
  * url      https://github.com/Scags/SM-Memory/blob/main/pawn/sourcemod/scripting/include/smmem/vec.inc
@@ -35,13 +37,23 @@
 #define UTL_VECTOR_OFFSET_SIZE      0xC
 #define UTL_VECTOR_OFFSET_ELEMENTS  0x10
 
+#define FOR_EACH_VEC( %0, %1 )      for ( int %1 = 0; %1 < %0.Count(); %1++ )
+#define FOR_EACH_VEC_BACK( %0, %1 ) for ( int %1 = %0.Count()-1; %1 >= 0; %1-- )
 
-#define FOR_EACH_VEC( %0, %1 ) \
-    for ( int %1 = 0; %1 < %0.Count(); %1++ )
+// sourcepawn seems really dont like macros.
 
-#define FOR_EACH_VEC_BACK( %0, %1 ) \
-    for ( int %1 = %0.Count()-1; %1 >= 0; %1-- )
+/*
+#define Assert(%0, %1, %2)                                  if (!(%0)) { _Assert(%1, %2); }
+#define Assert(%0, %1, %2, %3)                       if (!(%0)) { _Assert(%1, %2, %3); }
+#define Assert(%0, %1, %2, %3, %4)                   if (!(%0)) { _Assert(%1, %2, %3, %4); }
+#define Assert(%0, %1, %2, %3, %4, %5)             if (!(%0)) { _Assert(%1, %2, %3, %4, %5); }
 
+// warning 206: redundant test: constant expression is non-zero
+#define Assert_Zero(%0, %1)                         _Assert(%0, %1);
+#define Assert_Zero(%0, %1, %2)              _Assert(%0, %1, %2);
+#define Assert_Zero(%0, %1, %2, %3)          _Assert(%0, %1, %2, %3);
+#define Assert_Zero(%0, %1, %2, %3, %4)    _Assert(%0, %1, %2, %3, %4);
+*/
 enum
 {
     EXTERNAL_BUFFER_MARKER = -1,
@@ -76,7 +88,7 @@ typedef UtlVectorConstructorFunc = function void (int elem, any addr);
 typedef UtlVectorDestructorFunc = function void (int elem, any addr, any obj);
 
 /**
- * all allocation or deallocation access requires SM-Memory extension to work except for basic element writing.
+ * all allocation or deallocation access requires SM-Memory extension to work.
  * be sure you know what you are doing before using this.
 */
 
@@ -100,7 +112,7 @@ methodmap UtlVector < AddressBase {
         }
 
 #if defined _smmem_included_
-        public set(const any val) {
+        public set(any val) {
             StoreToAddress(this.addr, val, NumberType_Int32);
         }
 #endif
@@ -114,7 +126,7 @@ methodmap UtlVector < AddressBase {
         }
 
 #if defined _smmem_included_
-        public set(const int val) {
+        public set(int val) {
             StoreToAddress(this.addr + UTL_VECTOR_OFFSET_ALLOCATION_COUNT, val, NumberType_Int32);
         }
 #endif
@@ -127,7 +139,7 @@ methodmap UtlVector < AddressBase {
         }
 
 #if defined _smmem_included_
-        public set(const int val) {
+        public set(int val) {
             StoreToAddress(this.addr + UTL_VECTOR_OFFSET_GROWSIZE, val, NumberType_Int32);
         }
 #endif
@@ -140,7 +152,7 @@ methodmap UtlVector < AddressBase {
         }
 
 #if defined _smmem_included_
-        public set(const int val) {
+        public set(int val) {
             StoreToAddress(this.addr + UTL_VECTOR_OFFSET_SIZE, val, NumberType_Int32);
         }
 #endif
@@ -153,7 +165,7 @@ methodmap UtlVector < AddressBase {
         }
 
 #if defined _smmem_included_
-        public set(const any val) {
+        public set(any val) {
             StoreToAddress(this.addr + UTL_VECTOR_OFFSET_ELEMENTS, val, NumberType_Int32);
         }
 #endif
@@ -161,29 +173,22 @@ methodmap UtlVector < AddressBase {
     }
 
     public any Get(int index, int size = 4, NumberType elementSize = NumberType_Int32) {
-        if (!this.IsValidIndex(index))
-            ThrowError("Param index (%d) out of bounds. [0 - %d].", index, this.size);
-
+        Assert(this.IsValidIndex(index), UTL_VECTOR_TAG, "Param index (%d) out of bounds. [0 - %d].", index, this.size);
         return LoadFromAddress(this.m_pMemory + index * size, elementSize);
     }
 
     public void Set(int index, int size = 4, any value, NumberType elementSize = NumberType_Int32) {
-        if (!this.IsValidIndex(index))
-            ThrowError("Param index (%d) out of bounds. [0 - %d].", index, this.size);
-
+        Assert(this.IsValidIndex(index), UTL_VECTOR_TAG, "Param index (%d) out of bounds. [0 - %d].", index, this.size);
         StoreToAddress(this.m_pMemory + index * size, value, elementSize);
     }
 
     // this gets raw address of the element.
     public any GetEx(int index, int size = 4) {
-        if (!this.IsValidIndex(index))
-            ThrowError("Param index (%d) out of bounds. [0 - %d].", index, this.size);
-
+        Assert(this.IsValidIndex(index), UTL_VECTOR_TAG, "Param index (%d) out of bounds. [0 - %d].", index, this.size);
         return (this.m_pMemory + index * size);
     }
 
     public any Element(int index, int size = 4, NumberType elementSize = NumberType_Int32) {
-
         return this.Get(index, size, elementSize);
     }
 
@@ -313,11 +318,10 @@ methodmap UtlVector < AddressBase {
 // this is an extension to the original smmem/vec.inc
 #if defined _smmem_included_
     public void Grow(int alloccount, int size = 4) {
-        if (alloccount <= 0)
-            ThrowError("Param alloccount (%d) invalid.", alloccount);
+        Assert((alloccount > 0), UTL_VECTOR_TAG, "Param alloccount (%d) invalid.", alloccount);
 
         if (this.IsExternallyAllocated()) {
-            ThrowError("Can't grow a buffer whose memory was externally allocated .");
+            Assert_Zero(UTL_VECTOR_TAG, "Can't grow a buffer whose memory was externally allocated.");
             return;
         }
 
@@ -338,6 +342,7 @@ methodmap UtlVector < AddressBase {
                 if ( nAllocationRequested != nAllocationRequested )
                 {
                     // we've been asked to grow memory to a size s.t. the index type can't address the requested amount of memory
+                    Assert_Zero(UTL_VECTOR_TAG, "The index type can't address the requested amount of memory.");
                     return;
                 }
                 while ( nNewAllocationCount < nAllocationRequested )
@@ -350,9 +355,14 @@ methodmap UtlVector < AddressBase {
         this.m_nAllocationCount += nNewAllocationCount;
 
         if (this.m_pMemory) {
-            this.m_pMemory = realloc(this.m_pMemory, this.m_nAllocationCount * size);
+            // do not load or set first! check the allocated memory.
+            any p = realloc(this.m_pMemory, this.m_nAllocationCount * size);
+            Assert(!p ? 0 : 1, UTL_VECTOR_TAG, "realloc failed");
+            this.m_pMemory = p;
         } else {
-            this.m_pMemory = malloc(this.m_nAllocationCount * size);
+            any p = malloc(this.m_nAllocationCount * size);
+            Assert(!p ? 0 : 1, UTL_VECTOR_TAG, "malloc failed");
+            this.m_pMemory = p;
         }
     }
 
@@ -368,7 +378,7 @@ methodmap UtlVector < AddressBase {
     // see 'inline T* Construct( T* pMemory )' (src/public/tier0/platform.h)
     // when adding elements to the vector, we need to construct the object stored first.
     // but how do we construct these data that is all on your own.
-    public void Construct(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor) {
+    public void Construct(int elem, int size = 4, UtlVectorConstructorFunc constructor) {
         Call_StartFunction(INVALID_HANDLE, constructor);
         Call_PushCell(elem);
         Call_PushCell(this.GetEx(elem, size));
@@ -386,23 +396,17 @@ methodmap UtlVector < AddressBase {
         Call_Finish();
     }
 
+    //
     public void ShiftElementsRight(int elem, int num = 1, int size = 4) {
-        if (! (this.IsValidIndex(elem) || this.m_Size == 0 || num == 0) ) {
-            ThrowError("Param elem (%d) out of bounds, [0 - %d], or num (%d) is zero.", elem, this.m_Size, num);
-            return;
-        }
-
+        Assert( this.IsValidIndex(elem) || ( this.m_Size == 0 ) || ( num == 0 ), UTL_VECTOR_TAG, "Param elem (%d) out of bounds [0 - %d], or num (%d) is zero.", elem, this.m_Size, num);
         int numtomove = this.m_Size - elem - num;
         if (numtomove > 0 && num > 0)
             memmove(this.m_pMemory + (elem + num) * size, this.m_pMemory + elem * size, numtomove * size);
     }
 
+    //
     public void ShiftElementsLeft(int elem, int num = 1, int size = 4) {
-        if (! (this.IsValidIndex(elem) || this.m_Size == 0 || num == 0) ) {
-            ThrowError("Param elem (%d) out of bounds, [0 - %d], or num (%d) is zero.", elem, this.m_Size, num);
-            return;
-        }
-
+        Assert( this.IsValidIndex(elem) || ( this.m_Size == 0 ) || ( num == 0 ), UTL_VECTOR_TAG, "Param elem (%d) out of bounds [0 - %d], or num (%d) is zero.", elem, this.m_Size, num);
         int numtomove = this.m_Size - elem - num;
         if (numtomove > 0 && num > 0)
             memmove(this.m_pMemory + elem * size, this.m_pMemory + (elem + num) * size, numtomove * size);
@@ -412,87 +416,90 @@ methodmap UtlVector < AddressBase {
         if (this.m_nAllocationCount >= num)
             return;
 
-        if (this.IsExternallyAllocated())
-        {
-            ThrowError("Can't grow a buffer whose memory was externally allocated.");
+        if (this.IsExternallyAllocated()) {
+            Assert_Zero(UTL_VECTOR_TAG, "Can't grow a buffer whose memory was externally allocated.");
             return;
         }
             
         this.m_nAllocationCount = num;
 
         if (this.m_pMemory) {
-            this.m_pMemory = realloc(this.m_pMemory, this.m_nAllocationCount * size);
+            // do not load or set first! check the allocated memory.
+            any p = realloc(this.m_pMemory, this.m_nAllocationCount * size);
+            Assert(!p ? 0 : 1, UTL_VECTOR_TAG, "realloc failed");
+            this.m_pMemory = p;
         } else {
-            this.m_pMemory = malloc(this.m_nAllocationCount * size);
+            any p = malloc(this.m_nAllocationCount * size);
+            Assert(!p ? 0 : 1, UTL_VECTOR_TAG, "malloc failed");
+            this.m_pMemory = p;
         }
 
         this.ResetDbgInfo();
     }
 
-    public void EnsureCount(int num, int size = 4, NumberType elementSize = NumberType_Int32) {
-        if (this.size < num) {
-            this.AddMultipleToTail( num - this.m_Size, size, elementSize );
+    public void EnsureCount(int num, int size = 4, UtlVectorConstructorFunc constructor) {
+        if (this.Count() < num) {
+            this.AddMultipleToTail(num - this.Count(), size, constructor);
         }
     }
 
-    public int InsertBefore(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor) {
-        if (!( (elem == this.Count()) || this.IsValidIndex(elem) ))
-            ThrowError("Param elem (%d) out of bounds. [0 - %d].", elem, this.m_Size);
+    public int InsertBefore(int elem, int size = 4, UtlVectorConstructorFunc constructor) {
+        Assert( ((elem == this.Count()) || this.IsValidIndex(elem)) , UTL_VECTOR_TAG, "Param elem (%d) out of bounds. [0 - %d].", elem, this.m_Size);
 
         this.GrowVector(_, size);
         this.ShiftElementsRight(elem, _,size);
 
-        this.Construct(this.m_pMemory + elem * size, this.Element(elem, size, elementSize), elementSize, constructor);
+        this.Construct(elem, size, constructor);
         return elem;
     }
 
-    public int InsertAfter(int elem, int size = 4, NumberType elementSize = NumberType_Int32) {
-        return this.InsertBefore(elem + 1, size, elementSize);
+    public int InsertAfter(int elem, int size = 4, UtlVectorConstructorFunc constructor) {
+        return this.InsertBefore(elem + 1, size, constructor);
     }
 
-    public int AddToHead(int size = 4, NumberType elementSize = NumberType_Int32) {
-        return this.InsertBefore(0, size, elementSize);
+    public int AddToHead(int size = 4, UtlVectorConstructorFunc constructor) {
+        return this.InsertBefore(0, size, constructor);
     }
 
-    public int AddToTail(int size = 4, NumberType elementSize = NumberType_Int32) {
-        return this.InsertBefore(this.m_Size, size, elementSize);
+    public int AddToTail(int size = 4, UtlVectorConstructorFunc constructor) {
+        return this.InsertBefore(this.m_Size, size, constructor);
     }
 
-    public any AddToTailGetPtr(int size = 4, NumberType elementSize = NumberType_Int32) {
-        int index = this.InsertBefore(this.m_Size, size, elementSize);
+    public any AddToTailGetPtr(int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor) {
+        int index = this.InsertBefore(this.m_Size, size, constructor);
         return this.Get(index, size, elementSize);
     }
 
-    public int InsertMultipleBefore(int elem, int num, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor) {
+    public int InsertMultipleBefore(int elem, int num, int size = 4, UtlVectorConstructorFunc constructor) {
         if (num == 0)
             return elem;
 
-        if (!( (elem == this.m_Size) || this.IsValidIndex(elem) ))
-            ThrowError("Param elem (%d) out of bounds. [0 - %d].", elem, this.m_Size);
+        Assert( ((elem == this.Count()) || this.IsValidIndex(elem)) , UTL_VECTOR_TAG, "Param elem (%d) out of bounds. [0 - %d].", elem, this.m_Size);
 
         this.GrowVector(num, size);
         this.ShiftElementsRight(elem, num, size);
 
         for (int i = 0; i < num; i++) {
-            this.Construct(elem + i, this.Element(elem + 1, size, elementSize), elementSize, constructor);
+            this.Construct(elem + i, size, constructor);
         }
 
         return elem;
     }
 
-    public int AddMultipleToHead(int num, int size = 4, NumberType elementSize = NumberType_Int32) {
-        return this.InsertMultipleBefore(0, num, size, elementSize);
+    public int AddMultipleToHead(int num, int size = 4, UtlVectorConstructorFunc constructor) {
+        return this.InsertMultipleBefore(0, num, size, constructor);
     }
 
-    public int AddMultipleToTail(int num, int size = 4, NumberType elementSize = NumberType_Int32) {
-        return this.InsertMultipleBefore(this.m_Size, num, size, elementSize);
+    public int AddMultipleToTail(int num, int size = 4, UtlVectorConstructorFunc constructor) {
+        return this.InsertMultipleBefore(this.m_Size, num, size, constructor);
     }
 
-    public int InsertMultipleAfter(int elem, int num, int size = 4, NumberType elementSize = NumberType_Int32) {
-        return this.InsertMultipleBefore(elem + 1, num, size, elementSize);
+    public int InsertMultipleAfter(int elem, int num, int size = 4, UtlVectorConstructorFunc constructor) {
+        return this.InsertMultipleBefore(elem + 1, num, size, constructor);
     }
 
     public void FastRemove(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+        Assert(this.IsValidIndex(elem), UTL_VECTOR_TAG, "Param elem (%d) out of bounds. [0 - %d].", elem, this.m_Size);
         this.Destruct(elem, size, elementSize, destructor);
         if (this.m_Size > 0) {
             if (elem != this.m_Size - 1)
@@ -538,7 +545,10 @@ methodmap UtlVector < AddressBase {
         this.m_Size = 0;
     }
 
+    //
     public void RemoveMultiple(int elem, int num, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+        Assert( (num >= 0), UTL_VECTOR_TAG, "Param num (%d) is negative.", num);
+        Assert( (elem + num <= this.m_Size), UTL_VECTOR_TAG, "Param elem (%d) out of bounds. [0, m_Size - num: %d].", elem, this.m_Size - num);
         for (int i = elem + num; --i >= elem; ) {
             this.Destruct(i, size, elementSize, destructor);
         }
@@ -547,7 +557,9 @@ methodmap UtlVector < AddressBase {
         this.m_Size -= num;
     }
 
+    //
     public void RemoveMultipleFromHead(int num, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+        Assert( (num <= this.Count()), UTL_VECTOR_TAG, "Param num (%d) out of bounds. [0, m_Size: %d].", num, this.m_Size);
         for (int i = num; --i >= 0; ) {
             this.Destruct(i, size, elementSize, destructor);
         }
@@ -556,7 +568,9 @@ methodmap UtlVector < AddressBase {
         this.m_Size -= num;
     }
 
+    //
     public void RemoveMultipleFromTail(int num, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+        Assert( (num <= this.Count()), UTL_VECTOR_TAG, "Param num (%d) out of bounds. [0, m_Size: %d].", num, this.m_Size);
         for (int i = this.m_Size - num; i < this.m_Size; i++) {
             this.Destruct(i, size, elementSize, destructor);
         }
@@ -564,15 +578,15 @@ methodmap UtlVector < AddressBase {
         this.m_Size -= num;
     }
 
-    public void SetCount(int count, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+    public void SetCount(int count, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor, UtlVectorDestructorFunc destructor) {
         this.RemoveAll(size, elementSize, destructor);
-        this.AddMultipleToTail(count, size, elementSize);
+        this.AddMultipleToTail(count, size, constructor);
     }
 
-    public void SetCountNonDestructively(int count, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
+    public void SetCountNonDestructively(int count, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor, UtlVectorDestructorFunc destructor) {
         int delta = count - this.m_Size;
         if (delta > 0) {
-            this.AddMultipleToTail(delta, size, elementSize);
+            this.AddMultipleToTail(delta, size, constructor);
         } else if (delta < 0) {
             this.RemoveMultipleFromTail(-delta, size, elementSize, destructor);
         }
@@ -630,3 +644,47 @@ methodmap UtlVector < AddressBase {
     }
 }
 
+// should have use macros here.
+
+static void Assert(bool condition, const char[] tag, const char[] message, any ...)
+{
+    if (!condition)
+    {
+        char sBuffer[512];
+        VFormat(sBuffer, sizeof(sBuffer), message, 4);
+        Format(sBuffer, sizeof(sBuffer), "%s: %s.", tag, sBuffer);
+        _Assert(message);
+    }
+}
+
+static void Assert_Zero(const char[] tag, const char[] message, any ...)
+{
+    char sBuffer[512];
+    VFormat(sBuffer, sizeof(sBuffer), message, 3);
+    Format(sBuffer, sizeof(sBuffer), "%s: %s.", tag, sBuffer);
+    _Assert(message);
+}
+
+static void _Assert(const char[] message)
+{
+#if defined _log_for_sourcepawn_included
+    char sPath[256];
+    BuildPath(Path_SM, sPath, sizeof(sPath), "/logs/utlvector/%d-%m-%y.log");
+    Logger logger = ServerConsoleSink.CreateLogger("utlvector");
+    logger.SetLevel(LogLevel_Fatal);
+    
+    if (logger)
+    {
+        logger.LogSrc(LogLevel_Fatal, message);
+        logger.LogStackTrace(LogLevel_Fatal, message);
+        logger.Flush();
+        delete logger;
+    }
+#else
+    LogStackTrace(message);
+    PrintToServer(message);
+#endif
+
+    SetCommandFlags("crash", GetCommandFlags("crash") & ~FCVAR_CHEAT);
+    ServerCommand("crash");
+}
