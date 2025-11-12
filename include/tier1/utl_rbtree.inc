@@ -347,23 +347,17 @@ methodmap UtlRBTree < AddressBase {
     }
 
     public any Get(int i, int size = 4) {
-        if (!this.IsValidIndex(i, size))
-            ThrowError("Param index (%d) out of bounds. m_nAllocationCount: [0 - %d], m_LastAlloc: [0 - %d].", i, this.m_nAllocationCount, this.m_LastAlloc);
-
+        Assert(this.IsValidIndex(i, size), UTL_RBTREE_TAG, "Param index (%d) out of bounds. m_nAllocationCount: [0 - %d], m_LastAlloc: [0 - %d].", i, this.m_nAllocationCount, this.m_LastAlloc);
         return view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).m_Data;
     }
 
     public void Set(int i, int size = 4, any val) {
-        if (!this.IsValidIndex(i, size))
-            ThrowError("Param index (%d) out of bounds. m_nAllocationCount: [0 - %d], m_LastAlloc: [0 - %d].", i, this.m_nAllocationCount, this.m_LastAlloc);
-
+        Assert(this.IsValidIndex(i, size), UTL_RBTREE_TAG, "Param index (%d) out of bounds. m_nAllocationCount: [0 - %d], m_LastAlloc: [0 - %d].", i, this.m_nAllocationCount, this.m_LastAlloc);
         view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).m_Data = val;
     }
 
     public any GetEx(int i, int size = 4) {
-        if (!this.IsValidIndex(i, size))
-            ThrowError("Param index (%d) out of bounds. m_nAllocationCount: [0 - %d], m_LastAlloc: [0 - %d].", i, this.m_nAllocationCount, this.m_LastAlloc);
-
+        Assert(this.IsValidIndex(i, size), UTL_RBTREE_TAG, "Param index (%d) out of bounds. m_nAllocationCount: [0 - %d], m_LastAlloc: [0 - %d].", i, this.m_nAllocationCount, this.m_LastAlloc);
         return view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).GetDataAddress();
     }
 
@@ -442,9 +436,7 @@ methodmap UtlRBTree < AddressBase {
     }
 
     public UtlRBTreeLinks_t Links(int i, int size = 4) {
-        if (i == UtlRBTree.InvalidIndex())
-            ThrowError("Param index (%d) invalid", i);
-
+        Assert(i != UtlRBTree.InvalidIndex(), UTL_RBTREE_TAG, "Param index (%d) out of bounds", i);
         return view_as<UtlRBTreeLinks_t>(view_as<any>(this.m_pMemory) + i * size);
     }
 
@@ -757,13 +749,14 @@ methodmap UtlRBTree < AddressBase {
     }
 
     public void Link(int elem, int size = 4) {
-        if (elem != UtlRBTree.InvalidIndex())
-        {
+        if (elem != UtlRBTree.InvalidIndex()) {
             int parent = UtlRBTree.InvalidIndex();
             bool leftchild = false;
 
             this.FindInsertionPosition(this.Element(elem, size), parent, leftchild, size);
             this.LinkToParent(elem, parent, leftchild, size);
+
+            Assert(this.IsValid(), UTL_RBTREE_TAG, "Invalid RBTree after Link");
         }
     }
 
@@ -780,8 +773,8 @@ methodmap UtlRBTree < AddressBase {
 
     public int NextInorder(int i, int size = 4) {
         // Don't go into an infinite loop if it's a bad index
+        Assert(this.IsValidIndex(i, size), UTL_RBTREE_TAG, "Param index (%d) invalid.", i);
         if (!this.IsValidIndex(i, size)) {
-            ThrowError("Param index (%d) invalid.", i);
             return UtlRBTree.InvalidIndex();
         }
 
@@ -811,8 +804,8 @@ methodmap UtlRBTree < AddressBase {
 
     public int PrevInorder(int i, int size = 4) {
         // Don't go into an infinite loop if it's a bad index
+        Assert(this.IsValidIndex(i, size), UTL_RBTREE_TAG, "Param index (%d) invalid.", i);
         if (!this.IsValidIndex(i, size)) {
-            ThrowError("Param index (%d) invalid.", i);
             return UtlRBTree.InvalidIndex();
         }
 
@@ -877,13 +870,11 @@ methodmap UtlRBTree < AddressBase {
         return UtlRBTree.InvalidIndex();
     }
 
-/*
-    I CUtlRBTree<T, I, L, M>::PrevPreorder( I i ) const
-    {
-        Assert(0);  // not implemented yet
-        return InvalidIndex();
+    public int PrevPreorder(int i) {
+        Assert_Zero(UTL_RBTREE_TAG, "UtlRBtree.PrevPreorder() Not implemented yet.");
+        i = UtlRBTree.InvalidIndex();
+        return i;
     }
-*/
 
     public int LastPreorder(int size = 4) {
         int i = this.m_Root;
@@ -990,15 +981,13 @@ methodmap UtlRBTree < AddressBase {
             this.m_LessFunc = lessFunc;
         } else if (this.Count() > 0){
             // need to re-sort the tree here....
-            ThrowError("LessFunc is already set.");
+            Assert_Zero(UTL_RBTREE_TAG, "Can't change the lessFunc after inserting elements.");
         }
     }
 
     // Inserts a node into the tree, doesn't copy the data in.
     public void FindInsertionPosition(any insert, int &parent, bool &leftchild, int size = 4) {
-        if (!(!!this.m_LessFunc)) {
-            ThrowError("LessFunc is not set.");
-        }
+        Assert(!!this.m_LessFunc, UTL_RBTREE_TAG, "LessFunc is not set.");
 
         /* find where node belongs */
         int current = this.m_Root;
@@ -1018,9 +1007,7 @@ methodmap UtlRBTree < AddressBase {
     }
 
     public int Find(any search, int size = 4) {
-        if (!(!!this.m_LessFunc)) {
-            ThrowError("LessFunc is not set.");
-        }
+        Assert(!!this.m_LessFunc, UTL_RBTREE_TAG, "LessFunc is not set.");
 
         int current = this.m_Root;
         while (current != UtlRBTree.InvalidIndex())  {
@@ -1037,9 +1024,7 @@ methodmap UtlRBTree < AddressBase {
     }
 
     public int FindFirst(any search, int size = 4) {
-        if (!(!!this.m_LessFunc)) {
-            ThrowError("LessFunc is not set.");
-        }
+        Assert(!!this.m_LessFunc, UTL_RBTREE_TAG, "LessFunc is not set.");
 
         int current = this.m_Root;
         int best = UtlRBTree.InvalidIndex();
@@ -1058,13 +1043,10 @@ methodmap UtlRBTree < AddressBase {
     }
 
     public int FindClosest(any search, int size = 4, CompareOperands_t eFindCriteria) {
-        if (!(!!this.m_LessFunc)) {
-            ThrowError("LessFunc is not set.");
-        }
+        Assert(!!this.m_LessFunc, UTL_RBTREE_TAG, "LessFunc is not set.");
 
-        if (! (( eFindCriteria & ( k_EGreaterThan | k_ELessThan ) ) ^ ( k_EGreaterThan | k_ELessThan )) ) {
-            ThrowError("Invalid FindCriteria (%d).", eFindCriteria);
-        }
+        // error 450: no viable conversion from "CompareOperands_t" to "bool"
+        Assert( view_as<bool>(( eFindCriteria & ( k_EGreaterThan | k_ELessThan ) ) ^ ( k_EGreaterThan | k_ELessThan )), UTL_RBTREE_TAG, "Invalid FindCriteria (%d).", eFindCriteria);
 
         int current = this.m_Root;
         int best = UtlRBTree.InvalidIndex();
@@ -1105,11 +1087,10 @@ methodmap UtlRBTree < AddressBase {
 // Allocates / deallocates nodes
 //-----------------------------------------------------------------------------
     public void Grow(int alloccount = 1, int size = 4) {
-        if (alloccount <= 0)
-            ThrowError("Param alloccount (%d) invalid.", alloccount);
+        Assert((alloccount > 0), UTL_RBTREE_TAG, "Param alloccount (%d) invalid.", alloccount);
 
         if (this.IsExternallyAllocated()) {
-            ThrowError("Can't grow a buffer whose memory was externally allocated .");
+            Assert_Zero(UTL_RBTREE_TAG, "Can't grow a buffer whose memory was externally allocated.");
             return;
         }
 
@@ -1130,6 +1111,7 @@ methodmap UtlRBTree < AddressBase {
                 if ( nAllocationRequested != nAllocationRequested )
                 {
                     // we've been asked to grow memory to a size s.t. the index type can't address the requested amount of memory
+                    Assert_Zero(UTL_RBTREE_TAG, "The index type can't address the requested amount of memory.");
                     return;
                 }
                 while ( nNewAllocationCount < nAllocationRequested )
@@ -1142,9 +1124,14 @@ methodmap UtlRBTree < AddressBase {
         this.m_nAllocationCount += nNewAllocationCount;
 
         if (this.m_pMemory) {
-            this.m_pMemory = realloc(this.m_pMemory, this.m_nAllocationCount * size);
+            // do not load or set first! check the allocated memory.
+            any p = realloc(this.m_pMemory, this.m_nAllocationCount * size);
+            Assert(!p ? 0 : 1, UTL_RBTREE_TAG, "realloc failed");
+            this.m_pMemory = p;
         } else {
-            this.m_pMemory = malloc(this.m_nAllocationCount * size);
+            any p = malloc(this.m_nAllocationCount * size);
+            Assert(!p ? 0 : 1, UTL_RBTREE_TAG, "malloc failed");
+            this.m_pMemory = p;
         }
     }
 
@@ -1154,26 +1141,19 @@ methodmap UtlRBTree < AddressBase {
 
         // Nothing in the free list; add.
         if (this.m_FirstFree != UtlRBTree.InvalidIndex()) {
-            if (!(this.IsIdxValid(this.m_LastAlloc) || this.m_NumElements == 0))
-                ThrowError("Invalid LastAlloc (%d) or NumElements (%d).", this.m_LastAlloc, this.m_NumElements);
-
+            Assert((this.IsIdxValid(this.m_LastAlloc) || this.m_NumElements == 0), UTL_RBTREE_TAG, "Invalid LastAlloc (%d) or NumElements (%d).", this.m_LastAlloc, this.m_NumElements)
             int it = this.IsIdxValid(this.m_LastAlloc) ? (this.IsIdxValid(this.m_LastAlloc + 1) ? this.m_LastAlloc + 1 : UtlRBTree.InvalidIndex()) : (this.IsIdxValid(0) ? 0 : UtlRBTree.InvalidIndex());
 
             if (!this.IsIdxValid(it)) {
                 this.Grow(_, size);
 
                 it = this.IsIdxValid(this.m_LastAlloc) ? (this.IsIdxValid(this.m_LastAlloc + 1) ? this.m_LastAlloc + 1 : UtlRBTree.InvalidIndex()) : (this.IsIdxValid(0) ? 0 : UtlRBTree.InvalidIndex());
-                if (!this.IsIdxValid(it)) {
-                    // obviousely we should crash the server at this time, othwerwise this will cause undefined behavior!
-                    ThrowError("CUtlRBTree overflow!");
-                }
+                Assert(this.IsIdxValid(it), UTL_RBTREE_TAG, "CUtlRBTree overflow!");
             }
 
             this.m_LastAlloc = it;
             elem = this.m_LastAlloc;
-            if (!this.IsIdxValid(this.m_LastAlloc)) {
-                ThrowError("CUtlRBTree overflow!");
-            }
+            Assert(this.IsIdxValid(this.m_LastAlloc), UTL_RBTREE_TAG, "CUtlRBTree overflow!");
         } else {
             elem = this.m_FirstFree;
             this.m_FirstFree = this.RightChild(this.m_FirstFree, size);
@@ -1187,10 +1167,7 @@ methodmap UtlRBTree < AddressBase {
     }
 
     public void FreeNode(int i, int size = 4, UtlRBTreeDestructorFunc destructor) {
-        if (! (this.IsValidIndex(i, size) && (i != UtlRBTree.InvalidIndex())) ) {
-            ThrowError("Param index (%d) invalid.", i);
-            return;
-        }
+        Assert((this.IsValidIndex(i, size) && (i != UtlRBTree.InvalidIndex())), UTL_RBTREE_TAG, "Param index (%d) invalid.", i);
 
         this.Destruct(i, size, destructor);
         this.SetLeftChild(i, i, size);
@@ -1202,7 +1179,7 @@ methodmap UtlRBTree < AddressBase {
         int i = this.NewNode(size, constructor);
         this.LinkToParent(i, parent, leftchild, size);
         ++this.m_NumElements;
-
+        Assert(this.IsValid(), UTL_RBTREE_TAG, "Invalid tree after insert.");
         return i;
     }
 
@@ -1211,6 +1188,7 @@ methodmap UtlRBTree < AddressBase {
         bool leftchild = false;
         this.FindInsertionPosition(insert, parent, leftchild, size);
         int newNode = this.InsertAt(parent, leftchild, size, constructor);
+        
         // CopyConstruct( &Element( newNode ), insert );
         return newNode;
     }
@@ -1248,6 +1226,8 @@ methodmap UtlRBTree < AddressBase {
 
             this.FreeNode(elem, size, destructor);
             --this.m_NumElements;
+
+            Assert(this.IsValid(), UTL_RBTREE_TAG, "Invalid tree after remove.");
         }
     }
 
@@ -1266,18 +1246,11 @@ methodmap UtlRBTree < AddressBase {
         // valid elements for the multilist case (since we don't have all elements
         // connected to each other in a list).
 
+        
         if (this.m_LastAlloc == UtlRBTree.InvalidIndex()) {
-            if (this.m_Root == UtlRBTree.InvalidIndex()) {
-                ThrowError("No elements to remove.");
-            }
-
-            if (this.m_FirstFree == UtlRBTree.InvalidIndex()) {
-                ThrowError("No free elements to remove.");
-            }
-
-            if (this.m_NumElements == 0) {
-                ThrowError("No elements to remove.");
-            }
+            Assert(this.m_Root == UtlRBTree.InvalidIndex(), UTL_RBTREE_TAG, "No elements to remove. m_Root = %d", this.m_Root);
+            Assert(this.m_FirstFree == UtlRBTree.InvalidIndex(), UTL_RBTREE_TAG, "No free elements to remove. m_FirstFree = %d", this.m_FirstFree);
+            Assert(this.m_NumElements == 0, UTL_RBTREE_TAG, "No elements to remove. m_NumElements = %d", this.m_NumElements);
 
             return;
         }
@@ -1304,6 +1277,8 @@ methodmap UtlRBTree < AddressBase {
         this.m_LastAlloc = UtlRBTree.InvalidIndex();
         this.m_FirstFree = UtlRBTree.InvalidIndex();
         this.m_NumElements = 0;
+
+        Assert(this.IsValid(), UTL_RBTREE_TAG, "Invalid tree after remove all.");
     }
 
     public void Purge__(int size = 4, UtlRBTreeDestructorFunc destructor) {
