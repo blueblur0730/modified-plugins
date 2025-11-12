@@ -24,7 +24,7 @@
  * Reworked by blueblur
  * Date     2025-11-10
  * url      https://github.com/blueblur0730/modified-plugins
- * Version  2.4.1
+ * Version  2.5.0
  * 
  * Ported from: SM-Memory CUtlVector
  * url      https://github.com/Scags/SM-Memory/blob/main/pawn/sourcemod/scripting/include/smmem/vec.inc

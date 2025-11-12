@@ -17,7 +17,7 @@
  * Author: blueblur
  * Date: 2025-11-11
  * url: https://github.com/blueblur0730/modified-plugins
- * Version: 1.1.1
+ * Version: 1.2.0
 */
 
 /*
