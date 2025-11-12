@@ -1156,7 +1156,7 @@ methodmap UtlRBTree < AddressBase {
 
     // see 'inline T* CopyConstruct( T* pMemory, T const& src )' (src/public/tier0/platform.h)
     public void CopyConstruct(int elem, int size = 4, any obj = 0, UtlRBTreeConstructorFunc constructor) {
-        Assert( obj != 0, UTL_VECTOR_TAG, "Param obj is null to copy construct.");
+        Assert( obj != 0, UTL_RBTREE_TAG, "Param obj is null to copy construct.");
         Call_StartFunction(INVALID_HANDLE, constructor);
         Call_PushCell(this);
         Call_PushCell(elem);
