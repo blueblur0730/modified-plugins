@@ -402,7 +402,17 @@ methodmap UtlVector < AddressBase {
     // see 'inline T* Construct( T* pMemory )' or 'inline T* CopyConstruct( T* pMemory, T const& src )' (src/public/tier0/platform.h).
     // when adding elements to the vector, we need to construct the object stored first.
     // but how do we construct these data that is all on your own.
-    public void Construct(int elem, int size = 4, any obj = 0, UtlVectorConstructorFunc constructor) {
+    public void Construct(int elem, int size = 4, UtlVectorConstructorFunc constructor) {
+        Call_StartFunction(INVALID_HANDLE, constructor);
+        Call_PushCell(this);
+        Call_PushCell(elem);
+        Call_PushCell(this.GetEx(elem, size));
+        Call_Finish();
+    }
+
+    // see 'inline T* CopyConstruct( T* pMemory, T const& src )' (src/public/tier0/platform.h)
+    public void CopyConstruct(int elem, int size = 4, any obj = 0, UtlVectorConstructorFunc constructor) {
+        Assert( obj != 0, UTL_VECTOR_TAG, "Param obj is null to copy construct.");
         Call_StartFunction(INVALID_HANDLE, constructor);
         Call_PushCell(this);
         Call_PushCell(elem);
@@ -471,41 +481,42 @@ methodmap UtlVector < AddressBase {
         }
     }
 
-    public int InsertBefore(int elem, int size = 4, any obj = 0, UtlVectorConstructorFunc constructor) {
+    // when use copyconstructor, param obj cannot be null.
+    public int InsertBefore(int elem, int size = 4, bool bUseCopyConstructor = false, any obj = 0, UtlVectorConstructorFunc constructor) {
         Assert( ((elem == this.Count()) || this.IsValidIndex(elem)) , UTL_VECTOR_TAG, "Param elem (%d) out of bounds. [0 - %d].", elem, this.m_Size);
 
-        if (obj) {
+        if (bUseCopyConstructor) {
             Assert( (this.Base() == 0) || (obj < this.Base()) || (obj >= (this.Base() + this.Count()) ) , UTL_VECTOR_TAG, "Param obj's address (%d / %X) is not in the bound of this vector [%d, %d], or element pointer is null", obj, obj, this.Base(), this.Base() + this.Count());
         }
 
         this.GrowVector(_, size);
         this.ShiftElementsRight(elem, _,size);
 
-        this.Construct(elem, size, obj, constructor);
+        bUseCopyConstructor ?
+        this.CopyConstruct(elem, size, obj, constructor) :
+        this.Construct(elem, size, constructor);
         return elem;
     }
 
-    public int InsertAfter(int elem, int size = 4, any obj = 0, UtlVectorConstructorFunc constructor) {
-        return this.InsertBefore(elem + 1, size, obj, constructor);
+    public int InsertAfter(int elem, int size = 4, bool bUseCopyConstructor = false, any obj = 0, UtlVectorConstructorFunc constructor) {
+        return this.InsertBefore(elem + 1, size, bUseCopyConstructor, obj, constructor);
     }
 
-    public int AddToHead(int size = 4, any obj = 0, UtlVectorConstructorFunc constructor) {
-        return this.InsertBefore(0, size, obj, constructor);
+    public int AddToHead(int size = 4, bool bUseCopyConstructor = false, any obj = 0, UtlVectorConstructorFunc constructor) {
+        return this.InsertBefore(0, size, bUseCopyConstructor, obj, constructor);
     }
 
-    public int AddToTail(int size = 4, any obj = 0, UtlVectorConstructorFunc constructor) {
-        return this.InsertBefore(this.m_Size, size, obj, constructor);
+    public int AddToTail(int size = 4, bool bUseCopyConstructor = false, any obj = 0, UtlVectorConstructorFunc constructor) {
+        return this.InsertBefore(this.m_Size, size, bUseCopyConstructor, obj, constructor);
     }
 
-    public any AddToTailGetPtr(int size = 4, NumberType elementSize = NumberType_Int32, any obj = 0, UtlVectorConstructorFunc constructor) {
-        int index = this.InsertBefore(this.m_Size, size, obj, constructor);
+    public any AddToTailGetPtr(int size = 4, NumberType elementSize = NumberType_Int32, bool bUseCopyConstructor = false, any obj = 0, UtlVectorConstructorFunc constructor) {
+        int index = this.InsertBefore(this.m_Size, size, bUseCopyConstructor, obj, constructor);
         return this.Get(index, size, elementSize);
     }
 
-    // if bUseDefaultConstructor is true, use default constructor to construct the object.
-    // if bUseDefaultConstructor is false, use copy constructor to construct the object. and you wil need to pass param array objs.
     // note the size of param 'objs' is the same as param 'num'.
-    public int InsertMultipleBefore(int elem, int num, int size = 4, bool bUseDefaultConstructor = false, any[] objs, UtlVectorConstructorFunc constructor) {
+    public int InsertMultipleBefore(int elem, int num, int size = 4, bool bUseCopyConstructor = false, any[] objs, UtlVectorConstructorFunc constructor) {
         if (num == 0)
             return elem;
 
@@ -515,13 +526,13 @@ methodmap UtlVector < AddressBase {
         this.ShiftElementsRight(elem, num, size);
 
         // Invoke default constructors
-        if (bUseDefaultConstructor) {
+        if (!bUseCopyConstructor || objs[0] == 0) {
             for (int i = 0; i < num; i++) {
-                this.Construct(elem + i, size, 0, constructor);
+                this.Construct(elem + i, size, constructor);
             }
         } else {
             for (int i = 0; i < num; i++) {
-                this.Construct(elem + i, size, objs[i], constructor);
+                this.CopyConstruct(elem + i, size, objs[i], constructor);
             }
         }
 
@@ -529,16 +540,16 @@ methodmap UtlVector < AddressBase {
         return elem;
     }
 
-    public int AddMultipleToHead(int num, int size = 4, bool bUseDefaultConstructor = false, any[] objs, UtlVectorConstructorFunc constructor) {
-        return this.InsertMultipleBefore(0, num, size, bUseDefaultConstructor, objs, constructor);
+    public int AddMultipleToHead(int num, int size = 4, bool bUseCopyConstructor = false, any[] objs, UtlVectorConstructorFunc constructor) {
+        return this.InsertMultipleBefore(0, num, size, bUseCopyConstructor, objs, constructor);
     }
 
-    public int AddMultipleToTail(int num, int size = 4, bool bUseDefaultConstructor = false, any[] objs, UtlVectorConstructorFunc constructor) {
-        return this.InsertMultipleBefore(this.m_Size, num, size, bUseDefaultConstructor, objs, constructor);
+    public int AddMultipleToTail(int num, int size = 4, bool bUseCopyConstructor = false, any[] objs, UtlVectorConstructorFunc constructor) {
+        return this.InsertMultipleBefore(this.m_Size, num, size, bUseCopyConstructor, objs, constructor);
     }
 
-    public int InsertMultipleAfter(int elem, int num, int size = 4, bool bUseDefaultConstructor = false, any[] objs, UtlVectorConstructorFunc constructor) {
-        return this.InsertMultipleBefore(elem + 1, num, size, bUseDefaultConstructor, objs, constructor);
+    public int InsertMultipleAfter(int elem, int num, int size = 4, bool bUseCopyConstructor = false, any[] objs, UtlVectorConstructorFunc constructor) {
+        return this.InsertMultipleBefore(elem + 1, num, size, bUseCopyConstructor, objs, constructor);
     }
 
     // uses copy comstructor to construct the object.
@@ -554,7 +565,7 @@ methodmap UtlVector < AddressBase {
         // Copy the elements.	
         this.m_Size += nSrcCount;
         for (int i = 0; i < nSrcCount; i++) {
-            this.Construct(base + i, size, src.Element(i, size, elementSize), constructor);
+            this.CopyConstruct(base + i, size, src.Element(i, size, elementSize), constructor);
         }
 
         return base;

@@ -1143,13 +1143,47 @@ methodmap UtlRBTree < AddressBase {
         }
     }
 
+    // see 'inline T* Construct( T* pMemory )' (src/public/tier0/platform.h)
+    // when adding elements to the vector, we need to construct the object stored first.
+    // but how do we construct these data that is all on your own.
+    public void Construct(int elem, int size = 4, UtlRBTreeConstructorFunc constructor) {
+        Call_StartFunction(INVALID_HANDLE, constructor);
+        Call_PushCell(this);
+        Call_PushCell(elem);
+        Call_PushCell(this.GetEx(elem, size));
+        Call_Finish();
+    }
 
+    // see 'inline T* CopyConstruct( T* pMemory, T const& src )' (src/public/tier0/platform.h)
+    public void CopyConstruct(int elem, int size = 4, any obj = 0, UtlRBTreeConstructorFunc constructor) {
+        Assert( obj != 0, UTL_VECTOR_TAG, "Param obj is null to copy construct.");
+        Call_StartFunction(INVALID_HANDLE, constructor);
+        Call_PushCell(this);
+        Call_PushCell(elem);
+        Call_PushCell(this.GetEx(elem, size));
+        Call_PushCell(obj);
+        Call_Finish();
+    }
+
+    // see 'void Destruct<T>(T * pMemory)' (src/public/tier0/platform.h)
+    // when removing elements from the vector, we need to destruct the object stored first.
+    // but how do we destruct these data that is all on your own.
+    public void Destruct(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlRBTreeDestructorFunc destructor) {
+        Call_StartFunction(INVALID_HANDLE, destructor);
+        Call_PushCell(this);
+        Call_PushCell(elem);
+        Call_PushCell(this.GetEx(elem, size));
+        Call_PushCell(this.Get(elem, size, elementSize));
+        Call_Finish();
+    }
+
+    // uses default constructor.
     public int NewNode(int size = 4, UtlRBTreeConstructorFunc constructor) {
         int elem = 0;
 
         // Nothing in the free list; add.
         if (this.m_FirstFree != UtlRBTree.InvalidIndex()) {
-            Assert((this.IsIdxValid(this.m_LastAlloc) || this.m_NumElements == 0), UTL_RBTREE_TAG, "Invalid LastAlloc (%d) or NumElements (%d).", this.m_LastAlloc, this.m_NumElements)
+            Assert((this.IsIdxValid(this.m_LastAlloc) || this.m_NumElements == 0), UTL_RBTREE_TAG, "Invalid LastAlloc (%d) or NumElements (%d).", this.m_LastAlloc, this.m_NumElements);
             int it = this.IsIdxValid(this.m_LastAlloc) ? (this.IsIdxValid(this.m_LastAlloc + 1) ? this.m_LastAlloc + 1 : UtlRBTree.InvalidIndex()) : (this.IsIdxValid(0) ? 0 : UtlRBTree.InvalidIndex());
 
             if (!this.IsIdxValid(it)) {
@@ -1174,15 +1208,16 @@ methodmap UtlRBTree < AddressBase {
         return elem;
     }
 
-    public void FreeNode(int i, int size = 4, UtlRBTreeDestructorFunc destructor) {
+    public void FreeNode(int i, int size = 4, NumberType elementSize = NumberType_Int32, UtlRBTreeDestructorFunc destructor) {
         Assert((this.IsValidIndex(i, size) && (i != UtlRBTree.InvalidIndex())), UTL_RBTREE_TAG, "Param index (%d) invalid.", i);
 
-        this.Destruct(i, size, destructor);
+        this.Destruct(i, size, elementSize, destructor);
         this.SetLeftChild(i, i, size);
         this.SetRightChild(i, this.m_FirstFree, size);
         this.m_FirstFree = i;
     }
 
+    // uses default constructor.
     public int InsertAt(int parent, bool leftchild, int size = 4, UtlRBTreeConstructorFunc constructor) {
         int i = this.NewNode(size, constructor);
         this.LinkToParent(i, parent, leftchild, size);
@@ -1191,16 +1226,18 @@ methodmap UtlRBTree < AddressBase {
         return i;
     }
 
+    // uses copy constructor.
     public int Insert(any insert, int size = 4, UtlRBTreeConstructorFunc constructor) {
         int parent = UtlRBTree.InvalidIndex();
         bool leftchild = false;
         this.FindInsertionPosition(insert, parent, leftchild, size);
         int newNode = this.InsertAt(parent, leftchild, size, constructor);
         
-        // CopyConstruct( &Element( newNode ), insert );
+        this.CopyConstruct(newNode, size, insert, constructor);
         return newNode;
     }
 
+    // uses copy constructor.
     public int InsertIfNotFound(any insert, int size = 4, NumberType elementSize = NumberType_Int32, UtlRBTreeConstructorFunc constructor) {
         // use copy constructor to copy it in
         int parent;
@@ -1222,34 +1259,34 @@ methodmap UtlRBTree < AddressBase {
         }
 
         int newNode = this.InsertAt(parent, leftchild, size, constructor);
-        //CopyConstruct( &Element( newNode ), insert );
+        this.CopyConstruct(newNode, size, insert, constructor);
         return newNode;
     }
 
 
 
-    public void RemoveAt(int elem, int size = 4, UtlRBTreeDestructorFunc destructor) {
+    public void RemoveAt(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlRBTreeDestructorFunc destructor) {
         if (elem != UtlRBTree.InvalidIndex()) {
             this.Unlink(elem, size);
 
-            this.FreeNode(elem, size, destructor);
+            this.FreeNode(elem, size, elementSize, destructor);
             --this.m_NumElements;
 
             Assert(this.IsValid(), UTL_RBTREE_TAG, "Invalid tree after remove.");
         }
     }
 
-    public bool Remove(any search, int size = 4, UtlRBTreeDestructorFunc destructor) {
+    public bool Remove(any search, int size = 4, NumberType elementSize = NumberType_Int32, UtlRBTreeDestructorFunc destructor) {
         int node = this.Find(search, size);
         if (node != UtlRBTree.InvalidIndex()) {
-            this.RemoveAt(node, size, destructor);
+            this.RemoveAt(node, size, elementSize, destructor);
             return true;
         }
 
         return false;
     }
 
-    public void RemoveAll(int size = 4, UtlRBTreeDestructorFunc destructor) {
+    public void RemoveAll(int size = 4, NumberType elementSize = NumberType_Int32, UtlRBTreeDestructorFunc destructor) {
         // Have to do some convoluted stuff to invoke the destructor on all
         // valid elements for the multilist case (since we don't have all elements
         // connected to each other in a list).
@@ -1266,7 +1303,7 @@ methodmap UtlRBTree < AddressBase {
         for (int it = this.IsIdxValid( 0 ) ? 0 : UtlRBTree.InvalidIndex(); it != UtlRBTree.InvalidIndex(); it = this.IsIdxValid( it + 1 ) ? it + 1 : UtlRBTree.InvalidIndex() ) {
             int i = it;
             if (this.IsValidIndex(i, size)) { // skip elements in the free list
-                this.Destruct(i, size, destructor);
+                this.Destruct(i, size, elementSize, destructor);
                 this.SetRightChild(i, this.m_FirstFree, size);
                 this.SetLeftChild(i, i, size);
                 this.m_FirstFree = i;
@@ -1289,8 +1326,8 @@ methodmap UtlRBTree < AddressBase {
         Assert(this.IsValid(), UTL_RBTREE_TAG, "Invalid tree after remove all.");
     }
 
-    public void Purge__(int size = 4, UtlRBTreeDestructorFunc destructor) {
-        this.RemoveAll(size, destructor);
+    public void Purge__(int size = 4, NumberType elementSize = NumberType_Int32, UtlRBTreeDestructorFunc destructor) {
+        this.RemoveAll(size, elementSize, destructor);
         this.Purge();
     }
 
@@ -1306,27 +1343,6 @@ methodmap UtlRBTree < AddressBase {
 
             this.m_nAllocationCount = 0;
         }
-    }
-
-    // see 'inline T* Construct( T* pMemory )' (src/public/tier0/platform.h)
-    // when adding elements to the vector, we need to construct the object stored first.
-    // but how do we construct these data that is all on your own.
-    public void Construct(int elem, int size = 4, UtlRBTreeConstructorFunc constructor) {
-        Call_StartFunction(INVALID_HANDLE, constructor);
-        Call_PushCell(elem);
-        Call_PushCell(this.GetEx(elem, size));
-        Call_Finish();
-    }
-
-    // see 'void Destruct<T>(T * pMemory)' (src/public/tier0/platform.h)
-    // when removing elements from the vector, we need to destruct the object stored first.
-    // but how do we destruct these data that is all on your own.
-    public void Destruct(int elem, int size = 4, , NumberType elementSize = NumberType_Int32, UtlRBTreeDestructorFunc destructor) {
-        Call_StartFunction(INVALID_HANDLE, destructor);
-        Call_PushCell(elem);
-        Call_PushCell(this.GetEx(elem, size));
-        Call_PushCell(this.Get(elem, size, elementSize));
-        Call_Finish();
     }
 
     public bool IsExternallyAllocated() {
@@ -1383,8 +1399,8 @@ static void _Assert(const char[] message)
 {
 #if defined _log_for_sourcepawn_included
     char sPath[256];
-    BuildPath(Path_SM, sPath, sizeof(sPath), "/logs/utlvector/%d-%m-%y.log");
-    Logger logger = ServerConsoleSink.CreateLogger("utlvector");
+    BuildPath(Path_SM, sPath, sizeof(sPath), "/logs/utlrbtree/%d-%m-%y.log");
+    Logger logger = ServerConsoleSink.CreateLogger("utlrbtree");
     logger.SetLevel(LogLevel_Fatal);
     
     if (logger)
