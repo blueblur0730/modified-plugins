@@ -24,7 +24,7 @@
  * Reworked by blueblur
  * Date     2025-11-10
  * url      https://github.com/blueblur0730/modified-plugins
- * Version  2.3.0
+ * Version  2.4.0
  * 
  * Ported from: SM-Memory CUtlVector
  * url      https://github.com/Scags/SM-Memory/blob/main/pawn/sourcemod/scripting/include/smmem/vec.inc
@@ -40,7 +40,7 @@
 #define FOR_EACH_VEC( %0, %1 )      for ( int %1 = 0; %1 < %0.Count(); %1++ )
 #define FOR_EACH_VEC_BACK( %0, %1 ) for ( int %1 = %0.Count()-1; %1 >= 0; %1-- )
 
-// sourcepawn seems really dont like macros.
+// sourcepawn seems dont really like macros.
 
 /*
 #define Assert(%0, %1, %2)                                  if (!(%0)) { _Assert(%1, %2); }
@@ -70,22 +70,47 @@ enum
 */
 typedef UtlVectorSortFunc = function int (any elem1, any elem2);
 
-/**
- * User defined constructor function for UtlVector elements.
- * 
- * @param elem          The element to be constructed.
- * @param addr          The address of the element.
-*/
-typedef UtlVectorConstructorFunc = function void (int elem, any addr);
+
+typeset UtlVectorConstructorFunc
+{
+    /**
+     * User defined constructor function for UtlVector elements.
+     * This equilavent to 'inline T* Construct( T* pMemory )'
+     * 
+     * which is, you need to call the constructor function using this address.
+     * Like this: SDKCall(hndl, addr, ...);
+     * Or fill the memory yourself: StoreToAddress(addr + offset, value, NumberType_Int32);
+     * 
+     * @param vec           This pointer to the UtlVector.
+     * @param elem          The element to be constructed.
+     * @param addr          The address of the element.
+    */
+    function void (UtlVector vec, int elem, any addr);
+
+    /**
+     * User defined constructor function for UtlVector elements.
+     * This equilavent to 'inline T* CopyConstruct( T* pMemory, const T& src )'
+     * 
+     * which is, you need to store the object (assuming you have already constructed and loaded it from somewhere else) in the memory before calling this function.
+     * Like this: StoreToAddress(addr, obj, NumberType_Int32);
+     * 
+     * @param vec           This pointer to the UtlVector.
+     * @param elem          The element to be constructed.
+     * @param addr          The address of the element.
+     * @param obj           The object that copys to. could be null!!!
+    */
+    function void (UtlVector vec, int elem, any addr, any obj);
+}
 
 /**
  * User defined destructor function for UtlVector elements.
  * 
+ * @param vec           This pointer to the UtlVector.
  * @param elem          The element to be destroyed.
  * @param addr          The address of the element.
  * @param obj           The object that the element owns.
 */
-typedef UtlVectorDestructorFunc = function void (int elem, any addr, any obj);
+typedef UtlVectorDestructorFunc = function void (UtlVector vec, int elem, any addr, any obj);
 
 /**
  * all allocation or deallocation access requires SM-Memory extension to work.
@@ -375,13 +400,15 @@ methodmap UtlVector < AddressBase {
         this.ResetDbgInfo();
     }
 
-    // see 'inline T* Construct( T* pMemory )' (src/public/tier0/platform.h)
+    // see 'inline T* Construct( T* pMemory )' or 'inline T* CopyConstruct( T* pMemory, T const& src )' (src/public/tier0/platform.h).
     // when adding elements to the vector, we need to construct the object stored first.
     // but how do we construct these data that is all on your own.
-    public void Construct(int elem, int size = 4, UtlVectorConstructorFunc constructor) {
+    public void Construct(int elem, int size = 4, any obj = 0, UtlVectorConstructorFunc constructor) {
         Call_StartFunction(INVALID_HANDLE, constructor);
+        Call_PushCell(this);
         Call_PushCell(elem);
         Call_PushCell(this.GetEx(elem, size));
+        Call_PushCell(obj);
         Call_Finish();
     }
 
@@ -390,6 +417,7 @@ methodmap UtlVector < AddressBase {
     // but how do we destruct these data that is all on your own.
     public void Destruct(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
         Call_StartFunction(INVALID_HANDLE, destructor);
+        Call_PushCell(this);
         Call_PushCell(elem);
         Call_PushCell(this.GetEx(elem, size));
         Call_PushCell(this.Get(elem, size, elementSize));
@@ -437,40 +465,48 @@ methodmap UtlVector < AddressBase {
         this.ResetDbgInfo();
     }
 
+    // void CUtlVector<T, A>::EnsureCount( int num ), dose not use copyconstructor, use default constructor!!
     public void EnsureCount(int num, int size = 4, UtlVectorConstructorFunc constructor) {
         if (this.Count() < num) {
-            this.AddMultipleToTail(num - this.Count(), size, constructor);
+            this.AddMultipleToTail(num - this.Count(), size, false, {0}, constructor);
         }
     }
 
-    public int InsertBefore(int elem, int size = 4, UtlVectorConstructorFunc constructor) {
+    public int InsertBefore(int elem, int size = 4, any obj = 0, UtlVectorConstructorFunc constructor) {
         Assert( ((elem == this.Count()) || this.IsValidIndex(elem)) , UTL_VECTOR_TAG, "Param elem (%d) out of bounds. [0 - %d].", elem, this.m_Size);
+
+        if (obj) {
+            Assert( (this.Base() == 0) || (obj < this.Base()) || (obj >= (this.Base() + this.Count()) ) , UTL_VECTOR_TAG, "Param obj's address (%d / %X) is not in the bound of this vector [%d, %d], or element pointer is null", obj, obj, this.Base(), this.Base() + this.Count());
+        }
 
         this.GrowVector(_, size);
         this.ShiftElementsRight(elem, _,size);
 
-        this.Construct(elem, size, constructor);
+        this.Construct(elem, size, obj, constructor);
         return elem;
     }
 
-    public int InsertAfter(int elem, int size = 4, UtlVectorConstructorFunc constructor) {
-        return this.InsertBefore(elem + 1, size, constructor);
+    public int InsertAfter(int elem, int size = 4, any obj = 0, UtlVectorConstructorFunc constructor) {
+        return this.InsertBefore(elem + 1, size, obj, constructor);
     }
 
-    public int AddToHead(int size = 4, UtlVectorConstructorFunc constructor) {
-        return this.InsertBefore(0, size, constructor);
+    public int AddToHead(int size = 4, any obj = 0, UtlVectorConstructorFunc constructor) {
+        return this.InsertBefore(0, size, obj, constructor);
     }
 
-    public int AddToTail(int size = 4, UtlVectorConstructorFunc constructor) {
-        return this.InsertBefore(this.m_Size, size, constructor);
+    public int AddToTail(int size = 4, any obj = 0, UtlVectorConstructorFunc constructor) {
+        return this.InsertBefore(this.m_Size, size, obj, constructor);
     }
 
-    public any AddToTailGetPtr(int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor) {
-        int index = this.InsertBefore(this.m_Size, size, constructor);
+    public any AddToTailGetPtr(int size = 4, NumberType elementSize = NumberType_Int32, any obj = 0, UtlVectorConstructorFunc constructor) {
+        int index = this.InsertBefore(this.m_Size, size, obj, constructor);
         return this.Get(index, size, elementSize);
     }
 
-    public int InsertMultipleBefore(int elem, int num, int size = 4, UtlVectorConstructorFunc constructor) {
+    // if bUseDefaultConstructor is true, use default constructor to construct the object.
+    // if bUseDefaultConstructor is false, use copy constructor to construct the object. and you wil need to pass param array objs.
+    // note the size of param 'objs' is the same as param 'num'.
+    public int InsertMultipleBefore(int elem, int num, int size = 4, bool bUseDefaultConstructor = false, any[] objs, UtlVectorConstructorFunc constructor) {
         if (num == 0)
             return elem;
 
@@ -479,23 +515,50 @@ methodmap UtlVector < AddressBase {
         this.GrowVector(num, size);
         this.ShiftElementsRight(elem, num, size);
 
-        for (int i = 0; i < num; i++) {
-            this.Construct(elem + i, size, constructor);
+        // Invoke default constructors
+        if (bUseDefaultConstructor) {
+            for (int i = 0; i < num; i++) {
+                this.Construct(elem + i, size, 0, constructor);
+            }
+        } else {
+            for (int i = 0; i < num; i++) {
+                this.Construct(elem + i, size, objs[i], constructor);
+            }
         }
+
 
         return elem;
     }
 
-    public int AddMultipleToHead(int num, int size = 4, UtlVectorConstructorFunc constructor) {
-        return this.InsertMultipleBefore(0, num, size, constructor);
+    public int AddMultipleToHead(int num, int size = 4, bool bUseDefaultConstructor = false, any[] objs, UtlVectorConstructorFunc constructor) {
+        return this.InsertMultipleBefore(0, num, size, bUseDefaultConstructor, objs, constructor);
     }
 
-    public int AddMultipleToTail(int num, int size = 4, UtlVectorConstructorFunc constructor) {
-        return this.InsertMultipleBefore(this.m_Size, num, size, constructor);
+    public int AddMultipleToTail(int num, int size = 4, bool bUseDefaultConstructor = false, any[] objs, UtlVectorConstructorFunc constructor) {
+        return this.InsertMultipleBefore(this.m_Size, num, size, bUseDefaultConstructor, objs, constructor);
     }
 
-    public int InsertMultipleAfter(int elem, int num, int size = 4, UtlVectorConstructorFunc constructor) {
-        return this.InsertMultipleBefore(elem + 1, num, size, constructor);
+    public int InsertMultipleAfter(int elem, int num, int size = 4, bool bUseDefaultConstructor = false, any[] objs, UtlVectorConstructorFunc constructor) {
+        return this.InsertMultipleBefore(elem + 1, num, size, bUseDefaultConstructor, objs, constructor);
+    }
+
+    // uses copy comstructor to construct the object.
+    public int AddVectorToTail(UtlVector src, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor) {
+        Assert(src != this, UTL_VECTOR_TAG, "Can't add yourself to yourself.");
+
+        int base = this.Count();
+        int nSrcCount = src.Count();
+
+        // Make space.
+        this.EnsureCapacity(base + nSrcCount, size);
+
+        // Copy the elements.	
+        this.m_Size += nSrcCount;
+        for (int i = 0; i < nSrcCount; i++) {
+            this.Construct(base + i, size, src.Element(i, size, elementSize), constructor);
+        }
+
+        return base;
     }
 
     public void FastRemove(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorDestructorFunc destructor) {
@@ -578,15 +641,17 @@ methodmap UtlVector < AddressBase {
         this.m_Size -= num;
     }
 
+    // uses default constructor to construct the object.
     public void SetCount(int count, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor, UtlVectorDestructorFunc destructor) {
         this.RemoveAll(size, elementSize, destructor);
-        this.AddMultipleToTail(count, size, constructor);
+        this.AddMultipleToTail(count, size, false, {0}, constructor);
     }
 
+    // uses default constructor to construct the object.
     public void SetCountNonDestructively(int count, int size = 4, NumberType elementSize = NumberType_Int32, UtlVectorConstructorFunc constructor, UtlVectorDestructorFunc destructor) {
         int delta = count - this.m_Size;
         if (delta > 0) {
-            this.AddMultipleToTail(delta, size, constructor);
+            this.AddMultipleToTail(delta, size, false, {0}, constructor);
         } else if (delta < 0) {
             this.RemoveMultipleFromTail(-delta, size, elementSize, destructor);
         }
