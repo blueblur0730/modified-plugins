@@ -12,12 +12,13 @@
 #pragma semicolon 1
 
 #define UTL_RBTREE_TAG "[UtlRBTree]"
+#define UTL_RBTREE_VERSION "1.3.0"
 
 /**
  * Author: blueblur
  * Date: 2025-11-11
  * url: https://github.com/blueblur0730/modified-plugins
- * Version: 1.2.0
+ * Version: 1.3.0
 */
 
 /*
@@ -110,8 +111,9 @@ typeset UtlRBTreeConstructorFunc
      * @param vec           This pointer to the UtlRBTree.
      * @param elem          The element to be constructed.
      * @param addr          The address of the element.
+     * @param size          The size of the element.
     */
-    function void (UtlRBTree vec, int elem, any addr);
+    function void (UtlRBTree vec, int elem, any addr, int size);
 
     /**
      * User defined constructor function for UtlRBTree elements.
@@ -124,18 +126,21 @@ typeset UtlRBTreeConstructorFunc
      * @param elem          The element to be constructed.
      * @param addr          The address of the element.
      * @param obj           The object that copys to. could be null!!!
+     * @param size          The size of the object.
     */
-    function void (UtlRBTree vec, int elem, any addr, any obj);
+    function void (UtlRBTree vec, int elem, any addr, any obj, int size);
 }
 
 /**
  * User defined destructor function for UtlRBTree elements.
  * 
+ * @param vec           This pointer to the UtlRBTree.
  * @param elem          The element to be destroyed.
  * @param addr          The address of the element.
  * @param obj           The object that the element owns.
+ * @param size          The size of the object.
 */
-typedef UtlRBTreeDestructorFunc = function void (UtlRBTree vec, int elem, any addr, any obj);
+typedef UtlRBTreeDestructorFunc = function void (UtlRBTree vec, int elem, any addr, any obj, int size);
 
 #define UTL_RBTREE_ITERATOR_OFFSET_INDEX 0x0
 methodmap Iterator_t < AddressBase {
@@ -1014,6 +1019,10 @@ methodmap UtlRBTree < AddressBase {
         }
     }
 
+    public bool HasElement(any search, int size = 4, NumberType elementSize = NumberType_Int32) {
+        return (this.Find(search, size, elementSize) != UtlRBTree.InvalidIndex());
+    }
+
     public int Find(any search, int size = 4, NumberType elementSize = NumberType_Int32) {
         Assert(!!this.m_LessFunc, UTL_RBTREE_TAG, "LessFunc is not set.");
 
@@ -1143,6 +1152,31 @@ methodmap UtlRBTree < AddressBase {
         }
     }
 
+    public void EnsureCapacity(int num, int size = 4) {
+        if (this.m_nAllocationCount >= num)
+            return;
+
+        if (this.IsExternallyAllocated()) {
+            Assert_Zero(UTL_RBTREE_TAG, "Can't grow a buffer whose memory was externally allocated.");
+            return;
+        }
+            
+        this.m_nAllocationCount = num;
+
+        if (this.m_pMemory) {
+            // do not load or set first! check the allocated memory.
+            any p = realloc(this.m_pMemory, this.m_nAllocationCount * size);
+            Assert(!p ? 0 : 1, UTL_RBTREE_TAG, "realloc failed");
+            this.m_pMemory = p;
+        } else {
+            any p = malloc(this.m_nAllocationCount * size);
+            Assert(!p ? 0 : 1, UTL_RBTREE_TAG, "malloc failed");
+            this.m_pMemory = p;
+        }
+
+        this.ResetDbgInfo();
+    }
+
     // see 'inline T* Construct( T* pMemory )' (src/public/tier0/platform.h)
     // when adding elements to the vector, we need to construct the object stored first.
     // but how do we construct these data that is all on your own.
@@ -1151,6 +1185,7 @@ methodmap UtlRBTree < AddressBase {
         Call_PushCell(this);
         Call_PushCell(elem);
         Call_PushCell(this.GetEx(elem, size));
+        Call_PushCell(size);
         Call_Finish();
     }
 
@@ -1162,6 +1197,7 @@ methodmap UtlRBTree < AddressBase {
         Call_PushCell(elem);
         Call_PushCell(this.GetEx(elem, size));
         Call_PushCell(obj);
+        Call_PushCell(size);
         Call_Finish();
     }
 
@@ -1174,6 +1210,7 @@ methodmap UtlRBTree < AddressBase {
         Call_PushCell(elem);
         Call_PushCell(this.GetEx(elem, size));
         Call_PushCell(this.Get(elem, size, elementSize));
+        Call_PushCell(size);
         Call_Finish();
     }
 
@@ -1326,6 +1363,7 @@ methodmap UtlRBTree < AddressBase {
         Assert(this.IsValid(), UTL_RBTREE_TAG, "Invalid tree after remove all.");
     }
 
+    // first destruct all elements, then free the memory.
     public void Purge__(int size = 4, NumberType elementSize = NumberType_Int32, UtlRBTreeDestructorFunc destructor) {
         this.RemoveAll(size, elementSize, destructor);
         this.Purge();

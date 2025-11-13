@@ -11,6 +11,7 @@
 #pragma semicolon 1
 
 #define UTL_VECTOR_TAG "[UtlVector]"
+#define UTL_VECTOR_VERSION "2.5.1"
 
 /**
  * Author   dysphie
@@ -24,7 +25,7 @@
  * Reworked by blueblur
  * Date     2025-11-10
  * url      https://github.com/blueblur0730/modified-plugins
- * Version  2.5.0
+ * Version  2.5.1
  * 
  * Ported from: SM-Memory CUtlVector
  * url      https://github.com/Scags/SM-Memory/blob/main/pawn/sourcemod/scripting/include/smmem/vec.inc
@@ -84,8 +85,9 @@ typeset UtlVectorConstructorFunc
      * @param vec           This pointer to the UtlVector.
      * @param elem          The element to be constructed.
      * @param addr          The address of the element.
+     * @param size          The size of the element.
     */
-    function void (UtlVector vec, int elem, any addr);
+    function void (UtlVector vec, int elem, any addr, int size);
 
     /**
      * User defined constructor function for UtlVector elements.
@@ -98,8 +100,9 @@ typeset UtlVectorConstructorFunc
      * @param elem          The element to be constructed.
      * @param addr          The address of the element.
      * @param obj           The object that copys to. could be null!!!
+     * @param size          The size of the element.
     */
-    function void (UtlVector vec, int elem, any addr, any obj);
+    function void (UtlVector vec, int elem, any addr, any obj, int size);
 }
 
 /**
@@ -109,8 +112,9 @@ typeset UtlVectorConstructorFunc
  * @param elem          The element to be destroyed.
  * @param addr          The address of the element.
  * @param obj           The object that the element owns.
+ * @param size          The size of the element.
 */
-typedef UtlVectorDestructorFunc = function void (UtlVector vec, int elem, any addr, any obj);
+typedef UtlVectorDestructorFunc = function void (UtlVector vec, int elem, any addr, any obj, int size);
 
 /**
  * all allocation or deallocation access requires SM-Memory extension to work.
@@ -407,6 +411,7 @@ methodmap UtlVector < AddressBase {
         Call_PushCell(this);
         Call_PushCell(elem);
         Call_PushCell(this.GetEx(elem, size));
+        Call_PushCell(size);
         Call_Finish();
     }
 
@@ -418,6 +423,7 @@ methodmap UtlVector < AddressBase {
         Call_PushCell(elem);
         Call_PushCell(this.GetEx(elem, size));
         Call_PushCell(obj);
+        Call_PushCell(size);
         Call_Finish();
     }
 
@@ -430,6 +436,7 @@ methodmap UtlVector < AddressBase {
         Call_PushCell(elem);
         Call_PushCell(this.GetEx(elem, size));
         Call_PushCell(this.Get(elem, size, elementSize));
+        Call_PushCell(size);
         Call_Finish();
     }
 
