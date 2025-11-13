@@ -626,8 +626,8 @@ static void _Assert(const char[] message)
 {
 #if defined _log_for_sourcepawn_included
     char sPath[256];
-    BuildPath(Path_SM, sPath, sizeof(sPath), "/logs/utlrbtree/%d-%m-%y.log");
-    Logger logger = ServerConsoleSink.CreateLogger("utlrbtree");
+    BuildPath(Path_SM, sPath, sizeof(sPath), "/logs/utlmap/%d-%m-%y.log");
+    Logger logger = ServerConsoleSink.CreateLogger("utlmap");
     logger.SetLevel(LogLevel_Fatal);
     
     if (logger)
