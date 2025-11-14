@@ -55,12 +55,13 @@ methodmap UtlDict < AddressBase {
 
     property UtlMap m_Elements {
         public get() {
-            return LoadFromAddress(this.addr, NumberType_Int32);
+            return view_as<UtlMap>(this.addr);
         }
-
+/*
         public set(UtlMap value) {
             StoreToAddress(this.addr, value, NumberType_Int32);
         }
+    */
     }
 
     public any Element(int i, int size = 4, NumberType type = NumberType_Int32) {

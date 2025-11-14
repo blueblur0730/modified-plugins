@@ -18,7 +18,7 @@
  * Author: blueblur
  * Date: 2025-11-13
  * url: https://github.com/blueblur0730/modified-plugins
- * Version: 1.0.1
+ * Version: 1.0.2
 */
 
 /*
@@ -134,12 +134,14 @@ methodmap UtlMap < AddressBase {
 
     property UtlRBTree m_Tree {
         public get() {
-            return LoadFromAddress(this.addr + UTL_MAP_OFFSET_TREE, NumberType_Int32);
+            return view_as<UtlRBTree>(this.addr);
         }
 #if defined _smmem_included_
+/*
         public set(UtlRBTree value) {
-            StoreToAddress(this.addr + UTL_MAP_OFFSET_TREE, value, NumberType_Int32);
+            StoreToAddress(this.addr, value, NumberType_Int32);
         }
+*/
 #endif
     }
 
@@ -612,7 +614,7 @@ static void Assert_Zero(const char[] tag, const char[] message, any ...)
     char sBuffer[512];
     VFormat(sBuffer, sizeof(sBuffer), message, 3);
     Format(sBuffer, sizeof(sBuffer), "%s: %s.", tag, sBuffer);
-    _Assert(message);
+    _Assert(sBuffer);
 }
 
 static void _Assert(const char[] message)

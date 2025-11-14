@@ -18,7 +18,7 @@
  * Author: blueblur
  * Date: 2025-11-11
  * url: https://github.com/blueblur0730/modified-plugins
- * Version: 1.3.1
+ * Version: 1.3.2
 */
 
 /*
@@ -158,41 +158,41 @@ methodmap Iterator_t < AddressBase {
 methodmap UtlRBTreeLinks_t < AddressBase {
     property int m_Left {
         public get() {
-            return LoadFromAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_LEFT, NumberType_Int32);
+            return LoadFromAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_LEFT, NumberType_Int16);
         }
 
-        public set(const int val) {
-            StoreToAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_LEFT, val, NumberType_Int32);
+        public set(int val) {
+            StoreToAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_LEFT, val, NumberType_Int16);
         }
     }
 
     property int m_Right {
         public get() {
-            return LoadFromAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_RIGHT, NumberType_Int32);
+            return LoadFromAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_RIGHT, NumberType_Int16);
         }
 
-        public set(const int val) {
-            StoreToAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_RIGHT, val, NumberType_Int32);
+        public set(int val) {
+            StoreToAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_RIGHT, val, NumberType_Int16);
         }
     }
 
     property int m_Parent {
         public get() {
-            return LoadFromAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_PARENT, NumberType_Int32);
+            return LoadFromAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_PARENT, NumberType_Int16);
         }
 
-        public set(const int val) {
-            StoreToAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_PARENT, val, NumberType_Int32);
+        public set(int val) {
+            StoreToAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_PARENT, val, NumberType_Int16);
         }
     }
 
     property int m_Tag {
         public get() {
-            return LoadFromAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_TAG, NumberType_Int32);
+            return LoadFromAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_TAG, NumberType_Int16);
         }
 
-        public set(const int val) {
-            StoreToAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_TAG, val, NumberType_Int32);
+        public set(int val) {
+            StoreToAddress(this.addr + UTL_RBTREE_LINKS_OFFSET_TAG, val, NumberType_Int16);
         }
     }
 }
@@ -304,22 +304,22 @@ methodmap UtlRBTree < AddressBase {
 
     property int m_Root {
         public get() {
-            return LoadFromAddress(this.addr + UTL_RBTREE_OFFSET_ROOT, NumberType_Int32);
+            return LoadFromAddress(this.addr + UTL_RBTREE_OFFSET_ROOT, NumberType_Int16);
         }
 
         public set(int val) {
-            StoreToAddress(this.addr + UTL_RBTREE_OFFSET_ROOT, val, NumberType_Int32);
+            StoreToAddress(this.addr + UTL_RBTREE_OFFSET_ROOT, val, NumberType_Int16);
         }
     }
 
     property int m_NumElements {
         public get() {
-            return LoadFromAddress(this.addr + UTL_RBTREE_OFFSET_NUM_ELEMENTS, NumberType_Int32);
+            return LoadFromAddress(this.addr + UTL_RBTREE_OFFSET_NUM_ELEMENTS, NumberType_Int16);
         }    
 
 #if defined _smmem_included_
         public set(int val) {
-            StoreToAddress(this.addr + UTL_RBTREE_OFFSET_NUM_ELEMENTS, val, NumberType_Int32);
+            StoreToAddress(this.addr + UTL_RBTREE_OFFSET_NUM_ELEMENTS, val, NumberType_Int16);
         }
 #endif
 
@@ -327,22 +327,22 @@ methodmap UtlRBTree < AddressBase {
 
     property int m_FirstFree {
         public get() {
-            return LoadFromAddress(this.addr + UTL_RBTREE_OFFSET_FIRST_FREE, NumberType_Int32);
+            return LoadFromAddress(this.addr + UTL_RBTREE_OFFSET_FIRST_FREE, NumberType_Int16);
         }
 
-        public set(const int val) {
-            StoreToAddress(this.addr + UTL_RBTREE_OFFSET_FIRST_FREE, val, NumberType_Int32);    
+        public set(int val) {
+            StoreToAddress(this.addr + UTL_RBTREE_OFFSET_FIRST_FREE, val, NumberType_Int16);    
         }
     }
 
     // Iterator_t m_LastAlloc;
     property int m_LastAlloc {
         public get() {
-            return LoadFromAddress(this.addr + UTL_RBTREE_OFFSET_LAST_ALLOC, NumberType_Int32);
+            return LoadFromAddress(this.addr + UTL_RBTREE_OFFSET_LAST_ALLOC, NumberType_Int16);
         }
 
         public set(int val) {
-            StoreToAddress(this.addr + UTL_RBTREE_OFFSET_LAST_ALLOC, val, NumberType_Int32);
+            StoreToAddress(this.addr + UTL_RBTREE_OFFSET_LAST_ALLOC, val, NumberType_Int16);
         }
     }
 
@@ -1421,7 +1421,7 @@ static void Assert(bool condition, const char[] tag, const char[] message, any .
         char sBuffer[512];
         VFormat(sBuffer, sizeof(sBuffer), message, 4);
         Format(sBuffer, sizeof(sBuffer), "%s: %s.", tag, sBuffer);
-        _Assert(message);
+        _Assert(sBuffer);
     }
 }
 
@@ -1430,7 +1430,7 @@ static void Assert_Zero(const char[] tag, const char[] message, any ...)
     char sBuffer[512];
     VFormat(sBuffer, sizeof(sBuffer), message, 3);
     Format(sBuffer, sizeof(sBuffer), "%s: %s.", tag, sBuffer);
-    _Assert(message);
+    _Assert(sBuffer);
 }
 
 static void _Assert(const char[] message)
