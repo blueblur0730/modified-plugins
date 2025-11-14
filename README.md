@@ -4,7 +4,8 @@
 
 All Compiled with
 
-- sm1.13-7250  
+- sm1.13-7278
+  - (The first version SourceMod introduced 'Virtual Address')
   
 Written or modified in interest, feel free to use these codes by **keeping their original author name**.
 
