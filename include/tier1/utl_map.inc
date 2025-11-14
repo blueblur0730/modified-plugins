@@ -12,7 +12,7 @@
 #pragma semicolon 1
 
 #define UTL_MAP_TAG "[UtlMap]"
-#define UTL_MAP_VERSION "1.0.0"
+#define UTL_MAP_VERSION "1.0.2"
 
 /**
  * Author: blueblur
@@ -80,9 +80,6 @@ protected:
 */
 typedef UtlMapDestructorFunc = function void (UtlMap vec, int i, any addr, any obj, int size);
 
-//#define NODET_OFFSET_KEY 0x0
-#define NODET_OFFSET_ELEM 0x4
-
 methodmap Node_t < AddressBase {
     public Node_t(Address addr) {
         Node_t p = view_as<Node_t>(addr);
@@ -106,20 +103,18 @@ methodmap Node_t < AddressBase {
         StoreToAddress(this.addr, value, elementSize);
     }
 
-    public any GetElem(NumberType elementSize = NumberType_Int32) {
-        return LoadFromAddress(this.addr + NODET_OFFSET_ELEM, elementSize);
+    public any GetElem(int keySize, NumberType elementSize = NumberType_Int32) {
+        return LoadFromAddress(this.addr + keySize, elementSize);
     }
 
-    public any GetElemEx() {
-        return this.addr + NODET_OFFSET_ELEM;
+    public any GetElemEx(int keySize) {
+        return this.addr + keySize;
     }
 
-    public void SetElem(any value, NumberType elementSize = NumberType_Int32) {
-        StoreToAddress(this.addr + NODET_OFFSET_ELEM, value, elementSize);
+    public void SetElem(any value, int keySize, NumberType elementSize = NumberType_Int32) {
+        StoreToAddress(this.addr + keySize, value, elementSize);
     }
 }
-
-#define UTL_MAP_OFFSET_TREE 0x0
 
 methodmap UtlMap < AddressBase {
     public UtlMap(Address addr) {
@@ -145,32 +140,32 @@ methodmap UtlMap < AddressBase {
 #endif
     }
 
-    public any GetElement(int i, int size, NumberType elementSize = NumberType_Int32) {
-        return view_as<Node_t>(this.m_Tree.Get(i, size)).GetElem(elementSize);
+    public any GetElement(int i, int size, int keySize, NumberType elementSize = NumberType_Int32) {
+        return view_as<Node_t>(this.m_Tree.GetEx(i, size) + 8).GetElem(keySize, elementSize);
     }
 
-    public any GetElementEx(int i, int size) {
-        return view_as<Node_t>(this.m_Tree.Get(i, size)).GetElemEx();
+    public any GetElementEx(int i, int size, int keySize) {
+        return view_as<Node_t>(this.m_Tree.GetEx(i, size) + 8).GetElemEx(keySize);
     }
 
-    public void SetElement(int i, any value, int size, NumberType elementSize = NumberType_Int32) {
-        view_as<Node_t>(this.m_Tree.Get(i, size)).SetElem(value, elementSize);
+    public void SetElement(int i, any value, int size, int keySize, NumberType elementSize = NumberType_Int32) {
+        view_as<Node_t>(this.m_Tree.GetEx(i, size) + 8).SetElem(value, keySize, elementSize);
     }
 
     public any GetKey(int i, int size, NumberType elementSize = NumberType_Int32) {
-        return view_as<Node_t>(this.m_Tree.Get(i, size)).GetKey(elementSize);
+        return view_as<Node_t>(this.m_Tree.GetEx(i, size) + 8).GetKey(elementSize);
     }
 
     public any GetKeyEx(int i, int size) {
-        return view_as<Node_t>(this.m_Tree.Get(i, size)).GetKeyEx();
+        return view_as<Node_t>(this.m_Tree.GetEx(i, size) + 8).GetKeyEx();
     }
 
     public void SetKey(int i, any value, int size, NumberType elementSize = NumberType_Int32) {
-        view_as<Node_t>(this.m_Tree.Get(i, size)).SetKey(value, elementSize);
+        view_as<Node_t>(this.m_Tree.GetEx(i, size) + 8).SetKey(value, elementSize);
     }
 
-    public any Element(int i, int size, NumberType elementSize = NumberType_Int32) {
-        return this.GetElement(i, size, elementSize);
+    public any Element(int i, int size, int keySize, NumberType elementSize = NumberType_Int32) {
+        return this.GetElement(i, size, keySize, elementSize);
     }
 
     public any Key(int i, int size, NumberType elementSize = NumberType_Int32) {
@@ -301,7 +296,7 @@ methodmap UtlMap < AddressBase {
             return defaultValue;
         }
 
-        return this.GetElement(i, insertSize, numberType);
+        return this.GetElement(i, insertSize, keySize, numberType);
     }
 
     public int FindClosest(any key, int keySize, int insertSize, NumberType numberType = NumberType_Int32, CompareOperands_t eFindCriteria) {
@@ -430,7 +425,7 @@ methodmap UtlMap < AddressBase {
             return defaultValue;
         }
 
-        return this.GetElement(i, insertSize, numberType);
+        return this.GetElement(i, insertSize, keySize, numberType);
     }
 
     public int FindClosest(any key, int keySize, int insertSize, NumberType numberType = NumberType_Int32, CompareOperands_t eFindCriteria) {
@@ -501,13 +496,13 @@ methodmap UtlMap < AddressBase {
         return this.m_Tree.FindFirst(obj, size, numberType);
     }
 
-    public any FindElementSafe(any obj, int size, NumberType numberType = NumberType_Int32, any defaultValue = 0) {
+    public any FindElementSafe(any obj, int size, int keySize, NumberType numberType = NumberType_Int32, any defaultValue = 0) {
         int i = this.FindSafe(obj, size, numberType);
         if (i == UtlRBTree.InvalidIndex()) {
             return defaultValue;
         }
 
-        return this.GetElement(i, size, numberType);
+        return this.GetElement(i, size, keySize, numberType);
     }
 
     public int FindClosestSafe(any obj, int size, NumberType numberType = NumberType_Int32, CompareOperands_t eFindCriteria) {
@@ -543,8 +538,8 @@ methodmap UtlMap < AddressBase {
                 continue; 
 
             if (bAlwaysFreeElems && destructor) {
-                any elem = this.GetElement(i, keySize + elemSize, elementSize);
-                any elemAddr = this.GetElementEx(i, keySize + elemSize);
+                any elem = this.GetElement(i, keySize + elemSize, keySize, elementSize);
+                any elemAddr = this.GetElementEx(i, keySize + elemSize, keySize);
 
                 this.Destruct(i, elemSize, elemAddr, elem, destructor);
             }

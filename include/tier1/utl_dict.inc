@@ -12,13 +12,13 @@
 #pragma semicolon 1
 
 #define UTL_DICT_TAG "[UtlDict]"
-#define UTL_DICT_VERSION "1.0.0"
+#define UTL_DICT_VERSION "1.0.1"
 
 /**
  * Author: blueblur
  * Date: 2025-11-14
  * url: https://github.com/blueblur0730/modified-plugins
- * Version: 1.0.0
+ * Version: 1.0.1
 */
 
 enum EDictCompareType
@@ -64,8 +64,12 @@ methodmap UtlDict < AddressBase {
     */
     }
 
-    public any Element(int i, int size = 4, NumberType type = NumberType_Int32) {
-        return this.m_Elements.Element(i, size, type);
+    public any Element(int i, int size, int keySize, NumberType type = NumberType_Int32) {
+        return this.m_Elements.Element(i, size, keySize, type);
+    }
+
+    public any ElementEx(int i, int size, int keySize) {
+        return this.m_Elements.GetElementEx(i, size, keySize);
     }
 
     public Stringt GetElementName(int i, int size = 4, NumberType type = NumberType_Int32) {
@@ -170,8 +174,8 @@ methodmap UtlDict < AddressBase {
 
             // delete m_Elements[index];
             if (bAlwaysFreeElems && destructor) {
-                any elem = this.m_Elements.GetElement(index, elemSize, elementSize);
-                any elemAddr = this.m_Elements.GetElementEx(index, elemSize);
+                any elem = this.m_Elements.GetElement(index, elemSize, keySize, elementSize);
+                any elemAddr = this.m_Elements.GetElementEx(index, elemSize, keySize);
 
                 this.m_Elements.Destruct(index, elemSize, elemAddr, elem, destructor);
             }

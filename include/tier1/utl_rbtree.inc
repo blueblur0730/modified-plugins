@@ -12,13 +12,13 @@
 #pragma semicolon 1
 
 #define UTL_RBTREE_TAG "[UtlRBTree]"
-#define UTL_RBTREE_VERSION "1.3.0"
+#define UTL_RBTREE_VERSION "1.3.3"
 
 /**
  * Author: blueblur
  * Date: 2025-11-11
  * url: https://github.com/blueblur0730/modified-plugins
- * Version: 1.3.2
+ * Version: 1.3.3
 */
 
 /*
@@ -29,27 +29,27 @@
     LessFunc_t m_LessFunc;  // this + 0x0 / 0
     M m_Elements;           // this + 0x4 / 4, size is 0xC
     I m_Root;               // this + 0x10 / 16
-    I m_NumElements;        // this + 0x14 / 20
-    I m_FirstFree;          // this + 0x18 / 24
-    typename M::Iterator_t m_LastAlloc; // this + 0x1C / 28, the last index allocated.
+    I m_NumElements;        // this + 0x12 / 18
+    I m_FirstFree;          // this + 0x14 / 20
+    typename M::Iterator_t m_LastAlloc; // this + 0x18 / 22, the last index allocated.
 
-    Node_t* m_pElements;    // this + 0x20 / 32.
+    Node_t* m_pElements;    // this + 0x1A / 24.
 
-    // whole size is 36.
+    // whole size is 28.
 */
 
 /*
-    // size is 16.
+    // size is 8.
     template < class I >
     struct UtlRBTreeLinks_t
     {
-        I  m_Left;
-        I  m_Right;
-        I  m_Parent;
-        I  m_Tag;
+        I  m_Left;      // this + 0x0 / 0
+        I  m_Right;     // this + 0x2 / 2
+        I  m_Parent;    // this + 0x4 / 4
+        I  m_Tag;       // this + 0x6 / 6
     };
 
-    // size is 16 + sizeof(T).
+    // size is 8 + sizeof(T).
     template < class T, class I >
     struct UtlRBTreeNode_t : public UtlRBTreeLinks_t< I >
     {
@@ -63,7 +63,7 @@
 */
 
 /*
-    // size is 4.
+    // size is 2.
 	class Iterator_t
 	{
 	public:
@@ -152,9 +152,9 @@ methodmap Iterator_t < AddressBase {
 }
 
 #define UTL_RBTREE_LINKS_OFFSET_LEFT 0x0
-#define UTL_RBTREE_LINKS_OFFSET_RIGHT 0x4
-#define UTL_RBTREE_LINKS_OFFSET_PARENT 0x8
-#define UTL_RBTREE_LINKS_OFFSET_TAG 0xC
+#define UTL_RBTREE_LINKS_OFFSET_RIGHT 0x2
+#define UTL_RBTREE_LINKS_OFFSET_PARENT 0x4
+#define UTL_RBTREE_LINKS_OFFSET_TAG 0x6
 methodmap UtlRBTreeLinks_t < AddressBase {
     property int m_Left {
         public get() {
@@ -197,7 +197,7 @@ methodmap UtlRBTreeLinks_t < AddressBase {
     }
 }
 
-#define UTL_RBTREE_NODE_OFFSET_DATA 0x10
+#define UTL_RBTREE_NODE_OFFSET_DATA 0x8
 methodmap UtlRBTreeNode_t < UtlRBTreeLinks_t {
     property any m_Data {
         public get() {
@@ -228,10 +228,10 @@ methodmap UtlRBTreeNode_t < UtlRBTreeLinks_t {
 #define UTL_RBTREE_OFFSET_ALLOCATION_COUNT  0x8
 #define UTL_RBTREE_OFFSET_GROWSIZE          0xC
 #define UTL_RBTREE_OFFSET_ROOT              0x10
-#define UTL_RBTREE_OFFSET_NUM_ELEMENTS      0x14
-#define UTL_RBTREE_OFFSET_FIRST_FREE        0x18
-#define UTL_RBTREE_OFFSET_LAST_ALLOC        0x1C
-#define UTL_RBTREE_OFFSET_ELEMENTS          0x20
+#define UTL_RBTREE_OFFSET_NUM_ELEMENTS      0x12
+#define UTL_RBTREE_OFFSET_FIRST_FREE        0x14
+#define UTL_RBTREE_OFFSET_LAST_ALLOC        0x16
+#define UTL_RBTREE_OFFSET_ELEMENTS          0x18
 
 /**
  * all allocation or deallocation access requires SM-Memory extension to work.
@@ -361,17 +361,17 @@ methodmap UtlRBTree < AddressBase {
 
     public any Get(int i, int size = 4, NumberType elementSize = NumberType_Int32) {
         Assert(this.IsValidIndex(i, size), UTL_RBTREE_TAG, "Param index (%d) out of bounds. m_nAllocationCount: [0 - %d], m_LastAlloc: [0 - %d].", i, this.m_nAllocationCount, this.m_LastAlloc);
-        return view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).GetData(elementSize);
+        return view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * (8 + size)).GetData(elementSize);
     }
 
     public void Set(int i, int size = 4, any val, NumberType elementSize = NumberType_Int32) {
         Assert(this.IsValidIndex(i, size), UTL_RBTREE_TAG, "Param index (%d) out of bounds. m_nAllocationCount: [0 - %d], m_LastAlloc: [0 - %d].", i, this.m_nAllocationCount, this.m_LastAlloc);
-        view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).SetData(val, elementSize);
+        view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * (8 + size)).SetData(val, elementSize);
     }
 
     public any GetEx(int i, int size = 4) {
         Assert(this.IsValidIndex(i, size), UTL_RBTREE_TAG, "Param index (%d) out of bounds. m_nAllocationCount: [0 - %d], m_LastAlloc: [0 - %d].", i, this.m_nAllocationCount, this.m_LastAlloc);
-        return view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).GetDataAddress();
+        return view_as<any>(this.m_pMemory) + i * (8 + size);
     }
 
     public any Element(int i, int size = 4, NumberType elementSize = NumberType_Int32) {
