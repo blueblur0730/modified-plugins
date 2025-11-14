@@ -4,7 +4,6 @@
 #endif
 #define _utl_dict_included
 
-#include <sdktools>
 #include <address_base>
 #include <stringt>
 #include "tier1/utl_map.inc"
