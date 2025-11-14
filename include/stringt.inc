@@ -19,7 +19,7 @@
  * 
  * Extended by blueblur
  * url      https://github.com/blueblur0730/modified-plugins
- * Version  1.1.0
+ * Version  1.2.0
  * Date: 2025-11-14
  */
 
@@ -45,6 +45,14 @@ methodmap Stringt < AddressBase
         }
 
         return UTIL_StringtToCharArray(this, buffer, maxlen);
+    }
+
+    public int ToCharArray2D(char[][] buffer, int maxlen1, int maxlen2) {
+        if (this.IsNull()) {
+            ThrowError("Stringt address is null.");
+        }
+
+        return UTIL_StringtToCharArray2D(this, buffer, maxlen1, maxlen2);
     }
 
     // included null terminator.
@@ -127,6 +135,46 @@ stock int UTIL_StringtToCharArray(Stringt stringt, char[] buffer, int maxlen)
 
     buffer[index] = '\0';           // 结束符
     return index;
+}
+
+stock int UTIL_StringtToCharArray2D(Stringt stringt, char[][] buffer, int maxlen1, int maxlen2)
+{
+    if (stringt.addr == Address_Null) {
+        ThrowError("Stringt address is null.");
+    }
+
+    if (maxlen1 <= 0 || maxlen2 <= 0) {
+        ThrowError("The parameters maxlen1 and maxlen2 must be greater than 0.");
+    }
+
+    int rowIndex = 0;
+    int colIndex = 0;
+    int colEnd = maxlen2 - 1;
+    char character;
+
+    while (rowIndex < maxlen1)
+    {
+        colIndex = 0;
+        while (colIndex < colEnd)
+        {
+            character = LoadFromAddress(stringt.addr + (rowIndex * maxlen2) + colIndex, NumberType_Int8);
+
+            if (character == '\0')
+                break;
+
+            buffer[rowIndex][colIndex] = character;
+            ++colIndex;
+        }
+
+        buffer[rowIndex][colIndex] = '\0';
+
+        if (character == '\0')
+            break;
+
+        ++rowIndex;
+    }
+
+    return rowIndex;
 }
 
 // not safe, did not check the length.
