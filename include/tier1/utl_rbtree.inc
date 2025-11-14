@@ -12,13 +12,13 @@
 #pragma semicolon 1
 
 #define UTL_RBTREE_TAG "[UtlRBTree]"
-#define UTL_RBTREE_VERSION "1.3.3"
+#define UTL_RBTREE_VERSION "1.3.4"
 
 /**
  * Author: blueblur
  * Date: 2025-11-11
  * url: https://github.com/blueblur0730/modified-plugins
- * Version: 1.3.3
+ * Version: 1.3.4
 */
 
 /*
@@ -391,15 +391,15 @@ methodmap UtlRBTree < AddressBase {
     }
 
     public int LeftChild(int i, int size = 4) {
-        return i != UtlRBTree.InvalidIndex() ? view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).m_Left : UtlRBTree.InvalidIndex();
+        return i != UtlRBTree.InvalidIndex() ? view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * (8 + size)).m_Left : UtlRBTree.InvalidIndex();
     }
 
     public int RightChild(int i, int size = 4) {
-        return i != UtlRBTree.InvalidIndex() ? view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).m_Right : UtlRBTree.InvalidIndex();
+        return i != UtlRBTree.InvalidIndex() ? view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * (8 + size)).m_Right : UtlRBTree.InvalidIndex();
     }
 
     public int Parent(int i, int size = 4) {
-        return i != UtlRBTree.InvalidIndex() ? view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * size).m_Parent : UtlRBTree.InvalidIndex();
+        return i != UtlRBTree.InvalidIndex() ? view_as<UtlRBTreeNode_t>(view_as<any>(this.m_pMemory) + i * (8 + size)).m_Parent : UtlRBTree.InvalidIndex();
     }
 
     public bool IsLeftChild(int i, int size = 4) {
@@ -450,7 +450,7 @@ methodmap UtlRBTree < AddressBase {
 
     public UtlRBTreeLinks_t Links(int i, int size = 4) {
         Assert(i != UtlRBTree.InvalidIndex(), UTL_RBTREE_TAG, "Param index (%d) out of bounds", i);
-        return view_as<UtlRBTreeLinks_t>(view_as<any>(this.m_pMemory) + i * size);
+        return view_as<UtlRBTreeLinks_t>(view_as<any>(this.m_pMemory) + i * (8 + size));
     }
 
     public bool IsRed(int i, int size = 4) {
@@ -1224,7 +1224,7 @@ methodmap UtlRBTree < AddressBase {
             int it = this.IsIdxValid(this.m_LastAlloc) ? (this.IsIdxValid(this.m_LastAlloc + 1) ? this.m_LastAlloc + 1 : UtlRBTree.InvalidIndex()) : (this.IsIdxValid(0) ? 0 : UtlRBTree.InvalidIndex());
 
             if (!this.IsIdxValid(it)) {
-                this.Grow(_, size);
+                this.Grow(_, (8 + size));
 
                 it = this.IsIdxValid(this.m_LastAlloc) ? (this.IsIdxValid(this.m_LastAlloc + 1) ? this.m_LastAlloc + 1 : UtlRBTree.InvalidIndex()) : (this.IsIdxValid(0) ? 0 : UtlRBTree.InvalidIndex());
                 Assert(this.IsIdxValid(it), UTL_RBTREE_TAG, "CUtlRBTree overflow!");

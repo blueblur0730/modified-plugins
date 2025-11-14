@@ -12,13 +12,13 @@
 #pragma semicolon 1
 
 #define UTL_MAP_TAG "[UtlMap]"
-#define UTL_MAP_VERSION "1.0.2"
+#define UTL_MAP_VERSION "1.0.3"
 
 /**
  * Author: blueblur
  * Date: 2025-11-13
  * url: https://github.com/blueblur0730/modified-plugins
- * Version: 1.0.2
+ * Version: 1.0.3
 */
 
 /*

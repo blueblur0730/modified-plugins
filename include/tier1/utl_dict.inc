@@ -12,13 +12,13 @@
 #pragma semicolon 1
 
 #define UTL_DICT_TAG "[UtlDict]"
-#define UTL_DICT_VERSION "1.0.1"
+#define UTL_DICT_VERSION "1.0.2"
 
 /**
  * Author: blueblur
  * Date: 2025-11-14
  * url: https://github.com/blueblur0730/modified-plugins
- * Version: 1.0.1
+ * Version: 1.0.2
 */
 
 enum EDictCompareType
@@ -133,7 +133,7 @@ methodmap UtlDict < AddressBase {
 #if defined _smmem_included_
     // 何意味
     public void EnsureCapacity(int num, int size = 4) {
-        this.m_Elements.m_Tree.EnsureCapacity(num, size);
+        this.m_Elements.m_Tree.EnsureCapacity(num, 8 + size);
     }
 
     public void RemoveAt(int elem, int size = 4, NumberType elementSize = NumberType_Int32, UtlRBTreeDestructorFunc destructor) {
