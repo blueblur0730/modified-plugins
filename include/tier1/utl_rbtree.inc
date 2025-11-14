@@ -18,7 +18,7 @@
  * Author: blueblur
  * Date: 2025-11-11
  * url: https://github.com/blueblur0730/modified-plugins
- * Version: 1.3.0
+ * Version: 1.3.1
 */
 
 /*
@@ -231,7 +231,7 @@ methodmap UtlRBTreeNode_t < UtlRBTreeLinks_t {
 #define UTL_RBTREE_OFFSET_NUM_ELEMENTS      0x14
 #define UTL_RBTREE_OFFSET_FIRST_FREE        0x18
 #define UTL_RBTREE_OFFSET_LAST_ALLOC        0x1C
-#define UTL_RBTREE_OFFSET_ELEMENTS          0x24
+#define UTL_RBTREE_OFFSET_ELEMENTS          0x20
 
 /**
  * all allocation or deallocation access requires SM-Memory extension to work.
