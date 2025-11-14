@@ -18,7 +18,7 @@
  * Author: blueblur
  * Date: 2025-11-13
  * url: https://github.com/blueblur0730/modified-plugins
- * Version: 1.0.0
+ * Version: 1.0.1
 */
 
 /*
@@ -531,21 +531,14 @@ methodmap UtlMap < AddressBase {
 
     // Purges the list and calls delete on each element in it.
     // here, this equals to calling destructor fisrt, then call purge() to free the elements.
-    // here, we are freeing the each key and element objects.
-    // but, if the key and element is not a pointer or object, just regular types like int, float, etc.
+    // here, we are freeing the each element objects.
+    // but, if the element is not a pointer or object, just regular types like int, float, etc.
     // then no destructor is needed.
-    public void PurgeAndDeleteElements(bool bAlwaysFreeKeys = true, int keySize, bool bAlwaysFreeElems = true, int elemSize, NumberType elementSize = NumberType_Int32, UtlMapDestructorFunc destructor = null) {
+    public void PurgeAndDeleteElements(bool bAlwaysFreeElems = true, int keySize, int elemSize, NumberType elementSize = NumberType_Int32, UtlMapDestructorFunc destructor = null) {
         for (int i = 0; i < this.MaxElement(); ++i) 
         {
             if (!this.IsValidIndex( i )) 
                 continue; 
-
-            if (bAlwaysFreeKeys && destructor) {
-                any key = this.GetKey(i, keySize, elementSize);
-                any keyAddr = this.GetKeyEx(i, keySize);
-
-                this.Destruct(i, keySize, keyAddr, key, destructor);
-            }
 
             if (bAlwaysFreeElems && destructor) {
                 any elem = this.GetElement(i, keySize + elemSize, elementSize);
