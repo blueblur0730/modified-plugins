@@ -9,6 +9,8 @@
 #pragma newdecls required
 #pragma semicolon 1
 
+#define STRINGT_VERSION "1.3.0"
+
 /**
  * Author   dysphie
  * url      https://github.com/dysphie/nmo-guard/blob/main/scripting/nmo-guard/entity-outputs.sp
@@ -19,7 +21,7 @@
  * 
  * Extended by blueblur
  * url      https://github.com/blueblur0730/modified-plugins
- * Version  1.2.0
+ * Version  1.3.0
  * Date: 2025-11-14
  */
 
@@ -45,6 +47,14 @@ methodmap Stringt < AddressBase
         }
 
         return UTIL_StringtToCharArray(this, buffer, maxlen);
+    }
+
+    public void ToAddress(const char[] buffer) {
+        if (this.IsNull()) {
+            ThrowError("Stringt address is null.");
+        }
+
+        UTIL_CharToStringtAddress(this, buffer);
     }
 
     public int ToCharArray2D(char[][] buffer, int maxlen1, int maxlen2) {
@@ -135,6 +145,32 @@ stock int UTIL_StringtToCharArray(Stringt stringt, char[] buffer, int maxlen)
 
     buffer[index] = '\0';           // 结束符
     return index;
+}
+
+stock void UTIL_CharToStringtAddress(Stringt stringt, const char[] buffer)
+{
+    if (stringt.addr == Address_Null) {
+        ThrowError("Stringt address is null.");
+    }
+
+    int srcLen = UTIL_StrLen(stringt);
+
+    int  index  = 0;
+    int  end    = strlen(buffer);
+    char character;
+
+    while (index < end && index < srcLen)
+    {
+        character = buffer[index];
+
+        if (character == '\0' || LoadFromAddress(stringt.addr + index, NumberType_Int8) == '\0')
+            break;
+
+        StoreToAddress(stringt.addr + index, character, NumberType_Int8);
+        ++index;
+    }
+
+    StoreToAddress(stringt.addr + index, '\0', NumberType_Int8);
 }
 
 stock int UTIL_StringtToCharArray2D(Stringt stringt, char[][] buffer, int maxlen1, int maxlen2)
