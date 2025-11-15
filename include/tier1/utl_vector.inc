@@ -41,20 +41,6 @@
 #define FOR_EACH_VEC( %0, %1 )      for ( %1 = 0; %1 < %0.Count(); %1++ )
 #define FOR_EACH_VEC_BACK( %0, %1 ) for ( %1 = %0.Count()-1; %1 >= 0; %1-- )
 
-// sourcepawn seems dont really like macros.
-
-/*
-#define Assert(%0, %1, %2)                                  if (!(%0)) { _Assert(%1, %2); }
-#define Assert_OneArg(%0, %1, %2, %3)                       if (!(%0)) { _Assert(%1, %2, %3); }
-#define Assert_TwoArg(%0, %1, %2, %3, %4)                   if (!(%0)) { _Assert(%1, %2, %3, %4); }
-#define Assert_ThreeArg(%0, %1, %2, %3, %4, %5)             if (!(%0)) { _Assert(%1, %2, %3, %4, %5); }
-
-// warning 206: redundant test: constant expression is non-zero
-#define Assert_Zero(%0, %1)                         _Assert(%0, %1);
-#define Assert_Zero_OneArg(%0, %1, %2)              _Assert(%0, %1, %2);
-#define Assert_Zero_TwoArg(%0, %1, %2, %3)          _Assert(%0, %1, %2, %3);
-#define Assert_Zero_ThreeArg(%0, %1, %2, %3, %4)    _Assert(%0, %1, %2, %3, %4);
-*/
 enum
 {
     EXTERNAL_BUFFER_MARKER = -1,
@@ -728,7 +714,7 @@ methodmap UtlVector < AddressBase {
 
 // should have use macros here.
 
-static void Assert(bool condition, const char[] tag, const char[] message, any ...)
+static stock void Assert(bool condition, const char[] tag, const char[] message, any ...)
 {
     if (!condition)
     {
@@ -739,7 +725,7 @@ static void Assert(bool condition, const char[] tag, const char[] message, any .
     }
 }
 
-static void Assert_Zero(const char[] tag, const char[] message, any ...)
+static stock void Assert_Zero(const char[] tag, const char[] message, any ...)
 {
     char sBuffer[512];
     VFormat(sBuffer, sizeof(sBuffer), message, 3);
@@ -747,7 +733,7 @@ static void Assert_Zero(const char[] tag, const char[] message, any ...)
     _Assert(message);
 }
 
-static void _Assert(const char[] message)
+static stock void _Assert(const char[] message)
 {
 #if defined _log_for_sourcepawn_included
     char sPath[256];

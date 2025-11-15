@@ -604,7 +604,7 @@ methodmap UtlMap < AddressBase {
 
 // should have use macros here.
 
-static void Assert_Zero(const char[] tag, const char[] message, any ...)
+static stock void Assert_Zero(const char[] tag, const char[] message, any ...)
 {
     char sBuffer[512];
     VFormat(sBuffer, sizeof(sBuffer), message, 3);
@@ -612,7 +612,7 @@ static void Assert_Zero(const char[] tag, const char[] message, any ...)
     _Assert(sBuffer);
 }
 
-static void _Assert(const char[] message)
+static stock void _Assert(const char[] message)
 {
 #if defined _log_for_sourcepawn_included
     char sPath[256];
