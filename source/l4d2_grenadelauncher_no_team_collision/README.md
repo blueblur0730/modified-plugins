@@ -4,11 +4,6 @@
 
 Pass your grenade launcher projectile through teammates.
 
-## Requirements
-
-[Collision Hook](https://github.com/voided/CollisionHook)
-
-
 ## ConVar
 
 ```

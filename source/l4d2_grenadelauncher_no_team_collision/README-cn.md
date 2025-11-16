@@ -4,10 +4,6 @@
 
 让榴弹穿过生还者队友.
 
-## 依赖
-
-[Collision Hook](https://github.com/voided/CollisionHook)
-
 
 ## ConVar
 
