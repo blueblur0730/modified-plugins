@@ -1,0 +1,14 @@
+"Games"
+{
+    "left4dead2
+    {
+        "Offsets"
+        {
+            "CGrenadeLauncher_Projectile->m_bCollideWithTeammates"
+            {
+                "linux"     "6784"
+                "windows    "6792"
+            }
+        }
+    }
+}
