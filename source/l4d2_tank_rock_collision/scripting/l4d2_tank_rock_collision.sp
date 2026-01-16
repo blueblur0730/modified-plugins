@@ -17,6 +17,9 @@ public Plugin myinfo =
 
 public void L4D_TankRock_BounceTouch_Post(int tank, int rock, int entity)
 {
+    if (entity <= 0 || entity > MaxClients)
+        return;
+        
     if (!IsValidEntity(entity) || GetClientTeam(entity) != 3 || !IsTank(entity))
         return;
 
