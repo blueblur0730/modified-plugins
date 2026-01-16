@@ -7,7 +7,7 @@
             "CGrenadeLauncher_Projectile->m_bCollideWithTeammates"
             {
                 "linux"     "6784"
-                "windows    "6792"
+                "windows"   "6792"
             }
         }
     }

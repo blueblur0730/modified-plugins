@@ -48,6 +48,8 @@ public void OnPluginStart()
 		FCVAR_NONE,
 		true, 0.0, true, 1.0,
 		ConVarChanged_Cvars);
+
+	delete gd;
 }
 
 void ConVarChanged_Cvars(ConVar convar, const char[] oldValue, const char[] newValue)
