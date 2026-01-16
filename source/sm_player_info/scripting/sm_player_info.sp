@@ -117,7 +117,7 @@ public void SteamWorks_OnValidateClient(int iAuthId)
 
 public void OnClientConnected(int iClient)
 {
-	if (IsValidClient(iClient))
+	if (!IsValidClient(iClient))
 		return;
 
 	char sName[128];
