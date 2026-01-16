@@ -5,8 +5,8 @@
 #include <sdkhooks>
 #include <gamedata_wrapper>
 
-#define PLUGIN_NAME		"l4d2_genade_launcher_no_collision"
-#define PLUGIN_VERSION 	"1.2"
+#define PLUGIN_NAME		"l4d2_grenadelauncher_no_team_collision"
+#define PLUGIN_VERSION 	"1.2.1"
 
 bool g_bEnable;
 int g_iOff_m_bCollideWithTeammates = -1;
