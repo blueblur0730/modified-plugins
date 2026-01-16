@@ -1,6 +1,6 @@
 "Games"
 {
-    "left4dead2
+    "left4dead2"
     {
         "Offsets"
         {
