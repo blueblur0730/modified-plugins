@@ -112,13 +112,13 @@ public void OnClientPutInServer(int client)
 	if (GetClientTeam(client) == 2)
 		SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 }
-
+/*
 public void OnClientDisconnect(int client)
 {
 	if (GetClientTeam(client) == 2)
 		SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 }
-
+*/
 public Action L4D2_OnSelectTankAttack(int client, int &sequence)
 {
 	if (sequence < 48)
