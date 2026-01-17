@@ -25,7 +25,7 @@ ConVar g_hCvar_Hibernate;
 char g_sPath[256];
 bool g_bChangeLevelAvailable = false;
 
-#define PLUGIN_VERSION "r1.0.1"
+#define PLUGIN_VERSION "r1.0.2"
 
 public Plugin myinfo =
 {
@@ -52,6 +52,7 @@ public void OnPluginStart()
 
 	g_hCvar_Hibernate = FindConVar("sv_hibernate_when_empty");
 	g_hCvar_Hibernate.AddChangeHook(ConVarChanged_Hibernate);
+	ConVarChanged_Hibernate(g_hCvar_Hibernate, "", "");
 
 	HookEvent("player_disconnect", Event_PlayerDisconnect, EventHookMode_Post);	
 
