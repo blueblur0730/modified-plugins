@@ -8,7 +8,7 @@
 /**
  * An extension of l4d2_tank_damage_cvars by Visor, A1m`.
  */
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.0.1"
 #define DEBUG		   0
 
 /*
