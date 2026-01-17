@@ -12,7 +12,7 @@ KeyValues 	kv[MAXPLAYERS + 1] 	= { null, ... };
 char		g_sConfigPath[PLATFORM_MAX_PATH];
 char		g_sTitle[MAXPLAYERS + 1][MAX_VOTEPANEL_TITLE_LENGTH];
 
-#define PLUGIN_VERSION "2.0"
+#define PLUGIN_VERSION "2.0.1"
 
 public Plugin myinfo =
 {
@@ -157,7 +157,7 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 				Format(g_sTitle[param1], sizeof(g_sTitle[param1]), "%s - %s", g_sTitle[param1], sDisplayBuffer) :
 				Format(g_sTitle[param1], sizeof(g_sTitle[param1]), "%s", sDisplayBuffer);
 
-				NativeVote vote = new NativeVote(VoteHandler, NativeVotesType_Custom_YesNo);
+				NativeVote vote = new NativeVote(VoteHandler, NativeVotesType_Custom_YesNo, MenuAction_VoteStart|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End|MenuAction_Display|MenuAction_Select);
 				vote.SetTitle("%T", "PassTitle", param1, g_sTitle[param1]);
 				vote.Initiator = param1;
 				vote.SetDetails(sBuffer);
