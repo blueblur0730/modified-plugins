@@ -3,7 +3,7 @@
 
 #include <sourcemod>
 #include <colors>
-#include <l4d2_nativevote>
+#include <nativevotes>
 
 #define CONFIG_PATH "configs/vote_manager.cfg"
 #define MAX_VOTEPANEL_TITLE_LENGTH 64
@@ -12,7 +12,7 @@ KeyValues 	kv[MAXPLAYERS + 1] 	= { null, ... };
 char		g_sConfigPath[PLATFORM_MAX_PATH];
 char		g_sTitle[MAXPLAYERS + 1][MAX_VOTEPANEL_TITLE_LENGTH];
 
-#define PLUGIN_VERSION "1.2"
+#define PLUGIN_VERSION "2.0"
 
 public Plugin myinfo =
 {
@@ -147,7 +147,7 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 			}
 			else
 			{
-				if (!L4D2NativeVote_IsAllowNewVote())
+				if (NativeVotes_IsVoteInProgress())
 				{
 					CPrintToChat(param1, "%t", "VoteInProgress");
 					return;
@@ -157,29 +157,16 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 				Format(g_sTitle[param1], sizeof(g_sTitle[param1]), "%s - %s", g_sTitle[param1], sDisplayBuffer) :
 				Format(g_sTitle[param1], sizeof(g_sTitle[param1]), "%s", sDisplayBuffer);
 
-				L4D2NativeVote vote = L4D2NativeVote(VoteHandler);
+				NativeVote vote = new NativeVote(VoteHandler, NativeVotesType_Custom_YesNo);
 				vote.SetTitle("Pass %s?", g_sTitle[param1]);
 				vote.Initiator = param1;
-				vote.SetInfo(sBuffer);
+				vote.SetDetails(sBuffer);
+				//vote.VoteResultCallback = VoteHandler_Result;
 
-				int iPlayerCount = 0;
-				int[] iClients	 = new int[MaxClients];
-
-				for (int i = 1; i <= MaxClients; i++)
-				{
-					if (IsClientInGame(i) && !IsFakeClient(i))
-					{
-						if (GetClientTeam(i) == 1)
-							continue;
-
-						iClients[iPlayerCount++] = i;
-					}
-				}
-
-				if (!vote.DisplayVote(iClients, iPlayerCount, 20))
+				if (!vote.DisplayVoteToAll(20))
 				{
 					CPrintToChat(param1, "%t", "VoteFailedDisPlay");
-					LogError("Vote failed to display.");
+					//LogError("Vote failed to display.");
 				}
 
 				delete kv[param1];
@@ -201,43 +188,58 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 	}
 }
 
-void VoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
+int VoteHandler(NativeVote vote, MenuAction action, int param1, int param2)
 {
 	switch (action)
 	{
-		case VoteAction_Start:
-			CPrintToChatAllEx(param1, "%t", "HasInitiatedVote", param1);
-
-		case VoteAction_PlayerVoted:
+		case MenuAction_End:
 		{
-			CPrintToChatAllEx(param1, "%t", "Voted", param1);
-
-			switch (param2)
-			{
-				case VOTE_YES: vote.YesCount++;
-				case VOTE_NO: vote.NoCount++;
-			}
+			vote.Close();
 		}
 
-		case VoteAction_End:
+		case MenuAction_Display:
 		{
-			if (vote.YesCount >= vote.PlayerCount)
-			{
-				vote.SetPass("Excuting...");
-				CPrintToChatAll("%t", "PassingVote");
+			CPrintToChatAllEx(param1, "%t", "HasInitiatedVote", param1);
+		}
 
-				char sInfo[256];
-				vote.GetInfo(sInfo, sizeof(sInfo));
-				ServerCommand(sInfo);
-				ServerExecute();
+		case MenuAction_VoteCancel:
+		{
+			if (param1 == VoteCancel_NoVotes)
+			{
+				vote.DisplayFail(NativeVotesFail_NotEnoughVotes);
 			}
 			else
 			{
+				vote.DisplayFail(NativeVotesFail_Generic);
+			}
+		}
+
+		case MenuAction_Select:
+		{
+			CPrintToChatAllEx(param1, "%t", "Voted", param1);
+		}
+
+		case MenuAction_VoteEnd:
+		{
+			if (param1 == NATIVEVOTES_VOTE_NO)
+			{
+				vote.DisplayFail(NativeVotesFail_Loses);
 				CPrintToChatAll("%t", "VoteFailed");
-				vote.SetFail();
+			}
+			else
+			{
+				vote.DisplayPass("Excuting...");
+				CPrintToChatAll("%t", "PassingVote");
+
+				char sInfo[256];
+				vote.GetDetails(sInfo, sizeof(sInfo));
+				ServerCommand(sInfo);
+				ServerExecute();
 			}
 		}
 	}
+
+	return 0;
 }
 
 void TraverseKeys(Menu menu, int client)

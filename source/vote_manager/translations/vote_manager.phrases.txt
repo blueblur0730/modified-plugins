@@ -62,4 +62,17 @@
         "en"        "[{green}!{default}] The vote has failed."
         "chi"       "[{green}!{default}] 投票未能通过."
     }
+
+    "PassTitle"
+    {
+        "#format"   "{1:s}"
+        "en"        "Pass {1}?"
+        "chi"       "通过 {1}?"
+    }
+
+    "ExecutingVote"
+    {
+        "en"        "Excuting..."
+        "chi"       "执行中..."
+    }
 }
