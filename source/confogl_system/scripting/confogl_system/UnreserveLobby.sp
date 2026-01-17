@@ -5,6 +5,10 @@
 
 #define UL_MODULE_NAME "UnreserveLobby"
 
+// Requires left4dhooks by Silvers.
+native void L4D_LobbyUnreserve();
+native bool L4D_LobbyIsReserved();
+
 static ConVar
 	UL_hEnable = null;
 

@@ -5,6 +5,9 @@
 
 #define RM_MODULE_NAME "ReqMatch"
 
+// Requires l4d2_changelevel by Lux.
+native void L4D2_ChangeLevel(const char[] sMapName, bool bShouldResetScores=true);
+
 #define MAPRESTARTTIME 3.0
 #define RESETMINTIME   60.0
 

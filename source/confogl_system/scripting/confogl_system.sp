@@ -11,14 +11,7 @@ bool
 	RM_bIsMatchModeLoaded	  = false,
 	RM_bIsLoadingConfig		  = false;
 
-// Requires l4d2_changelevel by Lux.
-native void L4D2_ChangeLevel(const char[] sMapName, bool bShouldResetScores=true);
-
-// Requires left4dhooks by Silvers.
-native void L4D_LobbyUnreserve();
-native bool L4D_LobbyIsReserved();
-
-#define PLUGIN_VERSION "r1.9.1"	   // 2.4.5 rework
+#define PLUGIN_VERSION "r1.10.0"	   // 2.4.5 rework
 
 // Basic helper here.
 #include "confogl_system/includes/constants.sp"
@@ -27,7 +20,6 @@ native bool L4D_LobbyIsReserved();
 #include "confogl_system/includes/configs.sp"
 #include "confogl_system/includes/customtags.sp"
 #include "confogl_system/includes/predictable_unloader.sp"	  // Predictable Unloader by Sir
-#include "confogl_system/includes/voting.sp"				  // nativevote by Powerlord, fdxx. This built-in version is to make sure our vote can work as usual.
 
 // Main Modules here.
 #include "confogl_system/ReqMatch.sp"
@@ -78,7 +70,6 @@ public void OnPluginStart()
 	Fns_OnModuleStart();		// functions
 	Configs_OnModuleStart();	// configs
 	CT_OnModuleStart();			// customtags
-	VT_OnPluginStart();			// Voting
 
 	// Modules
 	MV_OnModuleStart();		// MatchVote
@@ -108,14 +99,12 @@ public void OnPluginEnd()
 public void OnMapStart()
 {
 	RM_OnMapStart();	// ReqMatch
-	VT_OnMapStart();	// Voting
 	LG_OnMapStart();	// Logging
 }
 
 public void OnMapEnd()
 {
 	PS_OnMapEnd();	  // PasswordSystem
-	VT_OnMapEnd();	  // Voting
 }
 
 public void OnConfigsExecuted()

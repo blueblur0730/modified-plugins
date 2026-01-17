@@ -5,6 +5,8 @@
 
 #define MODULE_MATCHVOTE "MatchVote"
 
+#include <nativevotes>
+
 static KeyValues
 	kv[MAXPLAYERS + 1] = { null, ... };
 
@@ -172,14 +174,13 @@ static void SlectMenuHandler(Menu menu, MenuAction action, int param1, int param
 
 	if (action == MenuAction_Select)
 	{
-		if (!ShouldAllowNewVote())
+		if (NativeVotes_IsVoteInProgress())
 		{
 			CPrintToChat(param1, "%t %t", "Tag", "VoteInProgress");
 			return;
 		}
 
 		int iPlayerCount	= 0;
-		int[] iClients		= new int[MaxClients];
 		int iConnectedCount = 0;
 
 		for (int i = 1; i <= MaxClients; i++)
@@ -189,7 +190,7 @@ static void SlectMenuHandler(Menu menu, MenuAction action, int param1, int param
 				if (GetClientTeam(i) <= 1)
 					continue;
 
-				iClients[iPlayerCount++] = i;
+				iPlayerCount++;
 			}
 
 			if (!IsClientInGame(i) && IsClientConnected(i))
@@ -211,12 +212,12 @@ static void SlectMenuHandler(Menu menu, MenuAction action, int param1, int param
 		char sBuffer[MAX_MESSAGE_LENGTH], sDisplayBuffer[MAX_MESSAGE_LENGTH];
 		menu.GetItem(param2, sBuffer, sizeof(sBuffer), _, sDisplayBuffer, sizeof(sDisplayBuffer));
 
-		L4D2NativeVote vote = L4D2NativeVote(LoadVoteHandler);
-		vote.SetTitle("加载 %s?", sDisplayBuffer);
+		NativeVote vote = new NativeVote(LoadVoteHandler, NativeVotesType_Custom_YesNo, MenuAction_VoteStart|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End|MenuAction_Display|MenuAction_Select);
+		vote.SetTitle("Load game config: %s?", sDisplayBuffer);
 		vote.Initiator = param1;
-		vote.SetInfo(sBuffer);
+		vote.SetDetails(sBuffer);
 
-		if (!vote.DisplayVote(iClients, iPlayerCount, 20.0))
+		if (!vote.DisplayVoteToAll(20))
 		{
 			CPrintToChat(param1, "%t %t", "Tag", "VoteFailedDisPlay");
 			g_hLogger.ErrorEx("[%s] Vote failed to display.", MODULE_MATCHVOTE);
@@ -224,41 +225,58 @@ static void SlectMenuHandler(Menu menu, MenuAction action, int param1, int param
 	}
 }
 
-static void LoadVoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
+static int LoadVoteHandler(NativeVote vote, MenuAction action, int param1, int param2)
 {
 	switch (action)
 	{
-		case VoteAction_Start:
-			CPrintToChatAllEx(param1, "%t %t", "Tag", "HasInitiatedVote", param1);
-
-		case VoteAction_PlayerVoted:
+		case MenuAction_End:
 		{
-			switch (param2)
-			{
-				case VOTE_YES: vote.YesCount++;
-				case VOTE_NO: vote.NoCount++;
-			}
+			vote.Close();
+		}
+	
+		case MenuAction_Display:
+		{
+			CPrintToChatAllEx(param1, "%t %t", "Tag", "HasInitiatedVote", param1);
 		}
 
-		case VoteAction_End:
+		case MenuAction_Select:
 		{
-			if (vote.YesCount >= vote.PlayerCount / 2)
-			{
-				vote.SetPass("正在执行...");
-				CPrintToChatAll("%t %t", "Tag", "PassingVote");
+			CPrintToChatAllEx(param1, "%t", "Voted", param1);
+		}
 
-				char sInfo[256], sMap[256];
-				vote.GetInfo(sInfo, sizeof(sInfo));
-				GetCurrentMap(sMap, sizeof(sMap));
-				PrepareLoad(0, sInfo, sMap);
+		case MenuAction_VoteCancel:
+		{
+			if (param1 == VoteCancel_NoVotes)
+			{
+				vote.DisplayFail(NativeVotesFail_NotEnoughVotes);
 			}
 			else
 			{
+				vote.DisplayFail(NativeVotesFail_Generic);
+			}
+		}
+
+		case MenuAction_VoteEnd:
+		{
+			if (param1 == NATIVEVOTES_VOTE_NO)
+			{
 				CPrintToChatAll("%t %t", "Tag", "VoteFailed");
-				vote.SetFail();
+				vote.DisplayFail(NativeVotesFail_Loses);
+			}
+			else
+			{
+				vote.DisplayPass("Executing vote...");
+				CPrintToChatAll("%t %t", "Tag", "PassingVote");
+
+				char sInfo[256], sMap[256];
+				vote.GetDetails(sInfo, sizeof(sInfo));
+				GetCurrentMap(sMap, sizeof(sMap));
+				PrepareLoad(0, sInfo, sMap);
 			}
 		}
 	}
+
+	return 0;
 }
 
 static Action MatchReset(int iClient, int iArgs)
@@ -294,14 +312,13 @@ static Action MatchReset(int iClient, int iArgs)
 
 static void StartResetMatchVote(int iClient)
 {
-	if (!ShouldAllowNewVote())
+	if (NativeVotes_IsVoteInProgress())
 	{
 		CPrintToChat(iClient, "%t", "VoteInProgress");
 		return;
 	}
 
 	int iPlayerCount	= 0;
-	int[] iClients		= new int[MaxClients];
 	int iConnectedCount = 0;
 
 	for (int i = 1; i <= MaxClients; i++)
@@ -311,7 +328,7 @@ static void StartResetMatchVote(int iClient)
 			if (GetClientTeam(i) <= 1)
 				continue;
 
-			iClients[iPlayerCount++] = i;
+			iPlayerCount++;
 		}
 
 		if (!IsClientInGame(i) && IsClientConnected(i))
@@ -330,48 +347,63 @@ static void StartResetMatchVote(int iClient)
 		return;
 	}
 
-	L4D2NativeVote vote = L4D2NativeVote(ResetVoteHandler);
-	vote.SetTitle("卸载当前配置?");
+	NativeVote vote = new NativeVote(ResetVoteHandler, NativeVotesType_Custom_YesNo, MenuAction_VoteStart|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End|MenuAction_Display|MenuAction_Select);
+	vote.SetTitle("Unload current config?");
 	vote.Initiator = iClient;
 
-	if (!vote.DisplayVote(iClients, iPlayerCount, 20.0))
+	if (!vote.DisplayVoteToAll(20))
 	{
 		CPrintToChat(iClient, "%t %t", "Tag", "VoteFailedDisPlay");
 		g_hLogger.ErrorEx("[%s] Vote failed to display.", MODULE_MATCHVOTE);
 	}
 }
 
-static void ResetVoteHandler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
+static int ResetVoteHandler(NativeVote vote, MenuAction action, int param1, int param2)
 {
 	switch (action)
 	{
-		case VoteAction_Start:
-			CPrintToChatAllEx(param1, "%t %t", "Tag", "HasInitiatedVote", param1);
-
-		case VoteAction_PlayerVoted:
+		case MenuAction_End:
 		{
-			CPrintToChatAllEx(param1, "%t %t", "Tag", "Voted", param1);
-
-			switch (param2)
-			{
-				case VOTE_YES: vote.YesCount++;
-				case VOTE_NO: vote.NoCount++;
-			}
+			vote.Close();
 		}
 
-		case VoteAction_End:
+		case MenuAction_Display:
 		{
-			if (vote.YesCount >= vote.PlayerCount / 2)
+			CPrintToChatAllEx(param1, "%t %t", "Tag", "HasInitiatedVote", param1);
+		}
+
+		case MenuAction_VoteCancel:
+		{
+			if (param1 == VoteCancel_NoVotes)
 			{
-				vote.SetPass("正在卸载...");
-				CPrintToChatAll("%t %t", "Tag", "VotePass_Unloading");
-				RM_Match_Unload(true);
+				vote.DisplayFail(NativeVotesFail_NotEnoughVotes);
 			}
 			else
 			{
+				vote.DisplayFail(NativeVotesFail_Generic);
+			}
+		}
+
+		case MenuAction_Select:
+		{
+			CPrintToChatAllEx(param1, "%t %t", "Tag", "Voted", param1);
+		}
+
+		case MenuAction_VoteEnd:
+		{
+			if (param1 == NATIVEVOTES_VOTE_NO)
+			{
 				CPrintToChatAll("%t %t", "Tag", "VoteFailed");
-				vote.SetFail();
+				vote.DisplayFail(NativeVotesFail_Loses);
+			}
+			else
+			{
+				vote.DisplayPass("Unloading...");
+				CPrintToChatAll("%t %t", "Tag", "VotePass_Unloading");
+				RM_Match_Unload(true);
 			}
 		}
 	}
+
+	return 0;
 }

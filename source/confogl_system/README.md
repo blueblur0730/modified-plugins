@@ -7,7 +7,8 @@ This is a simple guide on what is, and how to use the Confogl system.
 ## Requirements
 
 1. [log4sp extension](https://github.com/F1F88/sm-ext-log4sp).
-2. (optional) l4d2_changelevel plugin.
+2. [nativevote plugin](https://github.com/sapphonie/sourcemod-nativevotes-updated)
+3. (optional) l4d2_changelevel plugin.
 
 ## Installation
 
@@ -134,7 +135,7 @@ Confogl System and its framework is a good choice for making multiple gameplay o
 1. Added logging system for the plugin, requires extension [log4sp](https://github.com/F1F88/sm-ext-log4sp).
 2. Merged MatchVote and Predictable Unloader into Confogl.
 3. Automatically unload plugins when unloading a configuration.
-4. Uses built-in nativevote to replace builtinvote extension.
+4. Uses nativevote to replace builtinvote extension.
 5. Full translation provided.
 6. More details added and changed.
 7. More to come..
@@ -147,9 +148,7 @@ Confogl System and its framework is a good choice for making multiple gameplay o
 
 3. Forgetest, for his [improved code](https://github.com/Target5150/MoYu_Server_Stupid_Plugins/tree/master/The%20Last%20Stand/predictable_unloader) on predictable unloader.
 
-4. Powerlord and fdxx for the codes of [nativevote](https://github.com/fdxx/l4d2_nativevote)
+4. F1F88 for the extension [log4sp](https://github.com/F1F88/sm-ext-log4sp).
 
-5. F1F88 for the extension [log4sp](https://github.com/F1F88/sm-ext-log4sp).
-
-6. Many others that have contributed to confogl project that were not mentioned.
+5. Many others that have contributed to confogl project that were not mentioned.
 

@@ -7,7 +7,8 @@
 ## 需求
 
 1. [log4sp 拓展](https://github.com/F1F88/sm-ext-log4sp).
-2. (可选) l4d2_changelevel 插件.
+2. [nativevote 插件](https://github.com/sapphonie/sourcemod-nativevotes-updated)
+3. (可选) l4d2_changelevel 插件.
 
 ## 安装
 
@@ -126,7 +127,7 @@ Confogl System 以及它的框架是一个服务器拥有多种玩法的理想�
 1. 为插件加入了日志系统, 要求加载拓展 [log4sp](https://github.com/F1F88/sm-ext-log4sp).
 2. 合并了 MatchVote 以及 Predictable Unloader 进了 Confogl.
 3. 自动在卸载配置时卸载插件.
-4. 使用内置的nativevote替代builtinvote拓展.
+4. 使用nativevote替代builtinvote拓展.
 5. 全翻译文本支持.
 6. 更多加入的细节与更改.
 7. 更多未来将加入的功能..
@@ -139,8 +140,6 @@ Confogl System 以及它的框架是一个服务器拥有多种玩法的理想�
 
 3. Forgetest, 对他在 predictable unloader [的改进代码](https://github.com/Target5150/MoYu_Server_Stupid_Plugins/tree/master/The%20Last%20Stand/predictable_unloader).
 
-4. Powerlord 和 fdxx 的 [nativevote代码](https://github.com/fdxx/l4d2_nativevote)
+4. F1F88 的拓展 [log4sp](https://github.com/F1F88/sm-ext-log4sp).
 
-5. F1F88 的拓展 [log4sp](https://github.com/F1F88/sm-ext-log4sp).
-
-6. 许多其他为Confogl项目贡献过而我没有提到过的用户.
+5. 许多其他为Confogl项目贡献过而我没有提到过的用户.
