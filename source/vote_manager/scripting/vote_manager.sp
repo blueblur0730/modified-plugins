@@ -158,7 +158,7 @@ void MenuHandle_TraversalHandler(Menu menu, MenuAction action, int param1, int p
 				Format(g_sTitle[param1], sizeof(g_sTitle[param1]), "%s", sDisplayBuffer);
 
 				NativeVote vote = new NativeVote(VoteHandler, NativeVotesType_Custom_YesNo);
-				vote.SetTitle("Pass %s?", g_sTitle[param1]);
+				vote.SetTitle("%T", "PassTitle", param1, g_sTitle[param1]);
 				vote.Initiator = param1;
 				vote.SetDetails(sBuffer);
 				//vote.VoteResultCallback = VoteHandler_Result;
@@ -228,7 +228,7 @@ int VoteHandler(NativeVote vote, MenuAction action, int param1, int param2)
 			}
 			else
 			{
-				vote.DisplayPass("Excuting...");
+				vote.DisplayPass("%t", "ExecutingVote", param1);
 				CPrintToChatAll("%t", "PassingVote");
 
 				char sInfo[256];
