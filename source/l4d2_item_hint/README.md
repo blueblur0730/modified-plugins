@@ -1,6 +1,6 @@
 # [L4D2] Item Hint
 
-- Edited version from https://github.com/fbef0102/L4D2-Plugins/tree/master/l4d2_item_hint. Use before checking his documentation entirely.
+- Edited version from https://github.com/fbef0102/L4D1_2-Plugins/tree/master/l4d2_item_hint. Use before checking his documentation entirely.
 
 <hr>
 
