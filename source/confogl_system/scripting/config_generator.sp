@@ -2,7 +2,13 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#define PLUGIN_VERSION "1.0.1"
+#define PLUGIN_VERSION "1.1"
+
+enum struct PluginConVar
+{
+	Handle hPlugin;
+	ArrayList hArrayConVar;
+}
 
 public Plugin myinfo = 
 {
@@ -202,6 +208,8 @@ void Timer_Delay(Handle hTimer, DataPack dp)
 	// let's find convars.
 	char sConCommand[256]; bool bIsCommand; Handle hPlugin;
 	char szPluginPath[256];
+
+	ArrayList hArrayPluginConVarPack = new ArrayList(sizeof(PluginConVar));
 	Handle hConCmdIter = FindFirstConCommand(sConCommand, sizeof(sConCommand), bIsCommand);
 	hFile_cvar.WriteLine(" ");
 	if (hConCmdIter)
@@ -220,15 +228,64 @@ void Timer_Delay(Handle hTimer, DataPack dp)
 						hPlugin = hArrayPlugin.Get(i);
 						if (hPlugin == hCvar.Plugin)
 						{
-							char szDefault[256];
-							hCvar.GetDefault(szDefault, sizeof(szDefault));
-							hFile_cvar.WriteLine("confogl_addcvar %s %s", sConCommand, szDefault);
+							int index = hArrayPluginConVarPack.FindValue(hPlugin, 0);
+							if (index == -1)
+							{
+								PluginConVar pcv;
+								pcv.hPlugin = hCvar.Plugin;
+								pcv.hArrayConVar = new ArrayList();
+								pcv.hArrayConVar.Push(hCvar);
+								hArrayPluginConVarPack.PushArray(pcv);
+							}
+							else
+							{
+								PluginConVar pcv;
+								hArrayPluginConVarPack.GetArray(index, pcv, sizeof(PluginConVar));
+								pcv.hArrayConVar.Push(hCvar);
+								hArrayPluginConVarPack.SetArray(index, pcv, sizeof(PluginConVar));
+							}
+
+							//char szDefault[256];
+							//hCvar.GetDefault(szDefault, sizeof(szDefault));
+							//hFile_cvar.WriteLine("confogl_addcvar %s %s", sConCommand, szDefault);
 						}		
 					}
 				}
 			}
 		}
 		while (FindNextConCommand(hConCmdIter, sConCommand, sizeof(sConCommand), bIsCommand));
+
+		delete hConCmdIter;
+		delete hArrayPlugin;
+
+		for (int i = 0; i < hArrayPluginConVarPack.Length; i++)
+		{
+			PluginConVar pcv;
+			hArrayPluginConVarPack.GetArray(i, pcv, sizeof(PluginConVar));
+			GetPluginFilename(pcv.hPlugin, sPluginName, sizeof(sPluginName));
+
+			hFile_cvar.WriteLine(" ");
+			hFile_cvar.WriteLine("// [%s]", sPluginName);
+
+			for (int j = 0; j < pcv.hArrayConVar.Length; j++)
+			{
+				ConVar hCvar = pcv.hArrayConVar.Get(j);
+				char szDefault[256];
+				hCvar.GetDefault(szDefault, sizeof(szDefault));
+
+				char szName[256];
+				hCvar.GetName(szName, sizeof(szName));
+
+				char szDesc[256];
+				hCvar.GetDescription(szDesc, sizeof(szDesc));
+				ReplaceString(szDesc, sizeof(szDesc), "\n", " ", true);
+				hFile_cvar.WriteLine("confogl_addcvar %s %s		// %s", szName, szDefault, szDesc);
+			}
+
+			delete pcv.hArrayConVar;
+		}
+
+		delete hArrayPluginConVarPack;
 
 		hFile_cvar.WriteLine(" ");
 		hFile_cvar.WriteLine("// Collected all cvars, set their default values and lock the change.");
@@ -242,10 +299,8 @@ void Timer_Delay(Handle hTimer, DataPack dp)
 		hFile_cvar.WriteLine(" ");
 		hFile_cvar.WriteLine("// Start client cvar tracking.");
 		hFile_cvar.WriteLine("confogl_startclientchecking");
-		
-		delete hConCmdIter;
+
 		delete hFile_cvar;
-		delete hArrayPlugin;
 	}
 
 	for (int i = 0; i < hArrayPluginPath.Length; i++)
