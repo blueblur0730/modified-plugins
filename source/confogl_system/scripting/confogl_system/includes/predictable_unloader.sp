@@ -50,7 +50,7 @@ void UnloadPlugins(int args)
 			if (StrContains(sReserved, "nativevotes.smx") != -1)
 				continue;
 
-			PrintToServer("[%s] Unloading plugin: %s", MODULE_PREDICTABLE_UNLOADER_NAME, sReserved);
+			//PrintToServer("[%s] Unloading plugin: %s", MODULE_PREDICTABLE_UNLOADER_NAME, sReserved);
 			ServerCommand("sm plugins unload %s", sReserved);
 		}
 
