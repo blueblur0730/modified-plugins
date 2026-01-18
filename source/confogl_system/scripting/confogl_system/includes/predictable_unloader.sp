@@ -5,13 +5,6 @@
 
 #define MODULE_PREDICTABLE_UNLOADER_NAME "PredictableUnloader"
 
-/*
-void PU_OnPluginStart()
-{
-	RegServerCmd("pred_unload_plugins", Command_UnloadPlugins, "Unload Plugins!");
-}
-*/
-
 void PU_OnPluginEnd()
 {
 	// we merged this together, so dont let it confuse the loading process.
@@ -22,27 +15,16 @@ void PU_OnPluginEnd()
 	}
 }
 
-/*
-static Action Command_UnloadPlugins(int args)
-{
-	UnloadPlugins(args);
-	return Plugin_Handled;
-}
-*/
-
 void UnloadPlugins(int args)
 {
-	ArrayStack aReservedPlugins = new ArrayStack();
+	ArrayStack aReservedPlugins;
 	Handle	   mySelf			= GetMyHandle();
+	char sReserved[PLATFORM_MAX_PATH];
 
 	// Thanks to Forgetest.
-	if (args == -1)
+	if (args != -1)
 	{
-		// Ourself as the last to unload.
-		aReservedPlugins.Push(mySelf);
-	}
-	else
-	{
+		aReservedPlugins = new ArrayStack();
 		Handle currentPlugin  = null;
 		Handle pluginIterator = GetPluginIterator();
 		while (MorePlugins(pluginIterator))
@@ -57,26 +39,32 @@ void UnloadPlugins(int args)
 		}
 
 		delete pluginIterator;
-	}
 
-	ServerCommand("sm plugins load_unlock");
+		ServerCommand("sm plugins load_unlock");
 
-	char sReserved[PLATFORM_MAX_PATH];
-	while (!aReservedPlugins.Empty)
-	{
-		Handle hPlugin = aReservedPlugins.Pop();
-		GetPluginFilename(hPlugin, sReserved, sizeof(sReserved));
-		ServerCommand("sm plugins unload %s", sReserved);
-	}
+		while (!aReservedPlugins.Empty)
+		{
+			Handle hPlugin = aReservedPlugins.Pop();
+			GetPluginFilename(hPlugin, sReserved, sizeof(sReserved));
 
-	delete aReservedPlugins;
+			if (StrContains(sReserved, "nativevotes.smx") != -1)
+				continue;
 
-	if (args != -1)
-	{
+			PrintToServer("[%s] Unloading plugin: %s", MODULE_PREDICTABLE_UNLOADER_NAME, sReserved);
+			ServerCommand("sm plugins unload %s", sReserved);
+		}
+
+		delete aReservedPlugins;
+
 		CVS_OnModuleEnd();
 		PS_OnModuleEnd();
 		g_hLogger.InfoEx("[%s] Preparing for self unloading.", MODULE_PREDICTABLE_UNLOADER_NAME);
 		RequestFrame(NextFrame_RefreshPlugins);
+	}
+	else
+	{
+		GetPluginFilename(mySelf, sReserved, sizeof(sReserved));
+		ServerCommand("sm plugins unload %s", sReserved);
 	}
 }
 

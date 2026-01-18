@@ -11,7 +11,7 @@ bool
 	RM_bIsMatchModeLoaded	  = false,
 	RM_bIsLoadingConfig		  = false;
 
-#define PLUGIN_VERSION "r1.10.0"	   // 2.4.5 rework
+#define PLUGIN_VERSION "r1.10.1"	   // 2.4.5 rework
 
 // Basic helper here.
 #include "confogl_system/includes/constants.sp"

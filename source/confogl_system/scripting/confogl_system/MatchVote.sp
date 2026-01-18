@@ -400,10 +400,15 @@ static int ResetVoteHandler(NativeVote vote, MenuAction action, int param1, int 
 			{
 				vote.DisplayPass("Unloading...");
 				CPrintToChatAll("%t %t", "Tag", "VotePass_Unloading");
-				RM_Match_Unload(true);
+				RequestFrame(NextFrame_UnloadMatchMode);	// requesting frame here, we need to finish the vote first, then unload ourselves.
 			}
 		}
 	}
 
 	return 0;
+}
+
+static void NextFrame_UnloadMatchMode()
+{
+	RM_Match_Unload(true);
 }
