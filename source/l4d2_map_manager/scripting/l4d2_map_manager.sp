@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <dhooks>
-#include <l4d2_nativevote>              // https://github.com/fdxx/l4d2_nativevote
+#include <nativevotes>
 #include <l4d2_source_keyvalues>    	// https://github.com/fdxx/l4d2_source_keyvalues
 #include <left4dhooks>
 #include <colors>

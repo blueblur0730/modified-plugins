@@ -232,86 +232,79 @@ static int Chapters_MenuHandler(Menu menu, MenuAction action, int client, int it
 
 static void StartVoteMap(int client, const char[] sTitle, const char[] sMap)
 {
-	if (!L4D2NativeVote_IsAllowNewVote())
+	if (NativeVotes_IsVoteInProgress())
 	{
 		CPrintToChat(client, "%t", "VoteInProgress");
 		return;
 	}
 	
-	L4D2NativeVote vote = L4D2NativeVote(Vote_Handler);
-	vote.SetDisplayText("更换地图: %s (%s)", sTitle, sMap);
+	NativeVote vote = new NativeVote(Vote_Handler, NativeVotesType_Custom_YesNo, MenuAction_VoteStart|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End|MenuAction_Display|MenuAction_Select);
+	vote.SetTitle("Change map: %s (%s)", sTitle, sMap);
 	vote.Initiator = client;
-	vote.SetInfoString(sMap);
+	vote.SetDetails(sMap);
 
-	int iPlayerCount = 0;
-	int[] iClients = new int[MaxClients];
-
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i) && !IsFakeClient(i))
-		{
-			if (!IsValidTeamFlags(i, g_MvAttr.VoteTeamFlags))
-				continue;
-
-			iClients[iPlayerCount++] = i;
-		}
-	}
-
-	if (!vote.DisplayVote(iClients, iPlayerCount, 20))
+	if (!vote.DisplayVoteToAll(20))
     {
         CPrintToChat(client, "%t", "FailedToVote");
-        LogMessage("Failed to start vote");
+        //LogMessage("Failed to start vote");
     }
 		
 }
 
-static void Vote_Handler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
+static int Vote_Handler(NativeVote vote, MenuAction action, int param1, int param2)
 {
 	switch (action)
 	{
-		case VoteAction_Start:
+		case MenuAction_End:
+		{
+			vote.Close();
+		}
+
+		case MenuAction_Display:
 		{
 			char sDisplay[256];
-			vote.GetDisplayText(sDisplay, sizeof(sDisplay));
+			vote.GetDetails(sDisplay, sizeof(sDisplay));
 			CPrintToChatAll("%t", "InitiatedVote", param1, sDisplay);
 		}
-		case VoteAction_PlayerVoted:
+
+		case MenuAction_VoteCancel:
 		{
-			CPrintToChatAll("%t", "Voted", param1);
-
-			if (!CheckCommandAccess(param1, "sm_admin", ADMFLAG_ROOT))
-				return;
-
-			if (param2 == VOTE_YES && g_MvAttr.bAdminOneVotePassed)
+			if (param1 == VoteCancel_NoVotes)
 			{
-				vote.YesCount = vote.PlayerCount;
-				vote.NoCount = 0;
+				vote.DisplayFail(NativeVotesFail_NotEnoughVotes);
 			}
-			else if (param2 == VOTE_NO && g_MvAttr.bAdminOneVoteAgainst)
+			else
 			{
-				vote.YesCount = 0;
-				vote.NoCount = vote.PlayerCount;
+				vote.DisplayFail(NativeVotesFail_Generic);
 			}
 		}
-		case VoteAction_End:
+
+		case MenuAction_Select:
 		{
-			if (vote.YesCount > vote.PlayerCount/2)
+			CPrintToChatAll("%t", "Voted", param1);
+		}
+
+		case MenuAction_VoteEnd:
+		{
+			if (param1 == NATIVEVOTES_VOTE_NO)
 			{
-				vote.SetPass("加载中...");
+				CPrintToChatAll("%t", "VoteFailed");
+                vote.DisplayFail(NativeVotesFail_Loses);
+			}
+            else
+            {
+				vote.DisplayPass("Loading...");
 
 				char sMap[256], sMissionName[256];
-				vote.GetInfoString(sMap, sizeof(sMap));
+				vote.GetDetails(sMap, sizeof(sMap));
 
 				if (g_smFirstMap.GetString(sMap, sMissionName, sizeof(sMissionName)))
 					SDKCall(g_hSDKChangeMission, g_pTheDirector, sMissionName);
 				else
 					ServerCommand("changelevel %s", sMap);
-			}
-            else
-            {
-                CPrintToChatAll("%t", "VoteFailed");
-                vote.SetFail();
             }
 		}
 	}
+
+	return 0;
 }

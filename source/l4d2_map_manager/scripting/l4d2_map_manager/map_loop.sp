@@ -8,26 +8,7 @@ bool g_bSwitched = false;
 void _map_loop_OnPluginStart()
 {
     RegConsoleCmdEx("sm_preservemap", Cmd_PreserveMap, "Preserve map.");
-	//HookUserMessage(GetUserMessageId("DisconnectToLobby"), OnDisconnectToLobby);
-    //HookEntityOutput("trigger_finale", "FinaleWon", OnFinaleWon);
-    //HookEntityOutput("trigger_finale", "OnFinalStart", OnFinalStart); 
 }
-
-/*
-static void OnFinaleWon(const char[] output, int caller, int activator, float delay)
-{
-    if (!g_bIsFinalMap)
-        return;
-
-	g_sPreservedMap[0] == '\0' ?  CPrintToChatAll("%t", "SwitchingMapRandom")
-	:  CPrintToChatAll("%t", "SwitchingMap", g_sPreservedMap);
-
-    !g_bPreserved ? CreateTimer(3.0, Timer_SwitchMap) :
-    (g_sPreservedMap[0] == '\0' ? CreateTimer(3.0, Timer_SwitchMap) : CreateTimer(3.0, Timer_SwitchPreservedMap))
-
-    g_bPreserved = false;
-}
-*/
 
 MRESReturn DTR_CDirector_OnFinishScenarioExit()
 {
@@ -247,71 +228,72 @@ static void PreserveMap(int client, const char[] sSubName, const char[] sTitle)
 		if (!kvSub.IsNull())
 		{
 			kvSub.GetString("Map", sMap, sizeof(sMap), "N/A");
-	        if (!L4D2NativeVote_IsAllowNewVote())
+	        if (NativeVotes_IsVoteInProgress())
 	        {
 		        CPrintToChat(client, "%t", "VoteInProgress");
 		        return;
 	        }
 	
-	        L4D2NativeVote vote = L4D2NativeVote(Vote_Handler);
-	        vote.SetDisplayText("预定一下战役: %s (%s)", sTitle, sMap);
+	        NativeVote vote = new NativeVote(Vote_Handler, NativeVotesType_Custom_YesNo, MenuAction_VoteStart|MenuAction_VoteCancel|MenuAction_VoteEnd|MenuAction_End|MenuAction_Display|MenuAction_Select);
+	        vote.SetTitle("Presserve next compaign: %s (%s)", sTitle, sMap);
 	        vote.Initiator = client;
-	        vote.SetInfoString(sMap);
+	        vote.SetDetails(sMap);
 
-	        int iPlayerCount = 0;
-	        int[] iClients = new int[MaxClients];
-
-	        for (int i = 1; i <= MaxClients; i++)
-	        {
-		        if (IsClientInGame(i) && !IsFakeClient(i))
-			        iClients[iPlayerCount++] = i;
-	        }
-
-	        if (!vote.DisplayVote(iClients, iPlayerCount, 20))
+	        if (!vote.DisplayVoteToAll(20))
             {
                 CPrintToChat(client, "%t", "FailedToVote");
-		        LogMessage("Failed to start vote");
+		        //LogMessage("Failed to start vote");
             }
 		}
 	}
 }
 
-static void Vote_Handler(L4D2NativeVote vote, VoteAction action, int param1, int param2)
+static int Vote_Handler(NativeVote vote, MenuAction action, int param1, int param2)
 {
 	switch (action)
 	{
-		case VoteAction_Start:
+		case MenuAction_End:
+		{
+			vote.Close();
+		}
+
+		case MenuAction_Display:
 		{
 			char sDisplay[256];
-			vote.GetDisplayText(sDisplay, sizeof(sDisplay));
+			vote.GetDetails(sDisplay, sizeof(sDisplay));
 			CPrintToChatAll("%t", "InitiatedVote", param1, sDisplay);
 		}
-		case VoteAction_PlayerVoted:
+
+		case MenuAction_VoteCancel:
 		{
-			CPrintToChatAll("%t", "Voted", param1);
-
-			if (!CheckCommandAccess(param1, "sm_admin", ADMFLAG_ROOT))
-				return;
-
-			if (param2 == VOTE_YES && g_MvAttr.bAdminOneVotePassed)
+			if (param1 == VoteCancel_NoVotes)
 			{
-				vote.YesCount = vote.PlayerCount;
-				vote.NoCount = 0;
+				vote.DisplayFail(NativeVotesFail_NotEnoughVotes);
 			}
-			else if (param2 == VOTE_NO && g_MvAttr.bAdminOneVoteAgainst)
+			else
 			{
-				vote.YesCount = 0;
-				vote.NoCount = vote.PlayerCount;
+				vote.DisplayFail(NativeVotesFail_Generic);
 			}
 		}
-		case VoteAction_End:
+
+		case MenuAction_Select:
 		{
-			if (vote.YesCount > vote.PlayerCount/2)
+			CPrintToChatAll("%t", "Voted", param1);
+		}
+
+		case MenuAction_VoteEnd:
+		{
+			if (param1 == NATIVEVOTES_VOTE_NO)
 			{
-				vote.SetPass("已设置预定章节地图...");
+                CPrintToChatAll("%t", "VoteFailed");
+                vote.DisplayFail(NativeVotesFail_Loses);
+			}
+			else
+            {
+				vote.DisplayPass("Setting preserved compaign...");
 
 				char sMap[256];
-				vote.GetInfoString(sMap, sizeof(sMap));
+				vote.GetDetails(sMap, sizeof(sMap));
 
                 strcopy(g_sPreservedMap, sizeof(g_sPreservedMap), sMap);
                 g_bPreserved = true;
@@ -319,12 +301,9 @@ static void Vote_Handler(L4D2NativeVote vote, VoteAction action, int param1, int
                 Call_StartForward(g_hFWD_OnPreservedMap);
                 Call_PushString(sMap);
                 Call_Finish();
-			}
-			else
-            {
-                CPrintToChatAll("%t", "VoteFailed");
-                vote.SetFail();
             }
 		}
 	}
+
+	return 0;
 }
