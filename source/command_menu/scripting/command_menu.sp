@@ -27,7 +27,7 @@ public void OnPluginStart()
     LoadTranslation(TRANSLATION_FILE);
 
     CreateConVar("command_menu_version", PLUGIN_VERSION, "The version of the Command Menu plugin.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
-    RegConsoleCmd("sm_menu", Cmd_CommandMenu, "Opens the Command Menu.");
+    RegConsoleCmd("sm_commands", Cmd_CommandMenu, "Opens the Command Menu.");
 }
 
 public void OnPluginEnd()
