@@ -236,7 +236,8 @@ static int LoadVoteHandler(NativeVote vote, MenuAction action, int param1, int p
 	
 		case MenuAction_Display:
 		{
-			CPrintToChatAllEx(param1, "%t %t", "Tag", "HasInitiatedVote", param1);
+			if (param1 == vote.Initiator)
+				CPrintToChatAllEx(param1, "%t %t", "Tag", "HasInitiatedVote", param1);
 		}
 
 		case MenuAction_Select:
@@ -369,7 +370,8 @@ static int ResetVoteHandler(NativeVote vote, MenuAction action, int param1, int 
 
 		case MenuAction_Display:
 		{
-			CPrintToChatAllEx(param1, "%t %t", "Tag", "HasInitiatedVote", param1);
+			if (param1 == vote.Initiator)
+				CPrintToChatAllEx(param1, "%t %t", "Tag", "HasInitiatedVote", param1);
 		}
 
 		case MenuAction_VoteCancel:

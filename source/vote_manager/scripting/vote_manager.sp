@@ -199,7 +199,8 @@ int VoteHandler(NativeVote vote, MenuAction action, int param1, int param2)
 
 		case MenuAction_Display:
 		{
-			CPrintToChatAllEx(param1, "%t", "HasInitiatedVote", param1);
+			if (param1 == vote.Initiator)
+				CPrintToChatAllEx(param1, "%t", "HasInitiatedVote", param1);
 		}
 
 		case MenuAction_VoteCancel:

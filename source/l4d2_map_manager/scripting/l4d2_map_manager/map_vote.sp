@@ -262,9 +262,12 @@ static int Vote_Handler(NativeVote vote, MenuAction action, int param1, int para
 
 		case MenuAction_Display:
 		{
-			char sDisplay[256];
-			vote.GetDetails(sDisplay, sizeof(sDisplay));
-			CPrintToChatAll("%t", "InitiatedVote", param1, sDisplay);
+			if (param1 == vote.Initiator)
+			{
+				char sDisplay[256];
+				vote.GetDetails(sDisplay, sizeof(sDisplay));
+				CPrintToChatAll("%t", "InitiatedVote", param1, sDisplay);
+			}
 		}
 
 		case MenuAction_VoteCancel:
