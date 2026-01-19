@@ -152,7 +152,7 @@ int GetIndex()
 
 	if (g_iPrintType == AD_SEQUENTIAL)
 	{
-		int index = -1;
+		static int index = -1;
 		if (++index >= g_aAdList.Length)
 			index = 0;
 		return index;
