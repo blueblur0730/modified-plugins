@@ -128,14 +128,15 @@ void DrawTeamPanel(int client, bool autoRefresh)
 		"None"
 	};
 
+	char sBuffer[256];
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Panel_TeamInfo", client);
+
 	Panel panel = new Panel();
-	panel.SetTitle("团队信息");
+	panel.SetTitle(sBuffer);
 
-	static char info[MAX_NAME_LENGTH];
-	static char name[MAX_NAME_LENGTH];
-
-	FormatEx(info, sizeof info, "旁观 [%d]", GetTeamPlayers(TEAM_SPECTATOR, false));
-	panel.DrawItem(info);
+	char name[MAX_NAME_LENGTH];
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Panel_Spectator", client, GetTeamPlayers(TEAM_SPECTATOR, false));
+	panel.DrawItem(sBuffer);
 
 	int i = 1;
 	for (; i <= MaxClients; i++)
@@ -144,12 +145,12 @@ void DrawTeamPanel(int client, bool autoRefresh)
 			continue;
 
 		GetClientName(i, name, sizeof name);
-		FormatEx(info, sizeof info, "%s - %s", GetBotOfIdlePlayer(i) ? "闲置" : "观众", name);
-		panel.DrawText(info);
+		FormatEx(sBuffer, sizeof(sBuffer), "%T - %s", GetBotOfIdlePlayer(i) ? "Panel_IdlePlayer" : "Panel_SpecPlayer", client, name);
+		panel.DrawText(sBuffer);
 	}
 
-	FormatEx(info, sizeof info, "生还 [%d/%d] - %d Bot(s)", GetTeamPlayers(TEAM_SURVIVOR, false), g_iBotLimit, GetSurBotsCount());
-	panel.DrawItem(info);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Panel_SurvivorTeam", client, GetTeamPlayers(TEAM_SURVIVOR, false), g_iBotLimit, GetSurBotsCount());
+	panel.DrawItem(sBuffer);
 
 	static ConVar cv;
 	if (!cv)
@@ -164,22 +165,22 @@ void DrawTeamPanel(int client, bool autoRefresh)
 		GetClientName(i, name, sizeof name);
 
 		if (!IsPlayerAlive(i))
-			FormatEx(info, sizeof info, "死亡 - %s", name);
+			FormatEx(sBuffer, sizeof(sBuffer), "%T", "Panel_SurvivorDead", client, name);
 		else
 		{
 			if (GetEntProp(i, Prop_Send, "m_isIncapacitated"))
-				FormatEx(info, sizeof info, "倒地 - %dHP - %s", GetClientHealth(i) + GetTempHealth(i), name);
+				FormatEx(sBuffer, sizeof(sBuffer), "%T", "Panel_Incapacitated", client, GetClientHealth(i) + GetTempHealth(i), name);
 			else if (GetEntProp(i, Prop_Send, "m_currentReviveCount") >= maxInc)
-				FormatEx(info, sizeof info, "黑白 - %dHP - %s", GetClientHealth(i) + GetTempHealth(i), name);
+				FormatEx(sBuffer, sizeof(sBuffer), "%T", "Panel_ThirdStrike", client, GetClientHealth(i) + GetTempHealth(i), name);
 			else
-				FormatEx(info, sizeof info, "%dHP - %s", GetClientHealth(i) + GetTempHealth(i), name);
+				FormatEx(sBuffer, sizeof(sBuffer), "%T", "Panel_Health", client, GetClientHealth(i) + GetTempHealth(i), name);
 		}
 
-		panel.DrawText(info);
+		panel.DrawText(sBuffer);
 	}
 
-	FormatEx(info, sizeof info, "感染 [%d]", GetTeamPlayers(TEAM_INFECTED, false));
-	panel.DrawItem(info);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Panel_InfectedTeam", client, GetTeamPlayers(TEAM_INFECTED, false));
+	panel.DrawItem(sBuffer);
 
 	Zombie	  zombie;
 	ArrayList aClients = new ArrayList(sizeof Zombie);
@@ -209,21 +210,21 @@ void DrawTeamPanel(int client, bool autoRefresh)
 			if (IsPlayerAlive(zombie.client))
 			{
 				if (GetEntProp(zombie.client, Prop_Send, "m_isGhost"))
-					FormatEx(info, sizeof info, "(%s)鬼魂 - %s", ZombieName[zombie.class - 1], name);
+					FormatEx(sBuffer, sizeof(sBuffer), "%T", "Panel_GhostState_Spawned", client, ZombieName[zombie.class - 1], name);
 				else
-					FormatEx(info, sizeof info, "(%s)%dHP - %s", ZombieName[zombie.class - 1], GetEntProp(zombie.client, Prop_Data, "m_iHealth"), name);
+					FormatEx(sBuffer, sizeof(sBuffer), "%T", "Panel_Alive", client, ZombieName[zombie.class - 1], GetEntProp(zombie.client, Prop_Data, "m_iHealth"), name);
 			}
 			else
-				FormatEx(info, sizeof info, "(%s)死亡 - %s", ZombieName[zombie.class - 1], name);
+				FormatEx(sBuffer, sizeof(sBuffer), "%T", "Panel_InfectedDead", client, ZombieName[zombie.class - 1], name);
 
-			panel.DrawText(info);
+			panel.DrawText(sBuffer);
 		}
 	}
 
 	delete aClients;
 
-	FormatEx(info, sizeof info, "刷新 [%s]", autoRefresh ? "●" : "○");
-	panel.DrawItem(info);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Panel_Refresh", client, autoRefresh ? "●" : "○");
+	panel.DrawItem(sBuffer);
 
 	panel.Send(client, Panel_Handler, 15);
 	delete panel;

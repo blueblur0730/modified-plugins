@@ -3,18 +3,18 @@ void SetupConVars()
 {
 	CreateConVar("bots_version", PLUGIN_VERSION, "bots(coop) plugin version.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
 
-	g_hCvar_BotLimit	= CreateConVar("bots_limit", "4", "开局Bot的数量", FCVAR_NOTIFY, true, 1.0, true, float(MaxClients));
-	g_hCvar_JoinLimit	= CreateConVar("bots_join_limit", "-1", "生还者玩家数量达到该值后将禁用sm_join命令和本插件的自动加入功能(不会影响游戏原有的加入功能). \n-1=插件不进行处理.", FCVAR_NOTIFY, true, -1.0, true, float(MaxClients));
-	g_hCvar_JoinFlags	= CreateConVar("bots_join_flags", "3", "额外玩家加入生还者的方法. \n0=插件不进行处理, 1=输入!join手动加入, 2=进服后插件自动加入, 3=手动+自动.", FCVAR_NOTIFY);
-	g_hCvar_JoinRespawn = CreateConVar("bots_join_respawn", "1", "玩家加入生还者时如果没有存活的Bot可以接管是否复活. \n0=否, 1=是, -1=总是复活(该值为-1时将允许玩家通过切换队伍/退出重进刷复活).", FCVAR_NOTIFY);
-	g_hCvar_SpecNotify	= CreateConVar("bots_spec_notify", "3", "完全旁观玩家点击鼠标左键时, 提示加入生还者的方式 \n0=不提示, 1=聊天栏, 2=屏幕中央, 3=弹出菜单.", FCVAR_NOTIFY);
-	g_esWeapon[0].Flags = CreateConVar("bots_give_slot0", "131071", "主武器给什么. \n0=不给, 131071=所有, 7=微冲, 1560=霰弹, 30720=狙击, 31=Tier1, 32736=Tier2, 98304=Tier0.", FCVAR_NOTIFY);
-	g_esWeapon[1].Flags = CreateConVar("bots_give_slot1", "1064", "副武器给什么. \n0=不给, 131071=所有.(如果选中了近战且该近战在当前地图上未解锁,则会随机给一把).", FCVAR_NOTIFY);
-	g_esWeapon[2].Flags = CreateConVar("bots_give_slot2", "0", "投掷物给什么. \n0=不给, 7=所有.", FCVAR_NOTIFY);
-	g_esWeapon[3].Flags = CreateConVar("bots_give_slot3", "1", "医疗品给什么. \n0=不给, 15=所有.", FCVAR_NOTIFY);
-	g_esWeapon[4].Flags = CreateConVar("bots_give_slot4", "3", "药品给什么. \n0=不给, 3=所有.", FCVAR_NOTIFY);
-	g_hCvar_GiveType	= CreateConVar("bots_give_type", "2", "根据什么来给玩家装备. \n0=不给, 1=每个槽位的设置, 2=当前存活生还者的平均装备质量(仅主副武器).", FCVAR_NOTIFY);
-	g_hCvar_GiveTime	= CreateConVar("bots_give_time", "0", "什么时候给玩家装备. \n0=每次出生时, 1=只在本插件创建Bot和复活玩家时.", FCVAR_NOTIFY);
+	g_hCvar_BotLimit	= CreateConVar("bots_limit", "4", "Maximun number of bots allowed in the server.", FCVAR_NOTIFY, true, 1.0, true, float(MaxClients));
+	g_hCvar_JoinLimit	= CreateConVar("bots_join_limit", "-1", "sm_join and auto join functionality will be disabled once bots reached this limit. (not affected the original game joining logic.). \n-1 = do nothing about this.", FCVAR_NOTIFY, true, -1.0, true, float(MaxClients));
+	g_hCvar_JoinFlags	= CreateConVar("bots_join_flags", "3", "the ways extra players to join. \n0=do nothing, 1=by typing !join, 2=auto join once connected with server, 3=manual + auto.", FCVAR_NOTIFY);
+	g_hCvar_JoinRespawn = CreateConVar("bots_join_respawn", "1", "If there's not living bots when joining, should the bots be respawned?. \n0=no, 1=yes, -1=always respawn (when -1, players can respawn by switching teams or rejoining the server).", FCVAR_NOTIFY);
+	g_hCvar_SpecNotify	= CreateConVar("bots_spec_notify", "3", "The ways to show the join notification when spectator players click their M1: \n0=no notification, 1=chat, 2=screen center, 3=popup menu.", FCVAR_NOTIFY);
+	g_esWeapon[0].Flags = CreateConVar("bots_give_slot0", "131071", "Primary weapon to give. \n0=nothing, 131071=all, 7=smg, 1560=shotgun, 30720=sniper, 31=Tier1, 32736=Tier2, 98304=Tier0.", FCVAR_NOTIFY);
+	g_esWeapon[1].Flags = CreateConVar("bots_give_slot1", "1064", "Secondary weapon to give. \n0=nothing, 131071=all.(if melee is selected and it's not unlocked on the current map, a random one will be given).", FCVAR_NOTIFY);
+	g_esWeapon[2].Flags = CreateConVar("bots_give_slot2", "0", "Grenades to give. \n0=nothing, 7=all.", FCVAR_NOTIFY);
+	g_esWeapon[3].Flags = CreateConVar("bots_give_slot3", "1", "Medical items to give. \n0=nothing, 15=all.", FCVAR_NOTIFY);
+	g_esWeapon[4].Flags = CreateConVar("bots_give_slot4", "3", "Pills to give. \n0=nothing, 3=all.", FCVAR_NOTIFY);
+	g_hCvar_GiveType	= CreateConVar("bots_give_type", "2", "How to determine what equipment to give players. \n0=nothing, 1=per slot settings, 2=average equipment quality of current living survivors (primary and secondary only).", FCVAR_NOTIFY);
+	g_hCvar_GiveTime	= CreateConVar("bots_give_time", "0", "When to give players equipment. \n0=every spawn, 1=only when this plugin creates bots or respawns players.", FCVAR_NOTIFY);
 
 	g_hCvar_SurLimit	= FindConVar("survivor_limit");
 	g_hCvar_SurLimit.Flags &= ~FCVAR_NOTIFY;

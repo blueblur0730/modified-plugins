@@ -1,4 +1,14 @@
 
+stock void GoAFKTimer(int client, float flDuration)
+{
+	static int m_GoAFKTimer = -1;
+	if (m_GoAFKTimer == -1)
+		m_GoAFKTimer = FindSendPropInfo("CTerrorPlayer", "m_lookatPlayer") - 12;
+
+	SetEntDataFloat(client, m_GoAFKTimer + 4, flDuration);
+	SetEntDataFloat(client, m_GoAFKTimer + 8, GetGameTime() + flDuration);
+}
+
 stock bool IsNullSlot(int slot)
 {
 	int flags = g_esWeapon[slot].Flags.IntValue;

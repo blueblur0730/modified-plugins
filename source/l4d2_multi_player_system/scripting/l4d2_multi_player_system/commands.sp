@@ -26,7 +26,7 @@ static Action cmdGoIdle(int client, int args)
 
 	if (!g_bRoundStart)
 	{
-		CReplyToCommand(client, "[{green}!{default}] 回合尚未开始.");
+		CPrintToChat(client, "%t", "RoundNotAlive");
 		return Plugin_Handled;
 	}
 
@@ -35,16 +35,6 @@ static Action cmdGoIdle(int client, int args)
 
 	GoAFKTimer(client, 2.5);
 	return Plugin_Handled;
-}
-
-static void GoAFKTimer(int client, float flDuration)
-{
-	static int m_GoAFKTimer = -1;
-	if (m_GoAFKTimer == -1)
-		m_GoAFKTimer = FindSendPropInfo("CTerrorPlayer", "m_lookatPlayer") - 12;
-
-	SetEntDataFloat(client, m_GoAFKTimer + 4, flDuration);
-	SetEntDataFloat(client, m_GoAFKTimer + 8, GetGameTime() + flDuration);
 }
 
 static Action cmdTeamPanel(int client, int args)
@@ -63,19 +53,19 @@ static Action cmdJoinTeam2(int client, int args)
 
 	if (!g_bRoundStart)
 	{
-		CPrintToChat(client, "[{green}!{default}] 回合尚未开始.");
+		CPrintToChat(client, "%t", "RoundNotAlive");
 		return Plugin_Handled;
 	}
 
 	if (!(g_iJoinFlags & JOIN_MANUAL))
 	{
-		CPrintToChat(client, "[{green}!{default}] 手动加入已禁用.");
+		CPrintToChat(client, "%t", "ManualJoinDisabled");
 		return Plugin_Handled;
 	}
 
 	if (CheckJoinLimit())
 	{
-		CPrintToChat(client, "[{green}!{default}] 已达到生还者数量限制 {green}%d{default}.", g_iJoinLimit);
+		CPrintToChat(client, "%t", "ReachedLimit", g_iJoinLimit);
 		return Plugin_Handled;
 	}
 
@@ -89,7 +79,7 @@ static Action cmdJoinTeam2(int client, int args)
 
 		case TEAM_SURVIVOR:
 		{
-			CPrintToChat(client, "[{green}!{default}] 你当前已在生还者队伍.");
+			CPrintToChat(client, "%t", "AlreadyInSurvivorTeam");
 			return Plugin_Handled;
 		}
 
@@ -114,7 +104,7 @@ bool JoinSurTeam(int client)
 		if (IsPlayerAlive(client))
 			State_Transition(client, 6);
 
-		CPrintToChat(client, "[{green}!{default}] 重复加入默认为 {green}死亡状态{default}.");
+		CPrintToChat(client, "%t", "DeadWhenRejoin");
 		return true;
 	}
 
@@ -140,7 +130,7 @@ bool JoinSurTeam(int client)
 		{
 			SetHumanSpec(bot, client);
 			TakeOverBot(client);
-			CPrintToChat(client, "[{green}!{default}] 重复加入默认为 {green}死亡状态{default}.");
+			CPrintToChat(client, "%t", "DeadWhenRejoin");
 		}
 	}
 	else
@@ -180,25 +170,25 @@ static Action cmdTakeOverBot(int client, int args)
 
 	if (!g_bRoundStart)
 	{
-		CReplyToCommand(client, "[{green}!{default}] 回合尚未开始.");
+		CPrintToChat(client, "%t", "RoundNotAlive");
 		return Plugin_Handled;
 	}
 
 	if (!IsTeamAllowed(client))
 	{
-		CPrintToChat(client, "[{green}!{default}] 不符合接管条件.");
+		CPrintToChat(client, "%t", "NotAvailableToBeTakenOver");
 		return Plugin_Handled;
 	}
 
 	if (CheckJoinLimit())
 	{
-		CPrintToChat(client, "[{green}!{default}] 已达到生还者数量限制 {green}%d{default}.", g_iJoinLimit);
+		CPrintToChat(client, "%t", "ReachedLimit", g_iJoinLimit);
 		return Plugin_Handled;
 	}
 
 	if (!FindUselessSurBot(true))
 	{
-		CPrintToChat(client, "[{green}!{default}] 没有 {olive}空闲的电脑BOT{default} 可以接管.");
+		CPrintToChat(client, "%t", "NoAvailableToBeTaken");
 		return Plugin_Handled;
 	}
 
@@ -211,8 +201,13 @@ static void TakeOverBotMenu(int client)
 	char info[12];
 	char disp[64];
 	Menu menu = new Menu(TakeOverBot_MenuHandler);
-	menu.SetTitle("- 请选择接管目标 - [!tkbot]");
-	menu.AddItem("o", "当前旁观目标");
+
+	char sBuffer[256];
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Menu_ChooseBot", client);
+	menu.SetTitle(sBuffer);
+
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Menu_CurrentSpecTarget", client);
+	menu.AddItem("o", sBuffer);
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -220,7 +215,7 @@ static void TakeOverBotMenu(int client)
 			continue;
 
 		FormatEx(info, sizeof info, "%d", GetClientUserId(i));
-		FormatEx(disp, sizeof disp, "%s - %s", IsPlayerAlive(i) ? "存活" : "死亡", g_sSurvivorNames[GetCharacter(i)]);
+		FormatEx(disp, sizeof disp, "%T - %s", IsPlayerAlive(i) ? "Menu_Alive" : "Menu_Dead", client, g_sSurvivorNames[GetCharacter(i)]);
 		menu.AddItem(info, disp);
 	}
 
@@ -237,7 +232,7 @@ static int TakeOverBot_MenuHandler(Menu menu, MenuAction action, int param1, int
 		{
 			if (CheckJoinLimit())
 			{
-				CPrintToChat(param1, "[{green}!{default}] 已达到生还者数量限制 {green}%d{default}.", g_iJoinLimit);
+				CPrintToChat(param1, "%t", "ReachedLimit", g_iJoinLimit);
 				return 0;
 			}
 
@@ -253,17 +248,17 @@ static int TakeOverBot_MenuHandler(Menu menu, MenuAction action, int param1, int
 					TakeOverBot(param1);
 				}
 				else
-					CPrintToChat(param1, "[{green}!{default}] 当前旁观目标非可接管BOT.");
+					CPrintToChat(param1, "%t", "CurrentSpecTargetNotAvailable");
 			}
 			else {
 				bot = GetClientOfUserId(StringToInt(item));
 				if (!bot || !IsValidSurBot(bot))
-					CPrintToChat(param1, "[{green}!{default}] 选定的目标BOT已失效.");
+					CPrintToChat(param1, "%t", "SelectedBotNotAvailable");
 				else
 				{
 					int team = IsTeamAllowed(param1);
 					if (!team)
-						CPrintToChat(param1, "[{green}!{default}] 不符合接管条件.");
+						CPrintToChat(param1, "%t", "NotAvailableToBeTakenOver");
 					else
 					{
 						if (team != TEAM_SPECTATOR)
@@ -290,7 +285,7 @@ static Action cmdSuicide(int client, int args)
 
 	if (IsPlayerAlive(client))
 	{
-		CPrintToChatAllEx(client, "[{green}!{default}] {teamcolor}%N{default} 失去梦想自杀了...", client);
+		CPrintToChatAllEx(client, "%t", "Suicided", client);
 		ForcePlayerSuicide(client);
 	}
 
@@ -304,14 +299,14 @@ static Action cmdJoinTeam1(int client, int args)
 
 	if (!g_bRoundStart)
 	{
-		CReplyToCommand(client, "[{green}!{default}] 回合尚未开始.");
+		CPrintToChat(client, "%t", "RoundNotAlive");
 		return Plugin_Handled;
 	}
 
 	bool idle = !!GetBotOfIdlePlayer(client);
 	if (!idle && GetClientTeam(client) == TEAM_SPECTATOR)
 	{
-		CPrintToChat(client, "[{green}!{default}] 你当前已在旁观者队伍.");
+		CPrintToChat(client, "%t", "AlreadyInSpecTeam");
 		return Plugin_Handled;
 	}
 
@@ -326,27 +321,27 @@ static Action cmdBotSet(int client, int args)
 {
 	if (!g_bRoundStart)
 	{
-		CReplyToCommand(client, "[{green}!{default}] 回合尚未开始.");
+		CPrintToChat(client, "%t", "RoundNotAlive");
 		return Plugin_Handled;
 	}
 
 	if (args != 1)
 	{
-		CReplyToCommand(client, "[{green}!{default}] !bot/sm_bot <{olive}数量{default}>.");
+		CReplyToCommand(client, "%t", "BotSetUsage");
 		return Plugin_Handled;
 	}
 
 	int arg = GetCmdArgInt(1);
 	if (arg < 1 || arg > MaxClients - 1)
 	{
-		CReplyToCommand(client, "[{green}!{default}] 参数范围 {olive}1{default}~{olive}%d{default}.", MaxClients - 1);
+		CReplyToCommand(client, "%t", "ArgRange", MaxClients - 1);
 		return Plugin_Handled;
 	}
 
 	delete g_hBotsTimer;
 	g_hCvar_BotLimit.IntValue = arg;
 	g_hBotsTimer		  = CreateTimer(1.0, tmrBotsUpdate);
-	CReplyToCommand(client, "[{green}!{default}] 开局BOT数量已设置为 {green}%d{default}.", arg);
+	CReplyToCommand(client, "%t", "SettingBotNumber", arg);
 	return Plugin_Handled;
 }
 
@@ -375,10 +370,10 @@ static Action Listener_spec_next(int client, char[] command, int argc)
 	switch (g_iSpecNotify)
 	{
 		case 1:
-			CPrintToChat(client, "[{green}!{default}] 聊天栏输入 {olive}!join {default}加入游戏.");
+			CPrintToChat(client, "%t", "TypeJoinCommandToJoin");
 
 		case 2:
-			PrintHintText(client, "[!] 聊天栏输入 !join 加入游戏");
+			PrintHintText(client, "%T", "TypeJoinCommandToJoin_NoColor", client);
 
 		case 3:
 			JoinTeam2Menu(client);
@@ -391,13 +386,24 @@ static void JoinTeam2Menu(int client)
 {
 	EmitSoundToClient(client, SOUND_SPECMENU, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, SNDPITCH_NORMAL, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
 
+	char sBuffer[256];
 	Menu menu = new Menu(JoinTeam2_MenuHandler);
-	menu.SetTitle("加入生还者?");
-	menu.AddItem("y", "是");
-	menu.AddItem("n", "否");
+
+	FormatEx(sBuffer, sizeof sBuffer, "%T", "Menu_JoinTeam2", client);
+	menu.SetTitle(sBuffer);
+
+	FormatEx(sBuffer, sizeof sBuffer, "%T", "Menu_Yes", client);
+	menu.AddItem("y", sBuffer);
+
+	FormatEx(sBuffer, sizeof sBuffer, "%T", "Menu_No", client);
+	menu.AddItem("n", sBuffer);
 
 	if (FindUselessSurBot(true))
-		menu.AddItem("t", "接管指定BOT");
+	{
+		FormatEx(sBuffer, sizeof sBuffer, "%T", "Menu_TakeOverSpecifiedBot", client);
+		menu.AddItem("t", sBuffer);
+	}
+		
 
 	menu.ExitButton		= false;
 	menu.ExitBackButton = false;
@@ -420,7 +426,7 @@ static int JoinTeam2_MenuHandler(Menu menu, MenuAction action, int param1, int p
 					if (FindUselessSurBot(true))
 						TakeOverBotMenu(param1);
 					else
-						CPrintToChat(param1, "[{green}!{default}] 没有 {olive}空闲的电脑BOT {default}可以接管.");
+						CPrintToChat(param1, "%t", "NoAvailableToBeTaken");
 				}
 			}
 		}
@@ -452,14 +458,14 @@ static Action cmdIncreaseBot(int client, int args)
 {
 	if (!g_bRoundStart)
 	{
-		CReplyToCommand(client, "[{green}!{default}] 回合尚未开始.");
+		CPrintToChat(client, "%t", "RoundNotAlive");
 		return Plugin_Handled;
 	}
 
 	delete g_hBotsTimer;
 	g_hCvar_BotLimit.IntValue++;
 	g_hBotsTimer = CreateTimer(1.0, tmrBotsUpdate);
-	CReplyToCommand(client, "[{green}!{default}] 开局BOT数量已增加到 {green}%d{default}.", g_hCvar_BotLimit.IntValue);
+	CReplyToCommand(client, "%t", "IncreasedBotNumber", g_hCvar_BotLimit.IntValue);
 	return Plugin_Handled;
 }
 
@@ -467,12 +473,12 @@ static Action cmdDecreaseBot(int client, int args)
 {
 	if (!g_bRoundStart)
 	{
-		CReplyToCommand(client, "[{green}!{default}] 回合尚未开始.");
+		CPrintToChat(client, "%t", "RoundNotAlive");
 		return Plugin_Handled;
 	}
 
 	delete g_hBotsTimer;
 	g_hCvar_BotLimit.IntValue--;
-	CReplyToCommand(client, "[{green}!{default}] 开局BOT数量已减少到 {green}%d{default}.", g_hCvar_BotLimit.IntValue);
+	CReplyToCommand(client, "%t", "DecreasedBotNumber", g_hCvar_BotLimit.IntValue);
 	return Plugin_Handled;
 }

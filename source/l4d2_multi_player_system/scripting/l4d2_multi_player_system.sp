@@ -83,7 +83,7 @@ enum struct Player
 }
 Player g_esPlayer[MAXPLAYERS + 1];
 
-#define PLUGIN_VERSION "1.12.2"
+#define PLUGIN_VERSION "1.13.0"
 public Plugin myinfo =
 {
 	name = "[L4D2] Multi-Player System",
@@ -109,6 +109,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
+	LoadTranslation("l4d2_multi_player_system.phrases");
+
 	InitData();
 	SetupConVars();
 	SetupCommands();
@@ -175,4 +177,15 @@ public void OnMapStart()
 public void OnMapEnd()
 {
 	ResetPlugin();
+}
+
+stock void LoadTranslation(const char[] translation)
+{
+	char sPath[PLATFORM_MAX_PATH], sName[PLATFORM_MAX_PATH];
+	Format(sName, sizeof(sName), "translations/%s.txt", translation);
+	BuildPath(Path_SM, sPath, sizeof(sPath), sName);
+	if (!FileExists(sPath))
+		SetFailState("Missing translation file %s.txt", translation);
+
+	LoadTranslations(translation);
 }

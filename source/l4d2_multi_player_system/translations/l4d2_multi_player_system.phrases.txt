@@ -1,0 +1,259 @@
+"Phrases"
+{
+    "Panel_TeamInfo"
+    {
+        "en"   "Team Information"
+        "chi"  "队伍信息"
+    }
+
+    "Panel_Spectator"
+    {
+        "#format"   "{1:d}"
+        "en"    "Spectator [{1}]"
+        "chi"  "旁观 [{1}]"
+    }
+
+    "Panel_IdlePlayer"
+    {
+        "en"    "Idle"
+        "chi"  "闲置"
+    }
+
+    "Panel_SpecPlayer"
+    {
+        "en"    "Spectator"
+        "chi"  "观众"
+    }
+
+    "Panel_SurvivorTeam"
+    {
+        "#format"   "{1:d},{2:d},{3:d}"
+        "en"        "Survivor Team [{1}/{2}] - {3} Bot(s)"
+        "chi"       "生还者 [{1}/{2}] - {3} 人机"
+    }
+
+    "Panel_SurvivorDead"
+    {
+        "#format"   "{1:s}"
+        "en"    "Dead - {1}"
+        "chi"  "死亡 - {1}"
+    }
+
+    "Panel_Incapacitated"
+    {
+        "#format"   "{1:d},{2:s}"
+        "en"    "Incapacitated - {1}HP - {2}"
+        "chi"  "倒地 - {1}HP - {2}"
+    }
+
+    "Panel_ThirdStrike"
+    {
+        "#format"   "{1:d},{2:s}"
+        "en"    "Balck & White - {1}HP - {2}"
+        "chi"  "黑白 - {1}HP - {2}"
+    }
+
+    "Panel_Health"
+    {
+        "#format"   "{1:d},{2:s}"
+        "en"    "{1}HP - {2}"
+        "chi"  "{1}HP - {2}"
+    }
+
+    "Panel_TeamInfected"
+    {
+        "#format"   "{1:d}"
+        "en"    "Infected - {1}"
+        "chi"  "感染者 - {1}"
+    }
+
+    "Panel_GhostState_Spawned"
+    {
+        "#format"   "{1:s},{2:s}"
+        "en"    "({1})Ghost - {2} "
+        "chi"  "({1})幽灵状态 - {2}"
+    }
+
+    "Panel_Alive"
+    {
+        "#format"   "{1:s},{2:d},{3:s}"
+        "en"    "({1}){2}HP - {3}"
+        "chi"  "({1}){2}HP - {3}"
+    }
+
+    "Panel_InfectedDead"
+    {
+        "#format"   "{1:s},{2:s}"
+        "en"    "({1})Dead - {2}"
+        "chi"  "({1})死亡 - {2}"
+    }
+
+    "Panel_Refresh"
+    {
+        "#format"   "{1:s}"
+        "en"    "Refresh [{1}]"
+        "chi"  "刷新 [{1}]"
+    }
+
+    "RoundNotAlive"
+    {
+        "en"    "[{green}!{default}] Round not started yet."
+        "chi"  "[{green}!{default}] 回合尚未开始."
+    }
+
+    "ManualJoinDisabled"
+    {
+        "en"    "[{green}!{default}] Manual join is disabled."
+        "chi"  "[{green}!{default}] 手动加入已禁用."
+    }
+
+    "ReachedLimit"
+    {
+        "#format"   "{1:d}"
+        "en"    "[{green}!{default}] Reached limit of {green}{1}{default} survivors."
+        "chi"  "[{green}!{default}] 已达到生还者数量限制 {green}{1}{default}."
+    }
+
+    "AlreadyInSurvivorTeam"
+    {
+        "en"    "[{green}!{default}] You are already in the survivor team."
+        "chi"  "[{green}!{default}] 你当前已在生还者队伍."
+    }
+
+    "DeadWhenRejoin"
+    {
+        "en"    "[{green}!{default}] Rejoining is defaultly set to {green}dead state{default}."
+        "chi"  "[{green}!{default}] 重复加入默认为 {green}死亡状态{default}."
+    }
+
+    "NotAvailableToBeTakenOver"
+    {
+        "en"    "[{green}!{default}] This player is not available to be taken over."
+        "chi"  "[{green}!{default}] 不符合接管条件."
+    }
+
+    "NoAvailableToBeTaken"
+    {
+        "en"    "[{green}!{default}] No {olive}available survivor bots{default} to take over."
+        "chi"  "[{green}!{default}] 没有 {olive}空闲的电脑BOT{default} 可以接管."
+    }
+
+    "Menu_ChooseBot"
+    {
+        "en"    "- Choose a bot to take over - [!tkbot]"
+        "chi"  "- 请选择接管目标 - [!tkbot]"
+    }
+
+    "Menu_CurrentSpecTarget"
+    {
+        "en"    "Current Spec Target"
+        "chi"  "当前旁观目标"
+    }
+
+    "Menu_Alive"
+    {
+        "en"    "Alive"
+        "chi"  "存活"
+    }
+
+    "Menu_Dead"
+    {
+        "en"    "Dead"
+        "chi"  "死亡"
+    }
+
+    "CurrentSpecTargetNotAvailable"
+    {
+        "en"    "[{green}!{default}] Current Spec Target is not available to be taken over."
+        "chi"  "[{green}!{default}] 当前旁观目标不符合接管条件."
+    }
+
+    "SelectedBotNotAvailable"
+    {
+        "en"    "[{green}!{default}] Selected bot has not been available to be taken over."
+        "chi"  "[{green}!{default}] 选定的目标BOT已失效."
+    }
+
+    "Suicided"
+    {
+        "#format"   "{1:N}"
+        "en"    "[{green}!{default}] {teamcolor}{1}{default} suicided..."
+        "chi"  "[{green}!{default}] {teamcolor}{1}{default} 失去梦想自杀了..."
+    }
+
+    "AlreadyInSpecTeam"
+    {
+        "en"    "[{green}!{default}] You are already in the spectator team."
+        "chi"  "[{green}!{default}] 你当前已在旁观者队伍."
+    }
+
+    "BotSetUsage"
+    {
+        "en"    "[{green}!{default}] !bot/sm_bot <{olive}number{default}>."
+        "chi"  "[{green}!{default}] !bot/sm_bot <{olive}数量{default}>."
+    }
+
+    "ArgRange"
+    {
+        "#format"   "{1:d}"
+        "en"    "[{green}!{default}] Argument range {olive}1{default}~{olive}{1}{default}."
+        "chi"  "[{green}!{default}] 参数范围 {olive}1{default}~{olive}{1}{default}."
+    }
+
+    "SettingBotNumber"
+    {
+        "#format"   "{1:d}"
+        "en"    "[{green}!{default}] Setting bot number to {green}{1}{default}."
+        "chi"  "[{green}!{default}] 开局BOT数量已设置为 {green}{1}{default}."
+    }
+
+    "TypeJoinCommandToJoin"
+    {
+        "en"    "[{green}!{default}] Type {olive}!join {default} to join the game."
+        "chi"  "[{green}!{default}] 聊天栏输入 {olive}!join {default}加入游戏."
+    }
+
+    "TypeJoinCommandToJoin_NoColor"
+    {
+        "en"    "[!] Type !join to join the game."
+        "chi"  "[!] 聊天栏输入 !join 加入游戏"
+    }
+
+    "Menu_JoinTeam2"
+    {
+        "en"    "Join Survivor Team?"
+        "chi"  "加入生还者队伍?"
+    }
+
+    "Menu_Yes"
+    {
+        "en"    "Yes"
+        "chi"  "是"
+    }
+
+    "Menu_No"
+    {
+        "en"    "No"
+        "chi"  "否"
+    }
+
+    "Menu_TakeOverSpecifiedBot"
+    {
+        "en"    "Take over specified bot?"
+        "chi"  "接管指定BOT?"
+    }
+
+    "IncreasedBotNumber"
+    {
+        "#format"   "{1:d}"
+        "en"    "[{green}!{default}] Increased bot number to {green}{1}{default}."
+        "chi"  "[{green}!{default}] 开局BOT数量已增加到 {green}{1}{default}."
+    }
+
+    "DecreasedBotNumber"
+    {
+        "#format"   "{1:d}"
+        "en"    "[{green}!{default}] Decreased bot number to {green}{1}{default}."
+        "chi"  "[{green}!{default}] 开局BOT数量已减少到 {green}{1}{default}."
+    }
+}
