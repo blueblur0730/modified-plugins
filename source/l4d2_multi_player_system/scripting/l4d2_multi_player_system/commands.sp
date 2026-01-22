@@ -479,6 +479,7 @@ static Action cmdDecreaseBot(int client, int args)
 
 	delete g_hBotsTimer;
 	g_hCvar_BotLimit.IntValue--;
+	g_hBotsTimer = CreateTimer(1.0, tmrBotsUpdate);
 	CReplyToCommand(client, "%t", "DecreasedBotNumber", g_hCvar_BotLimit.IntValue);
 	return Plugin_Handled;
 }
