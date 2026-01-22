@@ -1,16 +1,19 @@
 
 void SetupCommands()
 {
-	RegConsoleCmd("sm_afk", cmdGoIdle, "闲置");
-	RegConsoleCmd("sm_teams", cmdTeamPanel, "团队菜单");
-	RegConsoleCmd("sm_join", cmdJoinTeam2, "加入生还者");
-	RegConsoleCmd("sm_tkbot", cmdTakeOverBot, "接管指定BOT");
+	RegConsoleCmd("sm_afk", cmdGoIdle, "Go awat from keyboard.");
+	RegConsoleCmd("sm_teams", cmdTeamPanel, "Team panel.");
+	RegConsoleCmd("sm_join", cmdJoinTeam2, "Join team 2.");
+	RegConsoleCmd("sm_tkbot", cmdTakeOverBot, "Take over a specified bot.");
 
-	RegConsoleCmd("sm_zs", cmdSuicide, "kill yourself");
-	RegConsoleCmd("sm_suicide", cmdSuicide, "kill yourself");
+	RegConsoleCmd("sm_zs", cmdSuicide, "kill yourself.");
+	RegConsoleCmd("sm_suicide", cmdSuicide, "kill yourself.");
 
-	RegAdminCmd("sm_spec", cmdJoinTeam1, ADMFLAG_ROOT, "加入旁观者");
-	RegAdminCmd("sm_bot", cmdBotSet, ADMFLAG_ROOT, "设置开局Bot的数量");
+	RegAdminCmd("sm_spec", cmdJoinTeam1, ADMFLAG_ROOT, "Join team 1.");
+	RegAdminCmd("sm_bot", cmdBotSet, ADMFLAG_ROOT, "Set the number of bots to spawn at round start.");
+
+	RegAdminCmd("sm_increase_bot", cmdIncreaseBot, ADMFLAG_ROOT, "Increase the number of bots by 1.");
+	RegAdminCmd("sm_decrease_bot", cmdDecreaseBot, ADMFLAG_ROOT, "Decrease the number of bots by 1.");
 
 	AddCommandListener(Listener_spec_next, "spec_next");
 	HookUserMessage(GetUserMessageId("SayText2"), umSayText2, true);
@@ -443,4 +446,33 @@ static Action umSayText2(UserMsg msg_id, BfRead msg, const int[] players, int pl
 		return Plugin_Handled;
 
 	return Plugin_Continue;
+}
+
+static Action cmdIncreaseBot(int client, int args)
+{
+	if (!g_bRoundStart)
+	{
+		CReplyToCommand(client, "[{green}!{default}] 回合尚未开始.");
+		return Plugin_Handled;
+	}
+
+	delete g_hBotsTimer;
+	g_hCvar_BotLimit.IntValue++;
+	g_hBotsTimer = CreateTimer(1.0, tmrBotsUpdate);
+	CReplyToCommand(client, "[{green}!{default}] 开局BOT数量已增加到 {green}%d{default}.", g_hCvar_BotLimit.IntValue);
+	return Plugin_Handled;
+}
+
+static Action cmdDecreaseBot(int client, int args)
+{
+	if (!g_bRoundStart)
+	{
+		CReplyToCommand(client, "[{green}!{default}] 回合尚未开始.");
+		return Plugin_Handled;
+	}
+
+	delete g_hBotsTimer;
+	g_hCvar_BotLimit.IntValue--;
+	CReplyToCommand(client, "[{green}!{default}] 开局BOT数量已减少到 {green}%d{default}.", g_hCvar_BotLimit.IntValue);
+	return Plugin_Handled;
 }

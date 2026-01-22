@@ -83,7 +83,7 @@ enum struct Player
 }
 Player g_esPlayer[MAXPLAYERS + 1];
 
-#define PLUGIN_VERSION "1.12.1"
+#define PLUGIN_VERSION "1.12.2"
 public Plugin myinfo =
 {
 	name = "[L4D2] Multi-Player System",
