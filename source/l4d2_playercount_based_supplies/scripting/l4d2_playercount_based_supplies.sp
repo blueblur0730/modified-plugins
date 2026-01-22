@@ -19,7 +19,7 @@
  * Spectators are not counted.
  */
 
-#define PLUGIN_VERSION "r1.0"
+#define PLUGIN_VERSION "r1.1"
 
 public Plugin myinfo =
 {
@@ -30,7 +30,7 @@ public Plugin myinfo =
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
-ConVar g_hCvar_AutoEnable, g_hCvar_MultipleType;
+ConVar g_hCvar_AutoEnable, g_hCvar_MultipleType, g_hCvar_BaseCount;
 bool	  g_bEnable;
 int	  g_iMultiple, g_iMultipleType;
 
@@ -40,6 +40,7 @@ public void OnPluginStart()
 	CreateConVar("l4d2_playercount_based_supplies_version", PLUGIN_VERSION, "Player Count Based Supplies version.", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DONTRECORD);
 	g_hCvar_AutoEnable		= CreateConVar("l4d2_playercount_based_supplies_enable", "1", "enable multiple medic?", _, true, 0.0, true, 1.0);
 	g_hCvar_MultipleType 	= CreateConVar("l4d2_playercount_based_supplies_type", "1", "which type to enable? 0=nothing, 1=medkit, 2=pain pills, 4=adrenaline, Add numbers together.", _, true, 0.0, true, 7.0);
+	g_hCvar_BaseCount		= CreateConVar("l4d2_playercount_based_supplies_basecount", "4", "base survivor count for caculation.", _, true, 1.0, true, 32.0);
 
 	g_hCvar_AutoEnable.AddChangeHook(CvarChanged);
 	g_hCvar_MultipleType.AddChangeHook(CvarChanged);
@@ -145,7 +146,7 @@ void SetMedicCount(bool bNotice = true)
 		return;
 
 	// do count bots.
-	float fMultiple = float(GetSurvivorCount()) / 4.0;
+	float fMultiple = float(GetSurvivorCount()) / g_hCvar_BaseCount.FloatValue;
 	int iMultiple = RoundToFloor(fMultiple);
 
 	if (iMultiple < 1)
