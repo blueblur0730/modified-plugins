@@ -71,19 +71,29 @@ void ToggleHook()
 	}
 }
 
+bool g_bIsMapStarted = false;
 public void OnMapStart()
 {
+	g_bIsMapStarted = true;
+	g_iMultiple		= 0;
+}
+
+public void OnMapEnd()
+{
+	g_bIsMapStarted = false;
 	g_iMultiple		= 0;
 }
 
 public void OnClientPutInServer()
 {
-	SetMedicCount();
+	if (g_bIsMapStarted)
+		SetMedicCount();
 }
 
 public void OnClientDisconnect()
 {
-	SetMedicCount();
+	if (g_bIsMapStarted)
+		SetMedicCount();
 }
 
 void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
@@ -126,10 +136,10 @@ void Event_PlayerTeam(Event event, const char[] name, bool dontBroadcast)
 
 void Timer_SetCount(Handle timer)
 {
-	SetMedicCount();
+	SetMedicCount(false);
 }
 
-void SetMedicCount()
+void SetMedicCount(bool bNotice = true)
 {
 	if (!g_bEnable || !g_iMultipleType)
 		return;
@@ -138,24 +148,24 @@ void SetMedicCount()
 	float fMultiple = float(GetSurvivorCount()) / 4.0;
 	int iMultiple = RoundToFloor(fMultiple);
 
-	if (iMultiple <= 1)
+	if (iMultiple < 1)
 		return;
 
 	if (iMultiple != g_iMultiple)
 	{
 		g_iMultiple = iMultiple;
+		bool bFirstAidKit = false;
+		bool bPainPills = false;
+		bool bAdrenaline = false;
 		int ent = INVALID_ENT_REFERENCE;
 		while ((ent = FindEntityByClassname(ent, "weapon_*")) != INVALID_ENT_REFERENCE)
 		{
 			char entName[64];
-			bool bFirstAidKit = false;
-			bool bPainPills = false;
-			bool bAdrenaline = false;
 			GetEntityClassname(ent, entName, sizeof(entName));
 			if ((g_iMultipleType & MULTIPLE_MEDKIT) && StrEqual(entName, "weapon_first_aid_kit_spawn"))
 			{
 				// prevent from chat spamming.
-				if (!bFirstAidKit)
+				if (!bFirstAidKit && bNotice)
 					PrintMessage(g_iMultiple, "first_aid_kit");
 
 				bFirstAidKit = true;
@@ -164,7 +174,7 @@ void SetMedicCount()
 				
 			if ((g_iMultipleType & MULTIPLE_PAIN_PILLS) && StrEqual(entName, "weapon_pain_pills_spawn"))
 			{
-				if (!bPainPills)
+				if (!bPainPills && bNotice)
 					PrintMessage(g_iMultiple, "pain_pills");
 
 				bPainPills = true;
@@ -173,10 +183,10 @@ void SetMedicCount()
 
 			if ((g_iMultipleType & MULTIPLE_ADRENALINE) && StrEqual(entName, "weapon_adrenaline_spawn"))
 			{
-				if (!bAdrenaline)
+				if (!bAdrenaline && bNotice)
 					PrintMessage(g_iMultiple, "adrenaline");
 
-				bAdrenaline = false;
+				bAdrenaline = true;
 				CreateEntityIO(ent, g_iMultiple);
 			}
 		}
@@ -199,7 +209,7 @@ void PrintMessage(int count, const char[] name)
 {
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && !IsFakeClient(i))
+		if (IsClientInGame(i) && !IsFakeClient(i) && GetClientTeam(i) == L4D2Team_Survivor)
 			CPrintToChat(i, "%t", "Changed", count, name, i);
 	}
 }
