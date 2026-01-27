@@ -40,6 +40,7 @@ public void OnPluginStart()
 	GameDataWrapper gd = new GameDataWrapper(GAMEDATA_FILE);
 	gd.CreateDetourOrFailEx(DETOUR_INPUTKILL, DTR_CBaseEntity_InputKill);
 	gd.CreateDetourOrFailEx(DETOUR_INPUTKILLHIERARCHY, DTR_CBaseEntity_InputKillHierarchy);
+	delete gd;
 }
 
 MRESReturn DTR_CBaseEntity_InputKill(int pThis)
