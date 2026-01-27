@@ -3,15 +3,13 @@
 
 #include <sourcemod>
 #include <dhooks>
+#include <gamedata_wrapper>
 
 #define GAMEDATA_FILE "l4d2_inputkill_block"
 #define DETOUR_INPUTKILL "CBaseEntity::InputKill"
 #define DETOUR_INPUTKILLHIERARCHY "CBaseEntity::InputKillHierarchy"
 
-#define PLUGIN_VERSION "1.2"
-
-DynamicDetour g_hDTR_InputKill = null;
-DynamicDetour g_hDTR_InputKillHierarchy = null;
+#define PLUGIN_VERSION "1.3"
 ConVar g_hCvar_ShouldKickBot;
 
 public Plugin myinfo = 
@@ -39,59 +37,26 @@ public void OnPluginStart()
 	CreateConVar("l4d2_inputkill_block_version", PLUGIN_VERSION, "Version of the plugin", FCVAR_NOTIFY|FCVAR_DONTRECORD);
 	g_hCvar_ShouldKickBot = CreateConVar("l4d2_inputkill_block_kickbot", "1", "Should prevent bots from being kicked?", _, true, 0.0, true, 1.0);
 
-	GameData gd = new GameData(GAMEDATA_FILE);
-	if (!gd) SetFailState("Failed to load gamedata file \""...GAMEDATA_FILE..."\".");
-
-	g_hDTR_InputKill = DynamicDetour.FromConf(gd, DETOUR_INPUTKILL);
-	if (!g_hDTR_InputKill) SetFailState("Failed to create detour for \""...DETOUR_INPUTKILL..."\".");
-
-	g_hDTR_InputKillHierarchy = DynamicDetour.FromConf(gd, DETOUR_INPUTKILLHIERARCHY);
-	if (!g_hDTR_InputKillHierarchy) SetFailState("Failed to create detour for \""...DETOUR_INPUTKILLHIERARCHY..."\".");
-
-	delete gd;
-
-	if (!g_hDTR_InputKill.Enable(Hook_Pre, DTR_CBaseEntity_InputKill))
-		SetFailState("Failed to enable detour \""...DETOUR_INPUTKILL..."\".");
-
-	if (!g_hDTR_InputKillHierarchy.Enable(Hook_Pre, DTR_CBaseEntity_InputKillHierarchy))
-		SetFailState("Failed to enable detour \""...DETOUR_INPUTKILLHIERARCHY..."\".");
-}
-
-public void OnPluginEnd()
-{
-	if (g_hDTR_InputKill)
-	{
-		g_hDTR_InputKill.Disable(Hook_Pre, DTR_CBaseEntity_InputKill);
-		delete g_hDTR_InputKill;
-	} 
-
-	if (g_hDTR_InputKillHierarchy)
-	{
-		g_hDTR_InputKillHierarchy.Disable(Hook_Pre, DTR_CBaseEntity_InputKillHierarchy);
-		delete g_hDTR_InputKillHierarchy;
-	} 
+	GameDataWrapper gd = new GameDataWrapper(GAMEDATA_FILE);
+	gd.CreateDetourOrFailEx(DETOUR_INPUTKILL, DTR_CBaseEntity_InputKill);
+	gd.CreateDetourOrFailEx(DETOUR_INPUTKILLHIERARCHY, DTR_CBaseEntity_InputKillHierarchy);
 }
 
 MRESReturn DTR_CBaseEntity_InputKill(int pThis)
 {
-	if (CheckPlayer(pThis))
-		return MRES_Supercede;
-
-	return MRES_Ignored;
+	return CheckPlayer(pThis) ? MRES_Supercede : MRES_Ignored;
 }
 
 MRESReturn DTR_CBaseEntity_InputKillHierarchy(int pThis)
 {
-	if (CheckPlayer(pThis))
-		return MRES_Supercede;
-
-	return MRES_Ignored;
+	return CheckPlayer(pThis) ? MRES_Supercede : MRES_Ignored;
 }
 
 bool CheckPlayer(int client)
 {
 	// not a client, let the input kills.
-	if (client < 1 || client > MaxClients)
+	// not taking the world into account.
+	if (client < 0 || client > MaxClients)
 		return false;
 
 	if (!IsClientInGame(client))
@@ -106,15 +71,13 @@ bool CheckPlayer(int client)
 
 		// or you are just an idle human? if so, dont let the input kills you.
 		int target = GetClientOfUserId(GetEntProp(client, Prop_Send, "m_humanSpectatorUserID"));
-		if (target >= 1 || target <= MaxClients) 
+		if (target >= 1 && target <= MaxClients) 
 			return true;
 
 		// you are bot.
 		return false;
 	}
-	else
-	{
-		// a human player. dont let the input kills you.
-		return true;
-	}
+
+	// a human player. dont let the input kills you.
+	return true;
 }

@@ -45,8 +45,8 @@
             {
                 "library"   "server"
                 "linux"     "@_ZN11CBaseEntity9InputKillER11inputdata_t"
-                "windows"   "\x56\x8B\xF1\x8B\x86\x0C\x02\x00\x00\x83\xF8\xFF\x74\x2A\x8B\x15\x2A\x2A\x2A\x2A\x8B\xC8\x81\xE1\xFF\x0F\x00\x00\x03\xC9\x8D\x4C\xCA\x04\x85\xC9\x74\x2A\xC1\xE8\x0C\x39\x41\x04\x75\x2A\x8B\x09\x85\xC9\x74\x2A\x8B\x01"
-                /* 56 8B F1 8B 86 0C 02 00 00 83 F8 FF 74 ? 8B 15 ? ? ? ? 8B C8 81 E1 FF 0F 00 00 03 C9 8D 4C CA 04 85 C9 74 ? C1 E8 0C 39 41 04 75 ? 8B 09 85 C9 74 ? 8B 01 */
+                "windows"   "\x56\x8B\xF1\x8B\x86\x2A\x2A\x2A\x2A\x83\xF8\x2A\x74\x2A\x8B\x15\x2A\x2A\x2A\x2A\x8B\xC8\x81\xE1\x2A\x2A\x2A\x2A\x03\xC9\x8D\x4C\xCA\x2A\x85\xC9\x74\x2A\xC1\xE8\x2A\x39\x41\x2A\x75\x2A\x8B\x09\x85\xC9\x74\x2A\x8B\x01\x8B\x90\x2A\x2A\x2A\x2A\x56\xFF\xD2\x8B\x06\x8B\x50"
+                /* 56 8B F1 8B 86 ? ? ? ? 83 F8 ? 74 ? 8B 15 ? ? ? ? 8B C8 81 E1 ? ? ? ? 03 C9 8D 4C CA ? 85 C9 74 ? C1 E8 ? 39 41 ? 75 ? 8B 09 85 C9 74 ? 8B 01 8B 90 ? ? ? ? 56 FF D2 8B 06 8B 50 */
             }
 
             // windows sig:
@@ -57,8 +57,8 @@
             {
                 "library"   "server"
                 "linux"     "@_ZN11CBaseEntity18InputKillHierarchyER11inputdata_t"
-                "windows"   "\x55\x8B\xEC\x53\x8B\xD9\x8B\x83\x78\x01\x00\x00"
-                /* 55 8B EC 53 8B D9 8B 83 78 01 00 00 */
+                "windows"   "\x55\x8B\xEC\x53\x8B\xD9\x8B\x83\x2A\x2A\x2A\x2A\x83\xF8"
+                /* 55 8B EC 53 8B D9 8B 83 ? ? ? ? 83 F8 */
             }
         }
     }
