@@ -13,7 +13,7 @@ void Reset()
 
 void SpawnSpecial()
 {
-	if (!g_bLeftSafeArea || !g_bEnable)
+	if (!g_bLeftSafeArea || !g_bEnable || !g_bFinishedIntro)
 		return;
 
 	static float fSpawnPos[3];
@@ -91,7 +91,7 @@ void SpawnSpecial()
 
 Action SpawnSpecial_Timer(Handle timer, int num)
 {
-	if (g_bLeftSafeArea && g_bEnable)
+	if (g_bLeftSafeArea && g_bEnable && g_bFinishedIntro)
 	{
 		static int iSpawnCount;
 
@@ -124,7 +124,7 @@ Action SpawnSpecial_Timer(Handle timer, int num)
 
 Action KillSICheck_Timer(Handle timer)
 {
-	if (!g_bLeftSafeArea || !g_bEnable)
+	if (!g_bLeftSafeArea || !g_bEnable || !g_bFinishedIntro)
 		return Plugin_Continue;
 
 	float fEngineTime = GetEngineTime();
@@ -147,6 +147,7 @@ Action KillSICheck_Timer(Handle timer)
 				g_fSpecialActionTime[i] = fEngineTime;
 		}
 	}
+    
 	return Plugin_Continue;
 }
 
