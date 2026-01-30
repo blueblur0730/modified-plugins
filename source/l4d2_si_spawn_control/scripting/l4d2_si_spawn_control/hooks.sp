@@ -34,7 +34,7 @@ void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	int userid = event.GetInt("userid");
 	int client = GetClientOfUserId(userid);
 
-	if (g_bLeftSafeArea && g_bMark[client] && client > 0 && IsClientInGame(client) && (GetClientTeam(client) == 3 || !strcmp(name, "shit")) && IsFakeClient(client))
+	if (g_bEnable && g_bLeftSafeArea && g_bMark[client] && client > 0 && IsClientInGame(client) && (GetClientTeam(client) == 3 || !strcmp(name, "shit")) && IsFakeClient(client))
 	{
 		int iClass = GetZombieClass(client);
 		if (iClass > 0 && iClass < SI_CLASS_SIZE)

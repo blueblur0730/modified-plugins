@@ -55,6 +55,8 @@ void SetupConVars()
 	z_spawn_range =					FindConVar("z_spawn_range");
 	z_discard_range =				FindConVar("z_discard_range");
 
+    g_hCvar_Enable                = CreateConVar("l4d2_si_spawn_control_enable", "1", "Enable SI spawn control.", FCVAR_NONE, true, 0.0, true, 1.0);
+
 	g_hCvar_SpecialLimit[HUNTER] =	CreateConVar("l4d2_si_spawn_control_hunter_limit",	"1", "Hunter limit.", FCVAR_NONE, true, 0.0, true, 32.0);
 	g_hCvar_SpecialLimit[JOCKEY] =	CreateConVar("l4d2_si_spawn_control_jockey_limit",	"1", "Jockey limit.", FCVAR_NONE, true, 0.0, true, 32.0);
 	g_hCvar_SpecialLimit[SMOKER] =	CreateConVar("l4d2_si_spawn_control_smoker_limit",	"1", "Smoker limit.", FCVAR_NONE, true, 0.0, true, 32.0);
@@ -62,15 +64,15 @@ void SetupConVars()
 	g_hCvar_SpecialLimit[SPITTER] = CreateConVar("l4d2_si_spawn_control_spitter_limit",	"1", "Spitter limit.", FCVAR_NONE, true, 0.0, true, 32.0);
 	g_hCvar_SpecialLimit[CHARGER] =	CreateConVar("l4d2_si_spawn_control_charger_limit",	"1", "Charger limit.", FCVAR_NONE, true, 0.0, true, 32.0);
 
-	g_hCvar_MaxSILimit =		CreateConVar("l4d2_si_spawn_control_max_specials",			"6",	"Max SI limit.", FCVAR_NONE, true, 0.0, true, 32.0);
-	g_hCvar_SpawnTime =			CreateConVar("l4d2_si_spawn_control_spawn_time",			"10.0",	"SI spawn time.", FCVAR_NONE, true, 1.0);
-	g_hCvar_FirstSpawnTime =	CreateConVar("l4d2_si_spawn_control_first_spawn_time",		"10.0",	"SI first spawn time (after leaving the safe area).", FCVAR_NONE, true, 0.1);
-	g_hCvar_KillSITime =		CreateConVar("l4d2_si_spawn_control_kill_si_time",			"25.0",	"Auto kill SI time. if it 'slack off'.", FCVAR_NONE, true, 0.1);
-	g_hCvar_BlockSpawn = 		CreateConVar("l4d2_si_spawn_control_block_other_si_spawn",	"1",	"Block other SI spawn (by L4D_OnSpawnSpecial).", FCVAR_NONE, true, 0.0, true, 1.0);
-	g_hCvar_SpawnMode =			CreateConVar("l4d2_si_spawn_control_spawn_mode",			"0",	"Spawn mode, See enum SpawnMode_*");
-	g_hCvar_NormalSpawnRange =	CreateConVar("l4d2_si_spawn_control_spawn_range_normal",	"1500", "Normal mode spawn range, randomly spawn from 1 to this range.", FCVAR_NONE, true, 1.0);
-	g_hCvar_NavAreaSpawnRange =	CreateConVar("l4d2_si_spawn_control_spawn_range_navarea",	"1500", "NavArea mode spawn range, randomly spawn from 1 to this range.", FCVAR_NONE, true, 1.0);
-	g_hCvar_TogetherSpawn =		CreateConVar("l4d2_si_spawn_control_together_spawn",		"0",	"After SI dies, wait for other SI to spawn together.", FCVAR_NONE, true, 0.0, true, 1.0);
+	g_hCvar_MaxSILimit =		    CreateConVar("l4d2_si_spawn_control_max_specials",			"6",	"Max SI limit.", FCVAR_NONE, true, 0.0, true, 32.0);
+	g_hCvar_SpawnTime =			    CreateConVar("l4d2_si_spawn_control_spawn_time",			"10.0",	"SI spawn time.", FCVAR_NONE, true, 1.0);
+	g_hCvar_FirstSpawnTime =	    CreateConVar("l4d2_si_spawn_control_first_spawn_time",		"10.0",	"SI first spawn time (after leaving the safe area).", FCVAR_NONE, true, 0.1);
+	g_hCvar_KillSITime =		    CreateConVar("l4d2_si_spawn_control_kill_si_time",			"25.0",	"Auto kill SI time. if it 'slack off'.", FCVAR_NONE, true, 0.1);
+	g_hCvar_BlockSpawn = 		    CreateConVar("l4d2_si_spawn_control_block_other_si_spawn",	"1",	"Block other SI spawn (by L4D_OnSpawnSpecial).", FCVAR_NONE, true, 0.0, true, 1.0);
+	g_hCvar_SpawnMode =			    CreateConVar("l4d2_si_spawn_control_spawn_mode",			"0",	"Spawn mode, See enum SpawnMode_*");
+	g_hCvar_NormalSpawnRange =	    CreateConVar("l4d2_si_spawn_control_spawn_range_normal",	"1500", "Normal mode spawn range, randomly spawn from 1 to this range.", FCVAR_NONE, true, 1.0);
+	g_hCvar_NavAreaSpawnRange =	    CreateConVar("l4d2_si_spawn_control_spawn_range_navarea",	"1500", "NavArea mode spawn range, randomly spawn from 1 to this range.", FCVAR_NONE, true, 1.0);
+	g_hCvar_TogetherSpawn =		    CreateConVar("l4d2_si_spawn_control_together_spawn",		"0",	"After SI dies, wait for other SI to spawn together.", FCVAR_NONE, true, 0.0, true, 1.0);
 
 	GetCvars();
 
@@ -78,6 +80,7 @@ void SetupConVars()
 	{
 		g_hCvar_SpecialLimit[i].AddChangeHook(ConVarChanged);
 	}
+    g_hCvar_Enable.AddChangeHook(ConVarChanged);
 	g_hCvar_MaxSILimit.AddChangeHook(ConVarChanged);
 	g_hCvar_SpawnTime.AddChangeHook(ConVarChanged);
 	g_hCvar_FirstSpawnTime.AddChangeHook(ConVarChanged);
@@ -123,6 +126,7 @@ void GetCvars()
 		g_iSpecialLimit[i] = g_hCvar_SpecialLimit[i].IntValue;
 	}
 
+    g_bEnable = g_hCvar_Enable.BoolValue;
 	g_iMaxSILimit = g_hCvar_MaxSILimit.IntValue;
 	g_fSpawnTime = g_hCvar_SpawnTime.FloatValue;
 	g_fFirstSpawnTime = g_hCvar_FirstSpawnTime.FloatValue;

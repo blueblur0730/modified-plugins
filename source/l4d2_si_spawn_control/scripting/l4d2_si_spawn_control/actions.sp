@@ -13,7 +13,7 @@ void Reset()
 
 void SpawnSpecial()
 {
-	if (!g_bLeftSafeArea)
+	if (!g_bLeftSafeArea || !g_bEnable)
 		return;
 
 	static float fSpawnPos[3];
@@ -91,7 +91,7 @@ void SpawnSpecial()
 
 Action SpawnSpecial_Timer(Handle timer, int num)
 {
-	if (g_bLeftSafeArea)
+	if (g_bLeftSafeArea && g_bEnable)
 	{
 		static int iSpawnCount;
 
@@ -124,7 +124,7 @@ Action SpawnSpecial_Timer(Handle timer, int num)
 
 Action KillSICheck_Timer(Handle timer)
 {
-	if (!g_bLeftSafeArea)
+	if (!g_bLeftSafeArea || !g_bEnable)
 		return Plugin_Continue;
 
 	float fEngineTime = GetEngineTime();
@@ -155,6 +155,6 @@ Action KickBot_Timer(Handle timer, int userid)
 	int client = GetClientOfUserId(userid);
 	if (client > 0 && IsClientInGame(client) && IsFakeClient(client) && !IsClientInKickQueue(client))
 		KickClient(client);
-        
+
 	return Plugin_Continue;
 }
