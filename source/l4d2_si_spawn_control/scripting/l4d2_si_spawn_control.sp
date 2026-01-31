@@ -57,8 +57,7 @@ bool
 	g_bFinalMap,
 	g_bLeftSafeArea,
 	g_bMark[MAXPLAYERS+1],
-	g_bTogetherSpawn,
-	g_bFinishedIntro;
+	g_bTogetherSpawn;
 
 Handle
 	g_hSpawnTimer[MAXPLAYERS+1],
@@ -75,7 +74,7 @@ MemoryPatch g_hPatch;
 
 TheNavAreas g_pTheNavAreas;
 
-#define PLUGIN_VERSION "4.1.0"
+#define PLUGIN_VERSION "4.1.1"
 #include "l4d2_si_spawn_control/setup.sp"
 #include "l4d2_si_spawn_control/utils.sp"
 #include "l4d2_si_spawn_control/hooks.sp"

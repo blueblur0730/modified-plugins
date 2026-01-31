@@ -9,9 +9,6 @@ void SetupEvents()
 
 	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Pre);
 	HookEvent("player_left_safe_area", Event_PlayerLeftSafeArea, EventHookMode_PostNoCopy);
-
-	// from l4d_skip_intro.
-	HookEvent("gameinstructor_nodraw", Event_NoDraw, EventHookMode_PostNoCopy); // Because round_start can be too early when clients are not in-game. This triggers when the cutscene starts.
 }
 
 static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
@@ -71,23 +68,6 @@ static void PlayerDeath_NextFrame()
 		delete g_hSpawnTimer[SPAWN_MAX_PRE];
 		g_hSpawnTimer[SPAWN_MAX_PRE] = CreateTimer(g_fSpawnTime, SpawnSpecial_Timer, SPAWN_MAX_PRE);
 	}
-}
-
-public void Event_NoDraw(Event event, const char[] name, bool dontBroadcast)
-{
-	if (L4D_IsFirstMapInScenario())
-	{
-		// Block finale
-		if (FindEntityByClassname(-1, "trigger_finale") != INVALID_ENT_REFERENCE )
-			return;
-
-		g_bFinishedIntro = false;
-	}
-}
-
-public void L4D_OnFinishIntro()
-{
-	g_bFinishedIntro = true;
 }
 
 public Action L4D_OnSpawnSpecial(int &zombieClass, const float vecPos[3], const float vecAng[3])
