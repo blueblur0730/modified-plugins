@@ -6,8 +6,9 @@
 #include <colors>
 #include <left4dhooks>
 
-#undef REQUIRE_PLUGIN
-#include "neko/nekonative.inc"
+native int	   NekoSpecials_GetSpawnMode();
+native int	   NekoSpecials_GetSpecialsNum();
+native int	   NekoSpecials_GetSpecialsTime();
 
 #undef REQUIRE_PLUGIN
 #include <readyup>
@@ -24,6 +25,14 @@ enum
 	NS_SpawnMode_Size	   = 5,	   // NS_SpawnMode_None is not included
 }
 
+enum
+{
+	SpawnMode_Normal			= 0, // L4D_GetRandomPZSpawnPosition + l4d2_si_spawn_control_spawn_range_normal
+	SpawnMode_NavAreaNearest	= 1, // GetSpawnPosByNavArea + nearest invisible place
+	SpawnMode_NavArea			= 2, // GetSpawnPosByNavArea + l4d2_si_spawn_control_spawn_range_navarea
+	SpawnMode_NormalEnhanced	= 3, // SpawnMode_Normal + SpawnMode_NavArea auto switch.
+}
+
 /* welcome_msg */
 ConVar
 	g_hCvar_Enable,
@@ -31,7 +40,6 @@ ConVar
 	g_hCvar_PrintRound,
 	g_hCvar_PrintRoundWaitTime,
 	g_hCvar_MoreLine,
-	// g_hCvar_cvHostname,
 	g_hCvar_MaxSlots;
 
 int g_iMaxPlayers = 0;
@@ -39,8 +47,9 @@ bool g_bReadyUpAvailable = false;
 bool g_bIsConfoglAvailable = false;
 bool g_bNekoSpecials = false;
 bool g_bIsInReady = false;
+bool g_bIsSIControlAvailable = false;
 
-#define PLUGIN_VERSION "r1.0"
+#define PLUGIN_VERSION "r1.2"
 
 public Plugin myinfo =
 {
@@ -54,6 +63,9 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	MarkNativeAsOptional("L4D2_GetSurvivalStartTime");	// this is a fucking bullshit
+	MarkNativeAsOptional("NekoSpecials_GetSpawnMode");
+	MarkNativeAsOptional("NekoSpecials_GetSpecialsNum");
+	MarkNativeAsOptional("NekoSpecials_GetSpecialsTime");
 	return APLRes_Success;
 }
 
@@ -78,6 +90,7 @@ public void OnAllPluginsLoaded()
 	g_bIsConfoglAvailable = LibraryExists("confogl_system");
 	g_bReadyUpAvailable	= LibraryExists("readyup");
 	g_bNekoSpecials = LibraryExists("nekospecials");
+	g_bIsSIControlAvailable = LibraryExists("l4d2_si_spawn_control");
 }
 
 public void OnLibraryAdded(const char[] name)
@@ -85,6 +98,7 @@ public void OnLibraryAdded(const char[] name)
 	if (StrEqual(name, "confogl_system")) g_bIsConfoglAvailable = true;
 	if (StrEqual(name, "readyup")) g_bReadyUpAvailable = true;
 	if (StrEqual(name, "nekospecials")) g_bNekoSpecials = true;
+	if (StrEqual(name, "l4d2_si_spawn_control")) g_bIsSIControlAvailable = true;
 }
 
 public void OnLibraryRemoved(const char[] name)
@@ -92,6 +106,7 @@ public void OnLibraryRemoved(const char[] name)
 	if (StrEqual(name, "confogl_system")) g_bIsConfoglAvailable = false;
 	if (StrEqual(name, "readyup")) g_bReadyUpAvailable = false;
 	if (StrEqual(name, "nekospecials")) g_bNekoSpecials = false;
+	if (StrEqual(name, "l4d2_si_spawn_control")) g_bIsSIControlAvailable = false;
 }
 
 public void OnReadyUpInitiate()
@@ -127,7 +142,7 @@ void Timer_WelcomeMessage(Handle Timer, int client)
 	if (g_hCvar_MoreLine.IntValue != 0)
 	{
 		char buffer[128];
-		for (int i = 1; i < g_hCvar_MoreLine.IntValue; i++)
+		for (int i = 0; i < g_hCvar_MoreLine.IntValue; i++)
 		{
 			Format(buffer, sizeof(buffer), "MoreMessage%d", i);
 			CPrintToChat(client, "%t", buffer);
@@ -195,6 +210,21 @@ void PrintMessage(int client)
 			char sSpawnMode[64];
 			GetNSSpawnModeString(sSpawnMode, sizeof(sSpawnMode), client);
 			CPrintToChatEx(client, client, "%t", "GameMode_NekoSpecialsStatus", sSpawnMode);
+		}
+		else if (g_bIsSIControlAvailable)
+		{
+			char sGameMode[64], sDifficulty[64];
+			FindConVar("mp_gamemode").GetString(sGameMode, sizeof(sGameMode));
+			GetDifficultyString(sDifficulty, sizeof(sDifficulty), client);
+			CPrintToChatEx(client, client, "%t", "GameMode_SISpawnControl",
+						   sGameMode,
+						   sDifficulty,
+						   FindConVar("l4d2_si_spawn_control_max_specials").IntValue,
+						   FindConVar("l4d2_si_spawn_control_spawn_time").IntValue);
+
+			char sSpawnMode[64];
+			GetSISpawnControlModeString(sSpawnMode, sizeof(sSpawnMode), client);
+			CPrintToChatEx(client, client, "%t", "GameMode_SISpawnControlStatus", sSpawnMode);
 		}
 		else
 		{
@@ -275,6 +305,18 @@ void GetNSSpawnModeString(char[] sSpawnMode, int maxlen, int client)
 		case NS_SpawnMode_Nightmare: Format(sSpawnMode, maxlen, "%T", "Nightmare_NS", client);
 		case NS_SpawnMode_Hell: Format(sSpawnMode, maxlen, "%T", "Hell_NS", client);
 		case NS_SpawnMode_Flexible: Format(sSpawnMode, maxlen, "%T", "Flexible_NS", client);
+		default: Format(sSpawnMode, maxlen, "%T", "unknown", client);
+	}
+}
+
+void GetSISpawnControlModeString(char[] sSpawnMode, int maxlen, int client)
+{
+	switch (FindConVar("l4d2_si_spawn_control_spawn_mode").IntValue)
+	{
+		case SpawnMode_Normal: Format(sSpawnMode, maxlen, "%T", "Normal_SISpawnControl", client);
+		case SpawnMode_NavAreaNearest: Format(sSpawnMode, maxlen, "%T", "NavAreaNearest_SISpawnControl", client);
+		case SpawnMode_NavArea: Format(sSpawnMode, maxlen, "%T", "NavArea_SISpawnControl", client);
+		case SpawnMode_NormalEnhanced: Format(sSpawnMode, maxlen, "%T", "NormalEnhanced_SISpawnControl", client);
 		default: Format(sSpawnMode, maxlen, "%T", "unknown", client);
 	}
 }

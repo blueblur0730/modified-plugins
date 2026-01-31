@@ -65,6 +65,20 @@
 		"chi"		"{green}>{default} 刷特模式: {teamcolor}{1}{default}"
 	}
 
+	"GameMode_SISpawnControl"
+	{
+		"#format"	"{1:s},{2:s},{3:d},{4:d}"			// 1: gamemode string 2: difficulty string
+		"en"		"{green}>{default} Gamemode: {teamcolor}{1}{default} - {teamcolor}{2}{default} - [{olive}{3}{default} t {olive}{4}{default} s]"
+		"chi"		"{green}>{default} 游戏模式: {teamcolor}{1}{default} - {teamcolor}{2}{default} - [{olive}{3}{default}特{olive}{4}{default}秒]"
+	}
+
+	"GameMode_SISpawnControlStatus"
+	{
+		"#format"	"{1:s}"
+		"en"		"{green}>{default} Spawn Mode: {teamcolor}{1}{default}"
+		"chi"		"{green}>{default} 刷特模式: {teamcolor}{1}{default}"
+	}
+
 	"ReadyUpStatus"
 	{
 		"#format"	"{1:s}"			// 1: readyup status string
@@ -175,5 +189,29 @@
 	{
 		"en"	"Flixible"
 		"chi"	"可变"
+	}
+
+	"Normal_SISpawnControl"
+	{
+		"en"	"Native Selection + Distance Control"
+		"chi"	"原生找位 + 距离控制"
+	}
+
+	"NavAreaNearest_SISpawnControl"
+	{
+		"en"	"Nearest Nav Area"
+		"chi"	"Nav最近"
+	}
+
+	"NavArea_SISpawnControl"
+	{
+		"en"	"Nearest Nav Area + Distance Control"
+		"chi"	"Nav最近 + 距离控制"
+	}
+
+	"NormalEnhanced_SISpawnControl"
+	{
+		"en"	"Native Selection + Nearrest Nav Area | Auto Switch"
+		"chi"	"原生找位 + Nav最近 | 自动切换"
 	}
 }
