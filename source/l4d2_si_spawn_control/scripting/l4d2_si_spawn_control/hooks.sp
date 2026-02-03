@@ -72,10 +72,16 @@ static void PlayerDeath_NextFrame()
 
 public Action L4D_OnSpawnSpecial(int &zombieClass, const float vecPos[3], const float vecAng[3])
 {
-	if (!g_bCanSpawn && g_bBlockSpawn)
+	if (!g_bCanSpawn)
 	{
-		LogMessage("%s not spawned by this plugin, blocked.", g_sSpecialName[zombieClass]);
-		return Plugin_Handled;
+		if (!g_bEnable && g_bDisableForDirector)
+			return Plugin_Continue;
+
+		if (g_bBlockSpawn)
+		{
+			//LogMessage("%s not spawned by this plugin, blocked.", g_sSpecialName[zombieClass]);
+			return Plugin_Handled;
+		}
 	}
 
 	return Plugin_Continue;

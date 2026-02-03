@@ -56,6 +56,7 @@ void SetupConVars()
 	z_discard_range =				FindConVar("z_discard_range");
 
     g_hCvar_Enable                = CreateConVar("l4d2_si_spawn_control_enable", "1", "Enable SI spawn control.", FCVAR_NONE, true, 0.0, true, 1.0);
+	g_hCvar_DisableForDirector    = CreateConVar("l4d2_si_spawn_control_disable_for_director", "1", "Transfer SI spawn control to director when disabled?.", FCVAR_NONE, true, 0.0, true, 1.0);
 
 	g_hCvar_SpecialLimit[HUNTER] =	CreateConVar("l4d2_si_spawn_control_hunter_limit",	"1", "Hunter limit.", FCVAR_NONE, true, 0.0, true, 32.0);
 	g_hCvar_SpecialLimit[JOCKEY] =	CreateConVar("l4d2_si_spawn_control_jockey_limit",	"1", "Jockey limit.", FCVAR_NONE, true, 0.0, true, 32.0);
@@ -81,6 +82,7 @@ void SetupConVars()
 		g_hCvar_SpecialLimit[i].AddChangeHook(ConVarChanged);
 	}
     g_hCvar_Enable.AddChangeHook(ConVarChanged);
+	g_hCvar_DisableForDirector.AddChangeHook(ConVarChanged);
 	g_hCvar_MaxSILimit.AddChangeHook(ConVarChanged);
 	g_hCvar_SpawnTime.AddChangeHook(ConVarChanged);
 	g_hCvar_FirstSpawnTime.AddChangeHook(ConVarChanged);
@@ -127,6 +129,7 @@ void GetCvars()
 	}
 
     g_bEnable = g_hCvar_Enable.BoolValue;
+	g_bDisableForDirector = g_hCvar_DisableForDirector.BoolValue;
 	g_iMaxSILimit = g_hCvar_MaxSILimit.IntValue;
 	g_fSpawnTime = g_hCvar_SpawnTime.FloatValue;
 	g_fFirstSpawnTime = g_hCvar_FirstSpawnTime.FloatValue;

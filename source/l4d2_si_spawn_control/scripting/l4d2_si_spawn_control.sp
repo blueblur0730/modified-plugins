@@ -20,6 +20,7 @@ ConVar
 
 ConVar
 	g_hCvar_Enable,
+	g_hCvar_DisableForDirector,
 	g_hCvar_SpecialLimit[SI_CLASS_SIZE],
 	g_hCvar_MaxSILimit,
 	g_hCvar_SpawnTime,
@@ -52,6 +53,7 @@ float
 
 bool
 	g_bEnable,
+	g_bDisableForDirector,
 	g_bBlockSpawn,
 	g_bCanSpawn,
 	g_bFinalMap,
@@ -74,7 +76,7 @@ MemoryPatch g_hPatch;
 
 TheNavAreas g_pTheNavAreas;
 
-#define PLUGIN_VERSION "4.1.1"
+#define PLUGIN_VERSION "4.2.0"
 #include "l4d2_si_spawn_control/setup.sp"
 #include "l4d2_si_spawn_control/utils.sp"
 #include "l4d2_si_spawn_control/hooks.sp"
