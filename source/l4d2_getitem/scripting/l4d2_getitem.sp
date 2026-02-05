@@ -313,7 +313,7 @@ void CreateSecondaryMenu(int client)
 {
     char sBuffer[64];
     Menu menu = new Menu(Secondary_MenuHandler);
-    menu.SetTitle(sBuffer, sizeof(sBuffer), "%T", "Secondary", client);
+    menu.SetTitle("%T", "Secondary", client);
 
     // yea it's hardcoded.
     for (int i = 0; i < sizeof(g_sItemNamePhrases[0]); i++)
@@ -487,7 +487,7 @@ void CreateTier2Menu(int client)
 {
     char sBuffer[64];
     Menu menu = new Menu(Tier2_MenuHandler);
-    menu.SetTitle(sBuffer, sizeof(sBuffer), "%T", "Tier2", client);
+    menu.SetTitle("%T", "Tier2", client);
 
     for (int i = 0; i < sizeof(g_sItemNamePhrases[2]); i++)
     {
@@ -570,7 +570,7 @@ void CreateThrowableMenu(int client)
 {
     char sBuffer[64];
     Menu menu = new Menu(Throwable_MenuHandler);
-    menu.SetTitle(sBuffer, sizeof(sBuffer), "%T", "Item", client);
+    menu.SetTitle("%T", "Item", client);
 
     for (int i = 0; i < sizeof(g_sItemNamePhrases[3]); i++)
     {
@@ -650,8 +650,7 @@ void CreateAdminMenu(int client)
 {
     char sBuffer[64];
     Menu menu = new Menu(AdminMenu_MenuHandler);
-    FormatEx(sBuffer, sizeof(sBuffer), "%T", "AdminMenu", client);
-    menu.SetTitle(sBuffer);
+    menu.SetTitle("%T", "AdminMenu", client);
     
     g_bSecondaryEnable ?
 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SecondaryMenuOff", client) :
