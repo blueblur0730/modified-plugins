@@ -116,10 +116,6 @@ static const char g_sItemNameEn[4][18][] =
 	},
 };
 
-#define IsValidPlayer(%1)	(%1 && IsClientInGame(%1) && !IsFakeClient(%1) && GetClientTeam(%1) == 2 && IsPlayerAlive(%1))
-
-#define PLUGIN_VERSION	"1.4"
-
 ConVar 
 	g_hcmeleedefault, 
 	g_hcinitialgundefault, 
@@ -148,6 +144,7 @@ float g_fAdTimer;
 float g_flLastTime[MAXPLAYERS + 1] = {0.0, ...};
 bool g_bIsRoundAlive = false;
 
+#define PLUGIN_VERSION	"1.5"
 public Plugin myinfo =
 {
 	name = "[L4D2] StartUp Item acquisition",
@@ -160,7 +157,7 @@ public Plugin myinfo =
 public void OnPluginStart()
 {
 	LoadTranslations("l4d2_getitem.phrases");
-	RegAdminCmd("sm_getitem", Command_Item, ADMFLAG_GENERIC, "Acquire items.");
+	RegConsoleCmd("sm_getitem", Command_Item, "Acquire items.");
 	
 	CreateConVar("l4d2_getitem_version", PLUGIN_VERSION, "Plugin version.", FCVAR_NOTIFY | FCVAR_DONTRECORD);
 	g_hcmeleedefault		= CreateConVar("l4d2_er_melee_enable",		"1",	"Enable melee weapon menu.",			_, true, 0.0, true, 1.0);
@@ -187,27 +184,9 @@ public void OnPluginStart()
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Post);
 }
 
-void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
-{
-	GetCvars();
-}
-
-void GetCvars()
-{
-	g_bMeleeDefault			=	g_hcmeleedefault.BoolValue;
-	g_bInitialGunDefault	=	g_hcinitialgundefault.BoolValue;
-	g_bSafeArea				=	g_hcsafearea.BoolValue;
-	g_bMenuAdvancedGunOpen	=	g_hcAdvancedGunOpen.BoolValue;
-	g_bMenuThrowableOpen	=	g_hcThrowableOpen.BoolValue;
-	g_bEnableLimit			=	g_hcEnableLimit.BoolValue;
-	g_iRequestCount			=	g_hcRequestCount.IntValue;
-	g_bAd					=	g_hcAd.BoolValue;
-	g_fAdTimer				=	g_hcAdTimer.FloatValue;
-}
-
 public void OnMapStart() 
 {
-	for (int i; i < sizeof g_sMeleeModels; i++) 
+	for (int i; i < sizeof(g_sMeleeModels); i++) 
 	{
 		if (!IsModelPrecached(g_sMeleeModels[i]))
 			PrecacheModel(g_sMeleeModels[i], true);
@@ -217,53 +196,6 @@ public void OnMapStart()
 public void L4D_OnFirstSurvivorLeftSafeArea_Post(int client)
 {
 	g_bIsRoundAlive = true;
-}
-
-void Event_RoundStart(Event hEvent, char[] sName, bool dontBroadcast)
-{
-	Clear();
-	if (g_bAd) CreateTimer(g_fAdTimer, Timer_Ad, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-}
-
-Action Timer_Ad(Handle Timer)
-{
-	// once game started stop this.
-	if (!g_bIsRoundAlive)
-	{
-		g_bEnableLimit ? CPrintToChatAll("%t", "Advertisement_Limit", g_iRequestCount) : CPrintToChatAll("%t", "Advertisement");
-		return Plugin_Continue;
-	}
-
-	return Plugin_Stop;
-}
-
-void Clear()
-{
-	if (g_bEnableLimit)
-	{
-		for (int i; i < MaxClients; i++)
-		{
-			g_iArrayCount[i] = 0;
-			g_flLastTime[i] = 0.0;
-		}
-	}
-
-	g_bIsRoundAlive = false;
-}
-
-Action Command_Item(int client, int args)
-{
-	if (!client || !IsClientInGame(client))
-		return Plugin_Handled;
-
-	if (g_bSafeArea && !IsClientInSafeArea(client))
-	{
-		CPrintToChat(client, "%t", "UseItInSafeRoom");
-		return Plugin_Handled;
-	}
-
-	ChooseItem(client);
-	return Plugin_Handled;
 }
 
 public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float vel[3], const float angles[3], int weapon, int subtype, int cmdnum, int tickcount, int seed, const int mouse[2])
@@ -285,13 +217,47 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
 	}
 }
 
+void Event_RoundStart(Event hEvent, char[] sName, bool dontBroadcast)
+{
+	Clear();
+
+	if (g_bAd) 
+		CreateTimer(g_fAdTimer, Timer_Ad, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+}
+
+void Timer_Ad(Handle hTimer)
+{
+	// once game started stop this.
+	if (!g_bIsRoundAlive)
+	{
+		g_bEnableLimit ? 
+		CPrintToChatAll("%t", "Advertisement_Limit", g_iRequestCount) : 
+		CPrintToChatAll("%t", "Advertisement");
+	}
+}
+
+Action Command_Item(int client, int args)
+{
+	if (!client || !IsClientInGame(client))
+		return Plugin_Handled;
+
+	if (g_bSafeArea && !IsClientInSafeArea(client))
+	{
+		CPrintToChat(client, "%t", "UseItInSafeRoom");
+		return Plugin_Handled;
+	}
+
+	ChooseItem(client);
+	return Plugin_Handled;
+}
+
 void ChooseItem(int client)
 {
 	// you are the admin.
 	if (GetClientTeam(client) == 2 || GetUserFlagBits(client) > 0)		
 	{
 		char sBuffer[64];
-		Menu menu = new Menu(Menu_HandlerFunction);
+		Menu menu = new Menu(MainMenu_Handler);
 		
 		FormatEx(sBuffer, sizeof(sBuffer), "%T", "MainTitle", client);
 		menu.SetTitle(sBuffer);
@@ -316,7 +282,7 @@ void ChooseItem(int client)
 		FormatEx(sBuffer, sizeof(sBuffer), "%T", "ItemOff", client);
 		menu.AddItem("d", sBuffer);
 
-		if (GetClientImmunityLevel(client) > 49) 
+		if (IsClientAdmin(client)) 
 		{
 			FormatEx(sBuffer, sizeof(sBuffer), "%T", "AdminMenu", client);
 			menu.AddItem("e", sBuffer);
@@ -327,11 +293,13 @@ void ChooseItem(int client)
 	}
 }
 
-int Menu_HandlerFunction(Menu menu, MenuAction action, int client, int itemNum)
+void MainMenu_Handler(Menu menu, MenuAction action, int client, int itemNum)
 {
 	switch(action)
 	{
-		case MenuAction_End: delete menu;
+		case MenuAction_End: 
+			delete menu;
+
 		case MenuAction_Select:
 		{
 			char sItem[2];
@@ -339,23 +307,21 @@ int Menu_HandlerFunction(Menu menu, MenuAction action, int client, int itemNum)
 			{
 				switch(sItem[0])
 				{
-					case 'a': if(g_bMeleeDefault) MenuGetMelee(client);
-					case 'b': if(g_bInitialGunDefault) MenuGetInitialGun(client);
-					case 'c': if(g_bMenuAdvancedGunOpen) MenuGetAdvancedGun(client);
-					case 'd': if(g_bMenuThrowableOpen) MenuGetThrowable(client);
-					case 'e': Menuadmin(client);
+					case 'a': if(g_bMeleeDefault) CreateSecondaryMenu(client);
+					case 'b': if(g_bInitialGunDefault) CreateTier1Menu(client);
+					case 'c': if(g_bMenuAdvancedGunOpen) CreateTier2Menu(client);
+					case 'd': if(g_bMenuThrowableOpen) CreateThrowableMenu(client);
+					case 'e': CreateAdminMenu(client);
 				}
 			}
 		}
 	}
-
-	return 0;
 }
 
-void MenuGetMelee(int client) 
+void CreateSecondaryMenu(int client) 
 {
 	char secondary[64];
-	Menu menu = new Menu(Melees_MenuHandler);
+	Menu menu = new Menu(Secondary_MenuHandler);
 
 	Format(secondary, sizeof(secondary), "%T", "Secondary", client);
 	menu.SetTitle(secondary);
@@ -368,14 +334,14 @@ void MenuGetMelee(int client)
 	menu.Display(client, 30);
 }
 
-int Melees_MenuHandler(Menu menu, MenuAction action, int client, int param2) 
+void Secondary_MenuHandler(Menu menu, MenuAction action, int client, int param2) 
 {
 	switch (action) 
 	{
 		case MenuAction_Select: 
 		{
 			int weaponid = GetPlayerWeaponSlot(client, 1);
-			if (IsValidEdict(weaponid))
+			if (weaponid != -1 && IsValidEdict(weaponid))
 			{
 				char classname[32];
 				GetEntPropString(weaponid, Prop_Data, "m_ModelName", classname, sizeof(classname));
@@ -388,21 +354,21 @@ int Melees_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 					{
 						if (g_iRequestCount > g_iArrayCount[client])
 						{
-							vCheatCommand(client, line);
+							CheatCommand(client, line);
 							g_iArrayCount[client]++;
 							CPrintToChatAll("%t", "GetItemWithLimit", client, (SpecifyLanguage(client)) ? g_sItemNameChi[0][param2] : g_sItemNameEn[0][param2], g_iArrayCount[client], g_iRequestCount);
 						}
 						else
+						{
 							CPrintToChat(client, "%t", "ReachedLimit", g_iRequestCount);
+						}
 					}
 					else
 					{	
-						vCheatCommand(client, line);
+						CheatCommand(client, line);
 						CPrintToChatAll("%t", "GetItem", client, (SpecifyLanguage(client)) ? g_sItemNameChi[0][param2] : g_sItemNameEn[0][param2]);
 					}
 				}
-				else
-					return 0;
 			}
 		}
 
@@ -412,15 +378,15 @@ int Melees_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 				ChooseItem(client);
 		}
 
-		case MenuAction_End: delete menu;
+		case MenuAction_End: 
+			delete menu;
 	}
-	return 0;
 }
 
-void MenuGetInitialGun(int client) 
+void CreateTier1Menu(int client) 
 {
 	char Tier1[64];
-	Menu menu = new Menu(InitialGun_MenuHandler);
+	Menu menu = new Menu(Tier1_MenuHandler);
 	Format(Tier1, sizeof(Tier1), "%T", "Tier1", client);
 	menu.SetTitle(Tier1);
 
@@ -431,7 +397,7 @@ void MenuGetInitialGun(int client)
 	menu.Display(client, 30);
 }
 
-int InitialGun_MenuHandler(Menu menu, MenuAction action, int client, int param2) 
+void Tier1_MenuHandler(Menu menu, MenuAction action, int client, int param2) 
 {
 	switch (action) 
 	{
@@ -439,12 +405,12 @@ int InitialGun_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 		{
 			// you've already have that one right?
 			int weaponid = GetPlayerWeaponSlot(client, 0);
-			if (IsValidEntity(weaponid))
+			if (weaponid != -1 && IsValidEdict(weaponid))
 			{
 				char classname[32];
 				GetEntityClassname(weaponid, classname, sizeof(classname));
 				if(StrContains(classname, g_sWeaponName[1][param2], true) != -1)
-					return 0;
+					return;
 			}
 
 			char line[32];
@@ -454,17 +420,19 @@ int InitialGun_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 			{
 				if (g_iRequestCount > g_iArrayCount[client])
 				{
-					vCheatCommand(client, line);
+					CheatCommand(client, line);
 					g_iArrayCount[client]++;
 
 					CPrintToChatAll("%t", "GetItemWithLimit", client, (SpecifyLanguage(client)) ? g_sItemNameChi[1][param2] : g_sItemNameEn[1][param2], g_iArrayCount[client], g_iRequestCount);
 				}
 				else
+				{
 					CPrintToChat(client, "%t", "ReachedLimit", g_iRequestCount);
+				}
 			}
 			else
 			{
-				vCheatCommand(client, line);
+				CheatCommand(client, line);
 				CPrintToChatAll("%t", "GetItem", client, g_sItemNameChi[1][param2]);
 			}
 		}
@@ -475,16 +443,15 @@ int InitialGun_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 				ChooseItem(client);
 		}
 
-		case MenuAction_End: delete menu;
+		case MenuAction_End:
+			delete menu;
 	}
-
-	return 0;
 }
 
-void MenuGetAdvancedGun(int client) 
+void CreateTier2Menu(int client) 
 {
 	char Tier2[64];
-	Menu menu = new Menu(AdvancedGun_MenuHandler);
+	Menu menu = new Menu(Tier2_MenuHandler);
 	Format(Tier2, sizeof(Tier2), "%T", "Tier2", client);
 	menu.SetTitle(Tier2);
 
@@ -495,19 +462,19 @@ void MenuGetAdvancedGun(int client)
 	menu.Display(client, 30);
 }
 
-int AdvancedGun_MenuHandler(Menu menu, MenuAction action, int client, int param2) 
+void Tier2_MenuHandler(Menu menu, MenuAction action, int client, int param2) 
 {
 	switch (action) 
 	{
 		case MenuAction_Select: 
 		{
 			int weaponid = GetPlayerWeaponSlot(client, 0);
-			if (IsValidEntity(weaponid))
+			if (weaponid != -1 && IsValidEdict(weaponid))
 			{
 				char classname[32];
 				GetEntityClassname(weaponid, classname, sizeof(classname));
-				if(StrContains(classname, g_sWeaponName[2][param2], true) != -1)
-					return 0;
+				if (StrContains(classname, g_sWeaponName[2][param2], true) != -1)
+					return;
 			}
 
 			char line[32];
@@ -517,17 +484,19 @@ int AdvancedGun_MenuHandler(Menu menu, MenuAction action, int client, int param2
 			{
 				if (g_iRequestCount > g_iArrayCount[client])
 				{
-					vCheatCommand(client, line);
+					CheatCommand(client, line);
 					g_iArrayCount[client]++;
 
 					CPrintToChatAll("%t", "GetItemWithLimit", client, (SpecifyLanguage(client)) ? g_sItemNameChi[2][param2] : g_sItemNameEn[2][param2], g_iArrayCount[client], g_iRequestCount);
 				}
 				else
+				{
 					CPrintToChat(client, "%t", "ReachedLimit", g_iRequestCount);
+				}
 			}
 			else
 			{
-				vCheatCommand(client, line);
+				CheatCommand(client, line);
 				CPrintToChatAll("%t", "GetItem", client, (SpecifyLanguage(client)) ? g_sItemNameChi[2][param2] : g_sItemNameEn[2][param2]);
 			}
 		}
@@ -538,12 +507,12 @@ int AdvancedGun_MenuHandler(Menu menu, MenuAction action, int client, int param2
 				ChooseItem(client);
 		}
 
-		case MenuAction_End: delete menu;
-}
-	return 0;
+		case MenuAction_End: 
+			delete menu;
+	}
 }
 
-void MenuGetThrowable(int client) 
+void CreateThrowableMenu(int client) 
 {
 	char item[64];
 	Menu menu = new Menu(Throwable_MenuHandler);
@@ -557,33 +526,35 @@ void MenuGetThrowable(int client)
 	menu.Display(client, 30);
 }
 
-int Throwable_MenuHandler(Menu menu, MenuAction action, int client, int param2) 
+void Throwable_MenuHandler(Menu menu, MenuAction action, int client, int param2) 
 {
 	switch (action) 
 	{
 		case MenuAction_Select: 
 		{
 			char line[32];
-			if (param2 < 15)
-				FormatEx(line, sizeof line, "give %s", g_sWeaponName[3][param2]);
-			else
-				FormatEx(line, sizeof line, "upgrade_add %s", g_sWeaponName[3][param2]);
+
+			param2 < 15 ?
+			FormatEx(line, sizeof line, "give %s", g_sWeaponName[3][param2]) :
+			FormatEx(line, sizeof line, "upgrade_add %s", g_sWeaponName[3][param2]);
 				
 			if (g_bEnableLimit)
 			{
 				if (g_iRequestCount > g_iArrayCount[client])
 				{
-					vCheatCommand(client, line);
+					CheatCommand(client, line);
 					g_iArrayCount[client]++;
 
 					CPrintToChatAll("%t", "GetItemWithLimit", client, (SpecifyLanguage(client)) ? g_sItemNameChi[3][param2] : g_sItemNameEn[3][param2], g_iArrayCount[client], g_iRequestCount);
 				}
 				else
+				{
 					CPrintToChat(client,  "%t", "ReachedLimit", g_iRequestCount);
+				}
 			}
 			else
 			{
-				vCheatCommand(client, line);
+				CheatCommand(client, line);
 				CPrintToChatAll("%t", "GetItem", client, (SpecifyLanguage(client)) ? g_sItemNameChi[3][param2] : g_sItemNameEn[3][param2]);
 			}
 		}
@@ -594,12 +565,12 @@ int Throwable_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 				ChooseItem(client);
 		}
 
-		case MenuAction_End: delete menu;
+		case MenuAction_End: 
+			delete menu;
 	}
-	return 0;
 }
 
-void Menuadmin(int client) 
+void CreateAdminMenu(int client) 
 {
 	char sBuffer[64];
 	Menu menu = new Menu(admin_MenuHandler);
@@ -607,35 +578,35 @@ void Menuadmin(int client)
 	menu.SetTitle(sBuffer);
 	
 	g_bMeleeDefault ?
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "SecondaryMenuOff") :
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "SecondaryMenuOn");
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SecondaryMenuOn", client) :
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SecondaryMenuOff", client);
 	menu.AddItem("e", sBuffer);
 
 	g_bInitialGunDefault ?
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "Tier1MenuOff") :
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "Tier1MenuOn");
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Tier1MenuOn", client) :
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Tier1MenuOff", client);
 	menu.AddItem("f", sBuffer);
 
 	g_bMenuAdvancedGunOpen ? 
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "Tier2MenuOff") :
- 	FormatEx(sBuffer, sizeof(sBuffer), "%t", "Tier2MenuOn");
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Tier2MenuOn", client) :
+ 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Tier2MenuOff", client);
 	menu.AddItem("g", sBuffer);
 
 	g_bMenuThrowableOpen ?
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "ItemMenuOff") :
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "ItemMenuOn");
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "ItemMenuOn", client) :
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "ItemMenuOff", client);
 	menu.AddItem("h", sBuffer);
 
 	g_bSafeArea ?
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "AllowOutOff") :
-	FormatEx(sBuffer, sizeof(sBuffer), "%t", "AllowOutOn");
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "AllowOutOn", client) :
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "AllowOutOff", client);
 	menu.AddItem("i", sBuffer);
 	
 	menu.ExitBackButton = true;
 	menu.Display(client, 30);
 }
 
-int admin_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
+void admin_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
 {
 	switch(action)
 	{
@@ -645,7 +616,8 @@ int admin_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
 				ChooseItem(client);
 		}
 
-		case MenuAction_End: delete menu;
+		case MenuAction_End: 
+			delete menu;
 
 		case MenuAction_Select:
 		{
@@ -688,10 +660,41 @@ int admin_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
 			}
 		}
 	}
-	return 0;
 }
 
-void vCheatCommand(int client, const char[] sCommand) 
+void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	GetCvars();
+}
+
+void GetCvars()
+{
+	g_bMeleeDefault			=	g_hcmeleedefault.BoolValue;
+	g_bInitialGunDefault	=	g_hcinitialgundefault.BoolValue;
+	g_bSafeArea				=	g_hcsafearea.BoolValue;
+	g_bMenuAdvancedGunOpen	=	g_hcAdvancedGunOpen.BoolValue;
+	g_bMenuThrowableOpen	=	g_hcThrowableOpen.BoolValue;
+	g_bEnableLimit			=	g_hcEnableLimit.BoolValue;
+	g_iRequestCount			=	g_hcRequestCount.IntValue;
+	g_bAd					=	g_hcAd.BoolValue;
+	g_fAdTimer				=	g_hcAdTimer.FloatValue;
+}
+
+void Clear()
+{
+	if (g_bEnableLimit)
+	{
+		for (int i; i < MaxClients; i++)
+		{
+			g_iArrayCount[i] = 0;
+			g_flLastTime[i] = 0.0;
+		}
+	}
+
+	g_bIsRoundAlive = false;
+}
+
+stock void CheatCommand(int client, const char[] sCommand) 
 {
 	if (!client || !IsClientInGame(client))
 		return;
@@ -709,13 +712,14 @@ void vCheatCommand(int client, const char[] sCommand)
 	SetUserFlagBits(client, iFlagBits);
 	SetCommandFlags(sCmd, iCmdFlags);
 	
-	if (strcmp(sCmd, "give") == 0) {
+	if (strcmp(sCmd, "give") == 0) 
+	{
 		if (strcmp(sCommand[5], "ammo") == 0)
-			vReloadAmmo(client); 
+			ReloadAmmo(client); 
 	}
 }
 
-void vReloadAmmo(int client) 
+stock void ReloadAmmo(int client) 
 {
 	int weapon = GetPlayerWeaponSlot(client, 0);
 	if (weapon <= MaxClients || !IsValidEntity(weapon))
@@ -736,29 +740,24 @@ void vReloadAmmo(int client)
 	}
 }
 
-int GetClientImmunityLevel(int client) 
+stock bool IsClientAdmin(int client)
 {
-
-	char sSteamID[32];
-	GetClientAuthId(client, AuthId_Steam2, sSteamID, sizeof sSteamID);
-	AdminId admin = FindAdminByIdentity(AUTHMETHOD_STEAM, sSteamID);
-	if (admin == INVALID_ADMIN_ID)
-		return -999;
-	return admin.ImmunityLevel;
+	if (!IsClientInGame(client)) return false;
+	int flag = GetUserFlagBits(client);
+	return (GetUserAdmin(client) != INVALID_ADMIN_ID && ((flag & ADMFLAG_CHEATS) || (flag & ADMFLAG_ROOT)));
 }
 
-//代码来自"https://steamcommunity.com/id/ChengChiHou/"
 stock bool IsClientInSafeArea(int client)
 {
 	int nav = L4D_GetLastKnownArea(client);
-	if(!nav)
+	if (!nav)
 		return false;
+
 	int iAttr = L4D_GetNavArea_SpawnAttributes(view_as<Address>(nav));
-	bool bInStartPoint = !!(iAttr & 0x80);
-	bool bInCheckPoint = !!(iAttr & 0x800);
-	if(!bInStartPoint && !bInCheckPoint)
-		return false;
-	return true;
+	bool bInStartPoint = !!(iAttr & NAV_SPAWN_PLAYER_START);
+	bool bInCheckPoint = !!(iAttr & NAV_SPAWN_CHECKPOINT);
+
+	return (bInStartPoint || bInCheckPoint);
 }
 
 /**
@@ -772,5 +771,10 @@ stock bool SpecifyLanguage(int client)
 {
 	int lang = GetClientLanguage(client);
 
-	return lang == 23? true : false;
+	return lang == 13 ? true : false;
+}
+
+stock bool IsValidPlayer(int client)
+{
+	return (client > 0 && client <= MaxClients && IsClientInGame(client) && !IsFakeClient(client) && GetClientTeam(client) == 2 && IsPlayerAlive(client));
 }
