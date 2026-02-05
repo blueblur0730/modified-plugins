@@ -211,18 +211,13 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
     }
 }
 
-public void OnPluginEnd()
-{
-    delete g_hTimer;
-}
-
 void Event_RoundStart(Event hEvent, char[] sName, bool dontBroadcast)
 {
     Clear();
 
     if (g_bAd)
     {
-        delete g_hTimer;
+        g_hTimer = null;
         g_hTimer = CreateTimer(g_fAdTimer, Timer_Ad, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
     }
 }
