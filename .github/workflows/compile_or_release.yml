@@ -94,8 +94,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Retrive Date
-        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+      - name: Prepare Env
+        run: | 
+             echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+             echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Download package
         uses: actions/download-artifact@v4
@@ -112,19 +114,66 @@ jobs:
           done; 
           wait
 
-      - name: Release
+      - name: Release (Pull Request)
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.name }}
+          PR_AUTHOR_EMAIL: ${{ github.event.pull_request.user.email }}
+
         uses: xresloader/upload-to-github-release@v1.6.1
         with:
           file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
-          # delete_file: modified-plugins-sm-${{ matrix.sm_version }}-*.zip
           draft: false
           prerelease: false
           branches: main
           tag_name: release
           tags: true
           update_latest_release: true
-          # verbose: true
           overwrite: true
           default_release_name: modified-plugins
+          update_release_body: | 
+           ## Release Updated On Pull Request:
+            - ${{ github.event.pull_request.number }} 
+             - ${{ env.PR_TITLE }} (by ${{ env.PR_AUTHOR }} @${{ env.PR_AUTHOR_EMAIL }})
+             - with number of commits: ${{ github.event.pull_request.commits }}
+
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release (Push)
+        if: github.event_name == 'push'
+        uses: xresloader/upload-to-github-release@v1.6.1
+        with:
+          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
+          draft: false
+          prerelease: false
+          branches: main
+          tag_name: release
+          tags: true
+          update_latest_release: true
+          overwrite: true
+          default_release_name: modified-plugins
+          update_release_body: |
+           ## Release Updated On Commit: 
+            - (${{ env.GITHUB_SHA_SHORT }}) 
+             - ${{ github.event.push.commits[0].message }} (by ${{ github.event.push.author.name }} in ${{ github.event.push.timestamp }})
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release (Dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        uses: xresloader/upload-to-github-release@v1.6.1
+        with:
+          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
+          draft: false
+          prerelease: false
+          branches: main
+          tag_name: release
+          tags: true
+          update_latest_release: true
+          overwrite: true
+          default_release_name: modified-plugins
+          update_release_body: |
+           ## Release Updated On Manually Triggered Workflow
+            - (${{ env.GITHUB_SHA_SHORT }}) (by ${{ github.triggering_actor }})
           token: ${{ secrets.GITHUB_TOKEN }}
 
