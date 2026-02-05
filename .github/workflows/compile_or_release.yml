@@ -133,8 +133,10 @@ jobs:
           overwrite: true
           default_release_name: modified-plugins
           update_release_body: | 
-           # Release Updated On Pull Request:
-            - ${{ github.event.pull_request.number }} ${{ env.PR_TITLE }} (by ${{ env.PR_AUTHOR }} @${{ env.PR_AUTHOR_EMAIL }})\n with number of commits: ${{ github.event.pull_request.commits }}
+           ## Release Updated On Pull Request:
+            - ${{ github.event.pull_request.number }} 
+             - ${{ env.PR_TITLE }} (by ${{ env.PR_AUTHOR }} @${{ env.PR_AUTHOR_EMAIL }})
+             - with number of commits: ${{ github.event.pull_request.commits }}
 
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -152,8 +154,9 @@ jobs:
           overwrite: true
           default_release_name: modified-plugins
           update_release_body: |
-           # Release Updated On Commit: 
-            - (${{ env.GITHUB_SHA_SHORT }}) ${{ github.event.push.commits[0].message }} (by ${{ github.event.push.author.name }} in ${{ github.event.push.timestamp }})
+           ## Release Updated On Commit: 
+            - (${{ env.GITHUB_SHA_SHORT }}) 
+             - ${{ github.event.push.commits[0].message }} (by ${{ github.event.push.author.name }} in ${{ github.event.push.timestamp }})
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release (Dispatch)
@@ -170,7 +173,7 @@ jobs:
           overwrite: true
           default_release_name: modified-plugins
           update_release_body: |
-           # Release Updated On Manually Triggered Workflow
+           ## Release Updated On Manually Triggered Workflow
             - (${{ env.GITHUB_SHA_SHORT }}) (by ${{ github.triggering_actor }})
           token: ${{ secrets.GITHUB_TOKEN }}
 
