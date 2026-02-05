@@ -117,7 +117,7 @@ float g_fAdTimer;
 float g_flLastTime[MAXPLAYERS + 1] = {0.0, ...};
 bool g_bIsRoundAlive = false;
 
-#define PLUGIN_VERSION    "1.7"
+#define PLUGIN_VERSION    "1.7.1"
 public Plugin myinfo =
 {
     name = "[L4D2] StartUp Item acquisition",
@@ -318,6 +318,9 @@ void CreateSecondaryMenu(int client)
     // yea it's hardcoded.
     for (int i = 0; i < sizeof(g_sItemNamePhrases[0]); i++)
     {
+        if (g_sItemNamePhrases[0][i][0] == '\0')
+            continue;
+
         FormatEx(sBuffer, sizeof(sBuffer), "%T", g_sItemNamePhrases[0][i], client);
         menu.AddItem(g_sWeaponName[0][i], sBuffer);
     }
@@ -401,6 +404,9 @@ void CreateTier1Menu(int client)
 
     for (int i = 0; i < sizeof(g_sItemNamePhrases[1]); i++)
     {
+        if (g_sItemNamePhrases[1][i][0] == '\0')
+            continue;
+
         FormatEx(sBuffer, sizeof(sBuffer), "%T", g_sItemNamePhrases[1][i], client);
         menu.AddItem(g_sWeaponName[1][i], sBuffer);
     }
@@ -566,8 +572,11 @@ void CreateThrowableMenu(int client)
     Menu menu = new Menu(Throwable_MenuHandler);
     menu.SetTitle(sBuffer, sizeof(sBuffer), "%T", "Item", client);
 
-    for (int i = 0; i < 18; i++)
+    for (int i = 0; i < sizeof(g_sItemNamePhrases[3]); i++)
     {
+        if (g_sItemNamePhrases[3][i][0] == '\0')
+            continue;
+
         FormatEx(sBuffer, sizeof(sBuffer), "%T", g_sItemNamePhrases[3][i], client);
         menu.AddItem(g_sWeaponName[3][i], sBuffer);
     }
@@ -645,28 +654,28 @@ void CreateAdminMenu(int client)
     menu.SetTitle(sBuffer);
     
     g_bSecondaryEnable ?
-    FormatEx(sBuffer, sizeof(sBuffer), "%T", "SecondaryMenuOn", client) :
-    FormatEx(sBuffer, sizeof(sBuffer), "%T", "SecondaryMenuOff", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "SecondaryMenuOff", client) :
+    FormatEx(sBuffer, sizeof(sBuffer), "%T", "SecondaryMenuOn", client);
     menu.AddItem("e", sBuffer);
 
     g_bTier1Enable ?
-    FormatEx(sBuffer, sizeof(sBuffer), "%T", "Tier1MenuOn", client) :
-    FormatEx(sBuffer, sizeof(sBuffer), "%T", "Tier1MenuOff", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Tier1MenuOff", client) :
+    FormatEx(sBuffer, sizeof(sBuffer), "%T", "Tier1MenuOn", client);
     menu.AddItem("f", sBuffer);
 
     g_bTier2Enable ? 
-    FormatEx(sBuffer, sizeof(sBuffer), "%T", "Tier2MenuOn", client) :
-     FormatEx(sBuffer, sizeof(sBuffer), "%T", "Tier2MenuOff", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "Tier2MenuOff", client) :
+    FormatEx(sBuffer, sizeof(sBuffer), "%T", "Tier2MenuOn", client);
     menu.AddItem("g", sBuffer);
 
     g_bThrowableEnable ?
-    FormatEx(sBuffer, sizeof(sBuffer), "%T", "ItemMenuOn", client) :
-    FormatEx(sBuffer, sizeof(sBuffer), "%T", "ItemMenuOff", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "ItemMenuOff", client) :
+    FormatEx(sBuffer, sizeof(sBuffer), "%T", "ItemMenuOn", client);
     menu.AddItem("h", sBuffer);
 
     g_bSafeAreaOnly ?
-    FormatEx(sBuffer, sizeof(sBuffer), "%T", "AllowOutOn", client) :
-    FormatEx(sBuffer, sizeof(sBuffer), "%T", "AllowOutOff", client);
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "AllowOutOff", client) :
+    FormatEx(sBuffer, sizeof(sBuffer), "%T", "AllowOutOn", client);
     menu.AddItem("i", sBuffer);
     
     menu.ExitBackButton = true;
