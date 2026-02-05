@@ -684,8 +684,8 @@ void CreateAdminMenu(int client)
     menu.AddItem("h", sBuffer);
 
     g_bSafeAreaOnly ?
-	FormatEx(sBuffer, sizeof(sBuffer), "%T", "AllowOutOff", client) :
-    FormatEx(sBuffer, sizeof(sBuffer), "%T", "AllowOutOn", client);
+    FormatEx(sBuffer, sizeof(sBuffer), "%T", "AllowOutOn", client) :
+	FormatEx(sBuffer, sizeof(sBuffer), "%T", "AllowOutOff", client);
     menu.AddItem("i", sBuffer);
     
     menu.ExitBackButton = true;
