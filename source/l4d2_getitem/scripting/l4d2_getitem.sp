@@ -71,7 +71,7 @@ ConVar
     g_hCvar_AdTimer,
     g_hCvar_EnableLimit, 
     g_hCvar_RequestCount, 
-    g_hCvar_SeperateRequestCountEnable,
+    g_hCvar_SeparateRequestCountEnable,
     g_hCvar_RequestCountSecondary,
     g_hCvar_RequestCountTier1,
     g_hCvar_RequestCountTier2,
@@ -85,7 +85,7 @@ bool
     g_bSafeAreaOnly,
     g_bEnableLimit,
     g_bAd,
-    g_bSeperateRequestCountEnable;
+    g_bSeparateRequestCountEnable;
 
 int 
     g_iRequestCount,
@@ -116,8 +116,9 @@ RequestCount_t g_RequestCount[MAXPLAYERS + 1];
 float g_fAdTimer;
 float g_flLastTime[MAXPLAYERS + 1] = {0.0, ...};
 bool g_bIsRoundAlive = false;
+Handle g_hTimer = null;
 
-#define PLUGIN_VERSION    "1.7.1"
+#define PLUGIN_VERSION    "1.7.2"
 public Plugin myinfo =
 {
     name = "[L4D2] StartUp Item acquisition",
@@ -141,10 +142,10 @@ public void OnPluginStart()
     g_hCvar_Ad                  = CreateConVar("l4d2_er_ad_enable",            "1",    "Enable advertisement to notify.",       _, true, 0.0, true, 1.0);
     g_hCvar_AdTimer             = CreateConVar("l4d2_er_ad_interval",          "120.0","Interval of advertisement.",            _, true, 1.0);    
 
-    g_hCvar_EnableLimit         = CreateConVar("l4d2_er_enable_limit",         "1",    "Enable limit for each acquisition. if seperate request count is enabled, this is not effective.", _, true, 0.0, true, 1.0);
+    g_hCvar_EnableLimit         = CreateConVar("l4d2_er_enable_limit",         "1",    "Enable limit for each acquisition. if separate request count is enabled, this is not effective.", _, true, 0.0, true, 1.0);
     g_hCvar_RequestCount        = CreateConVar("l4d2_er_request_count",        "2",    "Count of acquisition.",                 _, true, 1.0);
 
-    g_hCvar_SeperateRequestCountEnable      = CreateConVar("l4d2_er_seperate_request_count_enable",     "1",    "Enable seperate request count for each category.",     _, true, 0.0, true, 1.0);
+    g_hCvar_SeparateRequestCountEnable      = CreateConVar("l4d2_er_separate_request_count_enable",     "1",    "Enable separate request count for each category.",     _, true, 0.0, true, 1.0);
     g_hCvar_RequestCountSecondary           = CreateConVar("l4d2_er_request_count_secondary",           "2",    "Count of acquisition for secondary weapon.",     _, true, 1.0);
     g_hCvar_RequestCountTier1               = CreateConVar("l4d2_er_request_count_t1",                  "2",    "Count of acquisition for T1 weapon.",     _, true, 1.0);
     g_hCvar_RequestCountTier2               = CreateConVar("l4d2_er_request_count_t2",                  "2",    "Count of acquisition for T2 weapon.",     _, true, 1.0);
@@ -157,12 +158,14 @@ public void OnPluginStart()
     g_hCvar_ThrowableEnable.AddChangeHook(OnConVarChanged);
     g_hCvar_SafeAreaOnly.AddChangeHook(OnConVarChanged);
     g_hCvar_Ad.AddChangeHook(OnConVarChanged);
-    g_hCvar_AdTimer.AddChangeHook(OnConVarChanged);
+
+    g_hCvar_AdTimer.AddChangeHook(OnAdTimerConVarChanged);
+    OnAdTimerConVarChanged(g_hCvar_AdTimer, "", "");
 
     g_hCvar_EnableLimit.AddChangeHook(OnConVarChanged);
     g_hCvar_RequestCount.AddChangeHook(OnConVarChanged);
 
-    g_hCvar_SeperateRequestCountEnable.AddChangeHook(OnConVarChanged);
+    g_hCvar_SeparateRequestCountEnable.AddChangeHook(OnConVarChanged);
     g_hCvar_RequestCountSecondary.AddChangeHook(OnConVarChanged);
     g_hCvar_RequestCountTier1.AddChangeHook(OnConVarChanged);
     g_hCvar_RequestCountTier2.AddChangeHook(OnConVarChanged);
@@ -208,20 +211,28 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
     }
 }
 
+public void OnPluginEnd()
+{
+    delete g_hTimer;
+}
+
 void Event_RoundStart(Event hEvent, char[] sName, bool dontBroadcast)
 {
     Clear();
 
-    if (g_bAd) 
-        CreateTimer(g_fAdTimer, Timer_Ad, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+    if (g_bAd)
+    {
+        delete g_hTimer;
+        g_hTimer = CreateTimer(g_fAdTimer, Timer_Ad, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+    }
 }
 
 void Timer_Ad(Handle hTimer)
 {
     // once game started stop this.
-    if (!g_bIsRoundAlive)
+    if (!g_bIsRoundAlive && g_bAd)
     {
-        g_bEnableLimit ? 
+        g_bEnableLimit && !g_bSeparateRequestCountEnable ? 
         CPrintToChatAll("%t", "Advertisement_Limit", g_iRequestCount) : 
         CPrintToChatAll("%t", "Advertisement");
     }
@@ -347,7 +358,7 @@ void Secondary_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 
                     if (g_bEnableLimit)
                     {
-                        if (g_bSeperateRequestCountEnable)
+                        if (g_bSeparateRequestCountEnable)
                         {
                             if (g_iSecondaryRequestCount > g_RequestCount[client].iSecondaryCount)
                             {
@@ -400,7 +411,7 @@ void CreateTier1Menu(int client)
 {
     char sBuffer[64];
     Menu menu = new Menu(Tier1_MenuHandler);
-    menu.SetTitle(sBuffer, sizeof(sBuffer), "%T", "Tier1", client);
+    menu.SetTitle("%T", "Tier1", client);
 
     for (int i = 0; i < sizeof(g_sItemNamePhrases[1]); i++)
     {
@@ -436,7 +447,7 @@ void Tier1_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 
             if (g_bEnableLimit)
             {
-                if (g_bSeperateRequestCountEnable)
+                if (g_bSeparateRequestCountEnable)
                 {
                     if (g_iTier1RequestCount > g_RequestCount[client].iTier1Count)
                     {
@@ -519,7 +530,7 @@ void Tier2_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 
             if (g_bEnableLimit)
             {
-                if (g_bSeperateRequestCountEnable)
+                if (g_bSeparateRequestCountEnable)
                 {
                     if (g_iTier2RequestCount > g_RequestCount[client].iTier2Count)
                     {
@@ -599,7 +610,7 @@ void Throwable_MenuHandler(Menu menu, MenuAction action, int client, int param2)
                 
             if (g_bEnableLimit)
             {
-                if (g_bSeperateRequestCountEnable)
+                if (g_bSeparateRequestCountEnable)
                 {
                     if (g_iThrowableRequestCount > g_RequestCount[client].iThrowableCount)
                     {
@@ -742,6 +753,13 @@ void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue
     GetCvars();
 }
 
+void OnAdTimerConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+    delete g_hTimer;
+    g_fAdTimer = convar.FloatValue;
+    g_hTimer = CreateTimer(g_fAdTimer, Timer_Ad, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+}
+
 void GetCvars()
 {
     g_bSecondaryEnable          = g_hCvar_SencondaryEnable.BoolValue;
@@ -752,9 +770,8 @@ void GetCvars()
     g_bEnableLimit              = g_hCvar_EnableLimit.BoolValue;
     g_iRequestCount             = g_hCvar_RequestCount.IntValue;
     g_bAd                       = g_hCvar_Ad.BoolValue;
-    g_fAdTimer                  = g_hCvar_AdTimer.FloatValue;
 
-    g_bSeperateRequestCountEnable = g_hCvar_SeperateRequestCountEnable.BoolValue;
+    g_bSeparateRequestCountEnable = g_hCvar_SeparateRequestCountEnable.BoolValue;
     g_iSecondaryRequestCount    = g_hCvar_RequestCountSecondary.IntValue;
     g_iTier1RequestCount        = g_hCvar_RequestCountTier1.IntValue;
     g_iTier2RequestCount        = g_hCvar_RequestCountTier2.IntValue;
