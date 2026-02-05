@@ -9,7 +9,7 @@ on:
     branches: [master, main, workflow]
 
   push:
-    paths: ["source/**", "include/**", pushtrigger.txt"]
+    paths: ["source/**", "include/**", "pushtrigger.txt"]
     branches: [master, main, workflow]
 
   workflow_dispatch:
