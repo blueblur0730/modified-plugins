@@ -64,55 +64,30 @@ static const char g_sWeaponName[4][18][] =
 	},
 };
 
-static const char g_sItemNameChi[4][18][] =
+static const char g_sItemNamePhrases[4][18][] =
 {
 	{	/*slot 0()*/
-		"武士刀","消防斧","砍刀","小刀","手枪","马格南","电锯",
-		"平底锅","棒球棒","撬棍","板球棒","警棍","吉他","高尔夫",
-		"铲子","草叉","防爆盾","",
+		"Phrase_Katana","Phrase_Axe","Phrase_Machete","Phrase_Knife","Phrase_Pistol","Phrase_Deagle","Phrase_Chainsaw","Phrase_Frying Pan",
+		"Phrase_BaseballBat","Phrase_Crowbar","Phrase_CricketBat","Phrase_Tonfa","Phrase_Guitar","Phrase_GolfClub","Phrase_Shovel",
+		"Phrase_Pitchfork","Phrase_RiotShield","",
 	},
 
 	{	/*slot 1()*/
-		"木喷","铁喷","UZI微冲","消音微冲","MP5","备弹",
+		"Phrase_PumpShotgun","Phrase_ChromeShotgun","Phrase_Uzi","Phrase_Mac-10","Phrase_MP5","Phrase_Ammo",
 		"","","","","","","","","","","","",
 	},
 
 	{	/*slot 2()*/
-		"一代连喷","二代连喷","木狙","军狙","M-16","SCAR","AK-47","SG552",
-		"鸟狙","AWP","M60","榴弹发射器","","","","","","",
-	},
-
-	{	/*slot 3()*/
-		"医疗包","除颤仪","止痛药","肾上腺素","燃烧瓶","土制炸弹","胆汁瓶",
-		"燃烧弹药包","高爆弹药包","汽油桶","煤气罐","氧气瓶","烟花箱","可乐瓶",
-		"小侏儒","燃烧弹药","高爆弹药","激光瞄准器",
-	},
-};
-
-static const char g_sItemNameEn[4][18][] =
-{
-	{	/*slot 0()*/
-		"Katana","Axe","Machete","Knife","Pistol","Deagle","Chainsaw","Frying Pan",
-		"Baseball Bat","Crowbar","Cricket Bat","Tonfa","Guitar","Golf Club","Shovel",
-		"Pitchfork","Riot Shield","",
-	},
-
-	{	/*slot 1()*/
-		"Pump Shotgun","Chrome Shotgun","Uzi","Mac-10","MP5","Ammo",
-		"","","","","","","","","","","","",
-	},
-
-	{	/*slot 2()*/
-		"Autoshotgun","SPAS Shotgun","Hunting Rifle","Military Sniper","M-16",
-		"Desert Rifle","AK-47","SG552","Scout","AWP","M60","Grenade Launcher",
+		"Phrase_Autoshotgun","Phrase_SPASShotgun","Phrase_HuntingRifle","Phrase_MilitarySniper","Phrase_M-16",
+		"Phrase_DesertRifle","Phrase_AK-47","Phrase_SG552","Phrase_Scout","Phrase_AWP","Phrase_M60","Phrase_Grenade Launcher",
 		"","","","","","",
 	},
 
 	{	/*slot 3()*/
-		"First Aid Kit","Defibrillator","Pills","Adrenaline","Molotov","Pipe Bomb",
-		"Bile Bomb","Incendiary Ammo Pack","Explosive Ammo Pack","Gascan","Propane Tank",
-		"Oxygen Tank","Fireworks","Cola Bottles","Gnome","Incendiary Ammo","Explosive Ammo",
-		"Laser Sight",
+		"Phrase_FirstAidKit","Phrase_Defibrillator","Phrase_Pills","Phrase_Adrenaline","Phrase_Molotov","Phrase_PipeBomb",
+		"Phrase_BileBomb","Phrase_IncendiaryAmmoPack","Phrase_ExplosiveAmmoPack","Phrase_Gascan","Phrase_PropaneTank",
+		"Phrase_OxygenTank","Phrase_Fireworks","Phrase_ColaBottles","Phrase_Gnome","Phrase_IncendiaryAmmo","Phrase_ExplosiveAmmo",
+		"Phrase_LaserSight",
 	},
 };
 
@@ -144,7 +119,7 @@ float g_fAdTimer;
 float g_flLastTime[MAXPLAYERS + 1] = {0.0, ...};
 bool g_bIsRoundAlive = false;
 
-#define PLUGIN_VERSION	"1.5"
+#define PLUGIN_VERSION	"1.6"
 public Plugin myinfo =
 {
 	name = "[L4D2] StartUp Item acquisition",
@@ -320,15 +295,16 @@ void MainMenu_Handler(Menu menu, MenuAction action, int client, int itemNum)
 
 void CreateSecondaryMenu(int client) 
 {
-	char secondary[64];
+	char sBuffer[64];
 	Menu menu = new Menu(Secondary_MenuHandler);
-
-	Format(secondary, sizeof(secondary), "%T", "Secondary", client);
-	menu.SetTitle(secondary);
+	menu.SetTitle(sBuffer, sizeof(sBuffer), "%T", "Secondary", client);
 
 	// yea it's hardcoded.
-	for (int i = 0; i < 17; i++)
-		menu.AddItem(g_sWeaponName[0][i], (SpecifyLanguage(client)) ? g_sItemNameChi[0][i] : g_sItemNameEn[0][i]);
+	for (int i = 0; i < sizeof(g_sItemNamePhrases[0]); i++)
+	{
+		FormatEx(sBuffer, sizeof(sBuffer), "%T", g_sItemNamePhrases[0][i], client);
+		menu.AddItem(g_sWeaponName[0][i], sBuffer);
+	}
 
 	menu.ExitBackButton = true;
 	menu.Display(client, 30);
@@ -356,7 +332,8 @@ void Secondary_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 						{
 							CheatCommand(client, line);
 							g_iArrayCount[client]++;
-							CPrintToChatAll("%t", "GetItemWithLimit", client, (SpecifyLanguage(client)) ? g_sItemNameChi[0][param2] : g_sItemNameEn[0][param2], g_iArrayCount[client], g_iRequestCount);
+
+							CPrintToChatAll("%t", "GetItemWithLimit", client, g_sItemNamePhrases[0][param2], g_iArrayCount[client], g_iRequestCount);
 						}
 						else
 						{
@@ -366,7 +343,7 @@ void Secondary_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 					else
 					{	
 						CheatCommand(client, line);
-						CPrintToChatAll("%t", "GetItem", client, (SpecifyLanguage(client)) ? g_sItemNameChi[0][param2] : g_sItemNameEn[0][param2]);
+						CPrintToChatAll("%t", "GetItem", client, g_sItemNamePhrases[0][param2]);
 					}
 				}
 			}
@@ -385,13 +362,15 @@ void Secondary_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 
 void CreateTier1Menu(int client) 
 {
-	char Tier1[64];
+	char sBuffer[64];
 	Menu menu = new Menu(Tier1_MenuHandler);
-	Format(Tier1, sizeof(Tier1), "%T", "Tier1", client);
-	menu.SetTitle(Tier1);
+	menu.SetTitle(sBuffer, sizeof(sBuffer), "%T", "Tier1", client);
 
-	for (int i = 0; i < 6; i++)
-		menu.AddItem(g_sWeaponName[1][i], (SpecifyLanguage(client)) ? g_sItemNameChi[1][i] : g_sItemNameEn[1][i]);
+	for (int i = 0; i < sizeof(g_sItemNamePhrases[1]); i++)
+	{
+		FormatEx(sBuffer, sizeof(sBuffer), "%T", g_sItemNamePhrases[1][i], client);
+		menu.AddItem(g_sWeaponName[1][i], sBuffer);
+	}
 
 	menu.ExitBackButton = true;
 	menu.Display(client, 30);
@@ -409,7 +388,7 @@ void Tier1_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 			{
 				char classname[32];
 				GetEntityClassname(weaponid, classname, sizeof(classname));
-				if(StrContains(classname, g_sWeaponName[1][param2], true) != -1)
+				if (StrContains(classname, g_sWeaponName[1][param2], true) != -1)
 					return;
 			}
 
@@ -423,7 +402,7 @@ void Tier1_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 					CheatCommand(client, line);
 					g_iArrayCount[client]++;
 
-					CPrintToChatAll("%t", "GetItemWithLimit", client, (SpecifyLanguage(client)) ? g_sItemNameChi[1][param2] : g_sItemNameEn[1][param2], g_iArrayCount[client], g_iRequestCount);
+					CPrintToChatAll("%t", "GetItemWithLimit", client, g_sItemNamePhrases[1][param2], g_iArrayCount[client], g_iRequestCount);
 				}
 				else
 				{
@@ -433,7 +412,7 @@ void Tier1_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 			else
 			{
 				CheatCommand(client, line);
-				CPrintToChatAll("%t", "GetItem", client, g_sItemNameChi[1][param2]);
+				CPrintToChatAll("%t", "GetItem", client, g_sItemNamePhrases[1][param2]);
 			}
 		}
 
@@ -450,13 +429,15 @@ void Tier1_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 
 void CreateTier2Menu(int client) 
 {
-	char Tier2[64];
+	char sBuffer[64];
 	Menu menu = new Menu(Tier2_MenuHandler);
-	Format(Tier2, sizeof(Tier2), "%T", "Tier2", client);
-	menu.SetTitle(Tier2);
+	menu.SetTitle(sBuffer, sizeof(sBuffer), "%T", "Tier2", client);
 
-	for (int i = 0; i < 12; i++)
-		menu.AddItem(g_sWeaponName[2][i], (SpecifyLanguage(client)) ? g_sItemNameChi[2][i] : g_sItemNameEn[2][i]);
+	for (int i = 0; i < sizeof(g_sItemNamePhrases[2]); i++)
+	{
+		FormatEx(sBuffer, sizeof(sBuffer), "%T", g_sItemNamePhrases[2][i], client);
+		menu.AddItem(g_sWeaponName[2][i], sBuffer);
+	}
 
 	menu.ExitBackButton = true;
 	menu.Display(client, 30);
@@ -487,7 +468,7 @@ void Tier2_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 					CheatCommand(client, line);
 					g_iArrayCount[client]++;
 
-					CPrintToChatAll("%t", "GetItemWithLimit", client, (SpecifyLanguage(client)) ? g_sItemNameChi[2][param2] : g_sItemNameEn[2][param2], g_iArrayCount[client], g_iRequestCount);
+					CPrintToChatAll("%t", "GetItemWithLimit", client, g_sItemNamePhrases[2][param2], g_iArrayCount[client], g_iRequestCount);
 				}
 				else
 				{
@@ -497,7 +478,7 @@ void Tier2_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 			else
 			{
 				CheatCommand(client, line);
-				CPrintToChatAll("%t", "GetItem", client, (SpecifyLanguage(client)) ? g_sItemNameChi[2][param2] : g_sItemNameEn[2][param2]);
+				CPrintToChatAll("%t", "GetItem", client, g_sItemNamePhrases[2][param2]);
 			}
 		}
 
@@ -514,13 +495,15 @@ void Tier2_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 
 void CreateThrowableMenu(int client) 
 {
-	char item[64];
+	char sBuffer[64];
 	Menu menu = new Menu(Throwable_MenuHandler);
-	Format(item, sizeof(item), "%T", "Item", client);
-	menu.SetTitle(item);
+	menu.SetTitle(sBuffer, sizeof(sBuffer), "%T", "Item", client);
 
 	for (int i = 0; i < 18; i++)
-		menu.AddItem(g_sWeaponName[3][i], (SpecifyLanguage(client)) ? g_sItemNameChi[3][i] : g_sItemNameEn[3][i]);
+	{
+		FormatEx(sBuffer, sizeof(sBuffer), "%T", g_sItemNamePhrases[3][i], client);
+		menu.AddItem(g_sWeaponName[3][i], sBuffer);
+	}
 
 	menu.ExitBackButton = true;
 	menu.Display(client, 30);
@@ -545,7 +528,7 @@ void Throwable_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 					CheatCommand(client, line);
 					g_iArrayCount[client]++;
 
-					CPrintToChatAll("%t", "GetItemWithLimit", client, (SpecifyLanguage(client)) ? g_sItemNameChi[3][param2] : g_sItemNameEn[3][param2], g_iArrayCount[client], g_iRequestCount);
+					CPrintToChatAll("%t", "GetItemWithLimit", client, g_sItemNamePhrases[3][param2], g_iArrayCount[client], g_iRequestCount);
 				}
 				else
 				{
@@ -555,7 +538,7 @@ void Throwable_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 			else
 			{
 				CheatCommand(client, line);
-				CPrintToChatAll("%t", "GetItem", client, (SpecifyLanguage(client)) ? g_sItemNameChi[3][param2] : g_sItemNameEn[3][param2]);
+				CPrintToChatAll("%t", "GetItem", client, g_sItemNamePhrases[3][param2]);
 			}
 		}
 
@@ -573,7 +556,7 @@ void Throwable_MenuHandler(Menu menu, MenuAction action, int client, int param2)
 void CreateAdminMenu(int client) 
 {
 	char sBuffer[64];
-	Menu menu = new Menu(admin_MenuHandler);
+	Menu menu = new Menu(AdminMenu_MenuHandler);
 	FormatEx(sBuffer, sizeof(sBuffer), "%T", "AdminMenu", client);
 	menu.SetTitle(sBuffer);
 	
@@ -606,7 +589,7 @@ void CreateAdminMenu(int client)
 	menu.Display(client, 30);
 }
 
-void admin_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
+void AdminMenu_MenuHandler(Menu menu, MenuAction action, int client, int itemNum)
 {
 	switch(action)
 	{
@@ -758,20 +741,6 @@ stock bool IsClientInSafeArea(int client)
 	bool bInCheckPoint = !!(iAttr & NAV_SPAWN_CHECKPOINT);
 
 	return (bInStartPoint || bInCheckPoint);
-}
-
-/**
- * Specifiy sChinese and English that the given client index uses.
- * 
- * @param client		client index to specify.
- * 
- * @return				true if the client is using sChinese, false othwise.
- */
-stock bool SpecifyLanguage(int client)
-{
-	int lang = GetClientLanguage(client);
-
-	return lang == 13 ? true : false;
 }
 
 stock bool IsValidPlayer(int client)

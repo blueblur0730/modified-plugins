@@ -86,7 +86,7 @@
 
 	"GetItemWithLimit"
 	{
-		"#format"	"{1:N},{2:s},{3:d},{4:d}"
+		"#format"	"{1:N},{2:t},{3:d},{4:d}"
 		"en"		"[{green}!{default}] {green}{1} {default}acquired {blue}{2}{default}, Limit: [{blue}{3}{default} / {green}{4}{default}]"
 		"chi"		"[{green}!{default}] {green}{1} {default}获取了 {blue}{2}{default}, 次数: [{blue}{3}{default} / {green}{4}{default}]"
 	}
@@ -100,7 +100,7 @@
 
 	"GetItem"
 	{
-		"#format"	"{1:N},{2:s}"
+		"#format"	"{1:N},{2:t}"
 		"en"		"{blue}[{green}!{default}] {green}{1} {default}acquired {blue}{2}"
 		"chi"		"[{green}!{default}] {green}{1} {default}获取了 {blue}{2}"
 	}
@@ -240,5 +240,323 @@
 	{
 		"en"		"off"
 		"chi"		"关闭"
+	}
+
+	"Phrase_Katana"
+	{
+		"en"		"Katana"
+		"chi"		"武士刀"
+	}
+
+	"Phrase_Axe"
+	{
+		"en"		"Axe"
+		"chi"		"消防斧"
+	}
+
+	"Phrase_Machete"
+	{
+		"en"		"Machete"
+		"chi"		"砍刀"
+	}
+
+	"Phrase_Knife"
+	{
+		"en"		"Knife"
+		"chi"		"小刀"
+	}
+
+	"Phrase_Pistol"
+	{
+		"en"		"Pistol"
+		"chi"		"手枪"
+	}
+
+	"Phrase_Deagle"
+	{
+		"en"		"Deagle"
+		"chi"		"马格南"
+	}
+
+	"Phrase_Chainsaw"
+	{
+		"en"		"Chainsaw"
+		"chi"		"电锯"
+	}
+
+	"Phrase_Frying Pan"
+	{
+		"en"		"Frying Pan"
+		"chi"		"平底锅"
+	}
+
+	"Phrase_BaseballBat"
+	{
+		"en"		"Baseball Bat"
+		"chi"		"棒球棒"
+	}
+
+	"Phrase_Crowbar"
+	{
+		"en"		"Crowbar"
+		"chi"		"撬棍"
+	}
+
+	"Phrase_CricketBat"
+	{
+		"en"		"Cricket Bat"
+		"chi"		"板球棒"
+	}
+
+	"Phrase_Tonfa"
+	{
+		"en"		"Tonfa"
+		"chi"		"警棍"
+	}
+
+	"Phrase_Guitar"
+	{
+		"en"		"Guitar"
+		"chi"		"吉他"
+	}
+
+	"Phrase_GolfClub"
+	{
+		"en"		"Golf Club"
+		"chi"		"高尔夫"
+	}
+
+	"Phrase_Shovel"
+	{
+		"en"		"Shovel"
+		"chi"		"铲子"
+	}
+
+	"Phrase_Pitchfork"
+	{
+		"en"		"Pitchfork"
+		"chi"		"草叉"
+	}
+
+	"Phrase_RiotShield"
+	{
+		"en"		"Riot Shield"
+		"chi"		"防爆盾"
+	}
+
+	"Phrase_PumpShotgun"
+	{
+		"en"		"Pump Shotgun"
+		"chi"		"木喷"
+	}
+
+	"Phrase_ChromeShotgun"
+	{
+		"en"		"Chrome Shotgun"
+		"chi"		"铁喷"
+	}
+
+	"Phrase_Uzi"
+	{
+		"en"		"Uzi"
+		"chi"		"Uzi"
+	}
+
+	"Phrase_Mac-10"
+	{
+		"en"		"Mac-10"
+		"chi"		"Mac-10"
+	}
+
+	"Phrase_MP5"
+	{
+		"en"		"MP5"
+		"chi"		"MP5"
+	}
+
+	"Phrase_Ammo"
+	{
+		"en"		"Ammo"
+		"chi"		"补充子弹"
+	}
+
+	"Phrase_Autoshotgun"
+	{
+		"en"		"Autoshotgun"
+		"chi"		"一代连喷"
+	}
+
+	"Phrase_SPASShotgun"
+	{
+		"en"		"SPAS Shotgun"
+		"chi"		"二代连喷"
+	}
+
+	"Phrase_HuntingRifle"
+	{
+		"en"		"Hunting Rifle"
+		"chi"		"木狙15连"
+	}
+
+	"Phrase_MilitarySniper"
+	{
+		"en"		"Military Sniper"
+		"chi"		"军狙30连"
+	}
+
+	"Phrase_M-16"
+	{
+		"en"		"M-16"
+		"chi"		"M-16"
+	}
+
+	"Phrase_DesertRifle"
+	{
+		"en"		"Desert Rifle"
+		"chi"		"SCAR"
+	}
+
+	"Phrase_AK-47"
+	{
+		"en"		"AK-47"
+		"chi"		"AK-47"
+	}
+
+	"Phrase_SG552"
+	{
+		"en"		"SG552"
+		"chi"		"SG552"
+	}
+
+	"Phrase_Scout"
+	{
+		"en"		"Scout"
+		"chi"		"鸟狙"
+	}
+
+	"Phrase_AWP"
+	{
+		"en"		"AWP"
+		"chi"		"AWP"
+	}
+
+	"Phrase_M60"
+	{
+		"en"		"M60"
+		"chi"		"M60"
+	}
+
+	"Phrase_Grenade Launcher"
+	{
+		"en"		"Grenade Launcher"
+		"chi"		"榴弹发射器"
+	}
+
+	"Phrase_FirstAidKit"
+	{
+		"en"		"First Aid Kit"
+		"chi"		"医疗包"
+	}
+
+	"Phrase_Defibrillator"
+	{
+		"en"		"Defibrillator"
+		"chi"		"除颤仪"
+	}
+
+	"Phrase_Pills"
+	{
+		"en"		"Pills"
+		"chi"		"止痛药"
+	}
+
+	"Phrase_Adrenaline"
+	{
+		"en"		"Adrenaline"
+		"chi"		"肾上腺素"
+	}
+
+	"Phrase_Molotov"
+	{
+		"en"		"Molotov"
+		"chi"		"燃烧瓶"
+	}
+
+	"Phrase_PipeBomb"
+	{
+		"en"		"Pipe Bomb"
+		"chi"		"土制炸弹"
+	}
+
+	"Phrase_BileBomb"
+	{
+		"en"		"Bile Bomb"
+		"chi"		"胆汁瓶"
+	}
+
+	"Phrase_IncendiaryAmmoPack"
+	{
+		"en"		"Incendiary Ammo Pack"
+		"chi"		"燃烧弹药包"
+	}
+
+	"Phrase_ExplosiveAmmoPack"
+	{
+		"en"		"Explosive Ammo Pack"
+		"chi"		"高爆弹药包"
+	}
+
+	"Phrase_Gascan"
+	{
+		"en"		"Gas Can"
+		"chi"		"汽油桶"
+	}
+
+	"Phrase_PropaneTank"
+	{
+		"en"		"Propane Tank"
+		"chi"		"煤气罐"
+	}
+
+	"Phrase_OxygenTank"
+	{
+		"en"		"Oxygen Tank"
+		"chi"		"氧气瓶"
+	}
+
+	"Phrase_Fireworks"
+	{
+		"en"		"Fireworks"
+		"chi"		"烟花箱"
+	}
+
+	"Phrase_ColaBottles"
+	{
+		"en"		"Cola Bottles"
+		"chi"		"可乐瓶"
+	}
+
+	"Phrase_Gnome"
+	{
+		"en"		"Gnome"
+		"chi"		"侏儒"
+	}
+
+	"Phrase_IncendiaryAmmo"
+	{
+		"en"		"Incendiary Ammo"
+		"chi"		"燃烧弹药"
+	}
+
+	"Phrase_ExplosiveAmmo"
+	{
+		"en"		"Explosive Ammo"
+		"chi"		"高爆弹药"
+	}
+
+	"Phrase_LaserSight"
+	{
+		"en"		"Laser Sight"
+		"chi"		"激光瞄准器"
 	}
 }
