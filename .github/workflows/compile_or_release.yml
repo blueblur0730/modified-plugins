@@ -113,7 +113,7 @@ jobs:
           wait
 
       - name: Release
-        uses: xresloader/upload-to-github-release@v1
+        uses: xresloader/upload-to-github-release@v1.6.1
         with:
           file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
           # delete_file: modified-plugins-sm-${{ matrix.sm_version }}-*.zip
