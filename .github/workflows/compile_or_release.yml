@@ -5,11 +5,11 @@ name: Compile or Release
 
 on:
   pull_request:
-    paths: ["source/**", "include/**"]
+    paths: ["source/**", "include/**", "pushtrigger.txt"]
     branches: [master, main, workflow]
 
   push:
-    paths: ["source/**", "include/**"]
+    paths: ["source/**", "include/**", pushtrigger.txt"]
     branches: [master, main, workflow]
 
   workflow_dispatch:
@@ -156,7 +156,7 @@ jobs:
           update_release_body: |
            ## Release Updated On Commit: 
             - (${{ env.GITHUB_SHA_SHORT }}) 
-              - ${{ github.event.commits[0].message }} (by ${{ github.triggering_actor }} in ${{ github.event.push.timestamp }})
+              - ${{ github.event.commits[0].message }} (by ${{ github.event.commits[0].author.name }} in ${{ github.event.commits[0].timestamp }})
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release (Dispatch)
