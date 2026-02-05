@@ -117,9 +117,9 @@ jobs:
       - name: Release (Pull Request)
         if: github.event_name == 'pull_request'
         env:
-          PR_TITLE: ${{ github.event.pull_request.pull_request.title }}
-          PR_AUTHOR: ${{ github.event.pull_request.pull_request.user.name }}
-          PR_AUTHOR_EMAIL: ${{ github.event.pull_request.pull_request.user.email }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.name }}
+          PR_AUTHOR_EMAIL: ${{ github.event.pull_request.user.email }}
 
         uses: xresloader/upload-to-github-release@v1.6.1
         with:
@@ -132,8 +132,10 @@ jobs:
           update_latest_release: true
           overwrite: true
           default_release_name: modified-plugins
-          update_release_body: "# Release Updated On Pull Request:
-           - ${{ github.event.pull_request.number }} ${{ env.PR_TITLE }} (by ${{ env.PR_AUTHOR }} @${{ env.PR_AUTHOR_EMAIL }})\n with number of commits: ${{ github.event.pull_request.commits }}"
+          update_release_body: | 
+           # Release Updated On Pull Request:
+            - ${{ github.event.pull_request.number }} ${{ env.PR_TITLE }} (by ${{ env.PR_AUTHOR }} @${{ env.PR_AUTHOR_EMAIL }})\n with number of commits: ${{ github.event.pull_request.commits }}
+
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release (Push)
@@ -149,8 +151,9 @@ jobs:
           update_latest_release: true
           overwrite: true
           default_release_name: modified-plugins
-          update_release_body: "# Release Updated On Commit: 
-           - (${{ env.GITHUB_SHA_SHORT }}) ${{ github.event.push.commits[0].message }} (by ${{ github.event.push.author.name }} in ${{ github.event.push.timestamp })"
+          update_release_body: |
+           # Release Updated On Commit: 
+            - (${{ env.GITHUB_SHA_SHORT }}) ${{ github.event.push.commits[0].message }} (by ${{ github.event.push.author.name }} in ${{ github.event.push.timestamp }})
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release (Dispatch)
@@ -166,7 +169,8 @@ jobs:
           update_latest_release: true
           overwrite: true
           default_release_name: modified-plugins
-          update_release_body: "# Release Updated On Manually Triggered Workflow
-           - (${{ env.GITHUB_SHA_SHORT }}) (by ${{ github.triggering_actor }})"
+          update_release_body: |
+           # Release Updated On Manually Triggered Workflow
+            - (${{ env.GITHUB_SHA_SHORT }}) (by ${{ github.triggering_actor }})
           token: ${{ secrets.GITHUB_TOKEN }}
 
