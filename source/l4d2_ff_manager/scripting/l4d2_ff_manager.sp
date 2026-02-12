@@ -193,8 +193,7 @@ WeaponData_t g_WeaponData;
 int			 g_iDamageCache[MAXPLAYERS + 1][MAXPLAYERS + 1];	// Used to temporarily store Friendly Fire Damage between teammates
 Handle		 g_hFFTimer[MAXPLAYERS + 1] = { null, ... };		// Used to be able to disable the FF timer when they do more FF
 
-#define PLUGIN_VERSION "r2.0"
-
+#define PLUGIN_VERSION "r2.0.2"
 public Plugin myinfo =
 {
 	name = "[L4D2] Friendly Fire Manager",
@@ -293,7 +292,7 @@ public void OnPluginEnd()
 
 public void OnClientPutInServer(int client)
 {
-	if (!IsClientInGame(client) || GetClientTeam(client) != 2)
+	if (!IsClientInGame(client))
 		return;
 
 	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
