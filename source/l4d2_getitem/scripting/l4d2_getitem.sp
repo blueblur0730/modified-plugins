@@ -118,7 +118,7 @@ float g_flLastTime[MAXPLAYERS + 1] = {0.0, ...};
 bool g_bIsRoundAlive = false;
 Handle g_hTimer = null;
 
-#define PLUGIN_VERSION    "1.7.2"
+#define PLUGIN_VERSION    "1.7.3"
 public Plugin myinfo =
 {
     name = "[L4D2] StartUp Item acquisition",
@@ -497,6 +497,9 @@ void CreateTier2Menu(int client)
 
     for (int i = 0; i < sizeof(g_sItemNamePhrases[2]); i++)
     {
+        if (g_sItemNamePhrases[2][i][0] == '\0')
+            continue;
+
         FormatEx(sBuffer, sizeof(sBuffer), "%T", g_sItemNamePhrases[2][i], client);
         menu.AddItem(g_sWeaponName[2][i], sBuffer);
     }
