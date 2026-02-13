@@ -38,7 +38,7 @@ enum struct WeaponAmmo_t
 
 ArrayList g_hWeaponAmmoList;
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 public Plugin myinfo =
 {
 	name = "[L4D2] Max Ammo",
@@ -52,6 +52,7 @@ bool g_bLateLoad = false;
 public APLRes AskPluginLoad2(Handle hMyself, bool bLate, char[] sError, int iErrMax)
 {
 	g_bLateLoad = bLate;
+    RegPluginLibrary("l4d2_max_ammo");
 	return APLRes_Success;
 }
 
