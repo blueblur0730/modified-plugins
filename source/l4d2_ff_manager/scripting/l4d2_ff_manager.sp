@@ -8,12 +8,14 @@
 #include <colors>
 
 #define CONFIG_PATH "configs/l4d2_ff_manager.cfg"
+#define L4D2_MAXPLAYERS 32
 
 ConVar
 	g_hCvar_Enable,
 	g_hCvar_ShouldBlockFF,
 	g_hCvar_AnnounceType,
-	g_hCvar_EnableModifier;
+	g_hCvar_EnableModifier,
+	g_hCvar_Interval;
 
 char g_sConfigPath[64];
 
@@ -190,10 +192,73 @@ enum struct WeaponData_t
 }
 WeaponData_t g_WeaponData;
 
-int			 g_iDamageCache[MAXPLAYERS + 1][MAXPLAYERS + 1];	// Used to temporarily store Friendly Fire Damage between teammates
-Handle		 g_hFFTimer[MAXPLAYERS + 1] = { null, ... };		// Used to be able to disable the FF timer when they do more FF
+enum struct CountdownTimer
+{
+	void Init()
+	{
+		this.m_timestamp = -1.0;
+		this.m_duration = 0.0;
+	}
 
-#define PLUGIN_VERSION "r2.0.2"
+	float Now()
+	{
+		return GetGameTime(); // gpGlobals->curtime
+	}
+
+	void Reset()
+	{
+		this.m_timestamp = this.Now() + this.m_duration;
+	}		
+
+	void Start( float duration )
+	{
+		this.m_timestamp = this.Now() + duration;
+		this.m_duration = duration;
+	}
+
+	void Invalidate()
+	{
+		this.m_timestamp = -1.0;
+	}		
+
+	bool HasStarted()
+	{
+		return (this.m_timestamp > 0.0);
+	}
+
+	bool IsElapsed()
+	{
+		return (this.Now() > this.m_timestamp);
+	}
+
+	float GetElapsedTime()
+	{
+		return this.Now() - this.m_timestamp + this.m_duration;
+	}
+
+	float GetRemainingTime()
+	{
+		return (this.m_timestamp - this.Now());
+	}
+
+	/// return original countdown time
+	float GetCountdownDuration()
+	{
+		return (this.m_timestamp > 0.0) ? this.m_duration : 0.0;
+	}
+
+	float m_duration;
+	float m_timestamp;
+}
+
+enum struct DamageCache_t
+{
+	int m_iDamage[L4D2_MAXPLAYERS + 1];
+	CountdownTimer m_timer[L4D2_MAXPLAYERS + 1];
+} 
+DamageCache_t g_DamageCache[L4D2_MAXPLAYERS + 1];
+
+#define PLUGIN_VERSION "r3.0.0"
 public Plugin myinfo =
 {
 	name = "[L4D2] Friendly Fire Manager",
@@ -222,18 +287,16 @@ public void OnPluginStart()
 	LoadTranslation("l4d2_ff_manager.phrases");
 
 	CreateConVar("l4d2_ff_manager_version", PLUGIN_VERSION, "Plugin Version", FCVAR_NOTIFY | FCVAR_DONTRECORD);
-	g_hCvar_Enable		   = CreateConVar("l4d2_ff_manager_enable", "1", "0=Plugin off, 1=Plugin on.", _, true, 0.0, true, 1.0);
+	g_hCvar_Enable         = CreateConVar("l4d2_ff_manager_enable", "1", "0=Plugin off, 1=Plugin on.", _, true, 0.0, true, 1.0);
 	g_hCvar_AnnounceType   = CreateConVar("l4d2_ff_manager_type", "1", "Changes how ff announce displays FF damage (0: Disable, 1:In chat; 2: In Hint Box; 3: In center text)", _, true, 0.0, true, 3.0);
 	g_hCvar_ShouldBlockFF  = CreateConVar("l4d2_ff_manager_blockff", "0", "0=keep FF damage, 1=block. If off, also turn off notice.", _, true, 0.0, true, 1.0);
 	g_hCvar_EnableModifier = CreateConVar("l4d2_ff_manager_enable_modifier", "1", "0=Disable FF Modifier, 1=Enable FF Modifier", _, true, 0.0, true, 1.0);
+	g_hCvar_Interval       = CreateConVar("l4d2_ff_manager_interval", "1.0", "Interval in seconds to check to count FF damage.", _, true, 0.1);
 
 	RegAdminCmd("sm_reload_ff", Command_ReloadFF, ADMFLAG_CONFIG, "Reloads the FF config file.");
 	RegAdminCmd("sm_ff_config", Command_FFConfig, ADMFLAG_CONFIG, "Displays the FF config file.");
 
 	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
-	HookEvent("player_hurt_concise", Event_HurtConcise, EventHookMode_Post);
-	HookEvent("player_incapacitated_start", Event_IncapacitatedStart, EventHookMode_Post);
-
 	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
 	HookEvent("round_end", Event_RoundEnd, EventHookMode_PostNoCopy);				  // trigger twice in versus mode, one when all survivors wipe out or make it to saferom, one when first round ends (second round_start begins).
 	HookEvent("map_transition", Event_RoundEnd, EventHookMode_PostNoCopy);			  // all survivors make it to saferoom, and server is about to change next level in coop mode (does not trigger round_end)
@@ -266,6 +329,9 @@ Action Command_FFConfig(int client, int args)
 		DamageData_t data;
 		g_WeaponData.hMapGun.GetArray(sWeaponName, data, sizeof(DamageData_t));
 		PrintToServer("[FF Config] Gun: %s => Basic Damage: %d, Difficulty Multipler: %d, Range: %d, Range Modifier: %.02f, Gain Range: %d", sWeaponName, data.iBasic, data.iDifficultyMultipler, data.iRange, data.flRangeModifier, data.iGainRange);
+
+		if (client > 0)
+			PrintToConsole(client, "[FF Config] Gun: %s => Basic Damage: %d, Difficulty Multipler: %d, Range: %d, Range Modifier: %.02f, Gain Range: %d", sWeaponName, data.iBasic, data.iDifficultyMultipler, data.iRange, data.flRangeModifier, data.iGainRange);
 	}
 
 	for (int j = 0; j < hMeleeSnapshot.Length; j++)
@@ -276,7 +342,13 @@ Action Command_FFConfig(int client, int args)
 		DamageData_t data;
 		g_WeaponData.hMapMelee.GetArray(sWeaponName, data, sizeof(DamageData_t));
 		PrintToServer("[FF Config] Melee: %s => Basic Damage: %d, Difficulty Multipler: %d", sWeaponName, data.iBasic, data.iDifficultyMultipler);
+
+		if (client > 0)
+			PrintToConsole(client, "[FF Config] Melee: %s => Basic Damage: %d, Difficulty Multipler: %d", sWeaponName, data.iBasic, data.iDifficultyMultipler);
 	}
+
+	if (client > 0)
+		PrintToChat(client, "See console for the results.");
 
 	delete hGunSnapshot;
 	delete hMeleeSnapshot;
@@ -303,6 +375,35 @@ public void OnClientPutInServer(int client)
 public void OnMapEnd()
 {
 	ResetTimer();
+}
+
+// will this consume more than timer? I like it though..... >.<
+public void OnGameFrame()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || GetClientTeam(i) != 2)
+			continue;
+
+		for (int j = 1; j <= MaxClients; j++)
+		{
+			if (j == i)
+				continue;
+
+			if (!IsClientInGame(j) || GetClientTeam(j) != 2)
+				continue;
+
+			if (g_DamageCache[i].m_iDamage[j] == 0)
+				continue;
+
+			if (g_DamageCache[i].m_timer[j].HasStarted() && g_DamageCache[i].m_timer[j].IsElapsed())
+			{
+				AnnounceFF(i, j);
+				g_DamageCache[i].m_timer[j].Invalidate();
+				g_DamageCache[i].m_iDamage[j] = 0;
+			}
+		}
+	}
 }
 
 /**
@@ -359,15 +460,43 @@ Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, in
 					if (flRangeDecayedDamage != -1.0)
 					{
 						damage = flRangeDecayedDamage;
-						return Plugin_Changed;
 					}
 					else
 					{
 						damage = flDamage;
-						return Plugin_Changed;
 					}
+
+					if (g_DamageCache[attacker].m_timer[victim].HasStarted())
+					{
+						if (!g_DamageCache[attacker].m_timer[victim].IsElapsed())
+						{
+							g_DamageCache[attacker].m_timer[victim].Reset();
+							g_DamageCache[attacker].m_iDamage[victim] += RoundToNearest(damage);
+						}	
+					}
+					else
+					{
+						g_DamageCache[attacker].m_timer[victim].Start(g_hCvar_Interval.FloatValue);
+						g_DamageCache[attacker].m_iDamage[victim] = RoundToNearest(damage);
+					}
+
+					return Plugin_Changed;
 				}
 			}
+		}
+
+		if (g_DamageCache[attacker].m_timer[victim].HasStarted())
+		{
+			if (!g_DamageCache[attacker].m_timer[victim].IsElapsed())
+			{
+				g_DamageCache[attacker].m_timer[victim].Reset();
+				g_DamageCache[attacker].m_iDamage[victim] += RoundToNearest(damage);
+			}	
+		}
+		else
+		{
+			g_DamageCache[attacker].m_timer[victim].Start(g_hCvar_Interval.FloatValue);
+			g_DamageCache[attacker].m_iDamage[victim] = RoundToNearest(damage);
 		}
 	}
 	else
@@ -416,6 +545,21 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 					if (flDamage != -1.0)
 					{
 						damage = flDamage;
+
+						if (g_DamageCache[attacker].m_timer[victim].HasStarted())
+						{
+							if (!g_DamageCache[attacker].m_timer[victim].IsElapsed())
+							{
+								g_DamageCache[attacker].m_timer[victim].Reset();
+								g_DamageCache[attacker].m_iDamage[victim] += RoundToNearest(damage);
+							}	
+						}
+						else
+						{
+							g_DamageCache[attacker].m_timer[victim].Start(g_hCvar_Interval.FloatValue);
+							g_DamageCache[attacker].m_iDamage[victim] = RoundToNearest(damage);
+						}
+
 						return Plugin_Changed;
 					}
 				}
@@ -438,15 +582,43 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 					if (flRangeDecayedDamage != -1.0)
 					{
 						damage = flRangeDecayedDamage;
-						return Plugin_Changed;
 					}
 					else
 					{
 						damage = flDamage;
-						return Plugin_Changed;
 					}
+
+					if (g_DamageCache[attacker].m_timer[victim].HasStarted())
+					{
+						if (!g_DamageCache[attacker].m_timer[victim].IsElapsed())
+						{
+							g_DamageCache[attacker].m_timer[victim].Reset();
+							g_DamageCache[attacker].m_iDamage[victim] += RoundToNearest(damage);
+						}	
+					}
+					else
+					{
+						g_DamageCache[attacker].m_timer[victim].Start(g_hCvar_Interval.FloatValue);
+						g_DamageCache[attacker].m_iDamage[victim] = RoundToNearest(damage);
+					}
+
+					return Plugin_Changed;
 				}
 			}
+		}
+
+		if (g_DamageCache[attacker].m_timer[victim].HasStarted())
+		{
+			if (!g_DamageCache[attacker].m_timer[victim].IsElapsed())
+			{
+				g_DamageCache[attacker].m_timer[victim].Reset();
+				g_DamageCache[attacker].m_iDamage[victim] += RoundToNearest(damage);
+			}	
+		}
+		else
+		{
+			g_DamageCache[attacker].m_timer[victim].Start(g_hCvar_Interval.FloatValue);
+			g_DamageCache[attacker].m_iDamage[victim] = RoundToNearest(damage);
 		}
 	}
 	else
@@ -510,151 +682,43 @@ void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		CPrintToChatAll("%t", "KILL", attacker, victim);
 }
 
-void Event_HurtConcise(Event event, const char[] name, bool dontBroadcast)
-{
-	if (g_hCvar_ShouldBlockFF.BoolValue || !g_hCvar_Enable.BoolValue)
-		return;
-
-	int attacker = event.GetInt("attackerentid");
-	int victim	 = GetClientOfUserId(event.GetInt("userid"));
-
-	if ((attacker <= 0 || attacker > MaxClients) || (victim <= 0 || victim > MaxClients))
-		return;
-
-	if (attacker == victim)
-		return;
-
-	if (!IsClientInGame(attacker) || !IsClientInGame(victim))
-		return;
-
-	if (IsFakeClient(attacker))
-		return;
-
-	if (GetClientTeam(attacker) != 2 || GetClientTeam(victim) != 2)
-		return;
-
-	// If the player is already friendly firing teammates, resets the announce timer and adds to the damage
-	int damage = event.GetInt("dmg_health");
-	if (g_hFFTimer[attacker])
-	{
-		g_iDamageCache[attacker][victim] += damage;
-		//PrintToServer("Adding damage to cache. g_iDamageCache[%d][%d] = %d", attacker, victim, g_iDamageCache[attacker][victim]);
-		g_hFFTimer[attacker] = null;
-		delete g_hFFTimer[attacker];
-		g_hFFTimer[attacker] = CreateTimer(1.0, Timer_AnnounceFF, attacker);
-	}
-	// If it's the first friendly fire by that player, it will start the announce timer and store the damage done.
-	else
-	{
-		g_iDamageCache[attacker][victim] = damage;
-		//PrintToServer("Adding damage to cache. g_iDamageCache[%d][%d] = %d", attacker, victim, g_iDamageCache[attacker][victim]);
-		g_hFFTimer[attacker]			 = CreateTimer(1.0, Timer_AnnounceFF, attacker);
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (i != attacker && i != victim)
-				g_iDamageCache[attacker][i] = 0;
-		}
-	}
-}
-
-void Event_IncapacitatedStart(Event event, const char[] name, bool dontBroadcast)
-{
-	if (g_hCvar_ShouldBlockFF.BoolValue || !g_hCvar_Enable.BoolValue)
-		return;
-
-	int victim	 = GetClientOfUserId(event.GetInt("userid"));
-	int attacker = GetClientOfUserId(event.GetInt("attacker"));
-
-	if ((attacker <= 0 || attacker > MaxClients) || (victim <= 0 || victim > MaxClients))
-		return;
-
-	if (attacker == victim)
-		return;
-
-	if (!IsClientInGame(attacker) || !IsClientInGame(victim))
-		return;
-
-	if (IsFakeClient(attacker))
-		return;
-
-	if (GetClientTeam(attacker) != 2 || GetClientTeam(victim) != 2)
-		return;
-
-	int damage = GetClientHealth(victim) + GetSurvivorTempHealth(victim);
-
-	// If the player is already friendly firing teammates, resets the announce timer and adds to the damage
-	if (g_hFFTimer[attacker])
-	{
-		g_iDamageCache[attacker][victim] += damage;
-		g_hFFTimer[attacker] = null;
-		delete g_hFFTimer[attacker];
-		g_hFFTimer[attacker] = CreateTimer(1.0, Timer_AnnounceFF, attacker);
-	}
-	// If it's the first friendly fire by that player, it will start the announce timer and store the damage done.
-	else
-	{
-		g_iDamageCache[attacker][victim] = damage;
-		g_hFFTimer[attacker]			 = CreateTimer(1.0, Timer_AnnounceFF, attacker);
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (i != attacker && i != victim)
-				g_iDamageCache[attacker][i] = 0;
-		}
-	}
-}
-
-// Called if the attacker did not friendly fire recently, and announces all FF they did
-Action Timer_AnnounceFF(Handle timer, int attackerc)
+void AnnounceFF(int attacker, int victim)
 {
 	char victimName[128];
 	char attackerName[128];
 
-	IsClientInGame(attackerc) ? view_as<int>(GetClientName(attackerc, attackerName, sizeof(attackerName))) : Format(attackerName, sizeof(attackerName), "N/A");
+	IsClientInGame(attacker) ? 
+	view_as<int>(GetClientName(attacker, attackerName, sizeof(attackerName))) : 
+	Format(attackerName, sizeof(attackerName), "N/A");
 
-	for (int i = 1; i <= MaxClients; i++)
+	GetClientName(victim, victimName, sizeof(victimName));
+	switch (g_hCvar_AnnounceType.IntValue)
 	{
-		if (!IsClientInGame(i) || GetClientTeam(i) != 2)
-			continue;
-
-		//PrintToServer("Checking FF for %d: g_iDamageCache[%d][%d] = %d", i, attackerc, i, g_iDamageCache[attackerc][i]);
-		if (!g_iDamageCache[attackerc][i] || attackerc == i)
-			continue;
-
-		GetClientName(i, victimName, sizeof(victimName));
-		switch (g_hCvar_AnnounceType.IntValue)
+		case 1:
 		{
-			case 1:
-			{
-				CPrintToChat(attackerc, "%t", "FF_dealt_coloured", g_iDamageCache[attackerc][i], victimName);
-				CPrintToChat(i, "%t", "FF_receive_coloured", attackerName, g_iDamageCache[attackerc][i]);
-			}
-			case 2:
-			{
-				PrintHintText(attackerc, "%t", "FF_dealt", g_iDamageCache[attackerc][i], victimName);
-				PrintHintText(i, "%t", "FF_receive", g_iDamageCache[attackerc][i]);
-			}
-			case 3:
-			{
-				PrintCenterText(attackerc, "%t", "FF_dealt", g_iDamageCache[attackerc][i], victimName);
-				PrintCenterText(i, "%t", "FF_receive", attackerName, g_iDamageCache[attackerc][i]);
-			}
+			CPrintToChat(attacker, "%t", "FF_dealt_coloured", g_DamageCache[attacker].m_iDamage[victim], victimName);
+			CPrintToChat(victim, "%t", "FF_receive_coloured", attackerName, g_DamageCache[attacker].m_iDamage[victim]);
 		}
-
-		g_iDamageCache[attackerc][i] = 0;
+		case 2:
+		{
+			PrintHintText(attacker, "%t", "FF_dealt", g_DamageCache[attacker].m_iDamage[victim], victimName);
+			PrintHintText(victim, "%t", "FF_receive", g_DamageCache[attacker].m_iDamage[victim]);
+		}
+		case 3:
+		{
+			PrintCenterText(attacker, "%t", "FF_dealt", g_DamageCache[attacker].m_iDamage[victim], victimName);
+			PrintCenterText(victim, "%t", "FF_receive", attackerName, g_DamageCache[attacker].m_iDamage[victim]);
+		}
 	}
-
-	g_hFFTimer[attackerc] = null;
-	return Plugin_Continue;
 }
 
 void ResetTimer()
 {
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (g_hFFTimer[i])
+		for (int j = 1; j <= MaxClients; j++)
 		{
-			g_hFFTimer[i] = null;
-			//delete g_hFFTimer[i];
+			g_DamageCache[i].m_timer[j].Invalidate();
 		}
 	}
 }
