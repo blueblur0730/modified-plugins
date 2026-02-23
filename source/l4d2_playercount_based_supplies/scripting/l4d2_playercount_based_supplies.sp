@@ -26,7 +26,7 @@
  * Spectators are not counted.
  */
 
-#define PLUGIN_VERSION "r1.3"
+#define PLUGIN_VERSION "r1.3.1"
 
 public Plugin myinfo =
 {
@@ -68,7 +68,7 @@ public void OnPluginStart()
 
 void OnMultipleTypeChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-	g_iMultipleType = convar.IntValue;
+	g_iMultipleType = g_hCvar_MultipleType.IntValue;
 }
 
 Handle g_hTimer = null;
