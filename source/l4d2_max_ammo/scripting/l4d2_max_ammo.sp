@@ -4,6 +4,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
+#include <left4dhooks>
 #include <l4d2util_weapons>
 
 static const char g_sShortName[6][5][] = 
@@ -28,8 +29,6 @@ static const char g_sShortName[6][5][] =
     },
 };
 
-int g_iInitAmmo[17] = {90, 90, 72, 72, 650, 650, 650, 180, 150, 150, 150, 360, 400, 360, 360, 150, 30};
-
 enum struct WeaponAmmo_t
 {
     int weapon;
@@ -38,7 +37,7 @@ enum struct WeaponAmmo_t
 
 ArrayList g_hWeaponAmmoList;
 
-#define PLUGIN_VERSION "1.1"
+#define PLUGIN_VERSION "1.2"
 public Plugin myinfo =
 {
 	name = "[L4D2] Max Ammo",
@@ -60,6 +59,7 @@ public void OnPluginStart()
 {
     CreateConVar("l4d2_max_ammo_version", PLUGIN_VERSION, "L4D2 Max Ammo version", FCVAR_NOTIFY | FCVAR_DONTRECORD);
 
+    int iInitAmmo[17] = {90, 90, 72, 72, 650, 650, 650, 180, 150, 150, 150, 360, 400, 360, 360, 150, 30};
     char sName[32], sDesc[64], sNum[16];
     for (int i = 0; i < sizeof(g_sShortName); i++)
     {
@@ -73,13 +73,13 @@ public void OnPluginStart()
 
             FormatEx(sName, sizeof(sName), "l4d2_max_ammo_%s", g_sShortName[i][j]);
             FormatEx(sDesc, sizeof(sDesc), "Max ammo for %s weapon.", g_sShortName[i][j]);
-            IntToString(g_iInitAmmo[index], sNum, sizeof(sNum));
+            IntToString(iInitAmmo[index], sNum, sizeof(sNum));
             CreateConVar(sName, sNum, sDesc, _, true, 0.0);
         }   
     }
 
     g_hWeaponAmmoList = new ArrayList(sizeof(WeaponAmmo_t));
-    HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy); 
+    HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
 
     if (g_bLateLoad)
     {
@@ -99,7 +99,6 @@ public void OnClientPutInServer(int client)
 		return;
 
     SDKHook(client, SDKHook_WeaponEquipPost, OnWeaponEquipPost);
-    SDKHook(client, SDKHook_WeaponDropPost, OnWeaponDropPost);
 }
 
 public void OnEntityDestroyed(int entity)
@@ -145,7 +144,7 @@ void OnWeaponEquipPost(int client, int weapon)
     data.WriteCell(weapon);
     data.WriteCell(client);
     RequestFrame(OnNextFrame_OnEquipWeaponPost, data);  // m_iAmmo needs to be set on the next frame.
-    PrintToServer("Client %d equipped weapon %d", client, weapon);
+    //PrintToServer("Client %d equipped weapon %d", client, weapon);
 }
 
 void OnNextFrame_OnEquipWeaponPost(DataPack data)
@@ -155,14 +154,16 @@ void OnNextFrame_OnEquipWeaponPost(DataPack data)
     int client = data.ReadCell();
     delete data;
 
-   int wepref = EntIndexToEntRef(weapon);
-    int index = g_hWeaponAmmoList.FindValue(wepref, WeaponAmmo_t::weapon);
+    int index = g_hWeaponAmmoList.FindValue(EntIndexToEntRef(weapon), WeaponAmmo_t::weapon);
     if (index != -1)
     {
         WeaponAmmo_t weaponAmmo;
         g_hWeaponAmmoList.GetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
         int maxAmmo = weaponAmmo.currentAmmo;
+
         GetOrSetPlayerAmmo(client, weapon, maxAmmo);
+        g_hWeaponAmmoList.SetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
+
         //PrintToServer("Client %d max ammo for weapon %d is %d", client, weapon, maxAmmo);
     }
     else
@@ -176,36 +177,51 @@ void OnNextFrame_OnEquipWeaponPost(DataPack data)
         GetOrSetPlayerAmmo(client, weapon, maxAmmo);
 
         WeaponAmmo_t weaponAmmo;
-        weaponAmmo.weapon = wepref;
+        weaponAmmo.weapon = EntIndexToEntRef(weapon);
         weaponAmmo.currentAmmo = maxAmmo;
         g_hWeaponAmmoList.PushArray(weaponAmmo);
+        SDKHook(weapon, SDKHook_ReloadPost, OnWeaponReloadPost);
         //PrintToServer("Init. Client %d max ammo for weapon %d is %d", client, weapon, maxAmmo);
     }
 }
 
-void OnWeaponDropPost(int client, int weapon)
+void OnWeaponReloadPost(int weapon, bool bSuccessful)
 {
+    if (!bSuccessful)
+        return;
+
+    int client = GetEntPropEnt(weapon, Prop_Send, "m_hOwner");
     if (client <= 0 || client > MaxClients)
         return;
 
     if (!IsClientInGame(client) || GetClientTeam(client) != 2)
         return;
 
-    if (!IsValidEdict(weapon))
+    if (weapon == -1 || !IsValidEdict(weapon))
         return;
 
     if (!IsTargetWeapon(weapon))
         return;
 
-    int wepref = EntIndexToEntRef(weapon);
-    int index = g_hWeaponAmmoList.FindValue(wepref, WeaponAmmo_t::weapon);
+    // we can actually vmthook FinshReload here but it's way too nasty.
+    int index = g_hWeaponAmmoList.FindValue(EntIndexToEntRef(weapon), WeaponAmmo_t::weapon);
     if (index != -1)
     {
         WeaponAmmo_t weaponAmmo;
         g_hWeaponAmmoList.GetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
+
+        // currentAmmo = clip + backup.
         int currentAmmo = GetOrSetPlayerAmmo(client, weapon, -1);
-        weaponAmmo.currentAmmo = currentAmmo;
-        //PrintToServer("Client %d dropped weapon %d, current ammo is %d", client, weapon, currentAmmo);
+        int currentClip = GetEntProp(weapon, Prop_Send, "m_iClip1");
+
+        GetEdictClassname(weapon, weaponName, sizeof(weaponName));
+        int maxClip = L4D2_GetIntWeaponAttribute(weaponName, L4D2IWA_ClipSize);
+
+        int clipShot = maxClip - currentClip;
+        int finishAmmo = currentAmmo - clipShot;
+    
+        weaponAmmo.currentAmmo = finishAmmo;
+        //PrintToServer("Client %d reloaded weapon %d, current ammo is %d", client, weapon, finishAmmo);
         g_hWeaponAmmoList.SetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
     }
 }
