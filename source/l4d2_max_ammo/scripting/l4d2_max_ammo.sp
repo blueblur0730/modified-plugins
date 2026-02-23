@@ -214,6 +214,7 @@ void OnWeaponReloadPost(int weapon, bool bSuccessful)
         int currentAmmo = GetOrSetPlayerAmmo(client, weapon, -1);
         int currentClip = GetEntProp(weapon, Prop_Send, "m_iClip1");
 
+        char weaponName[32];
         GetEdictClassname(weapon, weaponName, sizeof(weaponName));
         int maxClip = L4D2_GetIntWeaponAttribute(weaponName, L4D2IWA_ClipSize);
 
