@@ -7,7 +7,7 @@ bool g_bSwitched = false;
 
 void _map_loop_OnPluginStart()
 {
-    RegConsoleCmdEx("sm_preservemap", Cmd_PreserveMap, "Preserve map.");
+    RegConsoleCmdEx("sm_nominate", Cmd_PreserveMap, "Nominate map.");
 }
 
 MRESReturn DTR_CDirector_OnFinishScenarioExit()
