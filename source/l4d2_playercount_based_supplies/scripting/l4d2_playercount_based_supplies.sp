@@ -21,7 +21,7 @@ public Plugin myinfo =
 {
 	name = "[L4D2] Player Count Based Supplies",
 	author = "奈, blueblur",
-	description = "Multiple the count one supply item can have based on player count.",
+	description = "Multiple the supply item's count based on then number of player count.",
 	version	= PLUGIN_VERSION,
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
