@@ -26,7 +26,7 @@
  * Spectators are not counted.
  */
 
-#define PLUGIN_VERSION "r1.3.1"
+#define PLUGIN_VERSION "r1.3.2"
 
 public Plugin myinfo =
 {
@@ -213,9 +213,9 @@ void SetMedicCount()
 					DispatchKeyValueInt(ent, "count", iMultiple);
 				}
 			}
-
-			CPrintToChatAll("%t", "Changed", iMultiple);
 		}
+
+		CPrintToChatAll("%t", "Changed", iMultiple);
 	}
 }
 
