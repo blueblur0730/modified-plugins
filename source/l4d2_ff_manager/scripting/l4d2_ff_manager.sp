@@ -258,7 +258,7 @@ enum struct DamageCache_t
 } 
 DamageCache_t g_DamageCache[L4D2_MAXPLAYERS + 1];
 
-#define PLUGIN_VERSION "r3.0.0"
+#define PLUGIN_VERSION "r3.1.0"
 public Plugin myinfo =
 {
 	name = "[L4D2] Friendly Fire Manager",
@@ -437,18 +437,16 @@ Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, in
 
 	if (!g_hCvar_ShouldBlockFF.BoolValue)
 	{
-		if (g_hCvar_EnableModifier.BoolValue)
+		// we left shotguns to alive callback only.
+		int wepid = IdentifyWeapon(weapon);
+		if (wepid != WEPID_MELEE && wepid != WEPID_PUMPSHOTGUN && wepid != WEPID_AUTOSHOTGUN && wepid != WEPID_SHOTGUN_CHROME && wepid != WEPID_SHOTGUN_SPAS)
 		{
-			// we left shotguns to alive callback only.
-			int wepid = IdentifyWeapon(weapon);
-			if (wepid != WEPID_MELEE && wepid != WEPID_PUMPSHOTGUN && wepid != WEPID_AUTOSHOTGUN && wepid != WEPID_SHOTGUN_CHROME && wepid != WEPID_SHOTGUN_SPAS)
+			if (g_hCvar_EnableModifier.BoolValue)
 			{
 				char sName[64];
 				GetWeaponName(wepid, sName, sizeof(sName));
 
 				float flDamage = g_WeaponData.GetGunDamage(sName);
-				//PrintToServer("Gun: %s, Damage: %.2f, Original Damage: %.2f", sName, flDamage, damage);
-
 				if (flDamage != -1.0)
 				{
 					float vecMyPosition[3], vecLength[3];
@@ -456,7 +454,8 @@ Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, in
 					MakeVectorFromPoints(vecMyPosition, damagePosition, vecLength);
 					float flDistance = GetVectorLength(vecLength);
 					float flRangeDecayedDamage = g_WeaponData.GetRangeDecayedDamage(flDamage, flDistance, sName);
-					//PrintToServer("Got Rounded Range Decayed Damage: %.2f", flRangeDecayedDamage);
+
+					//PrintToServer("Gun: %s, Damage: %.2f, Original Damage: %.2f, Range Decayed Damage: %.2f", sName, flDamage, damage, flRangeDecayedDamage);
 					if (flRangeDecayedDamage != -1.0)
 					{
 						damage = flRangeDecayedDamage;
@@ -466,37 +465,20 @@ Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, in
 						damage = flDamage;
 					}
 
-					if (g_DamageCache[attacker].m_timer[victim].HasStarted())
-					{
-						if (!g_DamageCache[attacker].m_timer[victim].IsElapsed())
-						{
-							g_DamageCache[attacker].m_timer[victim].Reset();
-							g_DamageCache[attacker].m_iDamage[victim] += RoundToNearest(damage);
-						}	
-					}
-					else
-					{
-						g_DamageCache[attacker].m_timer[victim].Start(g_hCvar_Interval.FloatValue);
-						g_DamageCache[attacker].m_iDamage[victim] = RoundToNearest(damage);
-					}
-
+					CheckTimer(damage, attacker, victim);
 					return Plugin_Changed;
 				}
+				else
+				{
+					CheckTimer(damage, attacker, victim);
+					return Plugin_Continue;
+				}
 			}
-		}
-
-		if (g_DamageCache[attacker].m_timer[victim].HasStarted())
-		{
-			if (!g_DamageCache[attacker].m_timer[victim].IsElapsed())
+			else
 			{
-				g_DamageCache[attacker].m_timer[victim].Reset();
-				g_DamageCache[attacker].m_iDamage[victim] += RoundToNearest(damage);
-			}	
-		}
-		else
-		{
-			g_DamageCache[attacker].m_timer[victim].Start(g_hCvar_Interval.FloatValue);
-			g_DamageCache[attacker].m_iDamage[victim] = RoundToNearest(damage);
+				CheckTimer(damage, attacker, victim);
+				return Plugin_Continue;
+			}
 		}
 	}
 	else
@@ -524,13 +506,13 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 
 	if (!g_hCvar_ShouldBlockFF.BoolValue)
 	{
-		if (g_hCvar_EnableModifier.BoolValue)
+		int wepid = IdentifyWeapon(weapon);
+		if (wepid == WEPID_MELEE)
 		{
-			int wepid = IdentifyWeapon(weapon);
-			if (wepid == WEPID_MELEE)
+			int meleeid = IdentifyMeleeWeapon(weapon);
+			if (meleeid != WEPID_MELEE_NONE)
 			{
-				int meleeid = IdentifyMeleeWeapon(weapon);
-				if (meleeid != WEPID_MELEE_NONE)
+				if (g_hCvar_EnableModifier.BoolValue)
 				{
 					// melee damage triggers multiple times in alive callback same as normal callback, but only once is effective damage.
 					// we only prcesses the real damage number.
@@ -541,37 +523,36 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 					GetMeleeWeaponName(meleeid, sName, sizeof(sName));
 
 					float flDamage = g_WeaponData.GetMeleeDamage(sName);
-					//PrintToServer("Melee: %s, Damage: %.2f, Original Damage: %.2f", sName, flDamage, damage);
+					//PrintToServer("Gun: %s, Damage: %.2f, Original Damage: %.2f, Range Decayed Damage: %.2f", sName, flDamage, damage, flRangeDecayedDamage);
 					if (flDamage != -1.0)
 					{
 						damage = flDamage;
 
-						if (g_DamageCache[attacker].m_timer[victim].HasStarted())
-						{
-							if (!g_DamageCache[attacker].m_timer[victim].IsElapsed())
-							{
-								g_DamageCache[attacker].m_timer[victim].Reset();
-								g_DamageCache[attacker].m_iDamage[victim] += RoundToNearest(damage);
-							}	
-						}
-						else
-						{
-							g_DamageCache[attacker].m_timer[victim].Start(g_hCvar_Interval.FloatValue);
-							g_DamageCache[attacker].m_iDamage[victim] = RoundToNearest(damage);
-						}
-
+						CheckTimer(damage, attacker, victim);
 						return Plugin_Changed;
 					}
+					else
+					{
+						CheckTimer(damage, attacker, victim);
+						return Plugin_Continue;
+					}
+				}
+				else
+				{
+					CheckTimer(damage, attacker, victim);
+					return Plugin_Continue;
 				}
 			}
-			else if (wepid == WEPID_PUMPSHOTGUN || wepid == WEPID_AUTOSHOTGUN || wepid == WEPID_SHOTGUN_CHROME || wepid == WEPID_SHOTGUN_SPAS)
+		}
+		else if (wepid == WEPID_PUMPSHOTGUN || wepid == WEPID_AUTOSHOTGUN || wepid == WEPID_SHOTGUN_CHROME || wepid == WEPID_SHOTGUN_SPAS)
+		{
+			if (g_hCvar_EnableModifier.BoolValue)
 			{
 				char sName[64];
 				GetWeaponName(wepid, sName, sizeof(sName));
 
 				float flDamage = g_WeaponData.GetGunDamage(sName);
-				//PrintToServer("Gun: %s, Damage: %.2f, Original Damage: %.2f", sName, flDamage, damage);
-
+				
 				if (flDamage != -1.0)
 				{
 					float vecMyPosition[3], vecLength[3];
@@ -579,6 +560,8 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 					MakeVectorFromPoints(vecMyPosition, damagePosition, vecLength);
 					float flDistance = GetVectorLength(vecLength);
 					float flRangeDecayedDamage = g_WeaponData.GetRangeDecayedDamage(flDamage, flDistance, sName);
+
+					//PrintToServer("Gun: %s, Damage: %.2f, Original Damage: %.2f, Range Decayed Damage: %.2f", sName, flDamage, damage, flRangeDecayedDamage);
 					if (flRangeDecayedDamage != -1.0)
 					{
 						damage = flRangeDecayedDamage;
@@ -588,37 +571,20 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 						damage = flDamage;
 					}
 
-					if (g_DamageCache[attacker].m_timer[victim].HasStarted())
-					{
-						if (!g_DamageCache[attacker].m_timer[victim].IsElapsed())
-						{
-							g_DamageCache[attacker].m_timer[victim].Reset();
-							g_DamageCache[attacker].m_iDamage[victim] += RoundToNearest(damage);
-						}	
-					}
-					else
-					{
-						g_DamageCache[attacker].m_timer[victim].Start(g_hCvar_Interval.FloatValue);
-						g_DamageCache[attacker].m_iDamage[victim] = RoundToNearest(damage);
-					}
-
+					CheckTimer(damage, attacker, victim);
 					return Plugin_Changed;
 				}
+				else
+				{
+					CheckTimer(damage, attacker, victim);
+					return Plugin_Continue;
+				}
 			}
-		}
-
-		if (g_DamageCache[attacker].m_timer[victim].HasStarted())
-		{
-			if (!g_DamageCache[attacker].m_timer[victim].IsElapsed())
+			else
 			{
-				g_DamageCache[attacker].m_timer[victim].Reset();
-				g_DamageCache[attacker].m_iDamage[victim] += RoundToNearest(damage);
-			}	
-		}
-		else
-		{
-			g_DamageCache[attacker].m_timer[victim].Start(g_hCvar_Interval.FloatValue);
-			g_DamageCache[attacker].m_iDamage[victim] = RoundToNearest(damage);
+				CheckTimer(damage, attacker, victim);
+				return Plugin_Continue;
+			}
 		}
 	}
 	else
@@ -648,6 +614,23 @@ Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &damage, i
 		return Plugin_Continue;
 
 	return Plugin_Handled;
+}
+
+void CheckTimer(float damage, int attacker, int victim)
+{
+	if (g_DamageCache[attacker].m_timer[victim].HasStarted())
+	{
+		if (!g_DamageCache[attacker].m_timer[victim].IsElapsed())
+		{
+			g_DamageCache[attacker].m_timer[victim].Reset();
+			g_DamageCache[attacker].m_iDamage[victim] += RoundToNearest(damage);
+		}
+	}
+	else
+	{
+		g_DamageCache[attacker].m_timer[victim].Start(g_hCvar_Interval.FloatValue);
+		g_DamageCache[attacker].m_iDamage[victim] = RoundToNearest(damage);
+	}
 }
 
 void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
