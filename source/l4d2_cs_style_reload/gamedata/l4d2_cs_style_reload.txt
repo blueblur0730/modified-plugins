@@ -1,0 +1,67 @@
+"Games"
+{
+    "left4dead2"
+    {
+        "MemPatches"
+        {
+            // here both eax stores the total ammo count.
+            "CTerrorGun::Reload__AddClip"
+            {
+                "signature" "CTerrorGun::Reload"
+
+                // CTerrorGun::Reload(void)+1DD  03 83 20 14 00 00                 add     eax, [ebx+1420h]
+                "linux"
+                {
+                    "offset"    "1DDh"
+                    "verify"    "\x03\x83\x20\x14\x00\x00"  // add     eax, [ebx+1420h] -> count = m_iAmmo + m_iClip
+                    "patch"     "\x90\x90\x90\x90\x90\x90"  // NOP out add to keep count = m_iAmmo
+                }
+
+                // sub_103E87D0+217  03 D0                             add     edx, eax
+                "windows"
+                {
+                    "offset"    "217h"
+                    "verify"    "\x03\xD0"  // add     edx, eax -> count =  m_iClip + m_iAmmo
+                    "patch"     "\x8B\xD0"  // mov     edx, eax -> count =  m_iAmmo
+                }
+            }
+
+            "CTerrorGun::Reload__ClipToZero"
+            {
+                "signature" "CTerrorGun::Reload"
+
+                // CTerrorGun::Reload(void)+342  C7 83 20 14 00 00                 mov     dword ptr [ebx+1420h], 0
+                // CTerrorGun::Reload(void)+342  00 00 00 00
+                "linux"
+                {
+                    "offset"	"342h"
+                    "verify"	"\xC7\x83\x20\x14\x00\x00\x00\x00\x00\x00"
+                    "patch"		"\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90"
+                }
+
+                // sub_103E87D0+24E  C7 86 14 14 00 00                 mov     dword ptr [esi+1414h], 0
+                // sub_103E87D0+24E  00 00 00 00
+                "windows"
+                {
+                	"offset"	"24Eh"
+                	"verify"	"\xC7\x86\x14\x14\x00\x00\x00\x00\x00\x00"
+                	"patch"		"\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90"
+                }
+            }
+        }
+
+        "Signatures"
+        {
+            // windows sig:
+            // search for string "!player->CanAttack()" to find CTerrorGun::PrimaryAttack
+            // clip into the vtable, the one above CTerrorGun::PrimaryAttack is CTerrorGun::Reload.
+            "CTerrorGun::Reload"
+            {
+                "library"   "server"
+                "linux"     "@_ZN10CTerrorGun6ReloadEv"
+                "windows"   "\x55\x8B\xEC\x83\xEC\x2A\x53\x56\x8B\xF1\xE8\x2A\x2A\x2A\x2A\x8B\xD8\x85\xDB\x0F\x84\x2A\x2A\x2A\x2A\x8B\x83"
+                /* 55 8B EC 83 EC ? 53 56 8B F1 E8 ? ? ? ? 8B D8 85 DB 0F 84 ? ? ? ? 8B 83 */
+            }
+        }
+    }
+}
