@@ -3,8 +3,11 @@
 
 #include <sourcemod>
 #include <sdktools>
+#include <sdkhooks>
 #include <colors>
 #include <gamedata_wrapper>
+
+#define MAX_EDICTS					(1 << 11)
 
 /**
  * M = Cn / b.
@@ -13,8 +16,7 @@
  * Spectators are not counted.
  */
 
-#define PLUGIN_VERSION "r1.3.3"
-
+#define PLUGIN_VERSION "r1.4.0"
 public Plugin myinfo =
 {
 	name = "[L4D2] Player Count Based Supplies",
@@ -28,6 +30,7 @@ ConVar g_hCvar_Enable, g_hCvar_MultipleType, g_hCvar_BaseCount;
 
 int g_iMultiple = 0;
 int g_iMultipleType = 0;
+bool g_bUsed[MAX_EDICTS + 1] = {false, ...};
 
 StringMap g_hMapSpawner;
 
@@ -69,6 +72,9 @@ public void OnMapEnd()
 void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	g_iMultiple = 0;
+
+	for (int i = 0; i < MAX_EDICTS; i++)
+		g_bUsed[i] = false;
 
 	if (!g_hTimer)
 		g_hTimer = CreateTimer(1.0, Timer_SetCount, 0, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
@@ -119,6 +125,11 @@ void SetMedicCount()
 			int value = 0;
 			if (g_hMapSpawner.ContainsKey(entName))
 			{
+				// if it's already used (case when count >= 2), do not reset its count again.
+				if (g_bUsed[ent])
+					return;
+
+				SDKHook(ent, SDKHook_UsePost, OnUse);
 				g_hMapSpawner.GetValue(entName, value);
 				if ((g_iMultipleType & value))
 				{
@@ -129,6 +140,17 @@ void SetMedicCount()
 
 		CPrintToChatAll("%t", "Changed", iMultiple);
 	}
+}
+
+void OnUse(int entity, int activator, int caller, UseType type, float value)
+{
+	if (!IsValidEdict(entity))
+		return;
+
+	if (g_bUsed[entity])
+		return;
+
+	g_bUsed[entity] = true;
 }
 
 stock int GetSurvivorCount()
