@@ -1,0 +1,26 @@
+"Games"
+{
+    "left4dead2"
+    {
+        "Offsets"
+        {
+            "CTerrorWeapon->m_upgradedAmmoCount"
+            {
+                "linux"     "6032"
+                "windows"   "6024"
+            }
+        }
+
+        "Signatures"
+        {
+            // windows sig: search for string "ammo_pickup".
+            "CTerrorPlayer::OnAmmoPickedUp"
+            {
+                "library"   "server"
+                "linux"     "@_ZN13CTerrorPlayer14OnAmmoPickedUpEv"
+                "windows"   "\x56\x57\x6A\x2A\x6A\x2A\x6A\x2A\x68\x2A\x2A\x2A\x2A\x6A\x2A\x83\xEC\x2A\x8B\xF9\x8B\x37\x8B\xCC"
+                /* 56 57 6A ? 6A ? 6A ? 68 ? ? ? ? 6A ? 83 EC ? 8B F9 8B 37 8B CC */
+            }
+        }
+    }
+}
