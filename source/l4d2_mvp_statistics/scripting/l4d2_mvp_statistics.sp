@@ -17,9 +17,6 @@
 #define ZC_WITCH				7
 #define ZC_TANK					8
 
-#undef REQUIRE_PLUGIN
-#tryinclude <readyup>
-
 #define BREV_SI                 1
 #define BREV_CI                 2
 #define BREV_FF                 4
@@ -35,14 +32,16 @@ ConVar
     g_hCvar_PluginEnabled,      // whether the plugin is enabled
     g_hCvar_CountTankDamage,    // whether we're tracking tank damage for MVP-selection
     g_hCvar_CountWitchDamage,   // whether we're tracking witch damage for MVP-selection
-    g_hCvar_TrackFF,            // whether we're tracking friendly-fire damage (separate stat)
-    g_hCvar_BrevityFlags;       // how verbose/brief the output should be:
+    g_hCvar_BrevityFlags,       // how verbose/brief the output should be:
+    g_hCvar_RankOrder,    // how to arrange the MVP-list.
+    g_hCvar_ListLimit,           // how many MVPs to display.
+
+    g_hCvar_AdRank,              // ad rank for the chat.
+    g_hCvar_AdInterval;          // ad interval for the chat.
 
 bool 
     g_bCountTankDamage,
-    g_bCountWitchDamage,
-    g_bTrackFF,
-    g_bRUPLive;
+    g_bCountWitchDamage;
 
 int g_iBrevityFlags;
 
@@ -113,7 +112,7 @@ enum struct Statistics_t
             this.m_iTotalPinnedDuringTank++;
     }
 }
-Statistics_t g_Statistics[L4D2_MAXPLAYERS + 1];         
+Statistics_t g_Statistics[L4D2_MAXPLAYERS + 1];  
 
 // Tank stats
 int
@@ -124,7 +123,7 @@ int
     g_iTotalDamageAll,
     g_iTotalFF;
 
-#define PLUGIN_VERSION "r2.0.0"
+#define PLUGIN_VERSION "r2.1.0"
 public Plugin myinfo =
 {
 	name = "[L4D2] Survivor MVP Statistics",
@@ -151,7 +150,6 @@ public void OnPluginStart()
     LoadTranslation("l4d2_mvp_statistics.phrases");
 
     // Round triggers
-    //HookEvent("door_close", DoorClose_Event);
     HookEvent("finale_vehicle_leaving", FinaleEnd_Event, EventHookMode_PostNoCopy);
     HookEvent("round_start", RoundStart_Event, EventHookMode_PostNoCopy);
     HookEvent("round_end", RoundEnd_Event, EventHookMode_PostNoCopy);
@@ -167,7 +165,6 @@ public void OnPluginStart()
     HookEvent("tank_killed", TankKilled_Event);
     HookEvent("tank_spawn", TankSpawn_Event);
     HookEvent("ability_use", AbilityUse_Event);
-    //HookEvent("tank_frustrated", tankFrustrated);
     
     // Catching data
     HookEvent("player_hurt", PlayerHurt_Event, EventHookMode_Post);
@@ -177,25 +174,22 @@ public void OnPluginStart()
     
     // Cvars
     g_hCvar_PluginEnabled =    CreateConVar("l4d2_mvp_statistics_enabled", "1", "Enable display of MVP at end of round");
-    g_hCvar_CountTankDamage =  CreateConVar("l4d2_mvp_statistics_counttank", "0", "Damage on tank counts towards MVP-selection if enabled.");
-    g_hCvar_CountWitchDamage = CreateConVar("l4d2_mvp_statistics_countwitch", "0", "Damage on witch counts towards MVP-selection if enabled.");
-    g_hCvar_TrackFF =          CreateConVar("l4d2_mvp_statistics_showff", "1", "Track Friendly-fire stat.");
+    g_hCvar_CountTankDamage =  CreateConVar("l4d2_mvp_statistics_counttank", "1", "Damage on tank counts towards MVP-selection if enabled.");
+    g_hCvar_CountWitchDamage = CreateConVar("l4d2_mvp_statistics_countwitch", "1", "Damage on witch counts towards MVP-selection if enabled.");
     g_hCvar_BrevityFlags =     CreateConVar("l4d2_mvp_statistics_brevity", "15", "Flags for setting brevity of MVP report (hide 1:SI, 2:CI, 4:FF, 8:rank).");
+    g_hCvar_RankOrder =        CreateConVar("l4d2_mvp_statistics_rank_order", "1", "1: SI first, 2: SI Damage First, 3: SI + CI Total Damage First.");
+    g_hCvar_ListLimit =        CreateConVar("l4d2_mvp_statistics_list_limit", "4", "How many MVPs to display.");
+
+    g_hCvar_AdRank =           CreateConVar("l4d2_mvp_statistics_ad_rank", "1", "Ad rank for the chat.");
+    g_hCvar_AdInterval =       CreateConVar("l4d2_mvp_statistics_ad_interval", "80", "Ad interval for the chat.");
     
     g_bCountTankDamage =  g_hCvar_CountTankDamage.BoolValue;
     g_bCountWitchDamage = g_hCvar_CountWitchDamage.BoolValue;
-    g_bTrackFF =          g_hCvar_TrackFF.BoolValue;
     g_iBrevityFlags =     g_hCvar_BrevityFlags.IntValue;
-    
-    // for now, force FF tracking on:
-    g_bTrackFF = true;
     
     g_hCvar_CountTankDamage.AddChangeHook(ConVarChange_CountTankDamage);
     g_hCvar_CountWitchDamage.AddChangeHook(ConVarChange_CountWitchDamage);
-    g_hCvar_TrackFF.AddChangeHook(ConVarChange_TrackFF);
     g_hCvar_BrevityFlags.AddChangeHook(ConVarChange_BrevityFlags);
-    
-    if (!(g_iBrevityFlags & BREV_FF)) { g_bTrackFF = true; } // force tracking on if we're showing FF
     
     g_bPlayerLeftStartArea = false;
     
@@ -203,14 +197,6 @@ public void OnPluginStart()
     RegConsoleCmd("sm_mvp", SurvivorMVP_Cmd, "Prints the current MVP for the survivor team");
     RegConsoleCmd("sm_mvpme", ShowMVPStats_Cmd, "Prints the client's own MVP-related stats");
 }
-
-#if defined  _readyup_included_
-public void OnRoundIsLive()
-{
-    g_bRUPLive = true;
-}
-#else
-#endif
 
 public void OnClientPutInServer(int client)
 {
@@ -237,19 +223,9 @@ void ConVarChange_CountWitchDamage(ConVar cvar, const char[] oldValue, const cha
     g_bCountWitchDamage = StringToInt(newValue) != 0;
 }
 
-void ConVarChange_TrackFF(ConVar cvar, const char[] oldValue, const char[] newValue) 
-{
-    //if (StringToInt(newValue) == 0) { g_bTrackFF = false; } else { g_bTrackFF = true; }
-    // for now, disable FF tracking toggle (always on)
-}
-
 void ConVarChange_BrevityFlags(ConVar cvar, const char[] oldValue, const char[] newValue) 
 {
     g_iBrevityFlags = StringToInt(newValue);
-
-    // force tracking on if we're showing FF
-    if (!(g_iBrevityFlags & BREV_FF))
-        g_bTrackFF = true; 
 }
 
 void PlayerLeftSafeArea_Event(Event event, const char[] name, bool dontBroadcast)
@@ -263,9 +239,11 @@ public void OnMapStart()
     g_bPlayerLeftStartArea = false;
 }
 
+Handle g_hTimer = null;
 public void OnMapEnd()
 {
     g_bInRound = false;
+    g_hTimer = null;
 }
 
 void ScavRoundStart_Event(Event event, const char[] name, bool dontBroadcast)
@@ -282,7 +260,6 @@ void ScavRoundStart_Event(Event event, const char[] name, bool dontBroadcast)
 void RoundStart_Event(Event event, const char[] name, bool dontBroadcast)
 {
     g_bPlayerLeftStartArea = false;
-    g_bRUPLive = false;
     
     // clear mvp stats
     for (int i = 1; i <= MaxClients; i++)
@@ -291,6 +268,11 @@ void RoundStart_Event(Event event, const char[] name, bool dontBroadcast)
     }
 
     ClearGlobals();
+
+    if (g_hCvar_AdRank.BoolValue && !g_hTimer)
+    {
+        g_hTimer = CreateTimer(g_hCvar_AdInterval.FloatValue, Timer_AdRank, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+    }
 }
 
 void ClearGlobals()
@@ -310,6 +292,11 @@ void ClearGlobals()
     g_bTankSpawn_Evented = false;
 }
 
+void Timer_AdRank(Handle timer)
+{
+    PrintRank();
+}
+
 void FinaleEnd_Event(Event event, const char[] name, bool dontBroadcast)
 {
     // Co-op modes.
@@ -325,7 +312,6 @@ void FinaleEnd_Event(Event event, const char[] name, bool dontBroadcast)
     }
 
     // No need for versus/other modes as round_end fires just fine on them.
-    
     g_bTankSpawn_Evented = false;
 }
 
@@ -338,6 +324,7 @@ void RoundEnd_Event(Event event, const char[] name, bool dontBroadcast)
         {
             if (g_hCvar_PluginEnabled.BoolValue)
                 CreateTimer(0.1, Timer_DelayedMVPPrint);
+
             g_bInRound = false;
         }
     }
@@ -354,7 +341,6 @@ void RoundEnd_Event(Event event, const char[] name, bool dontBroadcast)
         }
     }
     
-    g_bRUPLive = false;
     g_bTankSpawn_Evented = false;
 }
 
@@ -362,7 +348,6 @@ Action SurvivorMVP_Cmd(int client, int args)
 {
     PrintMVPString();
     PrintLoserz(true, client);
-
     return Plugin_Handled;
 }
 
@@ -452,8 +437,8 @@ void PrintLoserz(bool bSolo, int client)
     {
         int mvp_FF = FindMVP(3);
         int mvp_FF_losers[3];
-        mvp_FF_losers[0] = FindMVP(3, mvp_FF);                                                   // second place
-        mvp_FF_losers[1] = FindMVP(3, mvp_FF, mvp_FF_losers[0]);                             // third
+        mvp_FF_losers[0] = FindMVP(3, mvp_FF);                                           // second place
+        mvp_FF_losers[1] = FindMVP(3, mvp_FF, mvp_FF_losers[0]);                         // third
         mvp_FF_losers[2] = FindMVP(3, mvp_FF, mvp_FF_losers[0], mvp_FF_losers[1]);       // fourth
         
         for (int i = 0; i <= 2; i++)
@@ -626,9 +611,9 @@ void PlayerHurt_Event(Event event, const char[] name, bool dontBroadcast)
             }
         }
         // Otherwise if friendly fire
-        else if (GetClientTeam(attacker) == L4D2Team_Survivor && GetClientTeam(victim) == L4D2Team_Survivor && g_bTrackFF && !L4D_IsPlayerIncapacitated(victim))                // survivor on survivor action == FF
+        else if (GetClientTeam(attacker) == L4D2Team_Survivor && GetClientTeam(victim) == L4D2Team_Survivor && !L4D_IsPlayerIncapacitated(victim))                // survivor on survivor action == FF
         {
-            if (g_bRUPLive || g_bPlayerLeftStartArea) 
+            if (g_bPlayerLeftStartArea) 
             {
                 // but don't record before readyup ended or before leaving saferoom if readyup is not loaded.
                 //PrintToServer("attacker: %d, Damage: %d", attacker, damageDone);
@@ -644,7 +629,7 @@ void PlayerHurt_Event(Event event, const char[] name, bool dontBroadcast)
             
             // If we got hit by a tank, let's see what type of damage it was
             // If it was from a rock throw
-            if (g_bTankThrow && zombieClass == ZC_TANK && damageDone == 24) 
+            if (g_bTankThrow && zombieClass == ZC_TANK) 
                 g_Statistics[victim].m_iRocksEaten++;
 
             g_Statistics[victim].m_iDamageReceived += damageDone;
@@ -750,26 +735,21 @@ void InfectedDeath_Event(Event event, const char[] name, bool dontBroadcast)
 
 void PrintMVPString()
 {
+    if (g_iBrevityFlags & BREV_RANK)
+        PrintRank();
+
     char mvp_SI_name[64], mvp_Common_name[64], mvp_FF_name[64];
     int mvp_SI, mvp_Common,  mvp_FF = 0;
     bool bSI_bot, bCI_bot, bFF_bot = false;
-    
-    // calculate MVP per category:
-    //  1. SI damage & SI kills + damage to tank/witch
-    //  2. common kills
 
     if (g_iBrevityFlags & BREV_SI)
-    {
         FindMVPName(1, mvp_SI_name, sizeof(mvp_SI_name), mvp_SI, bSI_bot);
-    }
-    else if (g_iBrevityFlags & BREV_CI)
-    {
+    
+    if (g_iBrevityFlags & BREV_CI)
         FindMVPName(2, mvp_Common_name, sizeof(mvp_Common_name), mvp_Common, bCI_bot);
-    }
-    else if (g_iBrevityFlags & BREV_FF)
-    {
+    
+    if (g_iBrevityFlags & BREV_FF)
         FindMVPName(3, mvp_FF_name, sizeof(mvp_FF_name), mvp_FF, bFF_bot);
-    }
     
     // report
     if (mvp_SI == 0 && mvp_Common == 0 && ((g_iBrevityFlags & BREV_SI) && (g_iBrevityFlags & BREV_CI)))
@@ -804,7 +784,7 @@ void PrintMVPString()
     }
     
     // FF
-    if ((g_iBrevityFlags & BREV_FF) && g_bTrackFF)
+    if ((g_iBrevityFlags & BREV_FF))
     {
         if (mvp_FF == 0)
         {
@@ -817,12 +797,130 @@ void PrintMVPString()
     }
 }
 
+enum struct DataSet_t
+{
+    int index;
+    int data;
+}
+
+void PrintRank()
+{
+    switch (g_hCvar_RankOrder.IntValue)
+    {
+        case 1:
+        {
+            ArrayList hArray = new ArrayList(sizeof(DataSet_t));
+            for (int i = 0; i < L4D2_MAXPLAYERS; i++)
+            {
+                DataSet_t data;
+                data.index = i;
+                data.data = g_Statistics[i].m_iSIKills;
+                hArray.PushArray(data, sizeof(data));
+            }
+
+            hArray.SortCustom(ArraySortFunc);
+            for (int i = 0; i < hArray.Length; i++)
+            {
+                if (i == g_hCvar_ListLimit.IntValue)
+                    break;
+
+                DataSet_t data;
+                hArray.GetArray(i, data, sizeof(data));
+                int client = data.index;
+                if (client <= 0 || client > MaxClients || !IsClientInGame(client))
+                    continue;
+
+                CPrintToChatAll("%t", "RankMessage", i + 1, g_Statistics[client].m_szName, g_Statistics[client].m_iSIKills, g_Statistics[client].m_iSIDamage, g_Statistics[client].m_iCIKills, g_Statistics[client].m_iFFDamage, g_Statistics[client].m_iAllDamage);  
+            }
+
+            delete hArray;
+        }
+
+        case 2:
+        {
+            ArrayList hArray = new ArrayList(sizeof(DataSet_t));
+            for (int i = 0; i < L4D2_MAXPLAYERS; i++)
+            {
+                DataSet_t data;
+                data.index = i;
+                data.data = g_Statistics[i].m_iSIDamage;
+                hArray.PushArray(data, sizeof(data));
+            }
+
+            hArray.SortCustom(ArraySortFunc);
+            for (int i = 0; i < hArray.Length; i++)
+            {
+                if (i == g_hCvar_ListLimit.IntValue)
+                    break;
+
+                DataSet_t data;
+                hArray.GetArray(i, data, sizeof(data));
+                int client = data.index;
+                if (client <= 0 || client > MaxClients || !IsClientInGame(client))
+                    continue;
+
+                CPrintToChatAll("%t", "RankMessage", i + 1, g_Statistics[client].m_szName, g_Statistics[client].m_iSIKills, g_Statistics[client].m_iSIDamage, g_Statistics[client].m_iCIKills, g_Statistics[client].m_iFFDamage, g_Statistics[client].m_iAllDamage);  
+            }
+
+            delete hArray;
+        }
+
+        case 3:
+        {
+            ArrayList hArray = new ArrayList(sizeof(DataSet_t));
+            for (int i = 0; i < L4D2_MAXPLAYERS; i++)
+            {
+                DataSet_t data;
+                data.index = i;
+                data.data = g_Statistics[i].m_iAllDamage;
+                hArray.PushArray(data, sizeof(data));
+            }
+
+            hArray.SortCustom(ArraySortFunc);
+            for (int i = 0; i < hArray.Length; i++)
+            {
+                if (i == g_hCvar_ListLimit.IntValue)
+                    break;
+
+                DataSet_t data;
+                hArray.GetArray(i, data, sizeof(data));
+                int client = data.index;
+                if (client <= 0 || client > MaxClients || !IsClientInGame(client))
+                    continue;
+
+                CPrintToChatAll("", i + 1, g_Statistics[client].m_szName, g_Statistics[client].m_iAllDamage, g_Statistics[client].m_iSIKills, g_Statistics[client].m_iSIDamage, g_Statistics[client].m_iCIKills, g_Statistics[client].m_iFFDamage);  
+            }
+
+            delete hArray;
+        }
+    }
+}
+
+int ArraySortFunc(int index1, int index2, ArrayList array, Handle hndl)
+{
+    DataSet_t data1, data2;
+    array.GetArray(index1, data1, sizeof(data1));
+    array.GetArray(index2, data2, sizeof(data2));
+
+    if (data1.data < data2.data)
+    {
+        return 1;
+    }
+    else if (data1.data > data2.data)
+    {
+        return -1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
 void FindMVPName(int type, char[] name, int maxlen, int &mvp, bool &bBot)
 {
     mvp = FindMVP(type);
     if (mvp > 0)
     {
-        // get name from client if connected -- if not, use g_sClientName array
         if (IsClientConnected(mvp))
         {
             GetClientName(mvp, name, maxlen);
@@ -843,7 +941,7 @@ int FindMVP(int type, int excludeMeA = 0, int excludeMeB = 0, int excludeMeC = 0
     {
         case 1:
         {
-            for (i = 1; i < L4D2_MAXPLAYERS; i++)
+            for (i = 0; i < L4D2_MAXPLAYERS; i++)
             {
                 if (g_Statistics[i].m_iAllDamage > g_Statistics[maxIndex].m_iAllDamage  && i != excludeMeA && i != excludeMeB && i != excludeMeC)
                     maxIndex = i;
@@ -852,7 +950,7 @@ int FindMVP(int type, int excludeMeA = 0, int excludeMeB = 0, int excludeMeC = 0
 
         case 2:
         {
-            for (i = 1; i < L4D2_MAXPLAYERS; i++)
+            for (i = 0; i < L4D2_MAXPLAYERS; i++)
             {
                 if (g_Statistics[i].m_iCIKills > g_Statistics[maxIndex].m_iCIKills && i != excludeMeA && i != excludeMeB && i != excludeMeC)
                     maxIndex = i;
@@ -861,14 +959,13 @@ int FindMVP(int type, int excludeMeA = 0, int excludeMeB = 0, int excludeMeC = 0
 
         case 3:
         {
-            for (i = 1; i < L4D2_MAXPLAYERS; i++)
+            for (i = 0; i < L4D2_MAXPLAYERS; i++)
             {
                 if (g_Statistics[i].m_iFFDamage > g_Statistics[maxIndex].m_iFFDamage && i != excludeMeA && i != excludeMeB && i != excludeMeC)
                     maxIndex = i;
             }
         }
     }
-
 
     return maxIndex;
 }

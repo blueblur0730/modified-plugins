@@ -78,4 +78,18 @@
         "en"        "{blue}[{default}LVP{blue}] FF{default}: {olive}{1} {blue}({default}{2} {green}friendly fire {blue}[{default}{3}%%{blue}]){default}"
         "chi"       "{blue}[{default}LVP{blue}] 友伤{default}: {olive}{1} {blue}({default}{2} {green}次友伤 {blue}[{default}{3}%%{blue}]){default}"
     }
+
+    "RankMessage"
+    {
+        "#format"   "{1:d},{2:s},{3:d},{4:d},{5:d},{6:d},{7:d}"
+        "en"        "#{olive}{1}{default} - {blue}{2}{default} | {blue}SI{default}: {3} {green}kills{default} | {4} {green}dmg{default}, {blue}CI{default}: {5}, {green}FF{default}: {6}, {blue}Total{default}: {7}"
+        "chi"       "#{olive}{1}{default} - {blue}{2}{default} | {blue}特感{default}: {3} {green}击杀{default} | {4} {green}伤害{default}, {blue}小丧尸{default}: {5}, {green}友伤{default}: {6}, {blue}总伤害{default}: {7}"
+    }
+
+    "RankMessage_TotalOrder"
+    {
+        "#format"   "{1:d},{2:s},{3:d},{4:d},{5:d},{6:d},{7:d}"
+        "en"        "#{olive}{1}{default} - {blue}{2}{default} | {blue}Total{default}: {3}, {blue}SI{default}: {4} {green}kills{default} | {5} {green}dmg{default}, {blue}CI{default}: {6}, {green}FF{default}: {7}"
+        "chi"       "#{olive}{1}{default} - {blue}{2}{default} | {blue}总伤害{default}: {3}, {blue}特感{default}: {4} {green}击杀{default} | {5} {green}伤害{default}, {blue}小丧尸{default}: {6}, {green}友伤{default}: {7}"
+    }
 }
