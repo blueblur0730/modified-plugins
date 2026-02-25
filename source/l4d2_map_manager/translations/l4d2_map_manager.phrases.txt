@@ -77,8 +77,8 @@
 
     "NotifyPreserve"
     {
-        "en"        "[{green}!{default}] Type {lightgreen}/preservemap{default} to preserve the next campaign map."
-        "chi"       "[{green}!{default}] 输入 {lightgreen}/preservemap{default} 预定下一战役地图."
+        "en"        "[{green}!{default}] Type {lightgreen}/nominate{default} to preserve the next campaign map."
+        "chi"       "[{green}!{default}] 输入 {lightgreen}/nominate{default} 预定下一战役地图."
     }
 
     "SwitchingMap"
