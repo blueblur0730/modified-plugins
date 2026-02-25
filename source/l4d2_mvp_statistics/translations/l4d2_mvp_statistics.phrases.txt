@@ -1,0 +1,81 @@
+"Phrases"
+{
+    "YourRankSI"
+    {
+        "#format"   "{1:d},{2:d},{3:.2f},{4:d},{5:.2f}"
+        "en"        "{blue}Your Rank {green}SI: {olive}#{1} - {blue}({default}{2} {green}dmg {blue}[{default}{3}%%{blue}]{olive}, {default}{4} {green}kills {blue}[{default}{5}%%{blue}])"
+        "chi"       "{blue}你的排名 {green}特感: {olive}#{1} - {blue}({default}{2} {green}伤害 {blue}[{default}{3}%%{blue}]{olive}, {default}{4} {green}击杀 {blue}[{default}{5}%%{blue}])"
+    }
+
+    "YourRankCI"
+    {
+        "#format"   "{1:d},{2:d},{3:.2f}"
+        "en"        "{blue}Your Rank {green}CI{default}: {olive}#{1} {blue}({default}{2} {green}common {blue}[{default}{3}%%{blue}])"
+        "chi"       "{blue}你的排名 {green}小丧尸{default}: {olive}#{1} {blue}({default}{2} {green}小丧尸 {blue}[{default}{3}%%{blue}])"
+    }
+
+    "YourRankFF"
+    {
+        "#format"   "{1:d},{2:d},{3:.2f}"
+        "en"        "{blue}Your Rank {green}FF{default}: {olive}#{1} {blue}({default}{2} {green}friendly fire {blue}[{default}{3}%%{blue}])"
+        "chi"       "{blue}你的排名 {green}友伤{default}: {olive}#{1} {blue}({default}{2} {green}友伤 {blue}[{default}{3}%%{blue}])"
+    }
+
+    "NotEnoughAction"
+    {
+        "en"        "{blue}[{default}MVP{blue}]{default} {blue}({default}not enough action yet{blue}){default}"
+        "chi"       "{blue}[{default}MVP{blue}]{default} {blue}({default}没有足够的行为计量{blue}){default}"
+    }
+
+    "MVP_SI"
+    {
+        "#format"   "{1:s},{2:d},{3:.2f},{4:d},{5:.2f}"
+        "en"        "{blue}[{default}MVP{blue}] SI: {olive}{1} {blue}({default}{2} {green}dmg {blue}[{default}{3}%%{blue}]{olive}, {default}{4} {green}kills {blue}[{default}{5}%%{blue}])"
+        "chi"       "{blue}[{default}MVP{blue}] 特感: {olive}{1} {blue}({default}{2} {green}伤害 {blue}[{default}{3}%%{blue}]{olive}, {default}{4} {green}击杀 {blue}[{default}{5}%%{blue}])"
+    }
+
+    "MVP_SI_Nobody"
+    {
+        "en"        "{blue}[{default}MVP{blue}] SI: {blue}({default}nobody{blue}){default}"
+        "chi"       "{blue}[{default}MVP{blue}] 特感: {blue}({default}没有人{blue}){default}"
+    }
+
+    "MVP_CI"
+    {
+        "#format"   "{1:s},{2:d},{3:.2f}"
+        "en"        "{blue}[{default}MVP{blue}] CI: {olive}{1} {blue}({default}{2} {green}common {blue}[{default}{3}%%{blue}])"
+        "chi"       "{blue}[{default}MVP{blue}] 小丧尸: {olive}{1} {blue}({default}{2} {green}个 {blue}[{default}{3}%%{blue}])"
+    }
+
+    "MVP_CI_Nobody"
+    {
+        "en"        "{blue}[{default}MVP{blue}] CI: {blue}({default}nobody{blue}){default}"
+        "chi"       "{blue}[{default}MVP{blue}] 小丧尸: {blue}({default}没有人{blue}){default}"
+    }
+
+    "MVP_FF"
+    {
+        "#format"   "{1:s},{2:d},{3:.2f}"
+        "en"        "{blue}[{default}LVP{blue}] FF{default}: {olive}{1} {blue}({default}{2} {green}friendly fire {blue}[{default}{3}%%{blue}]){default}"
+        "chi"       "{blue}[{default}LVP{blue}] 友伤{default}: {olive}{1} {blue}({default}{2} {green}次友伤 {blue}[{default}{3}%%{blue}]){default}"
+    }
+
+    "MVP_FF_Nobody"
+    {
+        "en"        "{blue}[{default}LVP{blue}] FF{default}: {green}no friendly fire at all!{default}"
+        "chi"       "{blue}[{default}LVP{blue}] 友伤{default}: {green}完全没有友伤!{default}"
+    }
+
+    "LVP_FF_Nobody"
+    {
+        "en"        "{blue}[{default}LVP{blue}] FF{default}: {green}no friendly fire at all!{default}"
+        "chi"       "{blue}[{default}LVP{blue}] 友伤{default}: {green}完全没有友伤!{default}"
+    }
+    
+    "LVP_FF"
+    {
+        "#format"   "{1:s},{2:d},{3:.2f}"
+        "en"        "{blue}[{default}LVP{blue}] FF{default}: {olive}{1} {blue}({default}{2} {green}friendly fire {blue}[{default}{3}%%{blue}]){default}"
+        "chi"       "{blue}[{default}LVP{blue}] 友伤{default}: {olive}{1} {blue}({default}{2} {green}次友伤 {blue}[{default}{3}%%{blue}]){default}"
+    }
+}
