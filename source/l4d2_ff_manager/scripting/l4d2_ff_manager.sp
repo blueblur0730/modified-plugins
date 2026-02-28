@@ -258,7 +258,7 @@ enum struct DamageCache_t
 } 
 DamageCache_t g_DamageCache[L4D2_MAXPLAYERS + 1];
 
-#define PLUGIN_VERSION "r3.1.0"
+#define PLUGIN_VERSION "r3.1.1"
 public Plugin myinfo =
 {
 	name = "[L4D2] Friendly Fire Manager",
@@ -362,14 +362,22 @@ public void OnPluginEnd()
 	// g_hCvar_ShouldBlockFF.RestoreDefault();
 }
 
+bool g_bHooked[L4D2_MAXPLAYERS + 1];
 public void OnClientPutInServer(int client)
 {
-	if (!IsClientInGame(client))
+	if (!IsClientInGame(client) || g_bHooked[client])
 		return;
 
 	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 	SDKHook(client, SDKHook_OnTakeDamageAlive, OnTakeDamageAlive);	  // process melee damage.
 	SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
+
+	g_bHooked[client] = true;
+}
+
+public void OnClientDisconnect(int client)
+{
+	g_bHooked[client] = false;
 }
 
 public void OnMapEnd()
@@ -445,7 +453,7 @@ Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, in
 			{
 				char sName[64];
 				GetWeaponName(wepid, sName, sizeof(sName));
-
+				//PrintToServer("[OnTakeDamage] Gun: %s, Damage: %.02f", sName, damage);
 				float flDamage = g_WeaponData.GetGunDamage(sName);
 				if (flDamage != -1.0)
 				{
@@ -455,7 +463,7 @@ Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, in
 					float flDistance = GetVectorLength(vecLength);
 					float flRangeDecayedDamage = g_WeaponData.GetRangeDecayedDamage(flDamage, flDistance, sName);
 
-					//PrintToServer("Gun: %s, Damage: %.2f, Original Damage: %.2f, Range Decayed Damage: %.2f", sName, flDamage, damage, flRangeDecayedDamage);
+					//PrintToServer("[OnTakeDamage] Gun: %s, Damage: %.02f, Original Damage: %.02f, Range Decayed Damage: %.02f", sName, flDamage, damage, flRangeDecayedDamage);
 					if (flRangeDecayedDamage != -1.0)
 					{
 						damage = flRangeDecayedDamage;
@@ -512,6 +520,9 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 			int meleeid = IdentifyMeleeWeapon(weapon);
 			if (meleeid != WEPID_MELEE_NONE)
 			{
+				char sMeleeName[64];
+				GetMeleeWeaponName(meleeid, sMeleeName, sizeof(sMeleeName));
+				//PrintToServer("[OnTakeDamageAlive] Melee: %s, Damage: %.02f", sMeleeName, damage);
 				if (g_hCvar_EnableModifier.BoolValue)
 				{
 					// melee damage triggers multiple times in alive callback same as normal callback, but only once is effective damage.
@@ -523,7 +534,7 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 					GetMeleeWeaponName(meleeid, sName, sizeof(sName));
 
 					float flDamage = g_WeaponData.GetMeleeDamage(sName);
-					//PrintToServer("Gun: %s, Damage: %.2f, Original Damage: %.2f, Range Decayed Damage: %.2f", sName, flDamage, damage, flRangeDecayedDamage);
+					//PrintToServer("[OnTakeDamageAlive] Gun: %s, Damage: %.02f, Original Damage: %.02f", sName, flDamage, damage);
 					if (flDamage != -1.0)
 					{
 						damage = flDamage;
@@ -551,6 +562,7 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 				char sName[64];
 				GetWeaponName(wepid, sName, sizeof(sName));
 
+				//PrintToServer("[OnTakeDamageAlive] Gun: %s, Damage: %.02f", sName, damage);
 				float flDamage = g_WeaponData.GetGunDamage(sName);
 				
 				if (flDamage != -1.0)
@@ -561,7 +573,7 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 					float flDistance = GetVectorLength(vecLength);
 					float flRangeDecayedDamage = g_WeaponData.GetRangeDecayedDamage(flDamage, flDistance, sName);
 
-					//PrintToServer("Gun: %s, Damage: %.2f, Original Damage: %.2f, Range Decayed Damage: %.2f", sName, flDamage, damage, flRangeDecayedDamage);
+					//PrintToServer("Gun: %s, Damage: %.02f, Original Damage: %.02f, Range Decayed Damage: %.02f", sName, flDamage, damage, flRangeDecayedDamage);
 					if (flRangeDecayedDamage != -1.0)
 					{
 						damage = flRangeDecayedDamage;
