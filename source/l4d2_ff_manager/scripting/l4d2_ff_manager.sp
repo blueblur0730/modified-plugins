@@ -258,7 +258,7 @@ enum struct DamageCache_t
 } 
 DamageCache_t g_DamageCache[L4D2_MAXPLAYERS + 1];
 
-#define PLUGIN_VERSION "r3.1.1"
+#define PLUGIN_VERSION "r3.2.0"
 public Plugin myinfo =
 {
 	name = "[L4D2] Friendly Fire Manager",
@@ -268,6 +268,7 @@ public Plugin myinfo =
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
+GlobalForward g_hFWD_OnFriendlyFire;
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	if (GetEngineVersion() != Engine_Left4Dead2)
@@ -276,6 +277,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 		return APLRes_SilentFailure;
 	}
 
+	// void FFManager_OnFriendlyFire(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, float damageForce[3], float damagePosition[3])
+	g_hFWD_OnFriendlyFire = new GlobalForward("FFManager_OnFriendlyFire", ET_Event, Param_Cell, Param_Cell, Param_Cell, Param_Float, Param_Cell, Param_Cell, Param_Array, Param_Array);
+	RegPluginLibrary("l4d2_ff_manager");
 	return APLRes_Success;
 }
 
@@ -474,16 +478,19 @@ Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, in
 					}
 
 					CheckTimer(damage, attacker, victim);
+					CallForward(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
 					return Plugin_Changed;
 				}
 				else
 				{
+					CallForward(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
 					CheckTimer(damage, attacker, victim);
 					return Plugin_Continue;
 				}
 			}
 			else
 			{
+				CallForward(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
 				CheckTimer(damage, attacker, victim);
 				return Plugin_Continue;
 			}
@@ -539,17 +546,20 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 					{
 						damage = flDamage;
 
+						CallForward(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
 						CheckTimer(damage, attacker, victim);
 						return Plugin_Changed;
 					}
 					else
 					{
+						CallForward(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
 						CheckTimer(damage, attacker, victim);
 						return Plugin_Continue;
 					}
 				}
 				else
 				{
+					CallForward(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
 					CheckTimer(damage, attacker, victim);
 					return Plugin_Continue;
 				}
@@ -583,17 +593,20 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 						damage = flDamage;
 					}
 
+					CallForward(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
 					CheckTimer(damage, attacker, victim);
 					return Plugin_Changed;
 				}
 				else
 				{
+					CallForward(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
 					CheckTimer(damage, attacker, victim);
 					return Plugin_Continue;
 				}
 			}
 			else
 			{
+				CallForward(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
 				CheckTimer(damage, attacker, victim);
 				return Plugin_Continue;
 			}
@@ -643,6 +656,20 @@ void CheckTimer(float damage, int attacker, int victim)
 		g_DamageCache[attacker].m_timer[victim].Start(g_hCvar_Interval.FloatValue);
 		g_DamageCache[attacker].m_iDamage[victim] = RoundToNearest(damage);
 	}
+}
+
+void CallForward(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, float damageForce[3], float damagePosition[3])
+{
+	Call_StartForward(g_hFWD_OnFriendlyFire);
+	Call_PushCell(victim);
+	Call_PushCell(attacker);
+	Call_PushCell(inflictor);
+	Call_PushFloat(damage);
+	Call_PushCell(damagetype);
+	Call_PushCell(weapon);
+	Call_PushArray(damageForce, sizeof(damageForce));
+	Call_PushArray(damagePosition, sizeof(damagePosition));
+	Call_Finish();
 }
 
 void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
