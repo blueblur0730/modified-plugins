@@ -7,6 +7,7 @@
 #include <left4dhooks>
 #include <l4d2util>
 #include <colors>
+#include <l4d2_ff_manager>
 
 #define ZC_SMOKER				1
 #define ZC_BOOMER				2
@@ -33,11 +34,13 @@ ConVar
     g_hCvar_CountTankDamage,    // whether we're tracking tank damage for MVP-selection
     g_hCvar_CountWitchDamage,   // whether we're tracking witch damage for MVP-selection
     g_hCvar_BrevityFlags,       // how verbose/brief the output should be:
-    g_hCvar_RankOrder,    // how to arrange the MVP-list.
-    g_hCvar_ListLimit,           // how many MVPs to display.
+    g_hCvar_RankOrder,          // how to arrange the MVP-list.
+    g_hCvar_ListLimit,          // how many MVPs to display.
 
-    g_hCvar_AdRank,              // ad rank for the chat.
-    g_hCvar_AdInterval;          // ad interval for the chat.
+    g_hCvar_AdRank,             // ad rank for the chat.
+    g_hCvar_AdInterval,         // ad interval for the chat.
+
+    g_hCvar_RecordBeforeLeave;  // whether to record stats before leaving the safe area.
 
 bool 
     g_bCountTankDamage,
@@ -116,14 +119,14 @@ Statistics_t g_Statistics[L4D2_MAXPLAYERS + 1];
 
 // Tank stats
 int
-    g_TotalCommonKilledDuringTank = 0,              // Common killed during the tank 
-    g_iRockIndex,                                  // The index of the rock (to detect how many times we were rocked)
+    g_TotalCommonKilledDuringTank = 0,            // Common killed during the tank 
+    g_iRockIndex,                                 // The index of the rock (to detect how many times we were rocked)
     g_iTotalKills,                                // prolly more efficient to store than to recalculate
     g_iTotalCommon,
     g_iTotalDamageAll,
     g_iTotalFF;
 
-#define PLUGIN_VERSION "r2.1.0"
+#define PLUGIN_VERSION "r2.2.0"
 public Plugin myinfo =
 {
 	name = "[L4D2] Survivor MVP Statistics",
@@ -182,6 +185,8 @@ public void OnPluginStart()
 
     g_hCvar_AdRank =           CreateConVar("l4d2_mvp_statistics_ad_rank", "1", "Ad rank for the chat.");
     g_hCvar_AdInterval =       CreateConVar("l4d2_mvp_statistics_ad_interval", "80", "Ad interval for the chat.");
+
+    g_hCvar_RecordBeforeLeave = CreateConVar("l4d2_mvp_statistics_record_before_leave", "1", "Record stats before leaving the safe area.");
     
     g_bCountTankDamage =  g_hCvar_CountTankDamage.BoolValue;
     g_bCountWitchDamage = g_hCvar_CountWitchDamage.BoolValue;
@@ -554,6 +559,18 @@ void TankKilled_Event(Event event, const char[] name, bool dontBroadcast)
     g_bTankSpawn_Evented = false;
 }
 
+public void FFManager_OnFriendlyFire(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, float damageForce[3], float damagePosition[3])
+{
+    if (!g_bPlayerLeftStartArea) 
+    {
+        if (!g_hCvar_RecordBeforeLeave.BoolValue)
+            return;
+    }
+
+    g_Statistics[attacker].m_iFFDamage += RoundToNearest(damage);
+    g_iTotalFF += RoundToNearest(damage);
+}
+
 void PlayerHurt_Event(Event event, const char[] name, bool dontBroadcast)
 {
     int zombieClass = 0;
@@ -613,13 +630,7 @@ void PlayerHurt_Event(Event event, const char[] name, bool dontBroadcast)
         // Otherwise if friendly fire
         else if (GetClientTeam(attacker) == L4D2Team_Survivor && GetClientTeam(victim) == L4D2Team_Survivor && !L4D_IsPlayerIncapacitated(victim))                // survivor on survivor action == FF
         {
-            if (g_bPlayerLeftStartArea) 
-            {
-                // but don't record before readyup ended or before leaving saferoom if readyup is not loaded.
-                //PrintToServer("attacker: %d, Damage: %d", attacker, damageDone);
-                g_Statistics[attacker].m_iFFDamage += damageDone;
-                g_iTotalFF += damageDone;
-            }
+
         }
         
         // Otherwise if infected are inflicting damage on a survivor
