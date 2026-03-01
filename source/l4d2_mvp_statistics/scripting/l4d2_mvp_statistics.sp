@@ -131,7 +131,7 @@ int
     g_iTotalDamageAll,
     g_iTotalFF;
 
-#define PLUGIN_VERSION "r2.3.0"
+#define PLUGIN_VERSION "r2.3.1"
 public Plugin myinfo =
 {
 	name = "[L4D2] Survivor MVP Statistics",
@@ -839,11 +839,11 @@ void PrintRank()
         case 1:
         {
             ArrayList hArray = new ArrayList(sizeof(DataSet_t));
-            for (int i = 0; i < L4D2_MAXPLAYERS; i++)
+            for (int i = 1; i < L4D2_MAXPLAYERS; i++)
             {
                 DataSet_t data;
                 data.index = i;
-                data.data = g_Statistics[i].m_iSIKills;
+                data.data = g_Statistics[i - 1].m_iSIKills;
                 hArray.PushArray(data, sizeof(data));
             }
 
@@ -857,6 +857,9 @@ void PrintRank()
                 hArray.GetArray(i, data, sizeof(data));
                 int client = data.index;
                 if (client <= 0 || client > MaxClients || !IsClientInGame(client))
+                    continue;
+
+                if (GetClientTeam(client) != L4D2Team_Survivor)
                     continue;
 
                 CPrintToChatAll("%t", "RankMessage", i + 1, g_Statistics[client].m_szName, 
@@ -875,11 +878,11 @@ void PrintRank()
         case 2:
         {
             ArrayList hArray = new ArrayList(sizeof(DataSet_t));
-            for (int i = 0; i < L4D2_MAXPLAYERS; i++)
+            for (int i = 1; i < L4D2_MAXPLAYERS; i++)
             {
                 DataSet_t data;
                 data.index = i;
-                data.data = g_Statistics[i].m_iSIDamage;
+                data.data = g_Statistics[i - 1].m_iSIDamage;
                 hArray.PushArray(data, sizeof(data));
             }
 
@@ -893,6 +896,9 @@ void PrintRank()
                 hArray.GetArray(i, data, sizeof(data));
                 int client = data.index;
                 if (client <= 0 || client > MaxClients || !IsClientInGame(client))
+                    continue;
+
+                if (GetClientTeam(client) != L4D2Team_Survivor)
                     continue;
 
                 CPrintToChatAll("%t", "RankMessage", i + 1, g_Statistics[client].m_szName, 
@@ -911,11 +917,11 @@ void PrintRank()
         case 3:
         {
             ArrayList hArray = new ArrayList(sizeof(DataSet_t));
-            for (int i = 0; i < L4D2_MAXPLAYERS; i++)
+            for (int i = 1; i < L4D2_MAXPLAYERS; i++)
             {
                 DataSet_t data;
                 data.index = i;
-                data.data = g_Statistics[i].m_iAllDamage;
+                data.data = g_Statistics[i - 1].m_iAllDamage;
                 hArray.PushArray(data, sizeof(data));
             }
 
@@ -929,6 +935,9 @@ void PrintRank()
                 hArray.GetArray(i, data, sizeof(data));
                 int client = data.index;
                 if (client <= 0 || client > MaxClients || !IsClientInGame(client))
+                    continue;
+
+                if (GetClientTeam(client) != L4D2Team_Survivor)
                     continue;
 
                 CPrintToChatAll("%t", "RankMessage_TotalOrder", i + 1, g_Statistics[client].m_szName, 
