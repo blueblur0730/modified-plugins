@@ -49,10 +49,17 @@ bool
 int g_iBrevityFlags;
 
 bool
-    g_bTankThrow,                              // Whether or not the tank has thrown a rock
     g_bTankSpawn_Evented = false,              // When tank is spawned
     g_bInRound,
     g_bPlayerLeftStartArea;                    // used for tracking FF when RUP enabled
+
+// Tank stats
+int
+    g_TotalCommonKilledDuringTank = 0,            // Common killed during the tank 
+    g_iTotalKills,                                // prolly more efficient to store than to recalculate
+    g_iTotalCommon,
+    g_iTotalDamageAll,
+    g_iTotalFF;
 
 enum struct Statistics_t
 {
@@ -122,16 +129,7 @@ enum struct Statistics_t
 }
 Statistics_t g_Statistics[L4D2_MAXPLAYERS + 1];  
 
-// Tank stats
-int
-    g_TotalCommonKilledDuringTank = 0,            // Common killed during the tank 
-    g_iRockIndex,                                 // The index of the rock (to detect how many times we were rocked)
-    g_iTotalKills,                                // prolly more efficient to store than to recalculate
-    g_iTotalCommon,
-    g_iTotalDamageAll,
-    g_iTotalFF;
-
-#define PLUGIN_VERSION "r2.3.1"
+#define PLUGIN_VERSION "r2.3.2"
 public Plugin myinfo =
 {
 	name = "[L4D2] Survivor MVP Statistics",
@@ -172,7 +170,6 @@ public void OnPluginStart()
     HookEvent("choke_start", SmokerChoke_Event);
     HookEvent("tank_killed", TankKilled_Event);
     HookEvent("tank_spawn", TankSpawn_Event);
-    HookEvent("ability_use", AbilityUse_Event);
     
     // Catching data
     HookEvent("player_hurt", PlayerHurt_Event, EventHookMode_Post);
@@ -209,6 +206,19 @@ public void OnPluginStart()
     RegConsoleCmd("sm_mvpme", ShowMVPStats_Cmd, "Prints the client's own MVP-related stats");
 }
 
+Action SurvivorMVP_Cmd(int client, int args)
+{
+    PrintMVPString();
+    PrintLoserz(true, client);
+    return Plugin_Handled;
+}
+
+Action ShowMVPStats_Cmd(int client, int args)
+{
+    PrintLoserz(true, client);
+    return Plugin_Handled;
+}
+
 public void OnClientPutInServer(int client)
 {
     char tmpBuffer[64];
@@ -222,6 +232,8 @@ public void OnClientPutInServer(int client)
         // store name for later reference
         strcopy(g_Statistics[client].m_szName, sizeof(tmpBuffer), tmpBuffer);
     }
+
+    SDKHook(client, SDKHook_OnTakeDamagePost, OnTakeDamagePost);
 }
 
 void ConVarChange_CountTankDamage(ConVar cvar, const char[] oldValue, const char[] newValue) 
@@ -237,12 +249,6 @@ void ConVarChange_CountWitchDamage(ConVar cvar, const char[] oldValue, const cha
 void ConVarChange_BrevityFlags(ConVar cvar, const char[] oldValue, const char[] newValue) 
 {
     g_iBrevityFlags = StringToInt(newValue);
-}
-
-void PlayerLeftSafeArea_Event(Event event, const char[] name, bool dontBroadcast)
-{
-    // if RUP active, now we can start tracking FF
-    g_bPlayerLeftStartArea = true;
 }
 
 public void OnMapStart()
@@ -286,6 +292,12 @@ void RoundStart_Event(Event event, const char[] name, bool dontBroadcast)
     }
 }
 
+void PlayerLeftSafeArea_Event(Event event, const char[] name, bool dontBroadcast)
+{
+    // if RUP active, now we can start tracking FF
+    g_bPlayerLeftStartArea = true;
+}
+
 void ClearGlobals()
 {
     g_iTotalKills = 0;
@@ -293,7 +305,6 @@ void ClearGlobals()
     g_iTotalDamageAll = 0;
     g_iTotalFF = 0;
     g_TotalCommonKilledDuringTank = 0;
-    g_bTankThrow = false;
     
     g_bInRound = true;
     g_bTankSpawn_Evented = false;
@@ -351,19 +362,6 @@ void RoundEnd_Event(Event event, const char[] name, bool dontBroadcast)
     g_bTankSpawn_Evented = false;
 }
 
-Action SurvivorMVP_Cmd(int client, int args)
-{
-    PrintMVPString();
-    PrintLoserz(true, client);
-    return Plugin_Handled;
-}
-
-Action ShowMVPStats_Cmd(int client, int args)
-{
-    PrintLoserz(true, client);
-    return Plugin_Handled;
-}
-
 void Timer_DelayedMVPPrint(Handle timer)
 {
     PrintMVPString();
@@ -375,128 +373,29 @@ void Timer_PrintLosers(Handle timer)
     PrintLoserz(false, -1);
 }
 
-void PrintLoserz(bool bSolo, int client)
+// check if we are eatting a rock.
+void OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-    char tmpBuffer[1024];
-    // also find the three non-mvp survivors and tell them they sucked
-    // tell them they sucked with SI
-    if (g_iTotalDamageAll > 0)
-    {
-        int mvp_SI = FindMVP(1);
-        int mvp_SI_losers[3];
-        mvp_SI_losers[0] = FindMVP(1, mvp_SI);                                           // second place
-        mvp_SI_losers[1] = FindMVP(1, mvp_SI, mvp_SI_losers[0]);                         // third
-        mvp_SI_losers[2] = FindMVP(1, mvp_SI, mvp_SI_losers[0], mvp_SI_losers[1]);       // fourth
-        
-        for (int i = 0; i <= 2; i++)
-        {
-            if (IsClientAndInGame(mvp_SI_losers[i]) && !IsFakeClient(mvp_SI_losers[i])) 
-            {
-                if (bSolo)
-                {
-                    if (mvp_SI_losers[i] == client)
-                    {
-                        Format(tmpBuffer, sizeof(tmpBuffer), "%T", "YourRankSI", client, (i + 2), g_Statistics[mvp_SI_losers[i]].m_iAllDamage, (float(g_Statistics[mvp_SI_losers[i]].m_iAllDamage) / float(g_iTotalDamageAll)) * 100, g_Statistics[mvp_SI_losers[i]].m_iSIKills, (float(g_Statistics[mvp_SI_losers[i]].m_iSIKills) / float(g_iTotalKills)) * 100);
-                        CPrintToChat(mvp_SI_losers[i], "%s", tmpBuffer);
-                    }
-                }
-                else 
-                {
-                    Format(tmpBuffer, sizeof(tmpBuffer), "%T", "YourRankSI", mvp_SI_losers[i], (i + 2), g_Statistics[mvp_SI_losers[i]].m_iAllDamage, (float(g_Statistics[mvp_SI_losers[i]].m_iAllDamage) / float(g_iTotalDamageAll)) * 100, g_Statistics[mvp_SI_losers[i]].m_iSIKills, (float(g_Statistics[mvp_SI_losers[i]].m_iSIKills) / float(g_iTotalKills)) * 100);
-                    CPrintToChat(mvp_SI_losers[i], "%s", tmpBuffer);
-                }
-            }
-        }
-    }
-    
-    // tell them they sucked with Common
-    if (g_iTotalCommon > 0)
-    {
-        int mvp_CI = FindMVP(2);
-        int mvp_CI_losers[3];
-        mvp_CI_losers[0] = FindMVP(2, mvp_CI);                                           // second place
-        mvp_CI_losers[1] = FindMVP(2, mvp_CI, mvp_CI_losers[0]);                         // third
-        mvp_CI_losers[2] = FindMVP(2, mvp_CI, mvp_CI_losers[0], mvp_CI_losers[1]);       // fourth
-        
-        for (int i = 0; i <= 2; i++)
-        {
-            if (IsClientAndInGame(mvp_CI_losers[i]) && !IsFakeClient(mvp_CI_losers[i])) 
-            {
-                if (bSolo)
-                {
-                    if (mvp_CI_losers[i] == client)
-                    {
-                        Format(tmpBuffer, sizeof(tmpBuffer), "%T", "YourRankCI", client, (i + 2), g_Statistics[mvp_CI_losers[i]].m_iCIKills, (float(g_Statistics[mvp_CI_losers[i]].m_iCIKills) / float(g_iTotalCommon)) * 100);
-                        CPrintToChat(mvp_CI_losers[i], "%s", tmpBuffer);
-                    }
-                }
-                else
-                {
-                    Format(tmpBuffer, sizeof(tmpBuffer), "%T", "YourRankCI", mvp_CI_losers[i], (i + 2), g_Statistics[mvp_CI_losers[i]].m_iCIKills, (float(g_Statistics[mvp_CI_losers[i]].m_iCIKills) / float(g_iTotalCommon)) * 100);
-                    CPrintToChat(mvp_CI_losers[i], "%s", tmpBuffer);
-                }
-            }
-        }
-    }
-    
-    // tell them they were better with FF (I know, I know, losers = winners)
-    if (g_iTotalFF > 0)
-    {
-        int mvp_FF = FindMVP(3);
-        int mvp_FF_losers[3];
-        mvp_FF_losers[0] = FindMVP(3, mvp_FF);                                           // second place
-        mvp_FF_losers[1] = FindMVP(3, mvp_FF, mvp_FF_losers[0]);                         // third
-        mvp_FF_losers[2] = FindMVP(3, mvp_FF, mvp_FF_losers[0], mvp_FF_losers[1]);       // fourth
-        
-        for (int i = 0; i <= 2; i++)
-        {
-            if (IsClientAndInGame(mvp_FF_losers[i]) &&  !IsFakeClient(mvp_FF_losers[i])) 
-            {
-                if (bSolo)
-                {
-                    if (mvp_FF_losers[i] == client)
-                    {
-                        Format(tmpBuffer, sizeof(tmpBuffer), "%T", "YourRankFF", client, (i + 2), g_Statistics[mvp_FF_losers[i]].m_iFFDamage, (float(g_Statistics[mvp_FF_losers[i]].m_iFFDamage) / float(g_iTotalFF)) * 100);
-                        CPrintToChat(mvp_FF_losers[i], "%s", tmpBuffer);
-                    }
-                }
-                else
-                {
-                    Format(tmpBuffer, sizeof(tmpBuffer), "%T", "YourRankFF", mvp_FF_losers[i], (i + 2), g_Statistics[mvp_FF_losers[i]].m_iFFDamage, (float(g_Statistics[mvp_FF_losers[i]].m_iFFDamage) / float(g_iTotalFF)) * 100);
-                    CPrintToChat(mvp_FF_losers[i], "%s", tmpBuffer);
-                }
-            }
-        }
-    }    
-}
-
-public void OnEntityCreated(int entity, const char[] classname)
-{ 
-    if (!g_bTankThrow)
+    if (!IsClientAndInGame(victim) || !IsClientAndInGame(attacker))
         return;
-    
-    if (StrEqual(classname, "tank_rock", true))
-    {
-        g_iRockIndex = entity;
-        g_bTankThrow = true;
-    }
-}
 
-public void OnEntityDestroyed(int entity)
-{   
-    // The rock has been destroyed
-    if (g_iRockIndex == entity) 
-        g_bTankThrow = false;
-}
+    if (GetClientTeam(victim) != L4D2Team_Survivor || GetClientTeam(attacker) != L4D2Team_Infected)
+        return;
 
-void AbilityUse_Event(Event event, const char[] name, bool dontBroadcast)
-{
-    char ability[32];
-    event.GetString("ability", ability, sizeof(ability));
-    
-    // If tank is throwing a rock
-    if (StrEqual(ability, "ability_throw", true))
-        g_bTankThrow = true;
+    if (!IsTank(attacker))
+        return;
+
+    if (inflictor <= MaxClients || !IsValidEdict(inflictor))
+        return;
+
+    char classname[32];
+    GetEdictClassname(inflictor, classname, sizeof(classname));
+    if (strcmp(classname, "tank_rock", true) != 0)
+        return;
+
+    //PrintToServer("Player %d is eating a rock, attacker: %d, inflictor: %d, damage: %.02f", victim, attacker, inflictor, damage);
+    g_Statistics[victim].m_iRocksEaten++;
+    g_Statistics[victim].m_iDamageReceived += RoundToNearest(damage);
 }
 
 void PillsUsed_Event(Event event, const char[] name, bool dontBroadcast)
@@ -621,23 +520,9 @@ void PlayerHurt_Event(Event event, const char[] name, bool dontBroadcast)
                 }
             }
         }
-        // Otherwise if infected are inflicting damage on a survivor
-        else if (GetClientTeam(attacker) == L4D2Team_Infected && GetClientTeam(victim) == L4D2Team_Survivor) 
-        {
-            // If we got hit by a tank, let's see what type of damage it was
-            // If it was from a rock throw
-            if (g_bTankThrow && zombieClass == ZC_TANK) 
-                g_Statistics[victim].m_iRocksEaten++;
-
-            g_Statistics[victim].m_iDamageReceived += damageDone;
-        }
     }
 }
 
-/** 
-* When the infected are hurt (i.e. when a survivor hurts an SI)
-* We want to use this to track damage done to the witch.
-*/
 void InfectedHurt_Event(Event event, const char[] name, bool dontBroadcast)
 {
     // catch damage done to witch
@@ -945,6 +830,101 @@ void PrintRank()
             delete hArray;
         }
     }
+}
+
+void PrintLoserz(bool bSolo, int client)
+{
+    char tmpBuffer[1024];
+    // also find the three non-mvp survivors and tell them they sucked
+    // tell them they sucked with SI
+    if (g_iTotalDamageAll > 0)
+    {
+        int mvp_SI = FindMVP(1);
+        int mvp_SI_losers[3];
+        mvp_SI_losers[0] = FindMVP(1, mvp_SI);                                           // second place
+        mvp_SI_losers[1] = FindMVP(1, mvp_SI, mvp_SI_losers[0]);                         // third
+        mvp_SI_losers[2] = FindMVP(1, mvp_SI, mvp_SI_losers[0], mvp_SI_losers[1]);       // fourth
+        
+        for (int i = 0; i <= 2; i++)
+        {
+            if (IsClientAndInGame(mvp_SI_losers[i]) && !IsFakeClient(mvp_SI_losers[i])) 
+            {
+                if (bSolo)
+                {
+                    if (mvp_SI_losers[i] == client)
+                    {
+                        Format(tmpBuffer, sizeof(tmpBuffer), "%T", "YourRankSI", client, (i + 2), g_Statistics[mvp_SI_losers[i]].m_iAllDamage, (float(g_Statistics[mvp_SI_losers[i]].m_iAllDamage) / float(g_iTotalDamageAll)) * 100, g_Statistics[mvp_SI_losers[i]].m_iSIKills, (float(g_Statistics[mvp_SI_losers[i]].m_iSIKills) / float(g_iTotalKills)) * 100);
+                        CPrintToChat(mvp_SI_losers[i], "%s", tmpBuffer);
+                    }
+                }
+                else 
+                {
+                    Format(tmpBuffer, sizeof(tmpBuffer), "%T", "YourRankSI", mvp_SI_losers[i], (i + 2), g_Statistics[mvp_SI_losers[i]].m_iAllDamage, (float(g_Statistics[mvp_SI_losers[i]].m_iAllDamage) / float(g_iTotalDamageAll)) * 100, g_Statistics[mvp_SI_losers[i]].m_iSIKills, (float(g_Statistics[mvp_SI_losers[i]].m_iSIKills) / float(g_iTotalKills)) * 100);
+                    CPrintToChat(mvp_SI_losers[i], "%s", tmpBuffer);
+                }
+            }
+        }
+    }
+    
+    // tell them they sucked with Common
+    if (g_iTotalCommon > 0)
+    {
+        int mvp_CI = FindMVP(2);
+        int mvp_CI_losers[3];
+        mvp_CI_losers[0] = FindMVP(2, mvp_CI);                                           // second place
+        mvp_CI_losers[1] = FindMVP(2, mvp_CI, mvp_CI_losers[0]);                         // third
+        mvp_CI_losers[2] = FindMVP(2, mvp_CI, mvp_CI_losers[0], mvp_CI_losers[1]);       // fourth
+        
+        for (int i = 0; i <= 2; i++)
+        {
+            if (IsClientAndInGame(mvp_CI_losers[i]) && !IsFakeClient(mvp_CI_losers[i])) 
+            {
+                if (bSolo)
+                {
+                    if (mvp_CI_losers[i] == client)
+                    {
+                        Format(tmpBuffer, sizeof(tmpBuffer), "%T", "YourRankCI", client, (i + 2), g_Statistics[mvp_CI_losers[i]].m_iCIKills, (float(g_Statistics[mvp_CI_losers[i]].m_iCIKills) / float(g_iTotalCommon)) * 100);
+                        CPrintToChat(mvp_CI_losers[i], "%s", tmpBuffer);
+                    }
+                }
+                else
+                {
+                    Format(tmpBuffer, sizeof(tmpBuffer), "%T", "YourRankCI", mvp_CI_losers[i], (i + 2), g_Statistics[mvp_CI_losers[i]].m_iCIKills, (float(g_Statistics[mvp_CI_losers[i]].m_iCIKills) / float(g_iTotalCommon)) * 100);
+                    CPrintToChat(mvp_CI_losers[i], "%s", tmpBuffer);
+                }
+            }
+        }
+    }
+    
+    // tell them they were better with FF (I know, I know, losers = winners)
+    if (g_iTotalFF > 0)
+    {
+        int mvp_FF = FindMVP(3);
+        int mvp_FF_losers[3];
+        mvp_FF_losers[0] = FindMVP(3, mvp_FF);                                           // second place
+        mvp_FF_losers[1] = FindMVP(3, mvp_FF, mvp_FF_losers[0]);                         // third
+        mvp_FF_losers[2] = FindMVP(3, mvp_FF, mvp_FF_losers[0], mvp_FF_losers[1]);       // fourth
+        
+        for (int i = 0; i <= 2; i++)
+        {
+            if (IsClientAndInGame(mvp_FF_losers[i]) &&  !IsFakeClient(mvp_FF_losers[i])) 
+            {
+                if (bSolo)
+                {
+                    if (mvp_FF_losers[i] == client)
+                    {
+                        Format(tmpBuffer, sizeof(tmpBuffer), "%T", "YourRankFF", client, (i + 2), g_Statistics[mvp_FF_losers[i]].m_iFFDamage, (float(g_Statistics[mvp_FF_losers[i]].m_iFFDamage) / float(g_iTotalFF)) * 100);
+                        CPrintToChat(mvp_FF_losers[i], "%s", tmpBuffer);
+                    }
+                }
+                else
+                {
+                    Format(tmpBuffer, sizeof(tmpBuffer), "%T", "YourRankFF", mvp_FF_losers[i], (i + 2), g_Statistics[mvp_FF_losers[i]].m_iFFDamage, (float(g_Statistics[mvp_FF_losers[i]].m_iFFDamage) / float(g_iTotalFF)) * 100);
+                    CPrintToChat(mvp_FF_losers[i], "%s", tmpBuffer);
+                }
+            }
+        }
+    }    
 }
 
 int ArraySortFunc(int index1, int index2, ArrayList array, Handle hndl)
