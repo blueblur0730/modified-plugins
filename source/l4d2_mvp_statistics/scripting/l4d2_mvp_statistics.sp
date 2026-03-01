@@ -66,6 +66,9 @@ enum struct Statistics_t
     int m_iWitchDamage; // witch only
     int m_iFFDamage;    // friendly fire damage
 
+    int m_iTICount;     // team incapacitation count
+    int m_iTKCount;     // team kill count
+
     // Detailed statistics
     int m_iSIDamageClass[ZC_TANK + 1];  // si classes
     int m_iTimesPinned[ZC_TANK + 1];    // times pinned
@@ -89,6 +92,8 @@ enum struct Statistics_t
         this.m_iTankDamage = 0;
         this.m_iWitchDamage = 0;
         this.m_iFFDamage = 0;
+        this.m_iTICount = 0;
+        this.m_iTKCount = 0;
         
         for (int siClass = ZC_SMOKER; siClass <= ZC_TANK; siClass++) 
         {
@@ -126,7 +131,7 @@ int
     g_iTotalDamageAll,
     g_iTotalFF;
 
-#define PLUGIN_VERSION "r2.2.0"
+#define PLUGIN_VERSION "r2.3.0"
 public Plugin myinfo =
 {
 	name = "[L4D2] Survivor MVP Statistics",
@@ -172,6 +177,7 @@ public void OnPluginStart()
     // Catching data
     HookEvent("player_hurt", PlayerHurt_Event, EventHookMode_Post);
     HookEvent("player_death", PlayerDeath_Event, EventHookMode_Post);
+    HookEvent("player_incapacitated", PlayerIncapacitated_Event, EventHookMode_Post);
     HookEvent("infected_hurt" ,InfectedHurt_Event, EventHookMode_Post);
     HookEvent("infected_death", InfectedDeath_Event, EventHookMode_Post);
     
@@ -284,12 +290,8 @@ void ClearGlobals()
 {
     g_iTotalKills = 0;
     g_iTotalCommon = 0;
-    //iTotalDamage = 0;
-    //iTotalDamageTank = 0;
-    //iTotalDamageWitch = 0;
     g_iTotalDamageAll = 0;
     g_iTotalFF = 0;
-    //ttlSiDmgDuringTank = 0;
     g_TotalCommonKilledDuringTank = 0;
     g_bTankThrow = false;
     
@@ -627,12 +629,6 @@ void PlayerHurt_Event(Event event, const char[] name, bool dontBroadcast)
                 }
             }
         }
-        // Otherwise if friendly fire
-        else if (GetClientTeam(attacker) == L4D2Team_Survivor && GetClientTeam(victim) == L4D2Team_Survivor && !L4D_IsPlayerIncapacitated(victim))                // survivor on survivor action == FF
-        {
-
-        }
-        
         // Otherwise if infected are inflicting damage on a survivor
         else if (GetClientTeam(attacker) == L4D2Team_Infected && GetClientTeam(victim) == L4D2Team_Survivor) 
         {
@@ -683,19 +679,24 @@ void InfectedHurt_Event(Event event, const char[] name, bool dontBroadcast)
 void PlayerDeath_Event(Event event, const char[] name, bool dontBroadcast)
 {
     // Get the victim details
-    int zombieClass = 0;
-    int victimId = event.GetInt("userid");
-    int victim = GetClientOfUserId(victimId);
+    int victim = GetClientOfUserId(event.GetInt("userid"));
     
     // Get the attacker details
-    int attackerId = event.GetInt("attacker");
-    int attacker = GetClientOfUserId(attackerId);
-    
+    int attacker = GetClientOfUserId(event.GetInt("attacker"));
+
+	if (attacker == victim)
+		return;
+
+    if (!IsClientAndInGame(victim) || !IsClientAndInGame(attacker))
+        return;
+
+    int zombieClass = GetEntProp(victim, Prop_Send, "m_zombieClass");
+    if (zombieClass == ZC_TANK) 
+        g_bTankSpawn_Evented = false;
+
     // no world kills or flukes or whatevs, no bot attackers
-    if (victimId && attackerId && IsClientAndInGame(victim) && IsClientAndInGame(attacker) && GetClientTeam(attacker) == L4D2Team_Survivor)
+    if (GetClientTeam(attacker) == L4D2Team_Survivor)
     {
-        zombieClass = GetEntProp(victim, Prop_Send, "m_zombieClass");
-        
         // only SI, not the tank && only player-attackers
         if (zombieClass >= ZC_SMOKER && zombieClass < ZC_WITCH)
         {
@@ -704,25 +705,32 @@ void PlayerDeath_Event(Event event, const char[] name, bool dontBroadcast)
             g_iTotalKills++;
         }
     }
-    
-    /**
-    * Are we tracking the tank? 
-    * This is a secondary measure. For some reason when I test locally in PM, the
-    * tank_killed event is triggered, but when I test in a custom config, it's not.
-    * Hopefully this should fix it.
-    */
-    if (victimId && IsClientAndInGame(victim)) 
+
+    if (GetClientTeam(victim) == L4D2Team_Survivor && GetClientTeam(attacker) == L4D2Team_Survivor)
     {
-        zombieClass = GetEntProp(victim, Prop_Send, "m_zombieClass");
-        if (zombieClass == ZC_TANK) 
-            g_bTankSpawn_Evented = false;
+        g_Statistics[attacker].m_iTKCount++;
     }
 }
 
-// Was the zombie a hunter?
-/*bool isHunter(zombieClass) {
-    return zombieClass == ZC_HUNTER;
-}*/
+void PlayerIncapacitated_Event(Event event, const char[] name, bool dontBroadcast)
+{
+    int victim = GetClientOfUserId(event.GetInt("userid"));
+    int attacker = GetClientOfUserId(event.GetInt("attacker"));
+
+    if (attacker == 0)
+        attacker = event.GetInt("attackerentid");
+    
+    if (victim <= 0 || victim > MaxClients || !IsClientInGame(victim))
+        return;
+
+    if (attacker <= 0 || attacker > MaxClients || !IsClientInGame(attacker))
+        return;
+
+    if (GetClientTeam(victim) != 2 || GetClientTeam(attacker) != 2)
+        return;
+
+    g_Statistics[attacker].m_iTICount++;
+}
 
 void InfectedDeath_Event(Event event, const char[] name, bool dontBroadcast)
 {
@@ -773,7 +781,11 @@ void PrintMVPString()
         {
             if (mvp_SI > 0)
             {
-                CPrintToChatAll("%t", "MVP_SI", bSI_bot ? "[BOT]" : mvp_SI_name, g_Statistics[mvp_SI].m_iAllDamage, (float(g_Statistics[mvp_SI].m_iAllDamage) / float(g_iTotalDamageAll)) * 100, g_Statistics[mvp_SI].m_iSIKills, (float(g_Statistics[mvp_SI].m_iSIKills) / float(g_iTotalKills)) * 100);
+                CPrintToChatAll("%t", "MVP_SI", bSI_bot ? "[BOT]" : mvp_SI_name, 
+                                                g_Statistics[mvp_SI].m_iAllDamage, 
+                                                (float(g_Statistics[mvp_SI].m_iAllDamage) / float(g_iTotalDamageAll)) * 100, 
+                                                g_Statistics[mvp_SI].m_iSIKills, 
+                                                (float(g_Statistics[mvp_SI].m_iSIKills) / float(g_iTotalKills)) * 100);
             }
             else
             {
@@ -785,7 +797,9 @@ void PrintMVPString()
         {
             if (mvp_Common > 0)
             {
-                CPrintToChatAll("%t", "MVP_CI", bCI_bot ? "[BOT]" : mvp_Common_name, g_Statistics[mvp_Common].m_iCIKills, (float(g_Statistics[mvp_Common].m_iCIKills) / float(g_iTotalCommon)) * 100);
+                CPrintToChatAll("%t", "MVP_CI", bCI_bot ? "[BOT]" : mvp_Common_name, 
+                                                g_Statistics[mvp_Common].m_iCIKills, 
+                                                (float(g_Statistics[mvp_Common].m_iCIKills) / float(g_iTotalCommon)) * 100);
             }
             else
             {
@@ -803,7 +817,11 @@ void PrintMVPString()
         }
         else
         {
-            CPrintToChatAll("%t", "LVP_FF", bFF_bot ? "[BOT]" : mvp_FF_name, g_Statistics[mvp_FF].m_iFFDamage, (float(g_Statistics[mvp_FF].m_iFFDamage) / float(g_iTotalFF)) * 100);
+            CPrintToChatAll("%t", "LVP_FF", bFF_bot ? "[BOT]" : mvp_FF_name, 
+                                            g_Statistics[mvp_FF].m_iFFDamage, 
+                                            (float(g_Statistics[mvp_FF].m_iFFDamage) / float(g_iTotalFF)) * 100,
+                                            g_Statistics[mvp_FF].m_iTICount, 
+                                            g_Statistics[mvp_FF].m_iTKCount);
         }
     }
 }
@@ -841,7 +859,14 @@ void PrintRank()
                 if (client <= 0 || client > MaxClients || !IsClientInGame(client))
                     continue;
 
-                CPrintToChatAll("%t", "RankMessage", i + 1, g_Statistics[client].m_szName, g_Statistics[client].m_iSIKills, g_Statistics[client].m_iSIDamage, g_Statistics[client].m_iCIKills, g_Statistics[client].m_iFFDamage, g_Statistics[client].m_iAllDamage);  
+                CPrintToChatAll("%t", "RankMessage", i + 1, g_Statistics[client].m_szName, 
+                                                            g_Statistics[client].m_iSIKills, 
+                                                            g_Statistics[client].m_iSIDamage, 
+                                                            g_Statistics[client].m_iCIKills, 
+                                                            g_Statistics[client].m_iFFDamage, 
+                                                            g_Statistics[client].m_iAllDamage, 
+                                                            g_Statistics[client].m_iTICount, 
+                                                            g_Statistics[client].m_iTKCount);  
             }
 
             delete hArray;
@@ -870,7 +895,14 @@ void PrintRank()
                 if (client <= 0 || client > MaxClients || !IsClientInGame(client))
                     continue;
 
-                CPrintToChatAll("%t", "RankMessage", i + 1, g_Statistics[client].m_szName, g_Statistics[client].m_iSIKills, g_Statistics[client].m_iSIDamage, g_Statistics[client].m_iCIKills, g_Statistics[client].m_iFFDamage, g_Statistics[client].m_iAllDamage);  
+                CPrintToChatAll("%t", "RankMessage", i + 1, g_Statistics[client].m_szName, 
+                                                            g_Statistics[client].m_iSIKills, 
+                                                            g_Statistics[client].m_iSIDamage, 
+                                                            g_Statistics[client].m_iCIKills, 
+                                                            g_Statistics[client].m_iFFDamage, 
+                                                            g_Statistics[client].m_iAllDamage, 
+                                                            g_Statistics[client].m_iTICount, 
+                                                            g_Statistics[client].m_iTKCount);  
             }
 
             delete hArray;
@@ -899,7 +931,14 @@ void PrintRank()
                 if (client <= 0 || client > MaxClients || !IsClientInGame(client))
                     continue;
 
-                CPrintToChatAll("", i + 1, g_Statistics[client].m_szName, g_Statistics[client].m_iAllDamage, g_Statistics[client].m_iSIKills, g_Statistics[client].m_iSIDamage, g_Statistics[client].m_iCIKills, g_Statistics[client].m_iFFDamage);  
+                CPrintToChatAll("%t", "RankMessage_TotalOrder", i + 1, g_Statistics[client].m_szName, 
+                                                                        g_Statistics[client].m_iAllDamage, 
+                                                                        g_Statistics[client].m_iSIKills, 
+                                                                        g_Statistics[client].m_iSIDamage, 
+                                                                        g_Statistics[client].m_iCIKills, 
+                                                                        g_Statistics[client].m_iFFDamage, 
+                                                                        g_Statistics[client].m_iTICount, 
+                                                                        g_Statistics[client].m_iTKCount);  
             }
 
             delete hArray;
