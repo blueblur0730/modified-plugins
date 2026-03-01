@@ -258,7 +258,7 @@ enum struct DamageCache_t
 } 
 DamageCache_t g_DamageCache[L4D2_MAXPLAYERS + 1];
 
-#define PLUGIN_VERSION "r3.2.0"
+#define PLUGIN_VERSION "r3.2.1"
 public Plugin myinfo =
 {
 	name = "[L4D2] Friendly Fire Manager",
@@ -316,7 +316,7 @@ public void OnPluginStart()
 Action Command_ReloadFF(int client, int args)
 {
 	g_WeaponData.Init();
-	PrintToServer("FF Config Reloaded.");
+	ReplyToCommand(client, "FF Config Reloaded.");
 	return Plugin_Handled;
 }
 
@@ -372,7 +372,6 @@ public void OnClientPutInServer(int client)
 	if (!IsClientInGame(client) || g_bHooked[client])
 		return;
 
-	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 	SDKHook(client, SDKHook_OnTakeDamageAlive, OnTakeDamageAlive);	  // process melee damage.
 	SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
 
@@ -432,79 +431,6 @@ public void OnGameFrame()
  * See max range as m (usually 3000), in gain range the formula is:
  * f(x_gain) = f(x) * (m - x / m - g), g < x <= m
 */
-
-Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3])
-{
-	if (victim < 1 || victim > MaxClients)
-		return Plugin_Continue;
-
-	if (attacker < 1 || attacker > MaxClients)
-		return Plugin_Continue;
-
-	if (!IsClientInGame(victim) || !IsClientInGame(attacker))
-		return Plugin_Continue;
-
-	if (GetClientTeam(attacker) != 2 || GetClientTeam(victim) != 2)
-		return Plugin_Continue;
-
-	if (!g_hCvar_ShouldBlockFF.BoolValue)
-	{
-		// we left shotguns to alive callback only.
-		int wepid = IdentifyWeapon(weapon);
-		if (wepid != WEPID_MELEE && wepid != WEPID_PUMPSHOTGUN && wepid != WEPID_AUTOSHOTGUN && wepid != WEPID_SHOTGUN_CHROME && wepid != WEPID_SHOTGUN_SPAS)
-		{
-			if (g_hCvar_EnableModifier.BoolValue)
-			{
-				char sName[64];
-				GetWeaponName(wepid, sName, sizeof(sName));
-				//PrintToServer("[OnTakeDamage] Gun: %s, Damage: %.02f", sName, damage);
-				float flDamage = g_WeaponData.GetGunDamage(sName);
-				if (flDamage != -1.0)
-				{
-					float vecMyPosition[3], vecLength[3];
-					GetClientAbsOrigin(attacker, vecMyPosition);
-					MakeVectorFromPoints(vecMyPosition, damagePosition, vecLength);
-					float flDistance = GetVectorLength(vecLength);
-					float flRangeDecayedDamage = g_WeaponData.GetRangeDecayedDamage(flDamage, flDistance, sName);
-
-					//PrintToServer("[OnTakeDamage] Gun: %s, Damage: %.02f, Original Damage: %.02f, Range Decayed Damage: %.02f", sName, flDamage, damage, flRangeDecayedDamage);
-					if (flRangeDecayedDamage != -1.0)
-					{
-						damage = flRangeDecayedDamage;
-					}
-					else
-					{
-						damage = flDamage;
-					}
-
-					CheckTimer(damage, attacker, victim);
-					CallForward(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
-					return Plugin_Changed;
-				}
-				else
-				{
-					CallForward(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
-					CheckTimer(damage, attacker, victim);
-					return Plugin_Continue;
-				}
-			}
-			else
-			{
-				CallForward(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
-				CheckTimer(damage, attacker, victim);
-				return Plugin_Continue;
-			}
-		}
-	}
-	else
-	{
-		damage = 0.0;
-		return Plugin_Changed;
-	}
-
-	return Plugin_Continue;
-}
-
 Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3])
 {
 	if (victim < 1 || victim > MaxClients)
@@ -565,7 +491,7 @@ Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damag
 				}
 			}
 		}
-		else if (wepid == WEPID_PUMPSHOTGUN || wepid == WEPID_AUTOSHOTGUN || wepid == WEPID_SHOTGUN_CHROME || wepid == WEPID_SHOTGUN_SPAS)
+		else
 		{
 			if (g_hCvar_EnableModifier.BoolValue)
 			{
