@@ -475,7 +475,7 @@ public void OnEntityCreated(int entity, const char[] classname)
     if (!g_bTankThrow)
         return;
     
-    if(StrEqual(classname, "tank_rock", true))
+    if (StrEqual(classname, "tank_rock", true))
     {
         g_iRockIndex = entity;
         g_bTankThrow = true;
@@ -492,7 +492,7 @@ public void OnEntityDestroyed(int entity)
 void AbilityUse_Event(Event event, const char[] name, bool dontBroadcast)
 {
     char ability[32];
-    event.GetString("ability", ability, 32);
+    event.GetString("ability", ability, sizeof(ability));
     
     // If tank is throwing a rock
     if (StrEqual(ability, "ability_throw", true))
@@ -575,27 +575,23 @@ public void FFManager_OnFriendlyFire(int victim, int attacker, int inflictor, fl
 
 void PlayerHurt_Event(Event event, const char[] name, bool dontBroadcast)
 {
-    int zombieClass = 0;
-    
     // Victim details
-    int victimId = event.GetInt("userid");
-    int victim = GetClientOfUserId(victimId);
+    int victim = GetClientOfUserId(event.GetInt("userid"));
     
     // Attacker details
-    int attackerId = event.GetInt("attacker");
-    int attacker = GetClientOfUserId(attackerId);
-    
-    // Misc details
-    int damageDone = event.GetInt("dmg_health");
+    int attacker = GetClientOfUserId(event.GetInt("attacker"));
     
     // no world damage or flukes or whatevs, no bot attackers, no infected-to-infected damage
-    if (victimId && attackerId && IsClientAndInGame(victim) && IsClientAndInGame(attacker))
+    if (IsClientAndInGame(victim) && IsClientAndInGame(attacker))
     {
+        int zombieClass = GetEntProp(victim, Prop_Send, "m_zombieClass");
+
+        // Misc details
+        int damageDone = event.GetInt("dmg_health");
+
         // If a survivor is attacking infected
         if (GetClientTeam(attacker) == L4D2Team_Survivor && GetClientTeam(victim) == L4D2Team_Infected)
         {
-            zombieClass = GetEntProp(victim, Prop_Send, "m_zombieClass");
-            
             // Increment the damage for that class to the total
             g_Statistics[attacker].m_iSIDamageClass[zombieClass] += damageDone;
             //PrintToConsole(attacker, "Attacked: %d - Dmg: %d", zombieClass, damageDone);
@@ -605,21 +601,17 @@ void PlayerHurt_Event(Event event, const char[] name, bool dontBroadcast)
             if (zombieClass >= ZC_SMOKER && zombieClass < ZC_WITCH)
             {
                 // If the tank is up, let's store separately
-                if (g_bTankSpawn_Evented) {
+                if (g_bTankSpawn_Evented) 
                     g_Statistics[attacker].m_iSiDmgDuringTank += damageDone;
-                    //ttlSiDmgDuringTank += damageDone;
-                }
                 
                 g_Statistics[attacker].m_iSIDamage += damageDone;
                 g_Statistics[attacker].m_iAllDamage += damageDone;
-               // iTotalDamage += damageDone;
                 g_iTotalDamageAll += damageDone;
             }
             else if (zombieClass == ZC_TANK && damageDone != 5000) // For some reason the last attacker does 5k damage?
             {
                 // We want to track tank damage even if we're not factoring it in to our mvp result
                 g_Statistics[attacker].m_iTankDamage+= damageDone;
-                //iTotalDamageTank += damageDone;
                 
                 // If we're factoring it in, include it in our overall damage
                 if (g_bCountTankDamage)
@@ -632,8 +624,6 @@ void PlayerHurt_Event(Event event, const char[] name, bool dontBroadcast)
         // Otherwise if infected are inflicting damage on a survivor
         else if (GetClientTeam(attacker) == L4D2Team_Infected && GetClientTeam(victim) == L4D2Team_Survivor) 
         {
-            zombieClass = GetEntProp(attacker, Prop_Send, "m_zombieClass");
-            
             // If we got hit by a tank, let's see what type of damage it was
             // If it was from a rock throw
             if (g_bTankThrow && zombieClass == ZC_TANK) 
@@ -652,15 +642,13 @@ void InfectedHurt_Event(Event event, const char[] name, bool dontBroadcast)
 {
     // catch damage done to witch
     int victimEntId = event.GetInt("entityid");
-    
     if (IsWitch(victimEntId))
     {
-        int attackerId = event.GetInt("attacker");
-        int attacker = GetClientOfUserId(attackerId);
+        int attacker = GetClientOfUserId(event.GetInt("attacker"));
         int damageDone = event.GetInt("amount");
         
         // no world damage or flukes or whatevs, no bot attackers
-        if (attackerId && IsClientAndInGame(attacker) && GetClientTeam(attacker) == L4D2Team_Survivor)
+        if (IsClientAndInGame(attacker) && GetClientTeam(attacker) == L4D2Team_Survivor)
         {
             // We want to track the witch damage regardless of whether we're counting it in our mvp stat
             g_Statistics[attacker].m_iWitchDamage += damageDone;
@@ -734,10 +722,14 @@ void PlayerIncapacitated_Event(Event event, const char[] name, bool dontBroadcas
 
 void InfectedDeath_Event(Event event, const char[] name, bool dontBroadcast)
 {
-    int attackerId = event.GetInt("attacker");
-    int attacker = GetClientOfUserId(attackerId);
-    
-    if (g_bPlayerLeftStartArea && attackerId && IsClientAndInGame(attacker) && GetClientTeam(attacker) == L4D2Team_Survivor)
+    if (g_bPlayerLeftStartArea)
+    {
+        if (!g_hCvar_RecordBeforeLeave.BoolValue)
+            return;
+    }
+
+    int attacker = GetClientOfUserId(event.GetInt("attacker"));
+    if (IsClientAndInGame(attacker) && GetClientTeam(attacker) == L4D2Team_Survivor)
     {
         // If the tank is up, let's store separately
         if (g_bTankSpawn_Evented) 
