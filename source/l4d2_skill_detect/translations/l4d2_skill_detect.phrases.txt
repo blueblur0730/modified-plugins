@@ -145,9 +145,9 @@
     // crown
 	"CrownedWitch"
 	{
-        "#format"   "{1:N},{2:i}" // 1:attacker 2:damage
-		"en"		"{olive}{1}{default} crowned a witch ({blue}{2}{default} damage)."
-        "chi"		"{olive}{1}{default} 秒杀了一个 witch ({blue}{2}{default} 伤害)."
+        "#format"   "{1:N}" // 1:attacker
+		"en"		"{olive}{1}{default} crowned a witch."
+        "chi"		"{olive}{1}{default} 秒杀了一个 witch."
 	}
 	"CrownedWitch2"
 	{
@@ -157,15 +157,15 @@
     // drawcrown
 	"DrawCrowned"
 	{
-        "#format"   "{1:N},{2:i},{3:i}" // 1:attacker 2:damage 3:chipdamage
-		"en"		"{olive}{1}{default} draw-crowned a witch ({blue}{2}{default} damage, {olive}{3}{default} chip)."
-        "chi"		"{olive}{1}{default} 引秒了一个 witch ({blue}{2}{default} 伤害, {olive}{3}{default} 引诱伤害)."
+        "#format"   "{1:N}" // 1:attacker
+		"en"		"{olive}{1}{default} draw-crowned a witch."
+        "chi"		"{olive}{1}{default} 引秒了一个 witch."
 	}
 	"DrawCrowned2"
 	{
-        "#format"   "{1:i},{2:i}" // 1:damage 2:chipdamage
-		"en"		"A witch was draw-crowned ({blue}{1}{default} damage, {olive}{2}{default} chip)."
-        "chi"		"一个 witch 被引秒了 ({blue}{1}{default} 伤害, {olive}{2}{default} 引诱伤害)."
+        "#format"   "{1:i}" // 1:damage
+		"en"		"A witch was draw-crowned."
+        "chi"		"一个 witch 被引秒了."
 	}
     // smoker clears
 	"CutTongue"

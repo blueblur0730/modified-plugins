@@ -58,37 +58,6 @@
 #define L4D1_ZOMBIECLASS_TANK 5
 #define L4D2_ZOMBIECLASS_TANK 8
 
-// Map values: weapon type
-enum strWeaponType
-{
-	WPTYPE_SNIPER,
-	WPTYPE_MAGNUM,
-	WPTYPE_GL
-};
-
-// Map values: OnEntityCreated classname
-enum strOEC
-{
-	OEC_WITCH,
-	OEC_TANKROCK,
-	OEC_TRIGGER,
-	OEC_CARALARM,
-	OEC_CARGLASS
-};
-
-// witch array enMaps (L4D2_MAXPLAYERS+index)
-enum
-{
-	WTCH_NONE,
-	WTCH_HEALTH,
-	WTCH_GOTSLASH,
-	WTCH_STARTLED,
-	WTCH_CROWNER,
-	WTCH_CROWNSHOT,
-	WTCH_CROWNTYPE,
-	strWitchArray
-};
-
 enum
 {
 	CALARM_UNKNOWN,
@@ -119,6 +88,14 @@ enum struct TankRockTrace_t
 	int m_iSkeeter;
 }
 static ArrayList g_hArray_TankRockTrace;
+
+enum struct WitchTrace_t
+{
+	int m_iWitch;		// witch entity index
+	bool m_bGotSlash;	// failed to crown a witch?
+	bool m_bStartled;	// witch got startled?
+}
+static ArrayList g_hArray_WitchTrace;
 
 enum struct SkillCache_t
 {
@@ -177,28 +154,14 @@ static int			g_iLastCarAlarmBoomer;			   // if a boomer triggered an alarm, reme
 
 void _skill_detect_tracking_OnPluginStart()
 {
-	if (g_bLateLoad)
-	{
-		for (int client = 1; client <= MaxClients; client++)
-		{
-			if (IsValidClientInGame(client))
-			{
-				SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamageByWitch);
-			}	
-		}
-	}
-
 	g_hArray_TankRockTrace = new ArrayList(sizeof(TankRockTrace_t));
+	g_hArray_WitchTrace = new ArrayList(sizeof(WitchTrace_t));
 }
 
 void _skill_detect_tracking_OnPluginEnd()
 {
 	delete g_hArray_TankRockTrace;
-}
-
-void _skill_detect_tracking_OnClientPutInServer(int client)
-{
-	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamageByWitch);
+	delete g_hArray_WitchTrace;
 }
 
 void HookSkillDetectEvent()
@@ -248,6 +211,7 @@ static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 	}
 
 	g_hArray_TankRockTrace.Clear();
+	g_hArray_WitchTrace.Clear();
 }
 
 static void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
@@ -1286,34 +1250,34 @@ void _skill_detect_tracking_OnEntityDestroyed(int entity)
 	int index = g_hArray_TankRockTrace.FindValue(entity, TankRockTrace_t::m_iRock);
 	if (index != -1)
 	{
+		//PrintToServer("Rock: %i killed, index: %i", entity, index);
 		CreateTimer(ROCK_CHECK_TIME, Timer_CheckRockSkeet, index);
-		SDKUnhook(entity, SDKHook_TraceAttack, TraceAttackPost_Rock);
 		return;
 	}
 
-	char witch_key[10];
-	FormatEx(witch_key, sizeof(witch_key), "%x", entity);
-
-	int witch_array[L4D2_MAXPLAYERS + DMGARRAYEXT];
-	if (g_hWitchMap.GetArray(witch_key, witch_array, sizeof(witch_array)))
+	index = g_hArray_WitchTrace.FindValue(entity, WitchTrace_t::m_iWitch);
+	if (index != -1)
 	{
 		// witch
-		//  delayed deletion, to avoid potential problems with crowns not detecting
-		CreateTimer(WITCH_DELETE_TIME, Timer_WitchKeyDelete, entity);
-		SDKUnhook(entity, SDKHook_OnTakeDamagePost, OnTakeDamagePost_Witch);
-		return;
+		// delayed deletion, to avoid potential problems with crowns not detecting
+		//PrintToServer("Witch %i killed, index: %i", entity, index);
+		CreateTimer(WITCH_DELETE_TIME, Timer_WitchKeyDelete, index);
 	}
 }
 
-static void Timer_WitchKeyDelete(Handle timer, any witch)
+static void Timer_WitchKeyDelete(Handle timer, int index)
 {
-	char witch_key[10];
-	FormatEx(witch_key, sizeof(witch_key), "%x", witch);
-	g_hWitchMap.Remove(witch_key);
+	//PrintToServer("index: %i, length: %i", index, g_hArray_WitchTrace.Length);
+	g_hArray_WitchTrace.Erase(index);
 }
 
-static void Timer_CheckRockSkeet(Handle timer, any index)
+static void Timer_CheckRockSkeet(Handle timer, int index)
 {
+	// nah it just works.
+	//PrintToServer("index: %i, length: %i", index, g_hArray_TankRockTrace.Length);
+	if (!g_hArray_TankRockTrace.Length)
+		return;
+
 	TankRockTrace_t rockTrace;
 	g_hArray_TankRockTrace.GetArray(index, rockTrace, sizeof(rockTrace))
 	g_hArray_TankRockTrace.Erase(index);
@@ -1372,27 +1336,33 @@ static void Event_BoomerExploded(Event event, const char[] name, bool dontBroadc
 static void Event_WitchSpawned(Event event, const char[] name, bool dontBroadcast)
 {
 	int witch = event.GetInt("witchid");
-
-	SDKHook(witch, SDKHook_OnTakeDamagePost, OnTakeDamagePost_Witch);
-
-	int	 witch_dmg_array[L4D2_MAXPLAYERS + DMGARRAYEXT];
-	char witch_key[10];
-	FormatEx(witch_key, sizeof(witch_key), "%x", witch);
-
-	witch_dmg_array[L4D2_MAXPLAYERS + WTCH_HEALTH] = g_hCvar_WitchHealth.IntValue;
-	g_hWitchMap.SetArray(witch_key, witch_dmg_array, L4D2_MAXPLAYERS + DMGARRAYEXT, false);
+	if (!IsValidEdict(witch))
+		return;
+	
+	int index = g_hArray_WitchTrace.FindValue(witch, WitchTrace_t::m_iWitch);
+	if (index == -1)
+	{
+		WitchTrace_t witchTrace;
+		witchTrace.m_iWitch = witch;
+		g_hArray_WitchTrace.PushArray(witchTrace, sizeof(witchTrace));
+	}
+	else
+	{
+		WitchTrace_t witchTrace;
+		witchTrace.m_iWitch = witch;
+		g_hArray_WitchTrace.SetArray(index, witchTrace, sizeof(witchTrace));
+	}
 }
 
 static void Event_WitchKilled(Event event, const char[] name, bool dontBroadcast)
 {
 	int witch	 = event.GetInt("witchid");
 	int attacker = GetClientOfUserId(event.GetInt("userid"));
-	SDKUnhook(witch, SDKHook_OnTakeDamagePost, OnTakeDamagePost_Witch);
 
 	if (!IsValidSurvivor(attacker))
 		return;
 
-	bool	 bOneShot = event.GetBool("oneshot");
+	bool bOneShot = event.GetBool("oneshot");
 
 	// is it a crown / drawcrown?
 	DataPack pack	  = new DataPack();
@@ -1406,101 +1376,13 @@ static void Event_WitchHarasserSet(Event event, const char[] name, bool dontBroa
 {
 	int	 witch = event.GetInt("witchid");
 
-	char witch_key[10];
-	FormatEx(witch_key, sizeof(witch_key), "%x", witch);
-	int witch_dmg_array[L4D2_MAXPLAYERS + DMGARRAYEXT];
-
-	if (!g_hWitchMap.GetArray(witch_key, witch_dmg_array, L4D2_MAXPLAYERS + DMGARRAYEXT))
+	int index = g_hArray_WitchTrace.FindValue(witch, WitchTrace_t::m_iWitch);
+	if (index != -1)
 	{
-		for (int i = 0; i <= L4D2_MAXPLAYERS; i++)
-			witch_dmg_array[i] = 0;
-
-		witch_dmg_array[L4D2_MAXPLAYERS + WTCH_HEALTH]	 = g_hCvar_WitchHealth.IntValue;
-		witch_dmg_array[L4D2_MAXPLAYERS + WTCH_STARTLED] = 1;	 // harasser set
-		g_hWitchMap.SetArray(witch_key, witch_dmg_array, L4D2_MAXPLAYERS + DMGARRAYEXT, false);
-	}
-	else
-	{
-		witch_dmg_array[L4D2_MAXPLAYERS + WTCH_STARTLED] = 1;	 // harasser set
-		g_hWitchMap.SetArray(witch_key, witch_dmg_array, L4D2_MAXPLAYERS + DMGARRAYEXT, true);
-	}
-}
-
-static Action OnTakeDamageByWitch(int victim, int& attacker, int& inflictor, float& damage, int& damagetype)
-{
-	// if a survivor is hit by a witch, note it in the witch damage array (L4D2_MAXPLAYERS+2 = 1)
-	if (IsValidSurvivor(victim) && damage > 0.0)
-	{
-		// not a crown if witch hit anyone for > 0 damage
-		if (IsWitch(attacker))
-		{
-			char witch_key[10];
-			FormatEx(witch_key, sizeof(witch_key), "%x", attacker);
-			int witch_dmg_array[L4D2_MAXPLAYERS + DMGARRAYEXT];
-
-			if (!g_hWitchMap.GetArray(witch_key, witch_dmg_array, L4D2_MAXPLAYERS + DMGARRAYEXT))
-			{
-				for (int i = 0; i <= L4D2_MAXPLAYERS; i++)
-					witch_dmg_array[i] = 0;
-
-				witch_dmg_array[L4D2_MAXPLAYERS + WTCH_HEALTH]	 = g_hCvar_WitchHealth.IntValue;
-				witch_dmg_array[L4D2_MAXPLAYERS + WTCH_GOTSLASH] = 1;	 // failed
-				g_hWitchMap.SetArray(witch_key, witch_dmg_array, L4D2_MAXPLAYERS + DMGARRAYEXT, false);
-			}
-			else
-			{
-				witch_dmg_array[L4D2_MAXPLAYERS + WTCH_GOTSLASH] = 1;	 // failed
-				g_hWitchMap.SetArray(witch_key, witch_dmg_array, L4D2_MAXPLAYERS + DMGARRAYEXT, true);
-			}
-		}
-	}
-
-	return Plugin_Continue;
-}
-
-static void OnTakeDamagePost_Witch(int victim, int attacker, int inflictor, float damage, int damagetype)
-{
-	// only called for witches, so no check required
-
-	char witch_key[10];
-	FormatEx(witch_key, sizeof(witch_key), "%x", victim);
-	int witch_dmg_array[L4D2_MAXPLAYERS + DMGARRAYEXT];
-
-	if (!g_hWitchMap.GetArray(witch_key, witch_dmg_array, L4D2_MAXPLAYERS + DMGARRAYEXT))
-	{
-		for (int i = 0; i <= L4D2_MAXPLAYERS; i++)
-			witch_dmg_array[i] = 0;
-
-		witch_dmg_array[L4D2_MAXPLAYERS + WTCH_HEALTH] = g_hCvar_WitchHealth.IntValue;
-		g_hWitchMap.SetArray(witch_key, witch_dmg_array, L4D2_MAXPLAYERS + DMGARRAYEXT, false);
-	}
-
-	// store damage done to witch
-	if (IsValidSurvivor(attacker))
-	{
-		witch_dmg_array[attacker] += RoundToFloor(damage);
-		witch_dmg_array[L4D2_MAXPLAYERS + WTCH_HEALTH] -= RoundToFloor(damage);
-
-		// remember last shot
-		if (g_SkillCache[attacker].m_flWitchShotStart == 0.0 || (GetGameTime() - g_SkillCache[attacker].m_flWitchShotStart) > SHOTGUN_BLAST_TIME)
-		{
-			// reset last shot damage count and attacker
-			g_SkillCache[attacker].m_flWitchShotStart		  = GetGameTime();
-			witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNER]	  = attacker;
-			witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNSHOT] = 0;
-			witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNTYPE] = (damagetype & DMG_BUCKSHOT) ? 1 : 0;	// only allow shotguns
-		}
-
-		// continued blast, add up
-		witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNSHOT] += RoundToFloor(damage);
-		g_hWitchMap.SetArray(witch_key, witch_dmg_array, L4D2_MAXPLAYERS + DMGARRAYEXT, true);
-	}
-	else
-	{
-		// store all chip from other sources than survivor in [0]
-		witch_dmg_array[0] += RoundToFloor(damage);
-		// witch_dmg_array[L4D2_MAXPLAYERS+1] -= RoundToFloor(damage);
-		g_hWitchMap.SetArray(witch_key, witch_dmg_array, L4D2_MAXPLAYERS + DMGARRAYEXT, true);
+		WitchTrace_t witchTrace;
+		g_hArray_WitchTrace.GetArray(index, witchTrace, sizeof(witchTrace));
+		witchTrace.m_bStartled = true;
+		g_hArray_WitchTrace.SetArray(index, witchTrace, sizeof(witchTrace));
 	}
 }
 
@@ -1517,100 +1399,25 @@ static void Timer_CheckWitchCrown(Handle timer, DataPack pack)
 
 static void CheckWitchCrown(int witch, int attacker, bool bOneShot = false)
 {
-	char witch_key[10];
-	FormatEx(witch_key, sizeof(witch_key), "%x", witch);
-	int witch_dmg_array[L4D2_MAXPLAYERS + DMGARRAYEXT];
-	if (!g_hWitchMap.GetArray(witch_key, witch_dmg_array, L4D2_MAXPLAYERS + DMGARRAYEXT))
+	int index = g_hArray_WitchTrace.FindValue(witch, WitchTrace_t::m_iWitch);
+	if (index == -1)
 	{
-		PrintDebug("Witch Crown Check: Error: Map entry missing (entity: %i, oneshot: %i)", witch, bOneShot);
+		PrintDebug("Witch Crown Check: Error: Witch entity not found (entity: %i, oneshot: %i)", witch, bOneShot);
 		return;
 	}
 
-	int chipDamage	 = 0;
-	int iWitchHealth = g_hCvar_WitchHealth.IntValue;
-
-	if (bOneShot)
-		witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNTYPE] = 1;
-
-	if (witch_dmg_array[L4D2_MAXPLAYERS + WTCH_GOTSLASH] || !witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNTYPE])
-	{
-		PrintDebug("Witch Crown Check: Failed: bungled: %i / crowntype: %i (entity: %i)",
-				   witch_dmg_array[L4D2_MAXPLAYERS + WTCH_GOTSLASH],
-				   witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNTYPE],
-				   witch);
-		PrintDebug("Witch Crown Check: Further details: attacker: %N, attacker dmg: %i, teamless dmg: %i",
-				   attacker,
-				   witch_dmg_array[attacker],
-				   witch_dmg_array[0]);
-		return;
-	}
-
-	PrintDebug("Witch Crown Check: crown shot: %i, harrassed: %i (full health: %i / drawthresh: %i / oneshot %i)",
-			   witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNSHOT],
-			   witch_dmg_array[L4D2_MAXPLAYERS + WTCH_STARTLED],
-			   iWitchHealth,
-			   g_hCvar_DrawCrownThresh.IntValue,
-			   bOneShot);
+	WitchTrace_t witchTrace;
+	g_hArray_WitchTrace.GetArray(index, witchTrace, sizeof(witchTrace));
 
 	// full crown? unharrassed
-	if (!witch_dmg_array[L4D2_MAXPLAYERS + WTCH_STARTLED] && (bOneShot || witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNSHOT] >= iWitchHealth))
+	if (!witchTrace.m_bStartled && bOneShot)
 	{
-		// make sure that we don't count any type of chip
-		if (g_hCvar_HideFakeDamage.BoolValue)
-		{
-			chipDamage = 0;
-			for (int i = 0; i <= L4D2_MAXPLAYERS; i++)
-			{
-				if (i == attacker) { continue; }
-				chipDamage += witch_dmg_array[i];
-			}
-
-			witch_dmg_array[attacker] = iWitchHealth - chipDamage;
-		}
-
-		HandleCrown(attacker, witch_dmg_array[attacker]);
+		HandleCrown(attacker);
 	}
-	else if (witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNSHOT] >= g_hCvar_DrawCrownThresh.IntValue)
+	else
 	{
-		// draw crown: harassed + over X damage done by one survivor -- in ONE shot
-
-		for (int i = 0; i <= L4D2_MAXPLAYERS; i++)
-		{
-			if (i == attacker)
-			{
-				// count any damage done before final shot as chip
-				chipDamage += witch_dmg_array[i] - witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNSHOT];
-			}
-			else
-			{
-				chipDamage += witch_dmg_array[i];
-			}
-		}
-
-		// make sure that we don't count any type of chip
-		if (g_hCvar_HideFakeDamage.BoolValue)
-		{
-			// unlikely to happen, but if the chip was A LOT
-			if (chipDamage >= iWitchHealth)
-			{
-				chipDamage										  = iWitchHealth - 1;
-				witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNSHOT] = 1;
-			}
-			else
-			{
-				witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNSHOT] = iWitchHealth - chipDamage;
-			}
-
-			// re-check whether it qualifies as a drawcrown:
-			if (witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNSHOT] < g_hCvar_DrawCrownThresh.IntValue)
-				return;
-		}
-
-		// plus, set final shot as 'damage', and the rest as chip
-		HandleDrawCrown(attacker, witch_dmg_array[L4D2_MAXPLAYERS + WTCH_CROWNSHOT], chipDamage);
+		HandleDrawCrown(attacker);
 	}
-
-	// remove Map
 }
 
 // tank rock

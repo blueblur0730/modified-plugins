@@ -8,7 +8,24 @@
 #include <l4d2util>
 #include <colors>
 
-bool g_bLateLoad		   = false;	   // whether we're loading late (after map has started)
+// Map values: weapon type
+enum strWeaponType
+{
+	WPTYPE_SNIPER,
+	WPTYPE_MAGNUM,
+	WPTYPE_GL
+};
+
+// Map values: OnEntityCreated classname
+enum strOEC
+{
+	OEC_WITCH,
+	OEC_TANKROCK,
+	OEC_TRIGGER,
+	OEC_CARALARM,
+	OEC_CARGLASS
+};
+
 int	g_iPounceInterrupt = 150;	   // z_pounce_damage_interrupt, default 150, damage that is greater that this applied on a flying hunter will be skeeted immediately. but not handle on this plugin :).
 
 GlobalForward
@@ -41,7 +58,6 @@ GlobalForward
 StringMap
 	g_hMapWeapons		= null,	   // weapon check
 	g_hMapEntityCreated = null,	   // getting classname of entity created
-	g_hWitchMap			= null,	   // witch tracking (Crox)
 	g_hCarMap			= null;	   // car alarm tracking
 
 // cvars
@@ -73,7 +89,6 @@ ConVar
 	g_hCvar_AllowMelee,			  // cvar whether to count melee skeets
 	g_hCvar_AllowSniper,		  // cvar whether to count sniper headshot skeets
 	g_hCvar_AllowGLSkeet,		  // cvar whether to count direct hit GL skeets
-	g_hCvar_DrawCrownThresh,	  // cvar damage in final shot for drawcrown-req.
 	g_hCvar_SelfClearThresh,	  // cvar damage while self-clearing from smokers
 	g_hCvar_HunterDPThresh,		  // cvar damage for hunter highpounce
 	g_hCvar_JockeyDPThresh,		  // cvar distance for jockey highpounce
@@ -88,7 +103,6 @@ ConVar
 
 ConVar
 	g_hCvar_ChargerHealth	  = null,	 // z_charger_health
-	g_hCvar_WitchHealth		  = null,	 // z_witch_health
 	g_hCvar_MaxPounceDistance = null,	 // z_pounce_damage_range_max
 	g_hCvar_MinPounceDistance = null,	 // z_pounce_damage_range_min
 	g_hCvar_MaxPounceDamage	  = null;	 // z_hunter_max_pounce_bonus_damage;
@@ -144,7 +158,7 @@ ConVar
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.0.2"
+#define PLUGIN_VERSION "r2.1.0"
 
 public Plugin myinfo =
 {
@@ -169,8 +183,8 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
 	g_hForwardBoomerPop		  = new GlobalForward("SkillDetect_OnBoomerPop", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Float);
 	g_hForwardLevel			  = new GlobalForward("SkillDetect_OnChargerLevel", ET_Ignore, Param_Cell, Param_Cell);
 	g_hForwardLevelHurt		  = new GlobalForward("SkillDetect_OnChargerLevelHurt", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
-	g_hForwardCrown			  = new GlobalForward("SkillDetect_OnWitchCrown", ET_Ignore, Param_Cell, Param_Cell);
-	g_hForwardDrawCrown		  = new GlobalForward("SkillDetect_OnWitchDrawCrown", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+	g_hForwardCrown			  = new GlobalForward("SkillDetect_OnWitchCrown", ET_Ignore, Param_Cell);
+	g_hForwardDrawCrown		  = new GlobalForward("SkillDetect_OnWitchDrawCrown", ET_Ignore, Param_Cell);
 	g_hForwardTongueCut		  = new GlobalForward("SkillDetect_OnTongueCut", ET_Ignore, Param_Cell, Param_Cell);
 	g_hForwardSmokerSelfClear = new GlobalForward("SkillDetect_OnSmokerSelfClear", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	g_hForwardRockSkeeted	  = new GlobalForward("SkillDetect_OnTankRockSkeeted", ET_Ignore, Param_Cell, Param_Cell);
@@ -182,7 +196,6 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
 	g_hForwardVomitLanded	  = new GlobalForward("SkillDetect_OnBoomerVomitLanded", ET_Ignore, Param_Cell, Param_Cell);
 	g_hForwardBHopStreak	  = new GlobalForward("SkillDetect_OnBunnyHopStreak", ET_Ignore, Param_Cell, Param_Cell, Param_Float);
 	g_hForwardAlarmTriggered  = new GlobalForward("SkillDetect_OnCarAlarmTriggered", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
-	g_bLateLoad				  = late;
 
 	RegPluginLibrary("l4d2_skill_detect");
 	return APLRes_Success;
@@ -223,7 +236,6 @@ public void OnPluginStart()
 	g_hCvar_AllowMelee		  = CreateConVar("l4d2_skill_detect_skeet_allowmelee", "1", "Whether to count/forward melee skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
 	g_hCvar_AllowSniper		  = CreateConVar("l4d2_skill_detect_skeet_allowsniper", "1", "Whether to count/forward sniper/magnum headshots as skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
 	g_hCvar_AllowGLSkeet	  = CreateConVar("l4d2_skill_detect_skeet_allowgl", "1", "Whether to count/forward direct GL hits as skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
-	g_hCvar_DrawCrownThresh	  = CreateConVar("l4d2_skill_detect_drawcrown_damage", "500", "How much damage a survivor must at least do in the final shot for it to count as a drawcrown.", FCVAR_NONE, true, 0.0, false);
 	g_hCvar_SelfClearThresh	  = CreateConVar("l4d2_skill_detect_selfclear_damage", "200", "How much damage a survivor must at least do to a smoker for him to count as self-clearing.", FCVAR_NONE, true, 0.0, false);
 	g_hCvar_HunterDPThresh	  = CreateConVar("l4d2_skill_detect_hunterdp_height", "400", "Minimum height of hunter pounce for it to count as a DP.", FCVAR_NONE, true, 0.0, false);
 	g_hCvar_JockeyDPThresh	  = CreateConVar("l4d2_skill_detect_jockeydp_height", "300", "How much height distance a jockey must make for his 'DP' to count as a reportable highpounce.", FCVAR_NONE, true, 0.0, false);
@@ -240,7 +252,6 @@ public void OnPluginStart()
 	g_iPounceInterrupt		  = g_hCvar_PounceInterrupt.IntValue;
 
 	g_hCvar_ChargerHealth	  = FindConVar("z_charger_health");
-	g_hCvar_WitchHealth		  = FindConVar("z_witch_health");
 
 	g_hCvar_MaxPounceDistance = FindConVar("z_pounce_damage_range_max");
 	g_hCvar_MinPounceDistance = FindConVar("z_pounce_damage_range_min");
@@ -271,7 +282,6 @@ public void OnPluginStart()
 	g_hMapEntityCreated.SetValue("prop_car_alarm", OEC_CARALARM);
 	g_hMapEntityCreated.SetValue("prop_car_glass", OEC_CARGLASS);
 
-	g_hWitchMap = new StringMap();
 	g_hCarMap	= new StringMap();
 
 	_skill_detect_tracking_OnPluginStart();
@@ -281,15 +291,9 @@ public void OnPluginEnd()
 {
 	delete g_hMapWeapons;
 	delete g_hMapEntityCreated;
-	delete g_hWitchMap;
 	delete g_hCarMap;
 
 	_skill_detect_tracking_OnPluginEnd();
-}
-
-public void OnClientPutInServer(int client)
-{
-	_skill_detect_tracking_OnClientPutInServer(client);
 }
 
 public void OnEntityCreated(int entity, const char[] classname)

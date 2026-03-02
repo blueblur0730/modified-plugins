@@ -242,37 +242,34 @@ void HandleNonSkeet(int attacker, int victim, int damage, bool bOverKill = false
 }
 
 // crown
-void HandleCrown(int attacker, int damage)
+void HandleCrown(int attacker)
 {
 	// report?
 	if (g_hCvar_Report.BoolValue && g_hCvar_RepCrow.BoolValue)
 	{
 		(IsValidClientInGame(attacker)) ?
-		CPrintToChatAll("%t %t", "Tag++", "CrownedWitch", attacker, damage) :
+		CPrintToChatAll("%t %t", "Tag++", "CrownedWitch", attacker) :
 		CPrintToChatAll("%t", "CrownedWitch2");
 	}
 
 	// call forward
 	Call_StartForward(g_hForwardCrown);
 	Call_PushCell(attacker);
-	Call_PushCell(damage);
 	Call_Finish();
 }
 // drawcrown
-void HandleDrawCrown(int attacker, int damage, int chipdamage)
+void HandleDrawCrown(int attacker)
 {
 	if (g_hCvar_Report.BoolValue && g_hCvar_RepDrawCrow.BoolValue)
 	{
 		(IsValidClientInGame(attacker)) ?
-		CPrintToChatAll("%t %t", "Tag++", "DrawCrowned", attacker, damage, chipdamage) :
-		CPrintToChatAll("%t %t", "DrawCrowned2", damage, chipdamage);
+		CPrintToChatAll("%t %t", "Tag++", "DrawCrowned", attacker) :
+		CPrintToChatAll("%t %t", "DrawCrowned2");
 	}
 
 	// call forward
 	Call_StartForward(g_hForwardDrawCrown);
 	Call_PushCell(attacker);
-	Call_PushCell(damage);
-	Call_PushCell(chipdamage);
 	Call_Finish();
 }
 
