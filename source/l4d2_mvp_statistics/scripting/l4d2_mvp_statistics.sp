@@ -87,7 +87,6 @@ enum struct Statistics_t
     // Tank stats
     int m_iCommonKilledDuringTank;      // Common killed during the tank
     int m_iSiDmgDuringTank;             // SI killed during the tank
-    int m_iRocksEaten;                  // The amount of rocks a player 'ate'.
     int m_iTotalPinnedDuringTank;       // The total times we were pinned when the tank was up
 
     void Clear()
@@ -114,7 +113,6 @@ enum struct Statistics_t
         this.m_iTotalPinned = 0;
         this.m_iCommonKilledDuringTank = 0;
         this.m_iSiDmgDuringTank = 0;
-        this.m_iRocksEaten = 0;
         this.m_iTotalPinnedDuringTank = 0;
     }
 
@@ -129,7 +127,7 @@ enum struct Statistics_t
 }
 Statistics_t g_Statistics[L4D2_MAXPLAYERS + 1];  
 
-#define PLUGIN_VERSION "r2.3.2"
+#define PLUGIN_VERSION "r2.3.3"
 public Plugin myinfo =
 {
 	name = "[L4D2] Survivor MVP Statistics",
@@ -382,19 +380,7 @@ void OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int
     if (GetClientTeam(victim) != L4D2Team_Survivor || GetClientTeam(attacker) != L4D2Team_Infected)
         return;
 
-    if (!IsTank(attacker))
-        return;
-
-    if (inflictor <= MaxClients || !IsValidEdict(inflictor))
-        return;
-
-    char classname[32];
-    GetEdictClassname(inflictor, classname, sizeof(classname));
-    if (strcmp(classname, "tank_rock", true) != 0)
-        return;
-
     //PrintToServer("Player %d is eating a rock, attacker: %d, inflictor: %d, damage: %.02f", victim, attacker, inflictor, damage);
-    g_Statistics[victim].m_iRocksEaten++;
     g_Statistics[victim].m_iDamageReceived += RoundToNearest(damage);
 }
 
