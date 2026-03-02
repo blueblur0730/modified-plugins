@@ -26,8 +26,6 @@ enum strOEC
 	OEC_CARGLASS
 };
 
-int	g_iPounceInterrupt = 150;	   // z_pounce_damage_interrupt, default 150, damage that is greater that this applied on a flying hunter will be skeeted immediately. but not handle on this plugin :).
-
 GlobalForward
 	g_hForwardSkeet			  = null,
 	g_hForwardSkeetHurt		  = null,
@@ -57,8 +55,7 @@ GlobalForward
 
 StringMap
 	g_hMapWeapons		= null,	   // weapon check
-	g_hMapEntityCreated = null,	   // getting classname of entity created
-	g_hCarMap			= null;	   // car alarm tracking
+	g_hMapEntityCreated = null;	   // getting classname of entity created
 
 // cvars
 ConVar
@@ -97,15 +94,7 @@ ConVar
 	g_hCvar_InstaTime,			  // cvar clear within this time or lower for instaclear
 	g_hCvar_BHopMinStreak,		  // cvar this many hops in a row+ = streak
 	g_hCvar_BHopMinInitSpeed,	  // cvar lower than this and the first jump won't be seen as the start of a streak
-	g_hCvar_BHopContSpeed,		  // cvar
-
-	g_hCvar_PounceInterrupt = null;	   // z_pounce_damage_interrupt
-
-ConVar
-	g_hCvar_ChargerHealth	  = null,	 // z_charger_health
-	g_hCvar_MaxPounceDistance = null,	 // z_pounce_damage_range_max
-	g_hCvar_MinPounceDistance = null,	 // z_pounce_damage_range_min
-	g_hCvar_MaxPounceDamage	  = null;	 // z_hunter_max_pounce_bonus_damage;
+	g_hCvar_BHopContSpeed;
 
 /*
 	To Do
@@ -134,12 +123,6 @@ ConVar
 		- smoker
 		- jockey
 
-	- add deathcharge coordinates for some areas
-		- DT4 next to saferoom
-		- DA1 near the lower roof, on sidewalk next to fence (no hurttrigger there)
-		- DA2 next to crane roof to the right of window
-			DA2 charge down into start area, after everyone's jumped the fence
-
 	- count rock hits even if they do no damage [epi request]
 	- sir
 		- make separate teamskeet forward, with (for now, up to) 4 skeeters + the damage each did
@@ -158,13 +141,13 @@ ConVar
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.1.0"
+#define PLUGIN_VERSION "r2.1.1"
 
 public Plugin myinfo =
 {
 	name = "[L4D2] Skill Detection",
 	author = "Tabun, Competitive Rework Team, blueblur",
-	description = "Detects and reports skeets, crowns, levels, highpounces, etc.",
+	description = "Detects and reports skilled gameplay performances.",
 	version	= PLUGIN_VERSION,
 	url	= "https://github.com/blueblur0730/modified-plugins"
 };
@@ -246,26 +229,6 @@ public void OnPluginStart()
 	g_hCvar_BHopMinInitSpeed  = CreateConVar("l4d2_skill_detect_bhopinitspeed", "150", "The minimal speed of the first jump of a bunnyhopstreak (0 to allow 'hops' from standstill).", FCVAR_NONE, true, 0.0, false);
 	g_hCvar_BHopContSpeed	  = CreateConVar("l4d2_skill_detect_bhopkeepspeed", "300", "The minimal speed at which hops are considered succesful even if not speed increase is made.", FCVAR_NONE, true, 0.0, false);
 
-	// cvars: built in
-	g_hCvar_PounceInterrupt	  = FindConVar("z_pounce_damage_interrupt");
-	g_hCvar_PounceInterrupt.AddChangeHook(CvarChange_PounceInterrupt);
-	g_iPounceInterrupt		  = g_hCvar_PounceInterrupt.IntValue;
-
-	g_hCvar_ChargerHealth	  = FindConVar("z_charger_health");
-
-	g_hCvar_MaxPounceDistance = FindConVar("z_pounce_damage_range_max");
-	g_hCvar_MinPounceDistance = FindConVar("z_pounce_damage_range_min");
-	g_hCvar_MaxPounceDamage	  = FindConVar("z_hunter_max_pounce_bonus_damage");
-
-	if (g_hCvar_MaxPounceDistance == null)
-		g_hCvar_MaxPounceDistance = CreateConVar("z_pounce_damage_range_max", "1000.0", "Not available on this server, added by l4d2_skill_detect.", FCVAR_NONE, true, 0.0, false);
-
-	if (g_hCvar_MinPounceDistance == null)
-		g_hCvar_MinPounceDistance = CreateConVar("z_pounce_damage_range_min", "300.0", "Not available on this server, added by l4d2_skill_detect.", FCVAR_NONE, true, 0.0, false);
-
-	if (g_hCvar_MaxPounceDamage == null)
-		g_hCvar_MaxPounceDamage = CreateConVar("z_hunter_max_pounce_bonus_damage", "49", "Not available on this server, added by l4d2_skill_detect.", FCVAR_NONE, true, 0.0, false);
-
 	// Maps
 	g_hMapWeapons = new StringMap();
 	g_hMapWeapons.SetValue("hunting_rifle", WPTYPE_SNIPER);
@@ -282,8 +245,6 @@ public void OnPluginStart()
 	g_hMapEntityCreated.SetValue("prop_car_alarm", OEC_CARALARM);
 	g_hMapEntityCreated.SetValue("prop_car_glass", OEC_CARGLASS);
 
-	g_hCarMap	= new StringMap();
-
 	_skill_detect_tracking_OnPluginStart();
 }
 
@@ -291,7 +252,6 @@ public void OnPluginEnd()
 {
 	delete g_hMapWeapons;
 	delete g_hMapEntityCreated;
-	delete g_hCarMap;
 
 	_skill_detect_tracking_OnPluginEnd();
 }
@@ -304,11 +264,6 @@ public void OnEntityCreated(int entity, const char[] classname)
 public void OnEntityDestroyed(int entity)
 {
 	_skill_detect_tracking_OnEntityDestroyed(entity);
-}
-
-void CvarChange_PounceInterrupt(ConVar convar, const char[] oldValue, const char[] newValue)
-{
-	g_iPounceInterrupt = convar.IntValue;
 }
 
 stock void PrintDebug(const char[] Message, any...)

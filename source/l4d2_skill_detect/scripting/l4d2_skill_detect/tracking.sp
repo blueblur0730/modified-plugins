@@ -58,34 +58,31 @@
 #define L4D1_ZOMBIECLASS_TANK 5
 #define L4D2_ZOMBIECLASS_TANK 8
 
-enum
+enum CarAlarmReason_t
 {
 	CALARM_UNKNOWN,
 	CALARM_HIT,
 	CALARM_TOUCHED,
 	CALARM_EXPLOSION,
-	CALARM_BOOMER,
-	enAlarmReasons
+	CALARM_BOOMER
 };
 
-enum struct SISkillCache_t
+enum struct CarAlarmTrace_t
 {
-	// all SI / pinners
-	float m_flSpawnTime;	   // time the SI spawned up
-	float m_flPinTime[2];	   // time the SI pinned a target: 0 = start of pin (tongue pull, charger carry); 1 = carry end / tongue reigned in
-	int	  m_iSpecialVictim;	   // current victim (set in traceattack, so we can check on death)
-
-	// rocks
-	int	  m_iTankRock;	  // rock entity per tank
+	CarAlarmReason_t m_eReason;	// reason for the alarm
+	int m_iCarEntity;			// car entity index
+	int m_iGlassEntity;			// glass entity index
+	int m_iAttacker;			// who attacked the car
+	int m_iBoomerInflictor;		// boomer who inflicted the explosion (if any)
 }
-static SISkillCache_t g_SISkillCache[L4D2_MAXPLAYERS + 1];
+static ArrayList g_hArray_CarAlarmTrace;
 
 enum struct TankRockTrace_t
 {
-	int m_iThrower;
-	int m_iRock;
-	int m_iDamageTaken;
-	int m_iSkeeter;
+	int m_iThrower;		// who throwed the rock
+	int m_iRock;		// rock entity index
+	int m_iDamageTaken;	// how much damage was taken by the player
+	int m_iSkeeter;		// who skeeted the rock
 }
 static ArrayList g_hArray_TankRockTrace;
 
@@ -96,6 +93,15 @@ enum struct WitchTrace_t
 	bool m_bStartled;	// witch got startled?
 }
 static ArrayList g_hArray_WitchTrace;
+
+enum struct SISkillCache_t
+{
+	// all SI / pinners
+	float m_flSpawnTime;	   // time the SI spawned up
+	float m_flPinTime[2];	   // time the SI pinned a target: 0 = start of pin (tongue pull, charger carry); 1 = carry end / tongue reigned in
+	int	  m_iSpecialVictim;	   // current victim (set in traceattack, so we can check on death)
+}
+static SISkillCache_t g_SISkillCache[L4D2_MAXPLAYERS + 1];
 
 enum struct SkillCache_t
 {
@@ -128,9 +134,6 @@ enum struct SkillCache_t
 	int	  m_iBoomerGotShoved;	   // how many times the boomer got shoved
 	int	  m_iBoomerVomitHits;	   // how many booms in one vomit so far
 
-	// crowns
-	float m_flWitchShotStart;	 // when the last shotgun blast from a survivor started (on any witch)
-
 	// smoker clears
 	bool  m_bSmokerClearCheck;		// [smoker] smoker dies and this is set, it's a self-clear if m_iSmokerVictim is the killer
 	int	  m_iSmokerVictim;			// [smoker] the one that's being pulled
@@ -143,25 +146,49 @@ enum struct SkillCache_t
 	int	  m_iHops;				 // amount of hops in streak
 	float m_flLastHop[3];		 // velocity vector of last jump
 	float m_flHopTopVelocity;	 // maximum velocity in hopping streak
-
-	// alarms
-	int	  m_iLastCarAlarmReason;	// what this survivor did to set the last alarm off
 }
 static SkillCache_t g_SkillCache[L4D2_MAXPLAYERS + 1];
 
-static float		g_fLastCarAlarm			 = 0.0;	   // time when last car alarm went off
-static int			g_iLastCarAlarmBoomer;			   // if a boomer triggered an alarm, remember it
+static ConVar g_hCvar_PounceInterrupt = null;	   	// z_pounce_damage_interrupt
+static int	g_iPounceInterrupt = 150;	   			// z_pounce_damage_interrupt, default 150, damage that is greater that this applied on a flying hunter will be skeeted immediately. but not handle on this plugin :).
+
+static ConVar g_hCvar_ChargerHealth	 = null;	 // z_charger_health
+static ConVar g_hCvar_MaxPounceDistance = null;	 // z_pounce_damage_range_max
+static ConVar g_hCvar_MinPounceDistance = null;	 // z_pounce_damage_range_min
+static ConVar g_hCvar_MaxPounceDamage = null;	 // z_hunter_max_pounce_bonus_damage;
 
 void _skill_detect_tracking_OnPluginStart()
 {
 	g_hArray_TankRockTrace = new ArrayList(sizeof(TankRockTrace_t));
 	g_hArray_WitchTrace = new ArrayList(sizeof(WitchTrace_t));
+	g_hArray_CarAlarmTrace = new ArrayList(sizeof(CarAlarmTrace_t));
+
+	// cvars: built in
+	g_hCvar_PounceInterrupt	  = FindConVar("z_pounce_damage_interrupt");
+	g_hCvar_PounceInterrupt.AddChangeHook(CvarChange_PounceInterrupt);
+	g_iPounceInterrupt		  = g_hCvar_PounceInterrupt.IntValue;
+
+	g_hCvar_ChargerHealth	  = FindConVar("z_charger_health");
+	g_hCvar_MaxPounceDistance = FindConVar("z_pounce_damage_range_max");
+	g_hCvar_MinPounceDistance = FindConVar("z_pounce_damage_range_min");
+	g_hCvar_MaxPounceDamage	  = FindConVar("z_hunter_max_pounce_bonus_damage");
+
+	if (g_hCvar_MaxPounceDistance == null)
+		g_hCvar_MaxPounceDistance = CreateConVar("z_pounce_damage_range_max", "1000.0", "Not available on this server, added by l4d2_skill_detect.", FCVAR_NONE, true, 0.0, false);
+
+	if (g_hCvar_MinPounceDistance == null)
+		g_hCvar_MinPounceDistance = CreateConVar("z_pounce_damage_range_min", "300.0", "Not available on this server, added by l4d2_skill_detect.", FCVAR_NONE, true, 0.0, false);
+
+	if (g_hCvar_MaxPounceDamage == null)
+		g_hCvar_MaxPounceDamage = CreateConVar("z_hunter_max_pounce_bonus_damage", "49", "Not available on this server, added by l4d2_skill_detect.", FCVAR_NONE, true, 0.0, false);
+
 }
 
 void _skill_detect_tracking_OnPluginEnd()
 {
 	delete g_hArray_TankRockTrace;
 	delete g_hArray_WitchTrace;
+	delete g_hArray_CarAlarmTrace;
 }
 
 void HookSkillDetectEvent()
@@ -197,7 +224,11 @@ void HookSkillDetectEvent()
 	HookEvent("charger_pummel_start", Event_ChargePummelStart, EventHookMode_Post);
 
 	HookEvent("player_incapacitated_start", Event_IncapStart, EventHookMode_Post);
-	HookEvent("triggered_car_alarm", Event_CarAlarmGoesOff, EventHookMode_Post);
+}
+
+static void CvarChange_PounceInterrupt(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	g_iPounceInterrupt = convar.IntValue;
 }
 
 static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
@@ -216,8 +247,8 @@ static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 
 static void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
-	// clean Map, new cars will be created
-	g_hCarMap.Clear();
+	// clean array, new cars will be created
+	g_hArray_CarAlarmTrace.Clear();
 }
 
 static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
@@ -1167,81 +1198,60 @@ void _skill_detect_tracking_OnEntityCreated(int entity, const char[] classname)
 
 		case OEC_CARALARM:
 		{
-			char car_key[10];
-			FormatEx(car_key, sizeof(car_key), "%x", entity);
-
-			SDKHook(entity, SDKHook_OnTakeDamage, OnTakeDamage_Car);
-			SDKHook(entity, SDKHook_Touch, OnTouch_Car);
-
-			SDKHook(entity, SDKHook_Spawn, OnEntitySpawned_CarAlarm);
+			SDKHook(entity, SDKHook_OnTakeDamagePost, OnTakeDamagePost_Car);
+			SDKHook(entity, SDKHook_TouchPost, OnTouchPost_Car);
+			SDKHook(entity, SDKHook_SpawnPost, OnSpawn_CarAlarm);
 		}
 
 		case OEC_CARGLASS:
 		{
-			SDKHook(entity, SDKHook_OnTakeDamage, OnTakeDamage_CarGlass);
-			SDKHook(entity, SDKHook_Touch, OnTouch_CarGlass);
-
-			// g_hCarMap.SetValue(car_key, );
-			SDKHook(entity, SDKHook_Spawn, OnEntitySpawned_CarAlarmGlass);
+			SDKHook(entity, SDKHook_OnTakeDamagePost, OnTakeDamagePost_CarGlass);
+			SDKHook(entity, SDKHook_TouchPost, OnTouchPost_CarGlass);
+			SDKHook(entity, SDKHook_SpawnPost, OnSpawn_CarAlarmGlass);
 		}
 	}
 }
 
-static Action OnEntitySpawned_CarAlarm(int entity)
+static void OnSpawn_CarAlarm(int entity)
 {
 	if (!IsValidEntity(entity))
-		return Plugin_Continue;
+		return;
 
-	char car_key[10];
-	FormatEx(car_key, sizeof(car_key), "%x", entity);
-
-	char target[48];
-	GetEntPropString(entity, Prop_Data, "m_iName", target, sizeof(target));
-
-	g_hCarMap.SetValue(target, entity);
-	g_hCarMap.SetValue(car_key, 0);	   // who shot the car?
-	HookSingleEntityOutput(entity, "OnCarAlarmStart", Hook_CarAlarmStart);
-
-	return Plugin_Continue;
+	int index = g_hArray_CarAlarmTrace.FindValue(entity, CarAlarmTrace_t::m_iCarEntity);
+	if (index == -1)
+	{
+		CarAlarmTrace_t carAlarmTrace;
+		carAlarmTrace.m_iCarEntity = entity;
+		g_hArray_CarAlarmTrace.PushArray(carAlarmTrace, sizeof(carAlarmTrace));
+	}
 }
 
-static Action OnEntitySpawned_CarAlarmGlass(int entity)
+static void OnSpawn_CarAlarmGlass(int entity)
 {
 	if (!IsValidEntity(entity))
-		return Plugin_Continue;
+		return;
 
 	// glass is parented to a car, link the two through the Map
 	// find parent and save both
-	char car_key[10];
-	FormatEx(car_key, sizeof(car_key), "%x", entity);
+	int parentEntity = GetEntPropEnt(entity, Prop_Data, "m_pParent");
+	if (!IsValidEntity(parentEntity))
+		return;
 
-	char parent[48];
-	GetEntPropString(entity, Prop_Data, "m_iParent", parent, sizeof(parent));
-	int parentEntity;
-
-	// find targetname in Map
-	if (g_hCarMap.GetValue(parent, parentEntity))
+	int index = g_hArray_CarAlarmTrace.FindValue(parentEntity, CarAlarmTrace_t::m_iCarEntity);
+	if (index != -1)
 	{
-		// if valid entity, save the parent entity
-		if (IsValidEntity(parentEntity))
-		{
-			g_hCarMap.SetValue(car_key, parentEntity);
-
-			char car_key_p[10];
-			FormatEx(car_key_p, sizeof(car_key_p), "%x_A", parentEntity);
-			int testEntity;
-
-			if (g_hCarMap.GetValue(car_key_p, testEntity))
-			{
-				// second glass
-				FormatEx(car_key_p, sizeof(car_key_p), "%x_B", parentEntity);
-			}
-
-			g_hCarMap.SetValue(car_key_p, entity);
-		}
+		CarAlarmTrace_t carAlarmTrace;
+		g_hArray_CarAlarmTrace.GetArray(index, carAlarmTrace, sizeof(carAlarmTrace));
+		carAlarmTrace.m_iGlassEntity = entity;
+		g_hArray_CarAlarmTrace.SetArray(index, carAlarmTrace, sizeof(carAlarmTrace));
 	}
-
-	return Plugin_Continue;
+	else
+	{
+		CarAlarmTrace_t carAlarmTrace;
+		carAlarmTrace.m_iCarEntity = parentEntity;
+		carAlarmTrace.m_iGlassEntity = entity;
+		g_hArray_CarAlarmTrace.PushArray(carAlarmTrace, sizeof(carAlarmTrace));
+	}
 }
 
 // entity destruction
@@ -1537,24 +1547,10 @@ static void Event_ChokeStop(Event event, const char[] name, bool dontBroadcast)
 				view_as<bool>(reason != CUT_SLASH && reason != CUT_KILL));
 }
 
-// car alarm handling
-static void Hook_CarAlarmStart(const char[] output, int caller, int activator, float delay)
-{
-	// char car_key[10];
-	// FormatEx(car_key, sizeof(car_key), "%x", entity);
-
-	PrintDebug("calarm trigger: caller %i / activator %i / delay: %.2f", caller, activator, delay);
-}
-
-static void Event_CarAlarmGoesOff(Event event, const char[] name, bool dontBroadcast)
-{
-	g_fLastCarAlarm = GetGameTime();
-}
-
-static Action OnTakeDamage_Car(int victim, int& attacker, int& inflictor, float& damage, int& damagetype)
+static void OnTakeDamagePost_Car(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
 	if (!IsValidSurvivor(attacker))
-		return Plugin_Continue;
+		return;
 	/*
 		boomer popped on alarmed car =
 			DMG_BLAST_SURFACE| DMG_BLAST
@@ -1565,175 +1561,147 @@ static Action OnTakeDamage_Car(int victim, int& attacker, int& inflictor, float&
 		shove is without DMG_SLOWBURN
 	*/
 
-	CreateTimer(0.01, Timer_CheckAlarm, victim, TIMER_FLAG_NO_MAPCHANGE);
-
-	char car_key[10];
-	FormatEx(car_key, sizeof(car_key), "%x", victim);
-	g_hCarMap.SetValue(car_key, attacker);
-
-	if (damagetype & DMG_BLAST)
+	int index = g_hArray_CarAlarmTrace.FindValue(victim, CarAlarmTrace_t::m_iCarEntity);
+	if (index != -1)
 	{
-		if (IsValidInfected(inflictor) && GetEntProp(inflictor, Prop_Send, "m_zombieClass") == ZC_BOOMER)
+		CarAlarmTrace_t carAlarmTrace;
+		g_hArray_CarAlarmTrace.GetArray(index, carAlarmTrace, sizeof(carAlarmTrace));
+		if (damagetype & DMG_BLAST)
 		{
-			g_SkillCache[attacker].m_iLastCarAlarmReason = CALARM_BOOMER;
-			g_iLastCarAlarmBoomer						 = inflictor;
+			if (IsValidInfected(inflictor) && GetEntProp(inflictor, Prop_Send, "m_zombieClass") == ZC_BOOMER)
+			{
+				carAlarmTrace.m_eReason = CALARM_BOOMER;
+				carAlarmTrace.m_iBoomerInflictor = inflictor;
+			}
+			else
+			{
+				carAlarmTrace.m_eReason = CALARM_EXPLOSION;
+			}
+		}
+		else if (damage == 0.0 && (damagetype & DMG_CLUB || damagetype & DMG_SLASH) && !(damagetype & DMG_SLOWBURN))
+		{
+			carAlarmTrace.m_eReason = CALARM_TOUCHED;
 		}
 		else
 		{
-			g_SkillCache[attacker].m_iLastCarAlarmReason = CALARM_EXPLOSION;
+			carAlarmTrace.m_eReason = CALARM_HIT;
 		}
-	}
-	else if (damage == 0.0 && (damagetype & DMG_CLUB || damagetype & DMG_SLASH) && !(damagetype & DMG_SLOWBURN))
-	{
-		g_SkillCache[attacker].m_iLastCarAlarmReason = CALARM_TOUCHED;
-	}
-	else
-	{
-		g_SkillCache[attacker].m_iLastCarAlarmReason = CALARM_HIT;
-	}
 
-	return Plugin_Continue;
+		carAlarmTrace.m_iAttacker = attacker;
+		g_hArray_CarAlarmTrace.SetArray(index, carAlarmTrace, sizeof(carAlarmTrace));
+		CheckAlarm(victim, false);
+	}
 }
 
-static Action OnTouch_Car(int entity, int client)
+static void OnTouchPost_Car(int entity, int client)
 {
 	if (!IsValidSurvivor(client))
-		return Plugin_Continue;
+		return;
+	int index = g_hArray_CarAlarmTrace.FindValue(entity, CarAlarmTrace_t::m_iCarEntity);
+	if (index != -1)
+	{
+		CarAlarmTrace_t carAlarmTrace;
+		g_hArray_CarAlarmTrace.GetArray(index, carAlarmTrace, sizeof(carAlarmTrace));
 
-	CreateTimer(0.01, Timer_CheckAlarm, entity, TIMER_FLAG_NO_MAPCHANGE);
-
-	char car_key[10];
-	FormatEx(car_key, sizeof(car_key), "%x", entity);
-	g_hCarMap.SetValue(car_key, client);
-
-	g_SkillCache[client].m_iLastCarAlarmReason = CALARM_TOUCHED;
-	return Plugin_Continue;
+		carAlarmTrace.m_eReason = CALARM_TOUCHED;
+		carAlarmTrace.m_iAttacker = client;
+		g_hArray_CarAlarmTrace.SetArray(index, carAlarmTrace, sizeof(carAlarmTrace));
+		CheckAlarm(entity, false);
+	}
 }
 
-static Action OnTakeDamage_CarGlass(int victim, int& attacker, int& inflictor, float& damage, int& damagetype)
+static void OnTakeDamagePost_CarGlass(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
 	// check for either: boomer pop or survivor
 	if (!IsValidSurvivor(attacker))
-		return Plugin_Continue;
+		return;
 
-	char car_key[10];
-	FormatEx(car_key, sizeof(car_key), "%x", victim);
-	int parentEntity;
-
-	if (g_hCarMap.GetValue(car_key, parentEntity))
+	int index = g_hArray_CarAlarmTrace.FindValue(victim, CarAlarmTrace_t::m_iGlassEntity);
+	if (index != -1)
 	{
-		CreateTimer(0.01, Timer_CheckAlarm, parentEntity, TIMER_FLAG_NO_MAPCHANGE);
-
-		FormatEx(car_key, sizeof(car_key), "%x", parentEntity);
-		g_hCarMap.SetValue(car_key, attacker);
+		CarAlarmTrace_t carAlarmTrace;
+		g_hArray_CarAlarmTrace.GetArray(index, carAlarmTrace, sizeof(carAlarmTrace));
 
 		if (damagetype & DMG_BLAST)
 		{
 			if (IsValidInfected(inflictor) && GetEntProp(inflictor, Prop_Send, "m_zombieClass") == ZC_BOOMER)
 			{
-				g_SkillCache[attacker].m_iLastCarAlarmReason = CALARM_BOOMER;
-				g_iLastCarAlarmBoomer						 = inflictor;
+				carAlarmTrace.m_eReason = CALARM_BOOMER;
+				carAlarmTrace.m_iBoomerInflictor = inflictor;
 			}
 			else
 			{
-				g_SkillCache[attacker].m_iLastCarAlarmReason = CALARM_EXPLOSION;
+				carAlarmTrace.m_eReason = CALARM_EXPLOSION;
 			}
 		}
 		else if (damage == 0.0 && (damagetype & DMG_CLUB || damagetype & DMG_SLASH) && !(damagetype & DMG_SLOWBURN))
 		{
-			g_SkillCache[attacker].m_iLastCarAlarmReason = CALARM_TOUCHED;
+			carAlarmTrace.m_eReason = CALARM_TOUCHED;
 		}
 		else
 		{
-			g_SkillCache[attacker].m_iLastCarAlarmReason = CALARM_HIT;
+			carAlarmTrace.m_eReason = CALARM_HIT;
 		}
-	}
 
-	return Plugin_Continue;
+		carAlarmTrace.m_iAttacker = attacker;
+		g_hArray_CarAlarmTrace.SetArray(index, carAlarmTrace, sizeof(carAlarmTrace));
+		CheckAlarm(victim, true);
+	}
 }
 
-static Action OnTouch_CarGlass(int entity, int client)
+static void OnTouchPost_CarGlass(int entity, int client)
 {
 	if (!IsValidSurvivor(client))
-		return Plugin_Continue;
+		return;
 
-	char car_key[10];
-	FormatEx(car_key, sizeof(car_key), "%x", entity);
-	int parentEntity;
-
-	if (g_hCarMap.GetValue(car_key, parentEntity))
+	int index = g_hArray_CarAlarmTrace.FindValue(entity, CarAlarmTrace_t::m_iGlassEntity);
+	if (index != -1)
 	{
-		CreateTimer(0.01, Timer_CheckAlarm, parentEntity, TIMER_FLAG_NO_MAPCHANGE);
+		CarAlarmTrace_t carAlarmTrace;
+		g_hArray_CarAlarmTrace.GetArray(index, carAlarmTrace, sizeof(carAlarmTrace));
 
-		FormatEx(car_key, sizeof(car_key), "%x", parentEntity);
-		g_hCarMap.SetValue(car_key, client);
+		carAlarmTrace.m_eReason = CALARM_TOUCHED;
+		carAlarmTrace.m_iAttacker = client;
+		g_hArray_CarAlarmTrace.SetArray(index, carAlarmTrace, sizeof(carAlarmTrace));
 
-		g_SkillCache[client].m_iLastCarAlarmReason = CALARM_TOUCHED;
+		CheckAlarm(entity, true);
 	}
-
-	return Plugin_Continue;
 }
 
-static void Timer_CheckAlarm(Handle timer, any entity)
+static void CheckAlarm(int victim, bool bParent = false)
 {
-	// PrintToChatAll( "checking alarm: time: %.3f", GetGameTime() - g_fLastCarAlarm );
-
-	if ((GetGameTime() - g_fLastCarAlarm) < CARALARM_MIN_TIME)
+	int index = g_hArray_CarAlarmTrace.FindValue(victim, bParent ? CarAlarmTrace_t::m_iGlassEntity : CarAlarmTrace_t::m_iCarEntity);
+	if (index != -1)
 	{
-		// got a match, drop stuff from Map and handle triggering
-		char car_key[10];
-		int	 testEntity;
-		int	 survivor = -1;
-
-		// remove car glass
-		FormatEx(car_key, sizeof(car_key), "%x_A", entity);
-		if (g_hCarMap.GetValue(car_key, testEntity))
+		if (bParent)
 		{
-			g_hCarMap.Remove(car_key);
-			SDKUnhook(testEntity, SDKHook_OnTakeDamage, OnTakeDamage_CarGlass);
-			SDKUnhook(testEntity, SDKHook_Touch, OnTouch_CarGlass);
+			SDKUnhook(victim, SDKHook_OnTakeDamagePost, OnTakeDamagePost_CarGlass);
+			SDKUnhook(victim, SDKHook_TouchPost, OnTouchPost_CarGlass);
 		}
-
-		FormatEx(car_key, sizeof(car_key), "%x_B", entity);
-		if (g_hCarMap.GetValue(car_key, testEntity))
+		else
 		{
-			g_hCarMap.Remove(car_key);
-			SDKUnhook(testEntity, SDKHook_OnTakeDamage, OnTakeDamage_CarGlass);
-			SDKUnhook(testEntity, SDKHook_Touch, OnTouch_CarGlass);
-		}
-
-		// remove car
-		FormatEx(car_key, sizeof(car_key), "%x", entity);
-		if (g_hCarMap.GetValue(car_key, survivor))
-		{
-			g_hCarMap.Remove(car_key);
-			SDKUnhook(entity, SDKHook_OnTakeDamage, OnTakeDamage_Car);
-			SDKUnhook(entity, SDKHook_Touch, OnTouch_Car);
+			SDKUnhook(victim, SDKHook_OnTakeDamagePost, OnTakeDamagePost_Car);
+			SDKUnhook(victim, SDKHook_TouchPost, OnTouchPost_Car);
 		}
 
 		// check for infected assistance
 		int infected = 0;
-		if (IsValidSurvivor(survivor))
+		CarAlarmTrace_t carAlarmTrace;
+		g_hArray_CarAlarmTrace.GetArray(index, carAlarmTrace, sizeof(carAlarmTrace));
+		if (IsValidSurvivor(carAlarmTrace.m_iAttacker))
 		{
-			if (g_SkillCache[survivor].m_iLastCarAlarmReason == CALARM_BOOMER)
+			if (carAlarmTrace.m_eReason == CALARM_BOOMER)
 			{
-				infected = g_iLastCarAlarmBoomer;
+				infected = carAlarmTrace.m_iBoomerInflictor;
 			}
-			else if (IsValidInfected(GetEntPropEnt(survivor, Prop_Send, "m_carryAttacker")))
+			else
 			{
-				infected = GetEntPropEnt(survivor, Prop_Send, "m_carryAttacker");
-			}
-			else if (IsValidInfected(GetEntPropEnt(survivor, Prop_Send, "m_jockeyAttacker")))
-			{
-				infected = GetEntPropEnt(survivor, Prop_Send, "m_jockeyAttacker");
-			}
-			else if (IsValidInfected(GetEntPropEnt(survivor, Prop_Send, "m_tongueOwner")))
-			{
-				infected = GetEntPropEnt(survivor, Prop_Send, "m_tongueOwner");
+				infected = L4D2_GetSpecialInfectedDominatingMe(carAlarmTrace.m_iAttacker);
 			}
 		}
 
-		HandleCarAlarmTriggered(survivor, infected, (IsValidClientInGame(survivor)) ? g_SkillCache[survivor].m_iLastCarAlarmReason : CALARM_UNKNOWN);
+		HandleCarAlarmTriggered(carAlarmTrace.m_iAttacker, infected, (IsValidClientInGame(carAlarmTrace.m_iAttacker)) ? carAlarmTrace.m_eReason : CALARM_UNKNOWN);
+		g_hArray_CarAlarmTrace.Erase(index);
 	}
 }
 

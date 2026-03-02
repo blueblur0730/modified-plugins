@@ -482,48 +482,65 @@ void HandleBHopStreak(int survivor, int streak, float maxVelocity)
 }
 
 // car alarms
-void HandleCarAlarmTriggered(int survivor, int infected, int reason)
+void HandleCarAlarmTriggered(int survivor, int infected, CarAlarmReason_t reason)
 {
 	if (g_hCvar_RepCarAlarm.BoolValue && IsValidClientInGame(survivor) && !IsFakeClient(survivor))
 	{
 		if (reason == CALARM_HIT)
+		{
 			CPrintToChatAll("%t %t", "Tag+", "CalarmHit", survivor);
+		}
 		else if (reason == CALARM_TOUCHED)
 		{
 			// if a survivor touches an alarmed car, it might be due to a special infected...
 			if (IsValidInfected(infected))
 			{
 				if (!IsFakeClient(infected))
+				{
 					CPrintToChatAll("%t %t", "Tag+", "CalarmTouched", infected, survivor);
+				}
 				else
 				{
 					switch (GetEntProp(infected, Prop_Send, "m_zombieClass"))
 					{
 						case ZC_SMOKER:
 							CPrintToChatAll("%t %t", "Tag+", "CalarmTouchedHunter", survivor);
+
 						case ZC_JOCKEY:
 							CPrintToChatAll("%t %t", "Tag+", "CalarmTouchedJockey", survivor);
+
 						case ZC_CHARGER:
 							CPrintToChatAll("%t %t", "Tag+", survivor);
+
 						default:
 							CPrintToChatAll("%t %t", "Tag+", "CalarmTouchedInfected", survivor);
 					}
 				}
 			}
 			else
+			{
 				CPrintToChatAll("%t %t", "Tag+", "CalarmTouchedBot", survivor);
+			}
 		}
 		else if (reason == CALARM_EXPLOSION)
+		{
 			CPrintToChatAll("%t %t", "Tag+", "CalarmExplosion", survivor);
+		}
 		else if (reason == CALARM_BOOMER)
 		{
 			if (IsValidInfected(infected) && !IsFakeClient(infected))
+			{
 				CPrintToChatAll("%t %t", "Tag+", "CalarmBoomer", survivor, infected);
+			}
 			else
+			{
 				CPrintToChatAll("%t %t", "Tag+", "CalarmBoomerBot", survivor);
+			}
 		}
 		else
+		{
 			CPrintToChatAll("%t %t", "Tag+", "Calarm", survivor);
+		}
 	}
 
 	Call_StartForward(g_hForwardAlarmTriggered);
