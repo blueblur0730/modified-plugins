@@ -8,8 +8,8 @@
 #include <l4d2util>
 #include <colors>
 
-static bool g_bLateLoad		   = false;	   // whether we're loading late (after map has started)
-int			g_iPounceInterrupt = 150;	   // z_pounce_damage_interrupt, default 150, damage that is greater that this applied on a flying hunter will be skeeted immediately. but not handle on this plugin :).
+bool g_bLateLoad		   = false;	   // whether we're loading late (after map has started)
+int	g_iPounceInterrupt = 150;	   // z_pounce_damage_interrupt, default 150, damage that is greater that this applied on a flying hunter will be skeeted immediately. but not handle on this plugin :).
 
 GlobalForward
 	g_hForwardSkeet			  = null,
@@ -43,7 +43,6 @@ StringMap
 	g_hMapEntityCreated = null,	   // getting classname of entity created
 	g_hMapAbility		= null,	   // ability check
 	g_hWitchMap			= null,	   // witch tracking (Crox)
-	g_hRockMap			= null,	   // tank rock tracking
 	g_hCarMap			= null;	   // car alarm tracking
 
 // cvars
@@ -153,15 +152,15 @@ ConVar
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.0.0"
+#define PLUGIN_VERSION "r2.0.1"
 
 public Plugin myinfo =
 {
-	name		= "[L4D2] Skill Detection",
-	author		= "Tabun, Competitive Rework Team, blueblur",
+	name = "[L4D2] Skill Detection",
+	author = "Tabun, Competitive Rework Team, blueblur",
 	description = "Detects and reports skeets, crowns, levels, highpounces, etc.",
-	version		= PLUGIN_VERSION,
-	url			= "https://github.com/Tabbernaut/L4D2-Plugins"
+	version	= PLUGIN_VERSION,
+	url	= "https://github.com/blueblur0730/modified-plugins"
 };
 
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
@@ -285,10 +284,9 @@ public void OnPluginStart()
 	g_hMapAbility.SetValue("ability_throw", ABL_ROCKTHROW);
 
 	g_hWitchMap = new StringMap();
-	g_hRockMap	= new StringMap();
 	g_hCarMap	= new StringMap();
 
-	_skill_detect_tracking_LateLoad(g_bLateLoad);
+	_skill_detect_tracking_OnPluginStart();
 }
 
 public void OnPluginEnd()
@@ -297,18 +295,14 @@ public void OnPluginEnd()
 	delete g_hMapEntityCreated;
 	delete g_hMapAbility;
 	delete g_hWitchMap;
-	delete g_hRockMap;
 	delete g_hCarMap;
+
+	_skill_detect_tracking_OnPluginEnd();
 }
 
-public void OnClientPostAdminCheck(int client)
+public void OnClientPutInServer(int client)
 {
-	_skill_detect_tracking_OnClientPostAdminCheck(client);
-}
-
-public void OnClientDisconnect(int client)
-{
-	_skill_detect_tracking_OnClientDisconnect(client);
+	_skill_detect_tracking_OnClientPutInServer(client);
 }
 
 public void OnEntityCreated(int entity, const char[] classname)

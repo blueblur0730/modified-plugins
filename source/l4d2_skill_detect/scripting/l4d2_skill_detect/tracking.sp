@@ -126,6 +126,15 @@ enum struct SISkillCache_t
 }
 static SISkillCache_t g_SISkillCache[L4D2_MAXPLAYERS + 1];
 
+enum struct TankRockTrace_t
+{
+	int m_iThrower;
+	int m_iRock;
+	int m_iDamageTaken;
+	int m_iSkeeter;
+}
+static ArrayList g_hArray_TankRockTrace;
+
 enum struct SkillCache_t
 {
 	// hunters: skeets/pounces
@@ -178,32 +187,33 @@ enum struct SkillCache_t
 }
 static SkillCache_t g_SkillCache[L4D2_MAXPLAYERS + 1];
 
-static int			g_iRocksBeingThrown[10];
-static int			g_iRocksBeingThrownCount = 0;	 // so we can do a push/pop type check for who is throwing a created rock
-
 static float		g_fLastCarAlarm			 = 0.0;	   // time when last car alarm went off
 static int			g_iLastCarAlarmBoomer;			   // if a boomer triggered an alarm, remember it
 
-void				_skill_detect_tracking_LateLoad(bool bLate)
+void _skill_detect_tracking_OnPluginStart()
 {
-	if (bLate)
+	if (g_bLateLoad)
 	{
 		for (int client = 1; client <= MaxClients; client++)
 		{
 			if (IsValidClientInGame(client))
+			{
 				SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamageByWitch);
+			}	
 		}
 	}
+
+	g_hArray_TankRockTrace = new ArrayList(sizeof(TankRockTrace_t));
 }
 
-void _skill_detect_tracking_OnClientPostAdminCheck(int client)
+void _skill_detect_tracking_OnPluginEnd()
+{
+	delete g_hArray_TankRockTrace;
+}
+
+void _skill_detect_tracking_OnClientPutInServer(int client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamageByWitch);
-}
-
-void _skill_detect_tracking_OnClientDisconnect(int client)
-{
-	SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamageByWitch);
 }
 
 void HookSkillDetectEvent()
@@ -244,7 +254,6 @@ void HookSkillDetectEvent()
 
 static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
-	g_iRocksBeingThrownCount = 0;
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		g_SkillCache[i].m_bIsHopping = false;
@@ -252,6 +261,8 @@ static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 		for (int j = 1; j <= MaxClients; j++)
 			g_SkillCache[i].m_flVictimLastShove[j] = 0.0;
 	}
+
+	g_hArray_TankRockTrace.Clear();
 }
 
 static void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
@@ -264,14 +275,17 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
 	int victim	 = GetClientOfUserId(event.GetInt("userid"));
 	int attacker = GetClientOfUserId(event.GetInt("attacker"));
-	int zClass;
+
+	if (!IsValidClientInGame(victim) || !IsValidClientInGame(attacker))
+		return;
+
+	int zClass = GetEntProp(victim, Prop_Send, "m_zombieClass");
 
 	int damage	   = event.GetInt("dmg_health");
 	int damagetype = event.GetInt("type");
 
 	if (IsValidInfected(victim))
-	{
-		zClass		 = GetEntProp(victim, Prop_Send, "m_zombieClass");
+	{	 
 		int health	 = event.GetInt("health");
 		int hitgroup = event.GetInt("hitgroup");
 
@@ -292,7 +306,7 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 				// if the damage done is greater than the health we know the hunter to have remaining, reduce the damage done
 				if (g_SkillCache[victim].m_iHunterLastHealth > 0 && damage > g_SkillCache[victim].m_iHunterLastHealth)
 				{
-					damage									 = g_SkillCache[victim].m_iHunterLastHealth;
+					damage = g_SkillCache[victim].m_iHunterLastHealth;
 					g_SkillCache[victim].m_iHunterOverkill	 = g_SkillCache[victim].m_iHunterLastHealth - damage;
 					g_SkillCache[victim].m_iHunterLastHealth = 0;
 				}
@@ -445,8 +459,6 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	}
 	else if (IsValidInfected(attacker))
 	{
-		zClass = GetEntProp(attacker, Prop_Send, "m_zombieClass");
-
 		switch (zClass)
 		{
 			case ZC_HUNTER:
@@ -463,17 +475,6 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 
 				if (StrEqual(weapon, "tank_rock"))
 				{
-					// find rock entity through tank
-					if (g_SISkillCache[attacker].m_iTankRock)
-					{
-						// remember that the rock wasn't shot
-						char rock_key[10];
-						FormatEx(rock_key, sizeof(rock_key), "%x", g_SISkillCache[attacker].m_iTankRock);
-						int rock_array[3];
-						rock_array[rckDamage] = -1;
-						g_hRockMap.SetArray(rock_key, rock_array, sizeof(rock_array), true);
-					}
-
 					if (IsValidSurvivor(victim))
 						HandleRockEaten(attacker, victim);
 				}
@@ -1033,15 +1034,6 @@ static void Event_AbilityUse(Event event, const char[] name, bool dontBroadcast)
 			ResetHunter(client);
 			GetClientAbsOrigin(client, g_SkillCache[client].m_flPouncePosition);
 		}
-
-		case ABL_ROCKTHROW:
-		{
-			// tank throws rock
-			g_iRocksBeingThrown[g_iRocksBeingThrownCount] = client;
-
-			// safeguard
-			if (g_iRocksBeingThrownCount < 9) { g_iRocksBeingThrownCount++; }
-		}
 	}
 }
 
@@ -1222,22 +1214,13 @@ void _skill_detect_tracking_OnEntityCreated(int entity, const char[] classname)
 	{
 		case OEC_TANKROCK:
 		{
-			char rock_key[10];
-			FormatEx(rock_key, sizeof(rock_key), "%x", entity);
-			int rock_array[3];
+			TankRockTrace_t rockTrace;
+			rockTrace.m_iRock = entity;
+			rockTrace.m_iThrower = GetEntPropEnt(entity, Prop_Send, "m_hThrower");	// CTankRock < CBaseGrenade.
+			g_hArray_TankRockTrace.PushArray(rockTrace, sizeof(rockTrace));
 
-			// store which tank is throwing what rock
-			int tank = ShiftTankThrower();
-
-			if (IsValidClientInGame(tank))
-			{
-				g_SISkillCache[tank].m_iTankRock = entity;
-				rock_array[rckTank]				 = tank;
-			}
-			g_hRockMap.SetArray(rock_key, rock_array, sizeof(rock_array), true);
-
-			SDKHook(entity, SDKHook_TraceAttack, TraceAttack_Rock);
-			SDKHook(entity, SDKHook_Touch, OnTouch_Rock);
+			SDKHook(entity, SDKHook_TraceAttackPost, TraceAttackPost_Rock);
+			SDKHook(entity, SDKHook_TouchPost, OnTouchPost_Rock);
 		}
 
 		case OEC_CARALARM:
@@ -1322,17 +1305,16 @@ static Action OnEntitySpawned_CarAlarmGlass(int entity)
 // entity destruction
 void _skill_detect_tracking_OnEntityDestroyed(int entity)
 {
-	char witch_key[10];
-	FormatEx(witch_key, sizeof(witch_key), "%x", entity);
-
-	int rock_array[3];
-	if (g_hRockMap.GetArray(witch_key, rock_array, sizeof(rock_array)))
+	int index = g_hArray_TankRockTrace.FindValue(entity, TankRockTrace_t::m_iRock);
+	if (index != -1)
 	{
-		// tank rock
-		CreateTimer(ROCK_CHECK_TIME, Timer_CheckRockSkeet, entity);
-		SDKUnhook(entity, SDKHook_TraceAttack, TraceAttack_Rock);
+		CreateTimer(ROCK_CHECK_TIME, Timer_CheckRockSkeet, index);
+		SDKUnhook(entity, SDKHook_TraceAttack, TraceAttackPost_Rock);
 		return;
 	}
+
+	char witch_key[10];
+	FormatEx(witch_key, sizeof(witch_key), "%x", entity);
 
 	int witch_array[L4D2_MAXPLAYERS + DMGARRAYEXT];
 	if (g_hWitchMap.GetArray(witch_key, witch_array, sizeof(witch_array)))
@@ -1352,20 +1334,14 @@ static void Timer_WitchKeyDelete(Handle timer, any witch)
 	g_hWitchMap.Remove(witch_key);
 }
 
-static void Timer_CheckRockSkeet(Handle timer, any rock)
+static void Timer_CheckRockSkeet(Handle timer, any index)
 {
-	int	 rock_array[3];
-	char rock_key[10];
-	FormatEx(rock_key, sizeof(rock_key), "%x", rock);
+	TankRockTrace_t rockTrace;
+	g_hArray_TankRockTrace.GetArray(index, rockTrace, sizeof(rockTrace))
+	g_hArray_TankRockTrace.Erase(index);
 
-	if (!g_hRockMap.GetArray(rock_key, rock_array, sizeof(rock_array)))
-		return;
-
-	g_hRockMap.Remove(rock_key);
-
-	// if rock didn't hit anyone / didn't touch anything, it was shot
-	if (rock_array[rckDamage] > 0)
-		HandleRockSkeeted(rock_array[rckSkeeter], rock_array[rckTank]);
+	if (rockTrace.m_iDamageTaken > 0)
+		HandleRockSkeeted(rockTrace.m_iSkeeter, rockTrace.m_iThrower);
 }
 
 // boomer got somebody
@@ -1660,38 +1636,34 @@ static void CheckWitchCrown(int witch, int attacker, bool bOneShot = false)
 }
 
 // tank rock
-static Action TraceAttack_Rock(int victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& ammotype, int hitbox, int hitgroup)
+static void TraceAttackPost_Rock(int victim, int attacker, int inflictor, float damage, int damagetype, int ammotype, int hitbox, int hitgroup)
 {
 	if (IsValidSurvivor(attacker))
 	{
-		/*
-			can't really use this for precise detection, though it does
-			report the last shot -- the damage report is without distance falloff
-		*/
-		char rock_key[10];
-		int	 rock_array[3];
-		FormatEx(rock_key, sizeof(rock_key), "%x", victim);
-		g_hRockMap.GetArray(rock_key, rock_array, sizeof(rock_array));
-		rock_array[rckDamage] += RoundToFloor(damage);
-		rock_array[rckSkeeter] = attacker;
-		g_hRockMap.SetArray(rock_key, rock_array, sizeof(rock_array), true);
+		int index = g_hArray_TankRockTrace.FindValue(victim, TankRockTrace_t::m_iRock);
+		if (index != -1)
+		{
+			TankRockTrace_t rockTrace;
+			g_hArray_TankRockTrace.GetArray(index, rockTrace, sizeof(rockTrace));
+			rockTrace.m_iDamageTaken = RoundToFloor(damage);
+			rockTrace.m_iSkeeter = attacker;
+			g_hArray_TankRockTrace.SetArray(index, rockTrace, sizeof(rockTrace));
+		}
 	}
-
-	return Plugin_Continue;
 }
 
-static Action OnTouch_Rock(int entity, int other)
+static void OnTouchPost_Rock(int entity, int other)
 {
-	// remember that the rock wasn't shot
-	char rock_key[10];
-	FormatEx(rock_key, sizeof(rock_key), "%x", entity);
-	int rock_array[3];
-	rock_array[rckDamage] = -1;
-	g_hRockMap.SetArray(rock_key, rock_array, sizeof(rock_array), true);
+	int index = g_hArray_TankRockTrace.FindValue(entity, TankRockTrace_t::m_iRock);
+	if (index != -1)
+	{
+		TankRockTrace_t rockTrace;
+		g_hArray_TankRockTrace.GetArray(index, rockTrace, sizeof(rockTrace));
+		rockTrace.m_iDamageTaken = -1;
+		g_hArray_TankRockTrace.SetArray(index, rockTrace, sizeof(rockTrace));
 
-	SDKUnhook(entity, SDKHook_Touch, OnTouch_Rock);
-
-	return Plugin_Continue;
+		SDKUnhook(entity, SDKHook_TouchPost, OnTouchPost_Rock);
+	}
 }
 
 // smoker tongue cutting & self clears
@@ -1978,28 +1950,6 @@ static void Timer_CheckAlarm(Handle timer, any entity)
 
 		HandleCarAlarmTriggered(survivor, infected, (IsValidClientInGame(survivor)) ? g_SkillCache[survivor].m_iLastCarAlarmReason : CALARM_UNKNOWN);
 	}
-}
-
-static stock int ShiftTankThrower()
-{
-	int tank = -1;
-
-	if (!g_iRocksBeingThrownCount)
-		return -1;
-
-	tank = g_iRocksBeingThrown[0];
-
-	// shift the tank array downwards, if there are more than 1 throwers
-	if (g_iRocksBeingThrownCount > 1)
-	{
-		for (int x = 1; x <= g_iRocksBeingThrownCount; x++)
-		{
-			g_iRocksBeingThrown[x - 1] = g_iRocksBeingThrown[x];
-		}
-	}
-
-	g_iRocksBeingThrownCount--;
-	return tank;
 }
 
 static stock bool IsWitch(int iEntity)
