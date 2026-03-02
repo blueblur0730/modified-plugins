@@ -41,7 +41,6 @@ GlobalForward
 StringMap
 	g_hMapWeapons		= null,	   // weapon check
 	g_hMapEntityCreated = null,	   // getting classname of entity created
-	g_hMapAbility		= null,	   // ability check
 	g_hWitchMap			= null,	   // witch tracking (Crox)
 	g_hCarMap			= null;	   // car alarm tracking
 
@@ -97,8 +96,6 @@ ConVar
 /*
 	To Do
 	-----
-
-	- fix:  tank rock owner is not reliable for the RockEaten forward
 	- fix:  tank rock skeets still unreliable detection (often triggers a 'skeet' when actually landed on someone)
 
 	- fix:  apparently some HR4 cars generate car alarm messages when shot, even when no alarm goes off
@@ -106,6 +103,7 @@ ConVar
 			- see below: the single hook might also fix this.. -- if not, hook for sound
 			- do a hookoutput on prop_car_alarm's and use that to track the actual alarm
 				going off (might help in the case 2 alarms go off exactly at the same time?)
+
 	- fix:  double prints on car alarms (sometimes? epi + m60)
 
 	- fix:  sometimes instaclear reports double for single clear (0.16s / 0.19s) epi saw this, was for hunter
@@ -138,12 +136,6 @@ ConVar
 		- ? add jockey deadstops (and change forward to reflect type)
 		- ? speedcrown detection?
 		- ? spit-on-cap detection
-
-	---
-	done:
-		- applied sanity bounds to calculated damage for hunter dps
-		- removed tank's name from rock skeet print
-		- 300+ speed hops are considered hops even if no increase
 */
 
 /*****************************************************************
@@ -152,7 +144,7 @@ ConVar
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.0.1"
+#define PLUGIN_VERSION "r2.0.2"
 
 public Plugin myinfo =
 {
@@ -279,10 +271,6 @@ public void OnPluginStart()
 	g_hMapEntityCreated.SetValue("prop_car_alarm", OEC_CARALARM);
 	g_hMapEntityCreated.SetValue("prop_car_glass", OEC_CARGLASS);
 
-	g_hMapAbility = new StringMap();
-	g_hMapAbility.SetValue("ability_lunge", ABL_HUNTERLUNGE);
-	g_hMapAbility.SetValue("ability_throw", ABL_ROCKTHROW);
-
 	g_hWitchMap = new StringMap();
 	g_hCarMap	= new StringMap();
 
@@ -293,7 +281,6 @@ public void OnPluginEnd()
 {
 	delete g_hMapWeapons;
 	delete g_hMapEntityCreated;
-	delete g_hMapAbility;
 	delete g_hWitchMap;
 	delete g_hCarMap;
 

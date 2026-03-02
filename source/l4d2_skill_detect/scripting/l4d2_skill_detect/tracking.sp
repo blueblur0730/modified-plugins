@@ -76,21 +76,6 @@ enum strOEC
 	OEC_CARGLASS
 };
 
-// Map values: special abilities
-enum strAbility
-{
-	ABL_HUNTERLUNGE,
-	ABL_ROCKTHROW
-};
-
-enum
-{
-	rckDamage,
-	rckTank,
-	rckSkeeter,
-	strRockData
-};
-
 // witch array enMaps (L4D2_MAXPLAYERS+index)
 enum
 {
@@ -1016,25 +1001,18 @@ static void Event_AbilityUse(Event event, const char[] name, bool dontBroadcast)
 {
 	// track hunters pouncing
 	int	 client = GetClientOfUserId(event.GetInt("userid"));
-	char abilityName[64];
-	event.GetString("ability", abilityName, sizeof(abilityName));
-
 	if (!IsValidClientInGame(client))
 		return;
 
-	strAbility ability;
-	if (!g_hMapAbility.GetValue(abilityName, ability))
+	char abilityName[64];
+	event.GetString("ability", abilityName, sizeof(abilityName));
+	if (strcmp(abilityName, "ability_lounge") != 0)
 		return;
 
-	switch (ability)
-	{
-		case ABL_HUNTERLUNGE:
-		{
-			// hunter started a pounce
-			ResetHunter(client);
-			GetClientAbsOrigin(client, g_SkillCache[client].m_flPouncePosition);
-		}
-	}
+	// hunter started a pounce
+	ResetHunter(client);
+	GetClientAbsOrigin(client, g_SkillCache[client].m_flPouncePosition);
+
 }
 
 // charger carrying
