@@ -155,34 +155,13 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
 	}
 
 	// call forward
-	if (bSniper)
-	{
-		Call_StartForward(g_hForwardSkeetSniper);
-		Call_PushCell(attacker);
-		Call_PushCell(victim);
-		Call_Finish();
-	}
-	else if (bGL)
-	{
-		Call_StartForward(g_hForwardSkeetGL);
-		Call_PushCell(attacker);
-		Call_PushCell(victim);
-		Call_Finish();
-	}
-	else if (bMelee)
-	{
-		Call_StartForward(g_hForwardSkeetMelee);
-		Call_PushCell(attacker);
-		Call_PushCell(victim);
-		Call_Finish();
-	}
-	else
-	{
-		Call_StartForward(g_hForwardSkeet);
-		Call_PushCell(attacker);
-		Call_PushCell(victim);
-		Call_Finish();
-	}
+	Call_StartForward(g_hForwardSkeet);
+	Call_PushCell(attacker);
+	Call_PushCell(victim);
+	Call_PushCell(bMelee);
+	Call_PushCell(bSniper);
+	Call_PushCell(bGL);
+	Call_Finish();
 }
 
 // hurt skeet / non-skeet
@@ -203,42 +182,22 @@ void HandleNonSkeet(int attacker, int victim, int damage, bool bOverKill = false
 				continue;
 
 			Format(buffer, sizeof(buffer), "%T", "Unchipped", i);
-			if (IsValidClientInGame(victim))
-				CPrintToChat(i, "%t %t", "Tag+", "HurtSkeet", victim, damage, (bOverKill) ? buffer : "");
-			else
-				CPrintToChat(i, "%t %t", "Tag+", "HurtSkeetBot", damage, (bOverKill) ? buffer : "");
+			IsValidClientInGame(victim) ?
+			CPrintToChat(i, "%t %t", "Tag+", "HurtSkeet", victim, damage, (bOverKill) ? buffer : "") :
+			CPrintToChat(i, "%t %t", "Tag+", "HurtSkeetBot", damage, (bOverKill) ? buffer : "");
 		}
 
 	}
 
 	// call forward
-	if (bSniper)
-	{
-		Call_StartForward(g_hForwardSkeetSniperHurt);
-		Call_PushCell(attacker);
-		Call_PushCell(victim);
-		Call_PushCell(damage);
-		Call_PushCell(bOverKill);
-		Call_Finish();
-	}
-	else if (bMelee)
-	{
-		Call_StartForward(g_hForwardSkeetMeleeHurt);
-		Call_PushCell(attacker);
-		Call_PushCell(victim);
-		Call_PushCell(damage);
-		Call_PushCell(bOverKill);
-		Call_Finish();
-	}
-	else
-	{
-		Call_StartForward(g_hForwardSkeetHurt);
-		Call_PushCell(attacker);
-		Call_PushCell(victim);
-		Call_PushCell(damage);
-		Call_PushCell(bOverKill);
-		Call_Finish();
-	}
+	Call_StartForward(g_hForwardSkeetHurt);
+	Call_PushCell(attacker);
+	Call_PushCell(victim);
+	Call_PushCell(damage);
+	Call_PushCell(bOverKill);
+	Call_PushCell(bMelee);
+	Call_PushCell(bSniper);
+	Call_Finish();
 }
 
 // crown

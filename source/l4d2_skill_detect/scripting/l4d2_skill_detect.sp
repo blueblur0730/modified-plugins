@@ -29,11 +29,6 @@ enum strOEC
 GlobalForward
 	g_hForwardSkeet			  = null,
 	g_hForwardSkeetHurt		  = null,
-	g_hForwardSkeetMelee	  = null,
-	g_hForwardSkeetMeleeHurt  = null,
-	g_hForwardSkeetSniper	  = null,
-	g_hForwardSkeetSniperHurt = null,
-	g_hForwardSkeetGL		  = null,
 	g_hForwardHunterDeadstop  = null,
 	g_hForwardSIShove		  = null,
 	g_hForwardBoomerPop		  = null,
@@ -141,7 +136,7 @@ ConVar
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.1.1"
+#define PLUGIN_VERSION "r2.2.0"
 
 public Plugin myinfo =
 {
@@ -154,13 +149,8 @@ public Plugin myinfo =
 
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
 {
-	g_hForwardSkeet			  = new GlobalForward("SkillDetect_OnSkeet", ET_Ignore, Param_Cell, Param_Cell);
-	g_hForwardSkeetHurt		  = new GlobalForward("SkillDetect_OnSkeetHurt", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
-	g_hForwardSkeetMelee	  = new GlobalForward("SkillDetect_OnSkeetMelee", ET_Ignore, Param_Cell, Param_Cell);
-	g_hForwardSkeetMeleeHurt  = new GlobalForward("SkillDetect_OnSkeetMeleeHurt", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
-	g_hForwardSkeetSniper	  = new GlobalForward("SkillDetect_OnSkeetSniper", ET_Ignore, Param_Cell, Param_Cell);
-	g_hForwardSkeetSniperHurt = new GlobalForward("SkillDetect_OnSkeetSniperHurt", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
-	g_hForwardSkeetGL		  = new GlobalForward("SkillDetect_OnSkeetGL", ET_Ignore, Param_Cell, Param_Cell);
+	g_hForwardSkeet			  = new GlobalForward("SkillDetect_OnSkeet", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
+	g_hForwardSkeetHurt		  = new GlobalForward("SkillDetect_OnSkeetHurt", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	g_hForwardSIShove		  = new GlobalForward("SkillDetect_OnSpecialShoved", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
 	g_hForwardHunterDeadstop  = new GlobalForward("SkillDetect_OnHunterDeadstop", ET_Ignore, Param_Cell, Param_Cell);
 	g_hForwardBoomerPop		  = new GlobalForward("SkillDetect_OnBoomerPop", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Float);

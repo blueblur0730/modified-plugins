@@ -290,7 +290,7 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 				if (g_InfectedSkillCache[victim].m_iHunterLastHealth > 0 && damage > g_InfectedSkillCache[victim].m_iHunterLastHealth)
 				{
 					damage = g_InfectedSkillCache[victim].m_iHunterLastHealth;
-					g_InfectedSkillCache[victim].m_iHunterOverkill	 = g_InfectedSkillCache[victim].m_iHunterLastHealth - damage;
+					g_InfectedSkillCache[victim].m_iHunterOverkill	 = 0;
 					g_InfectedSkillCache[victim].m_iHunterLastHealth = 0;
 				}
 
@@ -305,7 +305,7 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 					so the g_InfectedSkillCache[victim].m_flHunterTracePouncing value indicates when the hunter was last seen pouncing in traceattack
 					(should be DIRECTLY before this event for every shot).
 				*/
-				bool isPouncing = view_as<bool>(GetEntProp(victim, Prop_Send, "m_isAttemptingToPounce") || g_InfectedSkillCache[victim].m_flHunterTracePouncing != 0.0 && (GetGameTime() - g_InfectedSkillCache[victim].m_flHunterTracePouncing) < 0.001);
+				bool isPouncing = view_as<bool>((GetEntProp(victim, Prop_Send, "m_isAttemptingToPounce") || g_InfectedSkillCache[victim].m_flHunterTracePouncing != 0.0) && (GetGameTime() - g_InfectedSkillCache[victim].m_flHunterTracePouncing) < 0.001);
 
 				if (isPouncing)
 				{
@@ -333,7 +333,7 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 							indirect hit is DMG_AIRBOAT
 						*/
 
-						char		  weaponB[32];
+						char weaponB[32];
 						strWeaponType weaponTypeB;
 						event.GetString("weapon", weaponB, sizeof(weaponB));
 
