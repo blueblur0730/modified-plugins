@@ -225,7 +225,6 @@ void _skill_detect_tracking_OnEntityCreated(int entity, const char[] classname)
 {
     if (entity < 1 || !IsValidEntity(entity) || !IsValidEdict(entity))
         return;
-    // track infected / witches, so damage on them counts as hits
 
     strOEC classnameOEC;
     if (!g_hMapEntityCreated.GetValue(classname, classnameOEC))
@@ -266,7 +265,6 @@ void _skill_detect_tracking_OnEntityDestroyed(int entity)
     int index = g_hArray_TankRockTrace.FindValue(entity, TankRockTrace_t::m_iRock);
     if (index != -1)
     {
-        //PrintToServer("Rock: %i killed, index: %i", entity, index);
         CreateTimer(ROCK_CHECK_TIME, Timer_CheckRockSkeet, index);
         return;
     }
@@ -276,7 +274,6 @@ void _skill_detect_tracking_OnEntityDestroyed(int entity)
     {
         // witch
         // delayed deletion, to avoid potential problems with crowns not detecting
-        //PrintToServer("Witch %i killed, index: %i", entity, index);
         CreateTimer(WITCH_DELETE_TIME, Timer_WitchKeyDelete, index);
     }
 }
@@ -315,15 +312,14 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
     if (!IsValidClientInGame(victim) || !IsValidClientInGame(attacker))
         return;
 
-    int zClass = GetEntProp(victim, Prop_Send, "m_zombieClass");
-
     int damage = event.GetInt("dmg_health");
     int damagetype = event.GetInt("type");
 
     if (IsValidInfected(victim))
     {     
-        int health     = event.GetInt("health");
+        int health = event.GetInt("health");
         int hitgroup = event.GetInt("hitgroup");
+        int zClass = GetEntProp(victim, Prop_Send, "m_zombieClass");
 
         if (damage < 1)
             return;
@@ -343,7 +339,7 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
                 if (g_InfectedSkillCache[victim].m_iHunterLastHealth > 0 && damage > g_InfectedSkillCache[victim].m_iHunterLastHealth)
                 {
                     damage = g_InfectedSkillCache[victim].m_iHunterLastHealth;
-                    g_InfectedSkillCache[victim].m_iHunterOverkill     = 0;
+                    g_InfectedSkillCache[victim].m_iHunterOverkill   = 0;
                     g_InfectedSkillCache[victim].m_iHunterLastHealth = 0;
                 }
 
@@ -499,6 +495,7 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
     }
     else if (IsValidInfected(attacker))
     {
+        int zClass = GetEntProp(attacker, Prop_Send, "m_zombieClass");
         switch (zClass)
         {
             case ZC_HUNTER:

@@ -127,6 +127,8 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
     {
         if (attacker == -2)
         {
+			
+
             // team skeet sets to -2
             (IsValidClientInGame(victim) && !IsFakeClient(victim)) ?
             CPrintToChatAll("%t %t", "Tag+", "TeamSkeeted", victim) :
