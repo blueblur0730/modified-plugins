@@ -2,16 +2,16 @@
 
 # [L4D2] Max Ammo
 
-Modify the ammo count for each weapons, overriding the original game convar.
+绕过游戏原生convar，为每一把抢单独实现最大备弹数。
 
-## Requirments
+## 要求
 
-- [Left 4 DHooks Direct](https://forums.alliedmods.net/showthread.php?t=321696) (required for the running)
-- [l4d_transition_entity](https://github.com/Target5150/MoYu_Server_Stupid_Plugins/tree/master/The%20Last%20Stand/l4d_transition_entity) (required for the running)
+- [Left 4 DHooks Direct](https://forums.alliedmods.net/showthread.php?t=321696) (运行时需要)
+- [l4d_transition_entity](https://github.com/Target5150/MoYu_Server_Stupid_Plugins/tree/master/The%20Last%20Stand/l4d_transition_entity) (运行时需要)
 
 - [gamedata_wrapper.inc](https://github.com/blueblur0730/modified-plugins/blob/main/include/gamedata_wrapper.inc)
-(required for the compiling)
-- [l4d2util.inc](https://github.com/SirPlease/L4D2-Competitive-Rework/tree/master/addons/sourcemod/scripting/include) (required for the compiling)
+(编译时需要)
+- [l4d2util.inc](https://github.com/SirPlease/L4D2-Competitive-Rework/tree/master/addons/sourcemod/scripting/include) (编译时需要)
 
 ## ConVars
 
