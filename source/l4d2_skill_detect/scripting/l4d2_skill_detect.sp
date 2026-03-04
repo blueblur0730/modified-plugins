@@ -26,6 +26,53 @@ enum strOEC
     OEC_CARGLASS
 };
 
+enum struct IntervalTimer_t
+{
+    // gpGlobals->curtime
+    float Now()
+    {
+        return GetGameTime();
+    }    
+
+    void Reset()
+    {
+        this.m_timestamp = this.Now();
+    }        
+
+    void Start()
+    {
+        this.m_timestamp = this.Now();
+    }
+
+    void Invalidate()
+    {
+        this.m_timestamp = -1.0;
+    }        
+
+    bool HasStarted()
+    {
+        return (this.m_timestamp > 0.0);
+    }
+
+    /// if not started, elapsed time is very large
+    float GetElapsedTime()
+    {
+        return (this.HasStarted()) ? (this.Now() - this.m_timestamp) : 99999.9;
+    }
+
+    bool IsLessThan( float duration )
+    {
+        return (this.Now() - this.m_timestamp < duration) ? true : false;
+    }
+
+    bool IsGreaterThan( float duration )
+    {
+        return (this.Now() - this.m_timestamp > duration) ? true : false;
+    }
+
+    float m_timestamp;
+}
+
 GlobalForward
     g_hForwardSkeet           = null,
     g_hForwardSkeetHurt       = null,
@@ -79,16 +126,16 @@ ConVar
     g_hCvar_RepCarAlarm,
 
     g_hCvar_AllowMelee,              // cvar whether to count melee skeets
-    g_hCvar_AllowSniper,          // cvar whether to count sniper headshot skeets
-    g_hCvar_AllowGLSkeet,          // cvar whether to count direct hit GL skeets
-    g_hCvar_SelfClearThresh,      // cvar damage while self-clearing from smokers
+    g_hCvar_AllowSniper,             // cvar whether to count sniper headshot skeets
+    g_hCvar_AllowGLSkeet,            // cvar whether to count direct hit GL skeets
+    g_hCvar_SelfClearThresh,         // cvar damage while self-clearing from smokers
     g_hCvar_HunterDPThresh,          // cvar damage for hunter highpounce
     g_hCvar_JockeyDPThresh,          // cvar distance for jockey highpounce
     g_hCvar_HideFakeDamage,          // cvar damage while self-clearing from smokers
-    g_hCvar_DeathChargeHeight,      // cvar how high a charger must have come in order for a DC to count
-    g_hCvar_InstaTime,              // cvar clear within this time or lower for instaclear
-    g_hCvar_BHopMinStreak,          // cvar this many hops in a row+ = streak
-    g_hCvar_BHopMinInitSpeed,      // cvar lower than this and the first jump won't be seen as the start of a streak
+    g_hCvar_DeathChargeHeight,       // cvar how high a charger must have come in order for a DC to count
+    g_hCvar_InstaTime,               // cvar clear within this time or lower for instaclear
+    g_hCvar_BHopMinStreak,           // cvar this many hops in a row+ = streak
+    g_hCvar_BHopMinInitSpeed,        // cvar lower than this and the first jump won't be seen as the start of a streak
     g_hCvar_BHopContSpeed;
 
 /*
@@ -177,9 +224,6 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
 public void OnPluginStart()
 {
     LoadTranslation("l4d2_skill_detect.phrases");
-
-    // hooks
-    HookSkillDetectEvent();
 
     g_hCvar_Debug             = CreateConVar("l4d2_skill_detect_detect_debug", "0", "Enable debug messages.", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DONTRECORD);
 

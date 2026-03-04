@@ -509,28 +509,28 @@ void HandleCarAlarmTriggered(int survivor, int infected, CarAlarmReason_t reason
     Call_Finish();
 }
 
-char[] Melee(int client)
+static char[] Melee(int client)
 {
     char sBuffer[32];
     Format(sBuffer, sizeof(sBuffer), "%T", "Melee", client);
     return sBuffer;
 }
 
-char[] Headshot(int client)
+static char[] Headshot(int client)
 {
     char sBuffer[32];
     Format(sBuffer, sizeof(sBuffer), "%T", "HeadShot", client);
     return sBuffer;
 }
 
-char[] Grenade(int client)
+static char[] Grenade(int client)
 {
     char sBuffer[32];
     Format(sBuffer, sizeof(sBuffer), "%T", "Grenade", client);
     return sBuffer;
 }
 
-char[] PluralCount(int client)
+static char[] PluralCount(int client)
 {
     char sBuffer[32];
     Format(sBuffer, sizeof(sBuffer), "%T", "PluralCount", client);
