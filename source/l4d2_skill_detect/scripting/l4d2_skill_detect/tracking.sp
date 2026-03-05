@@ -3,6 +3,8 @@
 #endif
 #define _skill_detect_tracking_included
 
+#include <actions>
+
 #define L4D2_MAXPLAYERS        32
 
 #define SHOTGUN_BLAST_TIME     0.1
@@ -67,13 +69,8 @@ enum struct InfectedSkillCache_t
 
     // hunters: skeets/pounces
     int m_iHunterShotDmgTeam;                                       // counting shotgun blast damage for hunter, counting entire survivor team's damage
+    int m_iShotsFired[L4D2_MAXPLAYERS + 1];                         // how many shots the survivor has fired to skeet a hunter.
     int m_iHunterShotDmg[L4D2_MAXPLAYERS + 1];       	            // counting shotgun blast damage for hunter / skeeter combo
-    IntervalTimer_t m_HunterShotStartTimer[L4D2_MAXPLAYERS + 1];    // when the last shotgun blast on hunter started (if at any time) by an attacker
-    IntervalTimer_t m_HunterTracePouncingTimer;                     // time when the hunter was still pouncing (in traceattack) -- used to detect pouncing status
-    float m_flHunterLastShot;                                       // when the last shotgun damage was done (by anyone) on a hunter
-    int m_iHunterLastHealth;                                        // last time hunter took any damage, how much health did it have left?
-    int m_iHunterOverkill;                                          // how much more damage a hunter would've taken if it wasn't already dead
-    bool  m_bHunterKilledPouncing;                                  // whether the hunter was killed when actually pouncing
     int m_iPounceDamage;                                            // how much damage on last 'highpounce' done
     float m_flPouncePosition[3];                                    // position that a hunter (jockey?) pounced from (or charger started his carry)
 
@@ -95,13 +92,57 @@ enum struct InfectedSkillCache_t
     int m_iSmokerVictim;                // [smoker] the one that's being pulled
     int m_iSmokerVictimDamage;          // [smoker] amount of damage done to a smoker by the one he pulled
     bool m_bSmokerShoved;               // [smoker] set if the victim of a pull manages to shove the smoker
+
+    void SortSkeetDmg(int iArr[L4D2_MAXPLAYERS + 1][3])
+    {
+        for (int i = 1; i < L4D2_MAXPLAYERS; i++)
+        {
+            iArr[i][0] = i;
+            iArr[i][1] = this.m_iHunterShotDmg[i];
+            iArr[i][2] = this.m_iShotsFired[i];
+        }
+
+        // Bubble sort in descending order
+        int n = L4D2_MAXPLAYERS;
+        for (int i = 1; i <= n - 1; i++)
+        {
+            for (int j = 1; j <= n - i; j++)
+            {
+                if (iArr[j][1] < iArr[j + 1][1])
+                {
+                    // Swap the entire row
+                    int temp0 = iArr[j][0];
+                    int temp1 = iArr[j][1];
+                    int temp2 = iArr[j][2];
+
+                    iArr[j][0] = iArr[j + 1][0];
+                    iArr[j][1] = iArr[j + 1][1];
+                    iArr[j][2] = iArr[j + 1][2];
+
+                    iArr[j + 1][0] = temp0;
+                    iArr[j + 1][1] = temp1;
+                    iArr[j + 1][2] = temp2;
+                }
+            }
+        }
+    }
+
+    void ResetHunter()
+    {
+        this.m_iHunterShotDmgTeam = 0;
+        for (int i = 1; i <= MaxClients; i++)
+        {
+            this.m_iHunterShotDmg[i] = 0;
+            this.m_iShotsFired[i] = 0;
+        }
+    }
 }
 InfectedSkillCache_t g_InfectedSkillCache[L4D2_MAXPLAYERS + 1];
 
 enum struct SurvivorSkillCache_t
 {
-    // skeets
-    int m_iShotsFired;    // how many shots the survivor has fired to skeet a hunter.
+    // skeet
+    bool m_bShotCounted;                // whether the shot has been counted for the hunter
 
     // levels / charges
     IntervalTimer_t m_ChargeTimer;      // time the charger's charge last started, or if victim, when impact started
@@ -120,10 +161,7 @@ enum struct SurvivorSkillCache_t
 SurvivorSkillCache_t g_SurvivorSkillCache[L4D2_MAXPLAYERS + 1];
 
 static ConVar g_hCvar_PounceInterrupt_Default = null;  // z_pounce_damage_interrupt
-static int    g_iPounceInterruptDefault = 150;         // z_pounce_damage_interrupt, default 150, damage that is greater that this applied on a flying hunter will be skeeted immediately. but not handle on this plugin :).
-
-static ConVar g_hCvar_PounceInterrupt = null;    // l4d2_si_damage_ajustment_pounce_damage_interrupt
-static int g_iPounceInterrupt = 150;             // default 150, damage that is greater that this applied on a flying hunter will be skeeted immediately. but not handle on this plugin :).
+int    g_iPounceInterruptDefault = 150;         // z_pounce_damage_interrupt, default 150, damage that is greater that this applied on a flying hunter will be skeeted immediately. but not handle on this plugin :).
 
 static ConVar g_hCvar_ChargerHealth     = null;     // z_charger_health
 ConVar g_hCvar_MaxPounceDistance = null;     // z_pounce_damage_range_max
@@ -151,10 +189,6 @@ void _skill_detect_tracking_OnPluginStart()
     g_hCvar_PounceInterrupt_Default.AddChangeHook(CvarChange_PounceInterrupt);
     g_iPounceInterruptDefault = g_hCvar_PounceInterrupt_Default.IntValue;
 
-    g_hCvar_PounceInterrupt = FindConVar("l4d2_si_damage_ajustment_pounce_damage_interrupt");
-    g_hCvar_PounceInterrupt.AddChangeHook(CvarChange_PounceInterrupt);
-    g_iPounceInterrupt = g_hCvar_PounceInterrupt.IntValue;
-
     g_hCvar_ChargerHealth = FindConVar("z_charger_health");
     g_hCvar_MaxPounceDistance = FindConVar("z_pounce_damage_range_max");
     g_hCvar_MinPounceDistance = FindConVar("z_pounce_damage_range_min");
@@ -177,9 +211,9 @@ void _skill_detect_tracking_OnPluginStart()
     HookEvent("player_hurt", Event_PlayerHurt, EventHookMode_Pre);
     HookEvent("player_death", Event_PlayerDeath, EventHookMode_Pre);
     HookEvent("player_shoved", Event_PlayerShoved, EventHookMode_Post);
-    HookEvent("ability_use", Event_AbilityUse, EventHookMode_Post);
 
     // hunter.
+    HookEvent("weapon_fire", Event_WeaponFire, EventHookMode_Post);
     HookEvent("lunge_pounce", Event_LungePounce, EventHookMode_Post);
 
     // survivor.
@@ -278,10 +312,21 @@ void _skill_detect_tracking_OnEntityDestroyed(int entity)
     }
 }
 
-static void CvarChange_PounceInterrupt(ConVar convar, const char[] oldValue, const char[] newValue)
+public void OnActionCreated( BehaviorAction action, int actor, const char[] name )
 {
-    g_iPounceInterruptDefault = g_hCvar_PounceInterrupt_Default.IntValue;
-    g_iPounceInterrupt = g_hCvar_PounceInterrupt.IntValue;
+    if (strcmp(name, "HunterLungeAtVictim") == 0)
+    {
+        action.OnShoved = HunterLungeAtVictim_OnShoved;
+        action.OnInjured = HunterLungeAtVictim_OnInjured;
+        action.OnKilled = HunterLungeAtVictim_OnKilled;
+        action.OnStart = HunterLungeAtVictim_OnStart;
+        action.OnEnd = HunterLungeAtVictim_OnEnd;
+    }
+}
+
+public void L4D2_OnDominatedBySpecialInfected(int victim, int dominator)
+{
+    g_InfectedSkillCache[dominator].m_iSpecialVictim = victim;
 }
 
 static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
@@ -298,7 +343,7 @@ static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
     g_hArray_WitchTrace.Clear();
 }
 
-void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
+static void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
     // clean array, new cars will be created
     g_hArray_CarAlarmTrace.Clear();
@@ -318,7 +363,6 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
     if (IsValidInfected(victim))
     {     
         int health = event.GetInt("health");
-        int hitgroup = event.GetInt("hitgroup");
         int zClass = GetEntProp(victim, Prop_Send, "m_zombieClass");
 
         if (damage < 1)
@@ -326,138 +370,6 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 
         switch (zClass)
         {
-            case ZC_HUNTER:
-            {
-                // if it's not a survivor doing the work, only get the remaining health
-                if (!IsValidSurvivor(attacker))
-                {
-                    g_InfectedSkillCache[victim].m_iHunterLastHealth = health;
-                    return;
-                }
-
-                // if the damage done is greater than the health we know the hunter to have remaining, reduce the damage done
-                if (g_InfectedSkillCache[victim].m_iHunterLastHealth > 0 && damage > g_InfectedSkillCache[victim].m_iHunterLastHealth)
-                {
-                    damage = g_InfectedSkillCache[victim].m_iHunterLastHealth;
-                    g_InfectedSkillCache[victim].m_iHunterOverkill   = 0;
-                    g_InfectedSkillCache[victim].m_iHunterLastHealth = 0;
-                }
-
-                /*
-                    handle old shotgun blast: too long ago? not the same blast
-                */
-                if (g_InfectedSkillCache[victim].m_iHunterShotDmg[attacker] > 0 && g_InfectedSkillCache[victim].m_HunterShotStartTimer[attacker].IsGreaterThan(SHOTGUN_BLAST_TIME))
-                    g_InfectedSkillCache[victim].m_HunterShotStartTimer[attacker].Invalidate();
-
-                /*
-                    m_isAttemptingToPounce is set to 0 here if the hunter is actually skeeted
-                    so the g_InfectedSkillCache[victim].m_HunterTracePouncingTimer value indicates when the hunter was last seen pouncing in traceattack
-                    (should be DIRECTLY before this event for every shot).
-                */
-                bool isPouncing = view_as<bool>(
-                                                GetEntProp(victim, Prop_Send, "m_isAttemptingToPounce") || 
-                                                (g_InfectedSkillCache[victim].m_HunterTracePouncingTimer.HasStarted() && 
-                                                g_InfectedSkillCache[victim].m_HunterTracePouncingTimer.IsLessThan(0.001))
-                                                                                                                            );
-
-                if (isPouncing)
-                {
-                    if (damagetype & DMG_BUCKSHOT)
-                    {
-                        // first pellet hit?
-                        if (!g_InfectedSkillCache[victim].m_HunterShotStartTimer[attacker].HasStarted())
-                        {
-                            // new shotgun blast
-                            g_InfectedSkillCache[victim].m_HunterShotStartTimer[attacker].Start();
-                            g_InfectedSkillCache[victim].m_flHunterLastShot    = g_InfectedSkillCache[victim].m_HunterShotStartTimer[attacker].m_timestamp;
-                        }
-
-                        g_InfectedSkillCache[victim].m_iHunterShotDmg[attacker] += damage;
-                        g_InfectedSkillCache[victim].m_iHunterShotDmgTeam += damage;
-
-                        if (health == 0)
-                            g_InfectedSkillCache[victim].m_bHunterKilledPouncing = true;
-                    }
-                    else if (damagetype & (DMG_BLAST | DMG_PLASMA) && health == 0)
-                    {
-                        // direct GL hit?
-                        /*
-                            direct hit is DMG_BLAST | DMG_PLASMA
-                            indirect hit is DMG_AIRBOAT
-                        */
-
-                        char weaponB[32];
-                        strWeaponType weaponTypeB;
-                        event.GetString("weapon", weaponB, sizeof(weaponB));
-
-                        if (g_hMapWeapons.GetValue(weaponB, weaponTypeB) && weaponTypeB == WPTYPE_GL)
-                        {
-                            if (g_hCvar_AllowGLSkeet.BoolValue)
-                                HandleSkeet(attacker, victim, false, false, true);
-                        }
-                    }
-                    else if (damagetype & DMG_BULLET && health == 0 && hitgroup == HITGROUP_HEAD)
-                    {
-                        // headshot with bullet based weapon (only single shots) -- only snipers
-                        char weaponA[32];
-                        strWeaponType weaponTypeA;
-                        event.GetString("weapon", weaponA, sizeof(weaponA));
-
-                        if (g_hMapWeapons.GetValue(weaponA, weaponTypeA) && (weaponTypeA == WPTYPE_SNIPER || weaponTypeA == WPTYPE_MAGNUM))
-                        {
-                            if (damage >= g_iPounceInterruptDefault)
-                            {
-                                g_InfectedSkillCache[victim].m_iHunterShotDmgTeam = 0;
-                                if (g_hCvar_AllowSniper.BoolValue)
-                                    HandleSkeet(attacker, victim, false, true);
-
-                                ResetHunter(victim);
-                            }
-                            else
-                            {
-                                // hurt skeet
-                                if (g_hCvar_AllowSniper.BoolValue)
-                                    HandleNonSkeet(attacker, victim, damage, (g_InfectedSkillCache[victim].m_iHunterOverkill + g_InfectedSkillCache[victim].m_iHunterShotDmgTeam > g_iPounceInterruptDefault), false, true);
-
-                                ResetHunter(victim);
-                            }
-                        }
-
-                        // already handled hurt skeet above
-                        // g_SurvivorSkillCache[victim].m_bHunterKilledPouncing = true;
-                    }
-                    else if (damagetype & DMG_SLASH || damagetype & DMG_CLUB)
-                    {
-                        // melee skeet
-                        if (damage >= g_iPounceInterruptDefault)
-                        {
-                            g_InfectedSkillCache[victim].m_iHunterShotDmgTeam = 0;
-                            if (g_hCvar_AllowMelee.BoolValue)
-                                HandleSkeet(attacker, victim, true);
-
-                            ResetHunter(victim);
-                            // g_SurvivorSkillCache[victim].m_bHunterKilledPouncing = true;
-                        }
-                        else if (health == 0)
-                        {
-                            // hurt skeet (always overkill)
-                            if (g_hCvar_AllowMelee.BoolValue)
-                                HandleNonSkeet(attacker, victim, damage, true, true, false);
-
-                            ResetHunter(victim);
-                        }
-                    }
-                }
-                else if (health == 0)
-                {
-                    // make sure we don't mistake non-pouncing hunters as 'not skeeted'-warnable
-                    g_InfectedSkillCache[victim].m_bHunterKilledPouncing = false;
-                }
-
-                // store last health seen for next damage event
-                g_InfectedSkillCache[victim].m_iHunterLastHealth = health;
-            }
-
             case ZC_CHARGER:
             {
                 if (IsValidSurvivor(attacker))
@@ -550,6 +462,7 @@ static void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
     g_InfectedSkillCache[client].m_flSpawnTime  = GetGameTime();
     g_InfectedSkillCache[client].m_flPinTime[0] = 0.0;
     g_InfectedSkillCache[client].m_flPinTime[1] = 0.0;
+    g_InfectedSkillCache[client].m_iSpecialVictim = 0;
 
     switch (zClass)
     {
@@ -568,7 +481,7 @@ static void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
 
         case ZC_HUNTER:
         {
-            SDKHook(client, SDKHook_TraceAttackPost, TraceAttackPost_Hunter);
+            g_InfectedSkillCache[client].ResetHunter();
             g_InfectedSkillCache[client].m_flPouncePosition[0] = 0.0;
             g_InfectedSkillCache[client].m_flPouncePosition[1] = 0.0;
             g_InfectedSkillCache[client].m_flPouncePosition[2] = 0.0;
@@ -633,47 +546,9 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
         {
             case ZC_HUNTER:
             {
-                if (!IsValidSurvivor(attacker))
-                    return;
-
-                if (g_InfectedSkillCache[victim].m_iHunterShotDmgTeam > 0 && g_InfectedSkillCache[victim].m_bHunterKilledPouncing)
-                {
-                    // skeet?
-                    if (g_InfectedSkillCache[victim].m_iHunterShotDmgTeam > g_InfectedSkillCache[victim].m_iHunterShotDmg[attacker] && 
-                        g_InfectedSkillCache[victim].m_iHunterShotDmgTeam >= (L4D_HasPlayerControlledZombies() ? g_iPounceInterruptDefault : g_iPounceInterrupt))
-                    {
-
-
-                        // team skeet
-                        HandleSkeet(-2, victim);
-                    }
-                    else if (g_InfectedSkillCache[victim].m_iHunterShotDmg[attacker] >= (L4D_HasPlayerControlledZombies() ? g_iPounceInterruptDefault : g_iPounceInterrupt))
-                    {
-                        // single player skeet
-                        HandleSkeet(attacker, victim);
-                    }
-                    else if (g_InfectedSkillCache[victim].m_iHunterOverkill > 0)
-                    {
-                        // overkill? might've been a skeet, if it wasn't on a hurt hunter (only for shotguns)
-                        HandleNonSkeet(attacker, victim, g_InfectedSkillCache[victim].m_iHunterShotDmgTeam, 
-                                        (g_InfectedSkillCache[victim].m_iHunterOverkill + g_InfectedSkillCache[victim].m_iHunterShotDmgTeam > 
-                                            (L4D_HasPlayerControlledZombies() ? g_iPounceInterruptDefault : g_iPounceInterrupt)
-                                        ));
-                    }
-                    else
-                    {
-                        // not a skeet at all
-                        HandleNonSkeet(attacker, victim, g_InfectedSkillCache[victim].m_iHunterShotDmg[attacker]);
-                    }
-                }
-                else
-                {
-                    // check whether it was a clear
-                    if (g_InfectedSkillCache[victim].m_iSpecialVictim > 0)
-                        HandleClear(attacker, victim, g_InfectedSkillCache[victim].m_iSpecialVictim, ZC_HUNTER, (GetGameTime() - g_InfectedSkillCache[victim].m_flPinTime[0]), -1.0);
-                }
-
-                ResetHunter(victim);
+                // check whether it was a clear
+                if (g_InfectedSkillCache[victim].m_iSpecialVictim > 0)
+                    HandleClear(attacker, victim, g_InfectedSkillCache[victim].m_iSpecialVictim, ZC_HUNTER, (GetGameTime() - g_InfectedSkillCache[victim].m_flPinTime[0]), -1.0);
             }
 
             case ZC_SMOKER:
@@ -768,9 +643,6 @@ static void Event_PlayerShoved(Event event, const char[] name, bool dontBroadcas
 
     if (g_InfectedSkillCache[victim].m_flVictimLastShove[attacker] == 0.0 || (GetGameTime() - g_InfectedSkillCache[victim].m_flVictimLastShove[attacker]) >= SHOVE_TIME)
     {
-        if (GetEntProp(victim, Prop_Send, "m_isAttemptingToPounce"))
-            HandleDeadstop(attacker, victim);
-
         HandleShove(attacker, victim, zClass);
         g_InfectedSkillCache[victim].m_flVictimLastShove[attacker] = GetGameTime();
     }
@@ -782,36 +654,11 @@ static void Event_PlayerShoved(Event event, const char[] name, bool dontBroadcas
     PrintDebug("shove by %i on %i", attacker, victim);
 }
 
-static void Event_AbilityUse(Event event, const char[] name, bool dontBroadcast)
+void CvarChange_PounceInterrupt(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-    // track hunters pouncing
-    int client = GetClientOfUserId(event.GetInt("userid"));
-    if (!IsValidClientInGame(client))
-        return;
-
-    char abilityName[64];
-    event.GetString("ability", abilityName, sizeof(abilityName));
-    if (strcmp(abilityName, "ability_lounge") != 0)
-        return;
-
-    // hunter started a pounce
-    ResetHunter(client);
-    GetClientAbsOrigin(client, g_InfectedSkillCache[client].m_flPouncePosition);
+    g_iPounceInterruptDefault = g_hCvar_PounceInterrupt_Default.IntValue;
+    
+    if (g_bSIAdjustment)
+        g_iPounceInterrupt = g_hCvar_PounceInterrupt.IntValue;
 }
 
-static stock bool IsWitch(int iEntity)
-{
-    if (iEntity > 0 && IsValidEntity(iEntity) && IsValidEdict(iEntity))
-    {
-        char strClassName[64];
-        GetEdictClassname(iEntity, strClassName, sizeof(strClassName));
-        return StrEqual(strClassName, "witch");
-    }
-
-    return false;
-}
-
-static stock float GetSurvivorDistance(int client)
-{
-    return L4D2Direct_GetFlowDistance(client);
-}

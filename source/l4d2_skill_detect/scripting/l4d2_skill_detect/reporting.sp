@@ -120,40 +120,52 @@ void HandleShove(int attacker, int victim, int zombieClass)
 }
 
 // real skeet
-void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = false, bool bGL = false)
+void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = false, bool bGL = false, bool bTeamSkeeted = false)
 {
     // report?
     if (g_hCvar_Report.BoolValue && g_hCvar_RepSkeet.BoolValue)
     {
-        if (attacker == -2)
+        if (bTeamSkeeted)
         {
-			
+			int iArr[L4D2_MAXPLAYERS + 1][3];
+			g_InfectedSkillCache[victim].SortSkeetDmg(iArr);
 
-            // team skeet sets to -2
-            (IsValidClientInGame(victim) && !IsFakeClient(victim)) ?
-            CPrintToChatAll("%t %t", "Tag+", "TeamSkeeted", victim) :
-            CPrintToChatAll("%t %t", "Tag+", "TeamSkeetedBot");
-        }
-        else if (IsValidClientInGame(attacker) && IsValidClientInGame(victim) && !IsFakeClient(victim))
-        {
-            for (int i = 1; i < MaxClients; i++)
-            {
-                if (!IsClientInGame(i) || IsFakeClient(i))
-                    continue;
-                
-                CPrintToChat(i, "%t %t", "Tag+", "Skeeted", attacker, (bMelee) ? Melee(i) : ((bSniper) ? Headshot(i) : ((bGL) ? Grenade(i) : "")), victim);
-            }
-        }
-        else if (IsValidClientInGame(attacker))
-        {
-            for (int i = 1; i < MaxClients; i++)
-            {
-                if (!IsClientInGame(i) || IsFakeClient(i))
-                    continue;
+			char szBuffer[256];
+			for (int i = 1; i < 3; i++)
+			{
+				int index = iArr[i][0];
+				int damage = iArr[i][1];
+				int shotsFired = iArr[i][2];
 
-                CPrintToChat(i, "%t %t", "Tag+", "SkeetedBot", attacker, (bMelee) ? Melee(i) : ((bSniper) ? Headshot(i) : ((bGL) ? Grenade(i) : "")));
-            }
+                //PrintToServer("index: %d, damage: %d, shotsFired: %d", index, damage, shotsFired);
+				if (!IsValidEdict(index) || damage <= 0)
+					continue;
+
+                char szTemp[128];
+                i == 1 ?
+                Format(szTemp, sizeof(szTemp), "{blue}%N{default} [%d / %d]", index, shotsFired, damage) :
+				Format(szTemp, sizeof(szTemp), ", {blue}%N{default} [%d / %d]", index, shotsFired, damage);
+                StrCat(szBuffer, sizeof(szBuffer), szTemp);
+			}
+
+            CPrintToChatAll("%t %t", "Tag+", "TeamSkeeted", victim, attacker, g_InfectedSkillCache[victim].m_iShotsFired[attacker], g_InfectedSkillCache[victim].m_iHunterShotDmg[attacker], "Plural", szBuffer);
         }
+        else if (bMelee)
+        {
+			CPrintToChatAll("%t %t", "Tag+++", "SkeetedMelee", attacker, victim);
+        }
+        else if (bSniper)
+        {
+			CPrintToChatAll("%t %t", "Tag++", "SkeetedSniper", attacker, victim, g_InfectedSkillCache[victim].m_iShotsFired[attacker]);
+        }
+		else if (bGL)
+		{
+			CPrintToChatAll("%t %t", "Tag++++", "SkeetedGL", attacker, victim);
+		}
+		else
+		{
+			CPrintToChatAll("%t %t", "Tag+", "Skeeted", attacker, victim, g_InfectedSkillCache[victim].m_iShotsFired[attacker]);
+		}
     }
 
     // call forward
@@ -163,42 +175,6 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
     Call_PushCell(bMelee);
     Call_PushCell(bSniper);
     Call_PushCell(bGL);
-    Call_Finish();
-}
-
-// hurt skeet / non-skeet
-//  NOTE: bSniper not set yet, do this
-void HandleNonSkeet(int attacker, int victim, int damage, bool bOverKill = false, bool bMelee = false, bool bSniper = false)
-{
-    // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepHurtSkeet.BoolValue)
-    {
-        (IsValidClientInGame(victim)) ?
-        CPrintToChatAll("%t %t", "Tag+", "HurtSkeet", victim, damage, (bOverKill) ? "Unchipped" : "") :
-        CPrintToChatAll("%t %t", "Tag+", "HurtSkeetBot", damage, (bOverKill) ? "Unchipped" : "");
-
-        for (int i = 1; i < MaxClients; i++)
-        {
-            static char buffer[64];
-            if (!IsClientInGame(i) || IsFakeClient(i))
-                continue;
-
-            Format(buffer, sizeof(buffer), "%T", "Unchipped", i);
-            IsValidClientInGame(victim) ?
-            CPrintToChat(i, "%t %t", "Tag+", "HurtSkeet", victim, damage, (bOverKill) ? buffer : "") :
-            CPrintToChat(i, "%t %t", "Tag+", "HurtSkeetBot", damage, (bOverKill) ? buffer : "");
-        }
-
-    }
-
-    // call forward
-    Call_StartForward(g_hForwardSkeetHurt);
-    Call_PushCell(attacker);
-    Call_PushCell(victim);
-    Call_PushCell(damage);
-    Call_PushCell(bOverKill);
-    Call_PushCell(bMelee);
-    Call_PushCell(bSniper);
     Call_Finish();
 }
 
@@ -308,9 +284,13 @@ void HandleHunterDP(int attacker, int victim, int actualDamage, float calculated
     if (g_hCvar_Report.BoolValue && g_hCvar_RepHunterDP.BoolValue && height >= g_hCvar_HunterDPThresh.FloatValue && !playerIncapped)
     {
         if (IsValidClientInGame(attacker) && IsValidClientInGame(victim) && !IsFakeClient(attacker))
+		{
             CPrintToChatAll("%t %t", "Tag++", "HunterHP", attacker, victim, RoundFloat(calculatedDamage), RoundFloat(height));
+		}
         else if (IsValidClientInGame(victim))
+		{
             CPrintToChatAll("%t %t", "Tag++", "HunterHPBot", victim, RoundFloat(calculatedDamage), RoundFloat(height));
+		}
     }
 
     Call_StartForward(g_hForwardHunterDP);
@@ -433,7 +413,7 @@ void HandleVomitLanded(int attacker, int boomCount)
 void HandleBHopStreak(int survivor, int streak, float maxVelocity)
 {
     if (g_hCvar_RepBhopStreak.BoolValue && IsValidClientInGame(survivor) && !IsFakeClient(survivor) && streak >= g_hCvar_BHopMinStreak.IntValue)
-        CPrintToChat(survivor, "%t %t", "Tag+", "BunnyHop", streak, (streak > 1) ? PluralCount(survivor) : "", maxVelocity);
+        CPrintToChat(survivor, "%t %t", "Tag+", "BunnyHop", streak, (streak > 1) ? "Plural" : "", maxVelocity);
 
     Call_StartForward(g_hForwardBHopStreak);
     Call_PushCell(survivor);
@@ -510,32 +490,3 @@ void HandleCarAlarmTriggered(int survivor, int infected, CarAlarmReason_t reason
     Call_PushCell(reason);
     Call_Finish();
 }
-
-static char[] Melee(int client)
-{
-    char sBuffer[32];
-    Format(sBuffer, sizeof(sBuffer), "%T", "Melee", client);
-    return sBuffer;
-}
-
-static char[] Headshot(int client)
-{
-    char sBuffer[32];
-    Format(sBuffer, sizeof(sBuffer), "%T", "HeadShot", client);
-    return sBuffer;
-}
-
-static char[] Grenade(int client)
-{
-    char sBuffer[32];
-    Format(sBuffer, sizeof(sBuffer), "%T", "Grenade", client);
-    return sBuffer;
-}
-
-static char[] PluralCount(int client)
-{
-    char sBuffer[32];
-    Format(sBuffer, sizeof(sBuffer), "%T", "PluralCount", client);
-    return sBuffer;
-}
-

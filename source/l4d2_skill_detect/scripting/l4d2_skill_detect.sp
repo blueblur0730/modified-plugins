@@ -8,6 +8,8 @@
 #include <l4d2util>
 #include <colors>
 
+bool g_bSIAdjustment = false;
+
 // Map values: weapon type
 enum strWeaponType
 {
@@ -75,7 +77,6 @@ enum struct IntervalTimer_t
 
 GlobalForward
     g_hForwardSkeet           = null,
-    g_hForwardSkeetHurt       = null,
     g_hForwardHunterDeadstop  = null,
     g_hForwardSIShove         = null,
     g_hForwardBoomerPop       = null,
@@ -105,7 +106,6 @@ ConVar
 
     g_hCvar_Report,
     g_hCvar_RepSkeet,
-    g_hCvar_RepHurtSkeet,
     g_hCvar_RepLevel,
     g_hCvar_RepHurtLevel,
     g_hCvar_RepCrow,
@@ -137,6 +137,10 @@ ConVar
     g_hCvar_BHopMinStreak,           // cvar this many hops in a row+ = streak
     g_hCvar_BHopMinInitSpeed,        // cvar lower than this and the first jump won't be seen as the start of a streak
     g_hCvar_BHopContSpeed;
+
+ConVar g_hCvar_PounceInterrupt = null;    // l4d2_si_damage_ajustment_pounce_damage_interrupt
+int g_iPounceInterrupt = 150;             // default 150, damage that is greater that this applied on a flying hunter will be skeeted immediately. but not handle on this plugin :).
+
 
 /*
     To Do
@@ -180,10 +184,11 @@ ConVar
 /*****************************************************************
             L I B R A R Y   I N C L U D E S
 *****************************************************************/
+#include "l4d2_skill_detect/utils.sp"
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.2.3"
+#define PLUGIN_VERSION "r2.3.0"
 
 public Plugin myinfo =
 {
@@ -197,7 +202,6 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
 {
     g_hForwardSkeet            = new GlobalForward("SkillDetect_OnSkeet", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
-    g_hForwardSkeetHurt        = new GlobalForward("SkillDetect_OnSkeetHurt", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
     g_hForwardSIShove          = new GlobalForward("SkillDetect_OnSpecialShoved", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
     g_hForwardHunterDeadstop   = new GlobalForward("SkillDetect_OnHunterDeadstop", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardBoomerPop        = new GlobalForward("SkillDetect_OnBoomerPop", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Float);
@@ -228,9 +232,8 @@ public void OnPluginStart()
     g_hCvar_Debug             = CreateConVar("l4d2_skill_detect_detect_debug", "0", "Enable debug messages.", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DONTRECORD);
 
     // cvars: config
-    g_hCvar_Report             = CreateConVar("l4d2_skill_detect_report_enable", "1", "Whether to report in chat.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_Report            = CreateConVar("l4d2_skill_detect_report_enable", "1", "Whether to report in chat.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepSkeet          = CreateConVar("l4d2_skill_detect_report_skeet", "1", "Enable skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepHurtSkeet      = CreateConVar("l4d2_skill_detect_report_hurtskeet", "1", "Enable hurt-skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepLevel          = CreateConVar("l4d2_skill_detect_report_level", "1", "Enable level reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepHurtLevel      = CreateConVar("l4d2_skill_detect_report_hurtlevel", "1", "Enable hurt-level reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepCrow           = CreateConVar("l4d2_skill_detect_report_crow", "1", "Enable crow reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
@@ -300,43 +303,23 @@ public void OnEntityDestroyed(int entity)
     _skill_detect_tracking_OnEntityDestroyed(entity);
 }
 
-stock void PrintDebug(const char[] Message, any...)
+public void OnAllPluginsLoaded()
 {
-    if (!g_hCvar_Debug.BoolValue)
-        return;
-
-    char sFormat[256];
-    VFormat(sFormat, sizeof(sFormat), Message, 2);
-
-    char Path[PLATFORM_MAX_PATH];
-    if (Path[0] == '\0')
-        BuildPath(Path_SM, Path, PLATFORM_MAX_PATH, "/logs/skill_detect.log");
-
-    LogToFileEx(Path, sFormat);
+    g_bSIAdjustment = LibraryExists("l4d2_si_damage_adjustment");
+    if (g_bSIAdjustment)
+    {
+        g_hCvar_PounceInterrupt = FindConVar("l4d2_si_damage_adjustment_pounce_damage_interrupt");
+        g_hCvar_PounceInterrupt.AddChangeHook(CvarChange_PounceInterrupt);
+        g_iPounceInterrupt = g_hCvar_PounceInterrupt.IntValue;
+    }
 }
 
-stock void LoadTranslation(const char[] translation)
+public void OnLibraryAdded(const char[] library)
 {
-    char sPath[PLATFORM_MAX_PATH], sName[PLATFORM_MAX_PATH];
-    Format(sName, sizeof(sName), "translations/%s.txt", translation);
-    BuildPath(Path_SM, sPath, sizeof(sPath), sName);
-    if (!FileExists(sPath))
-        SetFailState("Missing translation file %s.txt", translation);
-
-    LoadTranslations(translation);
+    g_bSIAdjustment = (strcmp(library, "l4d2_si_damage_adjustment") == 0);
 }
 
-stock bool IsValidClientInGame(int client)
+public void OnLibraryRemoved(const char[] library)
 {
-    return (IsValidClientIndex(client) && IsClientInGame(client));
-}
-
-stock bool IsClientAndInGame(int index)
-{
-    return (index > 0 && index <= MaxClients && IsClientInGame(index));
-}
-
-stock bool IsValidClient(int client)
-{
-    return (client > 0 && client <= MaxClients && IsClientInGame(client));
+    g_bSIAdjustment = !(strcmp(library, "l4d2_si_damage_adjustment") == 0);
 }

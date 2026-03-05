@@ -85,45 +85,42 @@
 		"en"		"{olive}{1}{default} {blue}shoved{default} an {olive}SI{default}."
         "chi"		"{olive}{1}{default} {blue}推开了{default} 一个 {olive}特感{default}."
 	}
-    // real skeet
+
 	"TeamSkeeted"
 	{
-        "#format"   "{1:N}" // 1:attacker
-		"en"		"{olive}{1}{default} was {blue}team-skeeted{default}."
-        "chi"		"{olive}{1}{default} 被 {blue}团队空爆了{default}."
+        "#format"   "{1:N},{2:N},{3:d},{4:d},{5:s}" // 1:victim, 2:attacker, 3: shots, 4:dmg, 6: assisters string.
+		"en"		"{olive}{1}{default} was team-skeeted by {blue}{2}{default} ({blue}{3} shot{default}/{blue}{4} dmg{default}). Assisters: ({5})"
+        "chi"		"{blue}{2}{default} 团队空爆了 {olive}{1}{default} ({blue}{3} 枪{default}/{blue}{4} 伤害{default}). 协助者: ({5})"
 	}
-	"TeamSkeetedBot"
-	{
-		"en"		"A {olive}hunter{default} was {blue}team-skeeted{default}."
-        "chi"		"一个 {olive}hunter{default} 被 {blue}团队空爆了{default}."
-	}
+
 	"Skeeted"
 	{
-        "#format"   "{1:N},{2:s},{3:N}" // 1:attacker 2:(bMelee) ? "melee-": ((bSniper) ? "headshot-" : ((bGL) ? "grenade-" : "") ) 3:victim
-		"en"		"{olive}{1}{default} {blue}{2}skeeted{default} {olive}{3}{default}."
-        "chi"		"{olive}{1}{default} {blue}{2}空爆了{default} {olive}{3}{default}."
+        "#format"   "{1:N},{2:N},{3:d}" // 1:attacker 2:victim, 3:shots fired
+		"en"		"{blue}{1}{default} skeeted {olive}{2}{default} in {blue}{3}{default} shot."
+        "chi"		"{blue}{1}{default} {blue}{3}{default} 枪空爆了 {olive}{2}{default}."
 	}
-	"SkeetedBot"
+
+	"SkeetedMelee"
 	{
-        "#format"   "{1:N},{2:s}" // 1:attacker 2:(bMelee) ? "melee-": ((bSniper) ? "headshot-" : ((bGL) ? "grenade-" : "") )
-		"en"		"{olive}{1}{default} {blue}{2}skeeted{default} a {olive}hunter{default}."
-        "chi"		"{olive}{1}{default} {blue}{2}空爆了{default} 一个 {olive}hunter{default}."
+        "#format"   "{1:N},{2:N}" // 1:attacker 2:victim,
+		"en"		"{blue}{1}{default} {blue}melee-skeeted{default} {olive}{2}{default}."
+        "chi"		"{blue}{1}{default} {blue}近战空爆了{default} {olive}{2}{default}."
 	}
-	"Melee"
+
+	"SkeetedSniper"
 	{
-		"en"		"melee-"
-        "chi"		"使用近战"
+        "#format"   "{1:N},{2:N},{3:d}" // 1:attacker 2:victim, 3:shots fired
+		"en"		"{blue}{1}{default} {blue}sniper-skeeted{default} {olive}{2}{default} ({blue}{3} shot{default})."
+        "chi"		"{blue}{1}{default} {blue}狙击空爆了{default} {olive}{2}{default} ({blue}{3} 枪{default})."
 	}
-	"HeadShot"
+
+	"SkeetedGL"
 	{
-		"en"		"headshot-"
-        "chi"		"爆头"
+        "#format"   "{1:N},{2:N}" // 1:attacker 2:victim, 3:shots fired
+		"en"		"{blue}{1}{default} {blue}grenade-launcher-skeeted{default} {olive}{2}{default}."
+        "chi"		"{blue}{1}{default} {blue}榴弹空爆了{default} {olive}{2}{default}."
 	}
-	"Grenade"
-	{
-		"en"		"grenade-"
-        "chi"		"使用榴弹"
-	}
+
     // hurt skeet / non-skeet
 	"HurtSkeet"
 	{
