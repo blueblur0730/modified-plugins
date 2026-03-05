@@ -125,7 +125,7 @@ Action HunterLungeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo info,
 Action HunterLungeAtVictim_OnStart(any action, int actor, any priorAction, ActionResult result)
 {
     //PrintToServer("[Skill Detect] HunterLungeAtVictim_OnStart called");
-    GetClientAbsOrigin(actor, g_InfectedSkillCache[actor].m_flPouncePosition);
+    g_InfectedSkillCache[actor].m_vecPouncePosition.GetClientAbsOrigin(actor);
     return Plugin_Continue;
 }
 
@@ -164,16 +164,12 @@ void Event_LungePounce(Event event, const char[] name, bool dontBroadcast)
 
     // check if it was a DP
     // ignore if no real pounce start pos
-    if (g_InfectedSkillCache[client].m_flPouncePosition[0] == 0.0
-        && g_InfectedSkillCache[client].m_flPouncePosition[1] == 0.0
-        && g_InfectedSkillCache[client].m_flPouncePosition[2] == 0.0)
-    {
+    if (g_InfectedSkillCache[client].m_vecPouncePosition.IsZero())
         return;
-    }
 
-    float endPos[3];
-    GetClientAbsOrigin(client, endPos);
-    float fHeight  = g_InfectedSkillCache[client].m_flPouncePosition[2] - endPos[2];
+    Vector endPos;
+    endPos.GetClientAbsOrigin(client);
+    float fHeight  = g_InfectedSkillCache[client].m_vecPouncePosition.z - endPos.z;
 
     // from pounceannounce:
     // distance supplied isn't the actual 2d vector distance needed for damage calculation. See more about it at
@@ -184,7 +180,7 @@ void Event_LungePounce(Event event, const char[] name, bool dontBroadcast)
     float fMaxDmg = g_hCvar_MaxPounceDamage.FloatValue;
 
     // calculate 2d distance between previous position and pounce position
-    int distance = RoundToNearest(GetVectorDistance(g_InfectedSkillCache[client].m_flPouncePosition, endPos));
+    int distance = RoundToNearest(g_InfectedSkillCache[client].m_vecPouncePosition.Distance(endPos));
 
     // get damage using hunter damage formula
     // check if this is accurate, seems to differ from actual damage done!

@@ -4,6 +4,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
+#include <actions>
 #include <left4dhooks>
 #include <l4d2util>
 #include <colors>
@@ -27,53 +28,6 @@ enum strOEC
     OEC_CARALARM,
     OEC_CARGLASS
 };
-
-enum struct IntervalTimer_t
-{
-    // gpGlobals->curtime
-    float Now()
-    {
-        return GetGameTime();
-    }    
-
-    void Reset()
-    {
-        this.m_timestamp = this.Now();
-    }        
-
-    void Start()
-    {
-        this.m_timestamp = this.Now();
-    }
-
-    void Invalidate()
-    {
-        this.m_timestamp = -1.0;
-    }        
-
-    bool HasStarted()
-    {
-        return (this.m_timestamp > 0.0);
-    }
-
-    /// if not started, elapsed time is very large
-    float GetElapsedTime()
-    {
-        return (this.HasStarted()) ? (this.Now() - this.m_timestamp) : 99999.9;
-    }
-
-    bool IsLessThan( float duration )
-    {
-        return (this.Now() - this.m_timestamp < duration) ? true : false;
-    }
-
-    bool IsGreaterThan( float duration )
-    {
-        return (this.Now() - this.m_timestamp > duration) ? true : false;
-    }
-
-    float m_timestamp;
-}
 
 GlobalForward
     g_hForwardSkeet           = null,
@@ -114,7 +68,6 @@ ConVar
     g_hCvar_RepSelfClear,
     g_hCvar_RepSelfClearShove,
     g_hCvar_RepRockSkeet,
-    g_hCvar_RepRockName,
     g_hCvar_RepDeadStop,
     g_hCvar_RepPop,
     g_hCvar_RepShove,
@@ -188,7 +141,7 @@ int g_iPounceInterrupt = 150;             // default 150, damage that is greater
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.3.0"
+#define PLUGIN_VERSION "r2.4.0"
 
 public Plugin myinfo =
 {
@@ -242,7 +195,6 @@ public void OnPluginStart()
     g_hCvar_RepSelfClear      = CreateConVar("l4d2_skill_detect_report_sc", "1", "Enable self clear reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepSelfClearShove = CreateConVar("l4d2_skill_detect_report_scs", "1", "Enable self clear Shove reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepRockSkeet      = CreateConVar("l4d2_skill_detect_report_rockskeet", "1", "Enable rock-skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepRockName       = CreateConVar("l4d2_skill_detect_report_rockname", "1", "Enable Tank name reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepDeadStop       = CreateConVar("l4d2_skill_detect_report_deadstop", "1", "Enable deadstop reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepPop            = CreateConVar("l4d2_skill_detect_report_pop", "1", "Enable pop reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepShove          = CreateConVar("l4d2_skill_detect_report_shove", "1", "Enable shove reporting.", FCVAR_NONE, true, 0.0, true, 1.0);

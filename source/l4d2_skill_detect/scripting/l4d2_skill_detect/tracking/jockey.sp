@@ -15,14 +15,12 @@ void Event_JockeyRide(Event event, const char[] name, bool dontBroadcast)
 
     // minimum distance travelled?
     // ignore if no real pounce start pos
-    if (g_InfectedSkillCache[client].m_flPouncePosition[0] == 0.0 && 
-        g_InfectedSkillCache[client].m_flPouncePosition[1] == 0.0 && 
-        g_InfectedSkillCache[client].m_flPouncePosition[2] == 0.0)
+    if (g_InfectedSkillCache[client].m_vecLeapPosistion.Set(0.0, 0.0, 0.0))
         return;
 
-    float endPos[3];
-    GetClientAbsOrigin(client, endPos);
-    float fHeight = g_InfectedSkillCache[client].m_flPouncePosition[2] - endPos[2];
+    Vector endPos;
+    endPos.GetClientAbsOrigin(client);
+    float fHeight = g_InfectedSkillCache[client].m_vecLeapPosistion.z - endPos.z;
 
     // (high) pounce
     HandleJockeyDP(client, victim, fHeight);

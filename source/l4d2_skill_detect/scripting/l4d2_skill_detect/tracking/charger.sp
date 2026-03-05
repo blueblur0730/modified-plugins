@@ -38,11 +38,11 @@ void Event_ChargeCarryStart(Event event, const char[] name, bool dontBroadcast)
 
     g_InfectedSkillCache[client].m_iChargeVictim  = victim;               // store who we're carrying (as long as this is set, it's not considered an impact charge flight)
     g_SurvivorSkillCache[victim].m_iVictimCharger = client;               // store who's charging whom
-    g_SurvivorSkillCache[victim].m_iVictimFlags      = VICFLG_CARRIED;       // reset flags for checking later - we know only this now
-    g_SurvivorSkillCache[victim].m_ChargeTimer      = g_InfectedSkillCache[client].m_ChargeTimer;
+    g_SurvivorSkillCache[victim].m_iVictimFlags = VICFLG_CARRIED;       // reset flags for checking later - we know only this now
+    g_SurvivorSkillCache[victim].m_ChargeTimer = g_InfectedSkillCache[client].m_ChargeTimer;
     g_SurvivorSkillCache[victim].m_iVictimMapDmg  = 0;
 
-    GetClientAbsOrigin(victim, g_SurvivorSkillCache[victim].m_flChargeVictimPos);
+    g_SurvivorSkillCache[victim].m_vecChargeVictimPos.GetClientAbsOrigin(victim);
 
     // CreateTimer( CHARGE_CHECK_TIME, Timer_ChargeCheck, client, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE );
     CreateTimer(CHARGE_CHECK_TIME, Timer_ChargeCheck, victim, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
@@ -57,12 +57,12 @@ void Event_ChargeImpact(Event event, const char[] name, bool dontBroadcast)
         return;
 
     // remember how many people the charger bumped into, and who, and where they were
-    GetClientAbsOrigin(victim, g_SurvivorSkillCache[victim].m_flChargeVictimPos);
+    g_SurvivorSkillCache[victim].m_vecChargeVictimPos.GetClientAbsOrigin(victim);
 
     g_SurvivorSkillCache[victim].m_iVictimCharger = client;              // store who we've bumped up
-    g_SurvivorSkillCache[victim].m_iVictimFlags      = 0;                  // reset flags for checking later
+    g_SurvivorSkillCache[victim].m_iVictimFlags = 0;                  // reset flags for checking later
     g_SurvivorSkillCache[victim].m_ChargeTimer.Start();      // store time per victim, for impacts
-    g_SurvivorSkillCache[victim].m_iVictimMapDmg  = 0;
+    g_SurvivorSkillCache[victim].m_iVictimMapDmg = 0;
 
     CreateTimer(CHARGE_CHECK_TIME, Timer_ChargeCheck, victim, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
@@ -105,8 +105,14 @@ static void Timer_ChargeCheck(Handle timer, int client)
     flTime = GetGameTime();
 
     // if something went wrong with the survivor or it was too long ago, forget about it
-    if (!IsValidSurvivor(client) || !g_SurvivorSkillCache[client].m_iVictimCharger || !g_SurvivorSkillCache[client].m_ChargeTimer.HasStarted() || g_SurvivorSkillCache[client].m_ChargeTimer.IsGreaterThan(MAX_CHARGE_TIME))
+    if (!IsValidSurvivor(client) || 
+        !g_SurvivorSkillCache[client].m_iVictimCharger || 
+        !g_SurvivorSkillCache[client].m_ChargeTimer.HasStarted() || 
+        g_SurvivorSkillCache[client].m_ChargeTimer.IsGreaterThan(MAX_CHARGE_TIME)
+    )
+    {
         return;
+    }
 
     // we're done checking if either the victim reached the ground, or died
     if (!IsPlayerAlive(client))
@@ -140,9 +146,9 @@ static void Timer_DeathChargeCheck(Handle timer, int client)
 
     if (!IsPlayerAlive(client))
     {
-        float pos[3];
-        GetClientAbsOrigin(client, pos);
-        float fHeight = g_SurvivorSkillCache[client].m_flChargeVictimPos[2] - pos[2];
+        Vector vecPos;
+        vecPos.GetClientAbsOrigin(client);
+        float fHeight = g_SurvivorSkillCache[client].m_vecChargeVictimPos.z - vecPos.z;
 
         /*
             it's a deathcharge when:
@@ -156,7 +162,7 @@ static void Timer_DeathChargeCheck(Handle timer, int client)
                 fHeight > g_hCvar_DeathChargeHeight.FloatValue
         */
         if (((flags & VICFLG_DROWN || flags & VICFLG_FALL) && (flags & VICFLG_HURTLOTS || flags & VICFLG_AIRDEATH) || (flags & VICFLG_WEIRDFLOW && fHeight >= MIN_FLOWDROPHEIGHT) || g_SurvivorSkillCache[client].m_iVictimMapDmg >= MIN_DC_TRIGGER_DMG) && !(flags & VICFLG_KILLEDBYOTHER))
-            HandleDeathCharge(g_SurvivorSkillCache[client].m_iVictimCharger, client, fHeight, GetVectorDistance(g_SurvivorSkillCache[client].m_flChargeVictimPos, pos, false), view_as<bool>(flags & VICFLG_CARRIED));
+            HandleDeathCharge(g_SurvivorSkillCache[client].m_iVictimCharger, client, fHeight, g_SurvivorSkillCache[client].m_vecChargeVictimPos.Distance(vecPos, false), view_as<bool>(flags & VICFLG_CARRIED));
     }
     else if ((flags & VICFLG_WEIRDFLOW || g_SurvivorSkillCache[client].m_iVictimMapDmg >= MIN_DC_RECHECK_DMG) && !(flags & VICFLG_WEIRDFLOWDONE))
     {

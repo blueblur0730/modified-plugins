@@ -21,12 +21,10 @@ void HandlePop(int attacker, int victim, int shoveCount, float timeAlive)
     // report?
     if (g_hCvar_Report.BoolValue && g_hCvar_RepPop.BoolValue)
     {
-        if (!IsValidClientInGame(attacker))
+        if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
 
-        (IsValidClientInGame(victim) && !IsFakeClient(victim)) ?
-        CPrintToChatAll("%t %t", "Tag+", "Popped", attacker, victim) :
-        CPrintToChatAll("%t %t", "Tag+", "PoppedBot", attacker);
+        CPrintToChatAll("%t %t", "Tag+", "Popped", attacker, victim);
     }
 
     Call_StartForward(g_hForwardBoomerPop);
@@ -43,12 +41,10 @@ void HandleLevel(int attacker, int victim)
     // report?
     if (g_hCvar_Report.BoolValue && g_hCvar_RepLevel.BoolValue)
     {
-        if (!IsValidClientInGame(attacker))
+        if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
         
-        (IsValidClientInGame(victim) && !IsFakeClient(victim)) ?
-        CPrintToChatAll("%t %t", "Tag+++", "Leveled", attacker, victim) :
-        CPrintToChatAll("%t %t", "Tag+++", "LeveledBot", attacker);
+        CPrintToChatAll("%t %t", "Tag+++", "Leveled", attacker, victim);
     }
 
     // call forward
@@ -63,12 +59,10 @@ void HandleLevelHurt(int attacker, int victim, int damage)
     // report?
     if (g_hCvar_Report.BoolValue && g_hCvar_RepHurtLevel.BoolValue)
     {
-        if (!IsValidClientInGame(attacker))
+        if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
         
-        (IsValidClientInGame(victim) && !IsFakeClient(victim)) ?
-        CPrintToChatAll("%t %t", "Tag+++", "LeveledHurt", attacker, victim, damage) :
-        CPrintToChatAll("%t %t", "Tag+++", "LeveledHurtBot", attacker, damage);
+        CPrintToChatAll("%t %t", "Tag+++", "LeveledHurt", attacker, victim, damage);
     }
 
     // call forward
@@ -85,12 +79,10 @@ void HandleDeadstop(int attacker, int victim)
     // report?
     if (g_hCvar_Report.BoolValue && g_hCvar_RepDeadStop.BoolValue)
     {
-        if (!IsValidClientInGame(attacker))
+        if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
 
-        (IsValidClientInGame(victim) && !IsFakeClient(victim)) ?
-        CPrintToChatAll("%t %t", "Tag+", "Deadstopped", attacker, victim) :
-        CPrintToChatAll("%t %t", "Tag+", "DeadstoppedBot", attacker);
+        CPrintToChatAll("%t %t", "Tag+", "Deadstopped", attacker, victim);
     }
 
     Call_StartForward(g_hForwardHunterDeadstop);
@@ -104,12 +96,10 @@ void HandleShove(int attacker, int victim, int zombieClass)
     // report?
     if (g_hCvar_Report.BoolValue && g_hCvar_RepShove.BoolValue)
     {
-        if (!IsValidClientInGame(attacker))
+        if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
 
-        (IsValidClientInGame(victim) && !IsFakeClient(victim)) ?
-        CPrintToChatAll("%t %t", "Tag+", "Shoved", attacker, victim) :
-        CPrintToChatAll("%t %t", "Tag+", "ShovedBot", attacker);
+        CPrintToChatAll("%t %t", "Tag+", "Shoved", attacker, victim);
     }
 
     Call_StartForward(g_hForwardSIShove);
@@ -130,16 +120,21 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
 			int iArr[L4D2_MAXPLAYERS + 1][3];
 			g_InfectedSkillCache[victim].SortSkeetDmg(iArr);
 
+            int count = 0;
 			char szBuffer[256];
-			for (int i = 1; i < 3; i++)
+			for (int i = 1; i < L4D2_MAXPLAYERS; i++)
 			{
 				int index = iArr[i][0];
 				int damage = iArr[i][1];
 				int shotsFired = iArr[i][2];
 
                 //PrintToServer("index: %d, damage: %d, shotsFired: %d", index, damage, shotsFired);
-				if (!IsValidEdict(index) || damage <= 0)
+				if (!IsValidEdict(index) || damage <= 0 || index == attacker)
 					continue;
+
+                count++;
+                if (count > 3)
+                    break;
 
                 char szTemp[128];
                 i == 1 ?
@@ -148,7 +143,20 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
                 StrCat(szBuffer, sizeof(szBuffer), szTemp);
 			}
 
-            CPrintToChatAll("%t %t", "Tag+", "TeamSkeeted", victim, attacker, g_InfectedSkillCache[victim].m_iShotsFired[attacker], g_InfectedSkillCache[victim].m_iHunterShotDmg[attacker], "Plural", szBuffer);
+            for (int i = 1; i < MaxClients; i++)
+            {
+                if (!IsClientInGame(i) || IsFakeClient(i))
+                    continue;
+
+                char sBuffer[8];
+                Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
+                CPrintToChat(i, "%t %t", "Tag+", "TeamSkeeted", 
+                            victim, attacker, 
+                            g_InfectedSkillCache[victim].m_iShotsFired[attacker],
+                            g_InfectedSkillCache[victim].m_iHunterShotDmg[attacker], 
+                            g_InfectedSkillCache[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "", 
+                            szBuffer);
+            }
         }
         else if (bMelee)
         {
@@ -184,9 +192,10 @@ void HandleCrown(int attacker)
     // report?
     if (g_hCvar_Report.BoolValue && g_hCvar_RepCrow.BoolValue)
     {
-        (IsValidClientInGame(attacker)) ?
-        CPrintToChatAll("%t %t", "Tag++", "CrownedWitch", attacker) :
-        CPrintToChatAll("%t", "CrownedWitch2");
+        if (!IsValidClientInGame(attacker))
+            return;
+
+        CPrintToChatAll("%t %t", "Tag++", "CrownedWitch", attacker);
     }
 
     // call forward
@@ -199,9 +208,10 @@ void HandleDrawCrown(int attacker)
 {
     if (g_hCvar_Report.BoolValue && g_hCvar_RepDrawCrow.BoolValue)
     {
-        (IsValidClientInGame(attacker)) ?
-        CPrintToChatAll("%t %t", "Tag++", "DrawCrowned", attacker) :
-        CPrintToChatAll("%t %t", "DrawCrowned2");
+        if (!IsValidClientInGame(attacker)) 
+            return;
+
+        CPrintToChatAll("%t %t", "Tag++", "DrawCrowned", attacker);
     }
 
     // call forward
@@ -215,12 +225,10 @@ void HandleTongueCut(int attacker, int victim)
 {
     if (g_hCvar_Report.BoolValue && g_hCvar_RepTongueCut.BoolValue)
     {
-        if (!IsValidClientInGame(victim))
+        if (!IsValidClientInGame(victim) || !IsValidClientInGame(attacker))
             return;
 
-        (IsValidClientInGame(victim) && !IsFakeClient(victim)) ?
-        CPrintToChatAll("%t %t", "Tag+++", "CutTongue", attacker, victim) :
-        CPrintToChatAll("%t %t", "Tag+++", "CutTongueBot", attacker);
+        CPrintToChatAll("%t %t", "Tag+++", "CutTongue", attacker, victim);
     }
 
     // call forward
@@ -234,12 +242,10 @@ void HandleSmokerSelfClear(int attacker, int victim, bool withShove = false)
 {
     if (g_hCvar_Report.BoolValue && g_hCvar_RepSelfClear.BoolValue && (!withShove || g_hCvar_RepSelfClearShove.BoolValue))
     {
-        if (!IsValidClientInGame(attacker))
+        if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
 
-        (IsValidClientInGame(victim) && !IsFakeClient(victim)) ?
-        CPrintToChatAll("%t %t", "Tag++", "SelfClearedTongue", attacker, victim, (withShove) ? "Shoving" : "none") :
-        CPrintToChatAll("%t %t", "Tag++", "SelfClearedTongueBot", attacker, (withShove) ? "Shoving" : "none");
+        CPrintToChatAll("%t %t", "Tag++", "SelfClearedTongue", attacker, victim, (withShove) ? "Shoving" : "none");
     }
 
     // call forward
@@ -263,12 +269,11 @@ void HandleRockSkeeted(int attacker, int victim)
 {
     if (g_hCvar_Report.BoolValue && g_hCvar_RepRockSkeet.BoolValue)
     {
-        if (!IsValidClientInGame(attacker))
+        if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
 
-        (g_hCvar_RepRockName.BoolValue && IsValidClientInGame(victim) && !IsFakeClient(victim)) ?
-        CPrintToChatAll("%t %t", "Tag+", "SkeetedRock", attacker, victim) :
-        CPrintToChatAll("%t %t", "Tag+", "SkeetedRockBot", attacker);
+        CPrintToChatAll("%t %t", "Tag+", "SkeetedRock", attacker, victim);
+
     }
 
     Call_StartForward(g_hForwardRockSkeeted);
@@ -283,14 +288,10 @@ void HandleHunterDP(int attacker, int victim, int actualDamage, float calculated
     // report?
     if (g_hCvar_Report.BoolValue && g_hCvar_RepHunterDP.BoolValue && height >= g_hCvar_HunterDPThresh.FloatValue && !playerIncapped)
     {
-        if (IsValidClientInGame(attacker) && IsValidClientInGame(victim) && !IsFakeClient(attacker))
-		{
-            CPrintToChatAll("%t %t", "Tag++", "HunterHP", attacker, victim, RoundFloat(calculatedDamage), RoundFloat(height));
-		}
-        else if (IsValidClientInGame(victim))
-		{
-            CPrintToChatAll("%t %t", "Tag++", "HunterHPBot", victim, RoundFloat(calculatedDamage), RoundFloat(height));
-		}
+        if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
+            return;
+
+        CPrintToChatAll("%t %t", "Tag++", "HunterHP", attacker, victim, RoundFloat(calculatedDamage), RoundFloat(height));
     }
 
     Call_StartForward(g_hForwardHunterDP);
@@ -308,10 +309,10 @@ void HandleJockeyDP(int attacker, int victim, float height)
     // report?
     if (g_hCvar_Report.BoolValue && g_hCvar_RepJockeyDP.BoolValue && height >= g_hCvar_JockeyDPThresh.FloatValue)
     {
-        if (IsValidClientInGame(attacker) && IsValidClientInGame(victim) && !IsFakeClient(attacker))
-            CPrintToChatAll("%t %t", "Tag+++", "JockeyHP", attacker, victim, RoundFloat(height));
-        else if (IsValidClientInGame(victim))
-            CPrintToChatAll("%t %t", "Tag+++", "JockeyHPBot", victim, RoundFloat(height));
+        if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
+            return;
+
+        CPrintToChatAll("%t %t", "Tag+++", "JockeyHP", attacker, victim, RoundFloat(height));
     }
 
     Call_StartForward(g_hForwardJockeyDP);
@@ -334,11 +335,11 @@ void HandleDeathCharge(int attacker, int victim, float height, float distance, b
                 continue;
 
             static char Buffer[64];
-            Format(Buffer, sizeof(Buffer), "%t", "Bowling", i);
-            if (IsValidClientInGame(attacker) && IsValidClientInGame(victim) && !IsFakeClient(attacker))
-                CPrintToChat(i, "%t %t", "Tag++++", "DeathCharged", attacker, victim, (bCarried) ? "" : Buffer, RoundFloat(height));
-            else if (IsValidClientInGame(victim))
-                CPrintToChat(i, "%t %t", "Tag++++", "DeathChargedBot", victim, (bCarried) ? "" : Buffer, RoundFloat(height));
+            Format(Buffer, sizeof(Buffer), "%T", "Bowling", i);
+            if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
+                return;
+
+            CPrintToChat(i, "%t %t", "Tag++++", "DeathCharged", attacker, victim, (bCarried) ? "" : Buffer, RoundFloat(height));
         }
 
     }
@@ -366,25 +367,22 @@ void HandleClear(int attacker, int victim, int pinVictim, int zombieClass, float
 
     if (g_hCvar_RepInstanClear.IntValue && attacker != pinVictim)
     {
-        float fMinTime     = g_hCvar_InstaTime.FloatValue;
+        float fMinTime = g_hCvar_InstaTime.FloatValue;
         float fClearTime = clearTimeA;
         if (zombieClass == ZC_CHARGER || zombieClass == ZC_SMOKER) { fClearTime = clearTimeB; }
 
         if (fClearTime != -1.0 && fClearTime <= fMinTime)
         {
-            if (IsValidClientInGame(attacker) && IsValidClientInGame(victim) && !IsFakeClient(victim))
+            if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
+                return;
+            
+            if (IsValidClientInGame(pinVictim))
             {
-                if (IsValidClientInGame(pinVictim))
-                    CPrintToChatAll("%t %t", "Tag+", "SIClear", attacker, pinVictim, victim, g_csSIClassName[zombieClass], fClearTime);
-                else
-                    CPrintToChatAll("%t %t", "Tag+", "SIClearTeammate", attacker, victim, g_csSIClassName[zombieClass], fClearTime);
+                CPrintToChatAll("%t %t", "Tag+", "SIClear", attacker, pinVictim, victim, g_csSIClassName[zombieClass], fClearTime);
             }
-            else if (IsValidClientInGame(attacker))
+            else
             {
-                if (IsValidClientInGame(pinVictim))
-                    CPrintToChatAll("%t %t", "Tag+", "SIClearBot", attacker, pinVictim, g_csSIClassName[zombieClass], fClearTime);
-                else
-                    CPrintToChatAll("%t %t", "Tag+", "SIClearTeammateBot", attacker, g_csSIClassName[zombieClass], fClearTime);
+                CPrintToChatAll("%t %t", "Tag+", "SIClearTeammate", attacker, victim, g_csSIClassName[zombieClass], fClearTime);
             }
         }
     }
@@ -413,7 +411,11 @@ void HandleVomitLanded(int attacker, int boomCount)
 void HandleBHopStreak(int survivor, int streak, float maxVelocity)
 {
     if (g_hCvar_RepBhopStreak.BoolValue && IsValidClientInGame(survivor) && !IsFakeClient(survivor) && streak >= g_hCvar_BHopMinStreak.IntValue)
-        CPrintToChat(survivor, "%t %t", "Tag+", "BunnyHop", streak, (streak > 1) ? "Plural" : "", maxVelocity);
+    {
+        char sBuffer[64];
+        Format(sBuffer, sizeof(sBuffer), "%T", "Plural", survivor);
+        CPrintToChat(survivor, "%t %t", "Tag+", "BunnyHop", streak, (streak > 1) ? sBuffer : "", maxVelocity);
+    }
 
     Call_StartForward(g_hForwardBHopStreak);
     Call_PushCell(survivor);
@@ -425,62 +427,38 @@ void HandleBHopStreak(int survivor, int streak, float maxVelocity)
 // car alarms
 void HandleCarAlarmTriggered(int survivor, int infected, CarAlarmReason_t reason)
 {
-    if (g_hCvar_RepCarAlarm.BoolValue && IsValidClientInGame(survivor) && !IsFakeClient(survivor))
+    if (g_hCvar_RepCarAlarm.BoolValue && IsValidClientInGame(survivor))
     {
         if (reason == CALARM_HIT)
         {
-            CPrintToChatAll("%t %t", "Tag+", "CalarmHit", survivor);
+            CPrintToChatAll("%t %t", "Tag+", "CarAlarmHit", survivor);
         }
         else if (reason == CALARM_TOUCHED)
         {
             // if a survivor touches an alarmed car, it might be due to a special infected...
             if (IsValidInfected(infected))
             {
-                if (!IsFakeClient(infected))
-                {
-                    CPrintToChatAll("%t %t", "Tag+", "CalarmTouched", infected, survivor);
-                }
-                else
-                {
-                    switch (GetEntProp(infected, Prop_Send, "m_zombieClass"))
-                    {
-                        case ZC_SMOKER:
-                            CPrintToChatAll("%t %t", "Tag+", "CalarmTouchedHunter", survivor);
-
-                        case ZC_JOCKEY:
-                            CPrintToChatAll("%t %t", "Tag+", "CalarmTouchedJockey", survivor);
-
-                        case ZC_CHARGER:
-                            CPrintToChatAll("%t %t", "Tag+", survivor);
-
-                        default:
-                            CPrintToChatAll("%t %t", "Tag+", "CalarmTouchedInfected", survivor);
-                    }
-                }
+                CPrintToChatAll("%t %t", "Tag+", "CarAlarmTouched", infected, survivor);
             }
             else
             {
-                CPrintToChatAll("%t %t", "Tag+", "CalarmTouchedBot", survivor);
+                CPrintToChatAll("%t %t", "Tag+", "CarAlarmTouchedSelf", survivor);
             }
         }
         else if (reason == CALARM_EXPLOSION)
         {
-            CPrintToChatAll("%t %t", "Tag+", "CalarmExplosion", survivor);
+            CPrintToChatAll("%t %t", "Tag+", "CarAlarmExplosion", survivor);
         }
         else if (reason == CALARM_BOOMER)
         {
-            if (IsValidInfected(infected) && !IsFakeClient(infected))
+            if (IsValidInfected(infected))
             {
-                CPrintToChatAll("%t %t", "Tag+", "CalarmBoomer", survivor, infected);
-            }
-            else
-            {
-                CPrintToChatAll("%t %t", "Tag+", "CalarmBoomerBot", survivor);
+                CPrintToChatAll("%t %t", "Tag+", "CarAlarmBoomer", survivor, infected);
             }
         }
         else
         {
-            CPrintToChatAll("%t %t", "Tag+", "Calarm", survivor);
+            CPrintToChatAll("%t %t", "Tag+", "CarAlarm", survivor);
         }
     }
 

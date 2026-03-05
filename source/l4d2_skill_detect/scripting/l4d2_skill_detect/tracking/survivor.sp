@@ -14,7 +14,7 @@ void Event_PlayerJumped(Event event, const char[] name, bool dontBroadcast)
             return;
 
         // where did jockey jump from?
-        GetClientAbsOrigin(client, g_InfectedSkillCache[client].m_flPouncePosition);
+        g_InfectedSkillCache[client].m_vecLeapPosistion.GetClientAbsOrigin(client);
     }
     else if (IsValidSurvivor(client))
     {

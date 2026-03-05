@@ -3,11 +3,8 @@
 #endif
 #define _skill_detect_tracking_included
 
-#include <actions>
-
 #define L4D2_MAXPLAYERS        32
 
-#define SHOTGUN_BLAST_TIME     0.1
 #define POUNCE_CHECK_TIME      0.1
 #define HOP_CHECK_TIME         0.1
 #define HOPEND_CHECK_TIME      0.1     // after streak end (potentially) detected, to check for realz?
@@ -72,7 +69,8 @@ enum struct InfectedSkillCache_t
     int m_iShotsFired[L4D2_MAXPLAYERS + 1];                         // how many shots the survivor has fired to skeet a hunter.
     int m_iHunterShotDmg[L4D2_MAXPLAYERS + 1];       	            // counting shotgun blast damage for hunter / skeeter combo
     int m_iPounceDamage;                                            // how much damage on last 'highpounce' done
-    float m_flPouncePosition[3];                                    // position that a hunter (jockey?) pounced from (or charger started his carry)
+    Vector m_vecPouncePosition;                                     // position that a hunter pounced from
+    Vector m_vecLeapPosistion;                                      // position that a jockey leapt from    
 
     // deadstops
     float m_flVictimLastShove[L4D2_MAXPLAYERS + 1];       // when was the player shoved last by attacker? (to prevent doubles)
@@ -83,9 +81,9 @@ enum struct InfectedSkillCache_t
     int m_iChargeVictim;              // who got charged
 
     // pops
-    bool  m_bBoomerHitSomebody;         // false if boomer didn't puke/exploded on anybody
-    int m_iBoomerGotShoved;             // how many times the boomer got shoved
-    int m_iBoomerVomitHits;             // how many booms in one vomit so far
+    bool m_bBoomerHitSomebody;         // false if boomer didn't puke/exploded on anybody
+    int m_iBoomerGotShoved;            // how many times the boomer got shoved
+    int m_iBoomerVomitHits;            // how many booms in one vomit so far
 
     // smoker clears
     bool m_bSmokerClearCheck;           // [smoker] smoker dies and this is set, it's a self-clear if m_iSmokerVictim is the killer
@@ -146,7 +144,7 @@ enum struct SurvivorSkillCache_t
 
     // levels / charges
     IntervalTimer_t m_ChargeTimer;      // time the charger's charge last started, or if victim, when impact started
-    float m_flChargeVictimPos[3];       // location of each survivor when it got hit by the charger
+    Vector m_vecChargeVictimPos;       // location of each survivor when it got hit by the charger
     int m_iVictimCharger;               // for a victim, by whom they got charge(impacted)
     int m_iVictimFlags;                 // flags stored per charge victim: VICFLAGS_
     int m_iVictimMapDmg;                // for a victim, how much the cumulative map damage is so far (trigger hurt / drowning)
@@ -482,17 +480,13 @@ static void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
         case ZC_HUNTER:
         {
             g_InfectedSkillCache[client].ResetHunter();
-            g_InfectedSkillCache[client].m_flPouncePosition[0] = 0.0;
-            g_InfectedSkillCache[client].m_flPouncePosition[1] = 0.0;
-            g_InfectedSkillCache[client].m_flPouncePosition[2] = 0.0;
+            g_InfectedSkillCache[client].m_vecPouncePosition.Set(0.0, 0.0, 0.0);
         }
 
         case ZC_JOCKEY:
         {
             SDKHook(client, SDKHook_TraceAttackPost, TraceAttackPost_Jockey);
-            g_InfectedSkillCache[client].m_flPouncePosition[0] = 0.0;
-            g_InfectedSkillCache[client].m_flPouncePosition[1] = 0.0;
-            g_InfectedSkillCache[client].m_flPouncePosition[2] = 0.0;
+            g_InfectedSkillCache[client].m_vecLeapPosistion.Set(0.0, 0.0, 0.0);
         }
 
         case ZC_CHARGER:

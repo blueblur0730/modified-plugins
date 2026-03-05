@@ -5,6 +5,54 @@
 
 #include <address_base>
 
+enum struct IntervalTimer_t
+{
+    // gpGlobals->curtime
+    float Now()
+    {
+        return GetGameTime();
+    }    
+
+    void Reset()
+    {
+        this.m_timestamp = this.Now();
+    }        
+
+    void Start()
+    {
+        this.m_timestamp = this.Now();
+    }
+
+    void Invalidate()
+    {
+        this.m_timestamp = -1.0;
+    }        
+
+    bool HasStarted()
+    {
+        return (this.m_timestamp > 0.0);
+    }
+
+    /// if not started, elapsed time is very large
+    float GetElapsedTime()
+    {
+        return (this.HasStarted()) ? (this.Now() - this.m_timestamp) : 99999.9;
+    }
+
+    bool IsLessThan( float duration )
+    {
+        return (this.Now() - this.m_timestamp < duration) ? true : false;
+    }
+
+    bool IsGreaterThan( float duration )
+    {
+        return (this.Now() - this.m_timestamp > duration) ? true : false;
+    }
+
+    float m_timestamp;
+}
+
+
 /*
 // size 92
 struct CTakeDamageInfo
@@ -65,6 +113,60 @@ methodmap CTakeDamageInfo < AddressBase
         }
     }
 */
+}
+
+enum struct Vector
+{
+    float x; 
+    float y;
+    float z;
+
+    bool IsZero() {
+        return (this.x == 0 && this.y == 0 && this.z == 0);
+    }
+
+    bool IsEqual(Vector vec) {
+        return (this.x == vec.x && this.y == vec.y && this.z == vec.z);
+    }
+
+    void Set(float x, float y, float z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    void Add(Vector vec) {
+        this.x += vec.x;
+        this.y += vec.y;
+        this.z += vec.z;
+    }
+
+    void Subtract(Vector vec) {
+        this.x -= vec.x;
+        this.y -= vec.y;
+        this.z -= vec.z;
+    }
+
+    void GetClientAbsOrigin(int client) {
+        float arr[3];
+        GetClientAbsOrigin(client, arr);
+
+        this.x = arr[0];
+        this.y = arr[1];
+        this.z = arr[2];
+    }
+
+    float Distance(Vector vec, bool squared=false) {
+        return GetVectorDistance(this.ToArray(), vec.ToArray(), squared);
+    }
+
+    float[] ToArray() {
+        float arr[3];
+        arr[0] = this.x;
+        arr[1] = this.y;
+        arr[2] = this.z;
+        return arr;
+    }
 }
 
 stock void PrintDebug(const char[] Message, any...)
