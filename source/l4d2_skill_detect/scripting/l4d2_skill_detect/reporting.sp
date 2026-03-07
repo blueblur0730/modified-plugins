@@ -117,45 +117,47 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
     {
         if (bTeamSkeeted)
         {
-			int iArr[L4D2_MAXPLAYERS + 1][3];
-			g_InfectedSkillCache[victim].SortSkeetDmg(iArr);
-
-            int count = 0;
-			char szBuffer[256];
-			for (int i = 1; i < L4D2_MAXPLAYERS; i++)
-			{
-				int index = iArr[i][0];
-				int damage = iArr[i][1];
-				int shotsFired = iArr[i][2];
-
-                //PrintToServer("index: %d, damage: %d, shotsFired: %d", index, damage, shotsFired);
-				if (!IsValidEdict(index) || damage <= 0 || index == attacker)
-					continue;
-
-                count++;
-                if (count > 3)
-                    break;
-
-                char szTemp[128];
-                i == 1 ?
-                Format(szTemp, sizeof(szTemp), "{blue}%N{default} [%d / %d]", index, shotsFired, damage) :
-				Format(szTemp, sizeof(szTemp), ", {blue}%N{default} [%d / %d]", index, shotsFired, damage);
-                StrCat(szBuffer, sizeof(szBuffer), szTemp);
-			}
-
             for (int i = 1; i < MaxClients; i++)
             {
                 if (!IsClientInGame(i) || IsFakeClient(i))
                     continue;
 
+                int iArr[L4D2_MAXPLAYERS + 1][3];
+                g_Hunter[victim].SortSkeetDmg(iArr);
+
+                int count = 0;
+                char szBuffer[256];
+                for (int j = 1; j < L4D2_MAXPLAYERS; j++)
+                {
+                    int index = iArr[j][0];
+                    int damage = iArr[j][1];
+                    int shotsFired = iArr[j][2];
+
+                    //PrintToServer("index: %d, damage: %d, shotsFired: %d", index, damage, shotsFired);
+                    if (!IsValidEdict(index) || damage <= 0 || index == attacker)
+                        continue;
+
+                    count++;
+                    if (count > 2)
+                        break;
+
+                    char szTemp[128];
+                    count == 1 ?
+                    Format(szTemp, sizeof(szTemp), "%T", "AssisterString", j, index, shotsFired, damage) :
+                    Format(szTemp, sizeof(szTemp), ", %T", "AssisterString", j, index, shotsFired, damage);
+                    StrCat(szBuffer, sizeof(szBuffer), szTemp);
+                }
+
                 char sBuffer[8];
                 Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
                 CPrintToChat(i, "%t %t", "Tag+", "TeamSkeeted", 
                             victim, attacker, 
-                            g_InfectedSkillCache[victim].m_iShotsFired[attacker],
-                            g_InfectedSkillCache[victim].m_iHunterShotDmg[attacker], 
-                            g_InfectedSkillCache[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "", 
-                            szBuffer);
+                            g_Hunter[victim].m_iShotsFired[attacker],
+                            g_Hunter[victim].m_iDamage[attacker], 
+                            g_Hunter[victim].m_iShotsFired[attacker] > 1 ? sBuffer : ""
+                        );
+
+                CPrintToChat(i, "%t %t", "Tag+", "Assisters", szBuffer);
             }
         }
         else if (bMelee)
@@ -164,7 +166,7 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
         }
         else if (bSniper)
         {
-			CPrintToChatAll("%t %t", "Tag++", "SkeetedSniper", attacker, victim, g_InfectedSkillCache[victim].m_iShotsFired[attacker]);
+			CPrintToChatAll("%t %t", "Tag++", "SkeetedSniper", attacker, victim, g_Hunter[victim].m_iShotsFired[attacker]);
         }
 		else if (bGL)
 		{
@@ -172,7 +174,7 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
 		}
 		else
 		{
-			CPrintToChatAll("%t %t", "Tag+", "Skeeted", attacker, victim, g_InfectedSkillCache[victim].m_iShotsFired[attacker]);
+			CPrintToChatAll("%t %t", "Tag+", "Skeeted", attacker, victim, g_Hunter[victim].m_iShotsFired[attacker]);
 		}
     }
 
@@ -286,7 +288,7 @@ void HandleRockSkeeted(int attacker, int victim)
 void HandleHunterDP(int attacker, int victim, int actualDamage, float calculatedDamage, float height, bool playerIncapped = false)
 {
     // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepHunterDP.BoolValue && height >= g_hCvar_HunterDPThresh.FloatValue && !playerIncapped)
+    if (g_hCvar_Report.BoolValue && g_hCvar_RepHunterDP.BoolValue && !playerIncapped)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -300,8 +302,7 @@ void HandleHunterDP(int attacker, int victim, int actualDamage, float calculated
     Call_PushCell(actualDamage);
     Call_PushFloat(calculatedDamage);
     Call_PushFloat(height);
-    Call_PushCell((height >= g_hCvar_HunterDPThresh.FloatValue) ? 1 : 0);
-    Call_PushCell((playerIncapped) ? 1 : 0);
+    Call_PushCell(playerIncapped);
     Call_Finish();
 }
 void HandleJockeyDP(int attacker, int victim, float height)
@@ -329,12 +330,23 @@ void HandleDeathCharge(int attacker, int victim, float height, float distance, b
     // report?
     if (g_hCvar_Report.BoolValue && g_hCvar_RepDeathCharge.BoolValue && height >= g_hCvar_DeathChargeHeight.FloatValue)
     {
+        if (bCarried)
+        {
+            if (height < g_hCvar_DeathChargeHeight.FloatValue)
+                return;
+        }
+        else
+        {
+            if (height < g_hCvar_DeathChargeHeightBlow.FloatValue)
+                return;
+        }
+
         for (int i = 1; i < MaxClients; i++)
         {
             if (!IsClientInGame(i) || IsFakeClient(i))
                 continue;
 
-            static char Buffer[64];
+            char Buffer[64];
             Format(Buffer, sizeof(Buffer), "%T", "Bowling", i);
             if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
                 return;
@@ -351,6 +363,76 @@ void HandleDeathCharge(int attacker, int victim, float height, float distance, b
     Call_PushFloat(distance);
     Call_PushCell((bCarried) ? 1 : 0);
     Call_Finish();
+}
+
+void HandleChargingSkeet(int attacker, int victim, float flTime, bool bTeamSkeeted = false)
+{
+    if (g_hCvar_Report.BoolValue && g_hCvar_RepChargingSkeet.BoolValue)
+    {
+        if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
+            return;
+
+        if (bTeamSkeeted)
+        {
+            for (int i = 1; i < MaxClients; i++)
+            {
+                if (!IsClientInGame(i) || IsFakeClient(i))
+                    continue;
+
+                if (!IsClientInGame(i) || IsFakeClient(i))
+                    continue;
+
+                int iArr[L4D2_MAXPLAYERS + 1][3];
+                g_Charger[victim].SortSkeetDmg(iArr);
+
+                int count = 0;
+                char szBuffer[256];
+                for (int j = 1; j < L4D2_MAXPLAYERS; j++)
+                {
+                    int index = iArr[j][0];
+                    int damage = iArr[j][1];
+                    int shotsFired = iArr[j][2];
+
+                    //PrintToServer("index: %d, damage: %d, shotsFired: %d", index, damage, shotsFired);
+                    if (!IsValidEdict(index) || damage <= 0 || index == attacker)
+                        continue;
+
+                    count++;
+                    if (count > 2)
+                        break;
+
+                    char szTemp[128];
+                    count == 1 ?
+                    Format(szTemp, sizeof(szTemp), "%T", "AssisterString", j, index, shotsFired, damage) :
+                    Format(szTemp, sizeof(szTemp), ", %T", "AssisterString", j, index, shotsFired, damage);
+                    StrCat(szBuffer, sizeof(szBuffer), szTemp);
+                }
+
+                char sBuffer[8];
+                Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
+                CPrintToChat(i, "%t %t", "Tag+", "TeamChargingSkeeted", 
+                            victim, attacker, 
+                            g_Hunter[victim].m_iShotsFired[attacker],
+                            g_Hunter[victim].m_iDamage[attacker], 
+                            flTime,
+                            g_Hunter[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "");
+
+                CPrintToChat(i, "%t %t", "Tag+", "Assisters", szBuffer);
+            }
+        }
+        else
+        {
+            CPrintToChatAll("%t %t", "Tag+", "ChargingSkeeted", attacker, victim, flTime);
+        }
+    }
+
+    // call forward
+    Call_StartForward(g_hForwardChargingSkeet);
+    Call_PushCell(attacker);
+    Call_PushCell(victim);
+    Call_PushFloat(flTime);
+    Call_Finish();
+    
 }
 
 // SI clears    (cleartimeA = pummel/pounce/ride/choke, cleartimeB = tongue drag, charger carry)

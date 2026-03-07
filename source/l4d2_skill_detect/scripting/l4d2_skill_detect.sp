@@ -45,6 +45,7 @@ GlobalForward
     g_hForwardHunterDP        = null,
     g_hForwardJockeyDP        = null,
     g_hForwardDeathCharge     = null,
+    g_hForwardChargingSkeet   = null,
     g_hForwardClear           = null,
     g_hForwardVomitLanded     = null,
     g_hForwardBHopStreak      = null,
@@ -74,6 +75,7 @@ ConVar
     g_hCvar_RepHunterDP,
     g_hCvar_RepJockeyDP,
     g_hCvar_RepDeathCharge,
+    g_hCvar_RepChargingSkeet,
     g_hCvar_RepInstanClear,
     g_hCvar_RepBhopStreak,
     g_hCvar_RepCarAlarm,
@@ -84,8 +86,10 @@ ConVar
     g_hCvar_SelfClearThresh,         // cvar damage while self-clearing from smokers
     g_hCvar_HunterDPThresh,          // cvar damage for hunter highpounce
     g_hCvar_JockeyDPThresh,          // cvar distance for jockey highpounce
-    g_hCvar_HideFakeDamage,          // cvar damage while self-clearing from smokers
+    g_hCvar_ClearThreh,              // cvar for max special clear time
     g_hCvar_DeathChargeHeight,       // cvar how high a charger must have come in order for a DC to count
+    g_hCvar_DeathChargeHeightBlow,   // cvar how high a blow must have come in order for a DC to count
+    g_hCvar_DeathChargeBlowCheckHealth, // cvar whether to check health when a blown up by charger
     g_hCvar_InstaTime,               // cvar clear within this time or lower for instaclear
     g_hCvar_BHopMinStreak,           // cvar this many hops in a row+ = streak
     g_hCvar_BHopMinInitSpeed,        // cvar lower than this and the first jump won't be seen as the start of a streak
@@ -141,7 +145,7 @@ int g_iPounceInterrupt = 150;             // default 150, damage that is greater
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.4.0"
+#define PLUGIN_VERSION "r2.5.0"
 
 public Plugin myinfo =
 {
@@ -166,9 +170,10 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
     g_hForwardSmokerSelfClear  = new GlobalForward("SkillDetect_OnSmokerSelfClear", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
     g_hForwardRockSkeeted      = new GlobalForward("SkillDetect_OnTankRockSkeeted", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardRockEaten        = new GlobalForward("SkillDetect_OnTankRockEaten", ET_Ignore, Param_Cell, Param_Cell);
-    g_hForwardHunterDP         = new GlobalForward("SkillDetect_OnHunterHighPounce", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Float, Param_Float, Param_Cell, Param_Cell);
+    g_hForwardHunterDP         = new GlobalForward("SkillDetect_OnHunterHighPounce", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Float, Param_Float, Param_Cell);
     g_hForwardJockeyDP         = new GlobalForward("SkillDetect_OnJockeyHighPounce", ET_Ignore, Param_Cell, Param_Cell, Param_Float, Param_Cell);
     g_hForwardDeathCharge      = new GlobalForward("SkillDetect_OnDeathCharge", ET_Ignore, Param_Cell, Param_Cell, Param_Float, Param_Float, Param_Cell);
+    g_hForwardChargingSkeet    = new GlobalForward("SkillDetect_OnChargingSkeet", ET_Ignore, Param_Cell, Param_Cell, Param_Float);
     g_hForwardClear            = new GlobalForward("SkillDetect_OnSpecialClear", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Float, Param_Float, Param_Cell);
     g_hForwardVomitLanded      = new GlobalForward("SkillDetect_OnBoomerVomitLanded", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardBHopStreak       = new GlobalForward("SkillDetect_OnBunnyHopStreak", ET_Ignore, Param_Cell, Param_Cell, Param_Float);
@@ -201,6 +206,7 @@ public void OnPluginStart()
     g_hCvar_RepHunterDP       = CreateConVar("l4d2_skill_detect_report_hunterdp", "1", "Enable hunter DP reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepJockeyDP       = CreateConVar("l4d2_skill_detect_report_jockeydp", "1", "Enable jockey DP reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepDeathCharge    = CreateConVar("l4d2_skill_detect_report_deadcharger", "1", "Enable deadcharger reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepChargingSkeet  = CreateConVar("l4d2_skill_detect_report_chargerskeet", "1", "Enable charger-skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepInstanClear    = CreateConVar("l4d2_skill_detect_report_instanclear", "1", "Enable instan-clear reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepBhopStreak     = CreateConVar("l4d2_skill_detect_report_bhop", "1", "Enable bhop streak reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepCarAlarm       = CreateConVar("l4d2_skill_detect_report_caralarm", "1", "Enable car alarm reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
@@ -211,8 +217,10 @@ public void OnPluginStart()
     g_hCvar_SelfClearThresh   = CreateConVar("l4d2_skill_detect_selfclear_damage", "200", "How much damage a survivor must at least do to a smoker for him to count as self-clearing.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_HunterDPThresh    = CreateConVar("l4d2_skill_detect_hunterdp_height", "400", "Minimum height of hunter pounce for it to count as a DP.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_JockeyDPThresh    = CreateConVar("l4d2_skill_detect_jockeydp_height", "300", "How much height distance a jockey must make for his 'DP' to count as a reportable highpounce.", FCVAR_NONE, true, 0.0, false);
-    g_hCvar_HideFakeDamage    = CreateConVar("l4d2_skill_detect_hidefakedamage", "0", "If set, any damage done that exceeds the health of a victim is hidden in reports.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_ClearThreh        = CreateConVar("l4d2_skill_detect_clear_max_time", "1.0", "How much time a clear must last for it to count.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_DeathChargeHeight = CreateConVar("l4d2_skill_detect_deathcharge_height", "375.0", "How much height distance a charger must take its victim for a deathcharge to be reported.", FCVAR_NONE, true, 0.0, false);
+    g_hCvar_DeathChargeHeightBlow = CreateConVar("l4d2_skill_detect_deathcharge_height_blow", "200.0", "How much height distance a charger must take its victim for a deathcharge to be reported when blown up.", FCVAR_NONE, true, 0.0, false);
+    g_hCvar_DeathChargeBlowCheckHealth = CreateConVar("l4d2_skill_detect_deathcharge_blow_check_health", "0", "Whether to check health when being blown up by a charger.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_InstaTime         = CreateConVar("l4d2_skill_detect_instaclear_time", "0.75", "A clear within this time (in seconds) counts as an insta-clear.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_BHopMinStreak     = CreateConVar("l4d2_skill_detect_bhopstreak", "3", "The lowest bunnyhop streak that will be reported.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_BHopMinInitSpeed  = CreateConVar("l4d2_skill_detect_bhopinitspeed", "150", "The minimal speed of the first jump of a bunnyhopstreak (0 to allow 'hops' from standstill).", FCVAR_NONE, true, 0.0, false);

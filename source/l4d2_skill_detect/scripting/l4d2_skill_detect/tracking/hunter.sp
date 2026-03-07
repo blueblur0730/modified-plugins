@@ -3,21 +3,89 @@
 #endif
 #define _skill_detect_tracking_hunter_included
 
+enum struct HunterSkillCache_t
+{
+    // hunters: skeets/pounces
+    int m_iTeamDamage;                        // counting shotgun blast damage for hunter, counting entire survivor team's damage
+    int m_iShotsFired[L4D2_MAXPLAYERS + 1];   // how many shots the survivor has fired to skeet a hunter.
+    int m_iDamage[L4D2_MAXPLAYERS + 1];       // counting shotgun blast damage for hunter / skeeter combo
+    int m_iPounceDamage;                      // how much damage on last 'highpounce' done
+    Vector m_vecPounceStartPos;               // position that a hunter pounced from
+    IntervalTimer_t m_IncapStartTimer;          // timer for when a hunter started incap someone.
+
+    void SortSkeetDmg(int iArr[L4D2_MAXPLAYERS + 1][3])
+    {
+        for (int i = 1; i < L4D2_MAXPLAYERS; i++)
+        {
+            iArr[i][0] = i;
+            iArr[i][1] = this.m_iDamage[i];
+            iArr[i][2] = this.m_iShotsFired[i];
+        }
+
+        // Bubble sort in descending order
+        int n = L4D2_MAXPLAYERS;
+        for (int i = 1; i <= n - 1; i++)
+        {
+            for (int j = 1; j <= n - i; j++)
+            {
+                if (iArr[j][1] < iArr[j + 1][1])
+                {
+                    // Swap the entire row
+                    int temp0 = iArr[j][0];
+                    int temp1 = iArr[j][1];
+                    int temp2 = iArr[j][2];
+
+                    iArr[j][0] = iArr[j + 1][0];
+                    iArr[j][1] = iArr[j + 1][1];
+                    iArr[j][2] = iArr[j + 1][2];
+
+                    iArr[j + 1][0] = temp0;
+                    iArr[j + 1][1] = temp1;
+                    iArr[j + 1][2] = temp2;
+                }
+            }
+        }
+    }
+
+    void ResetHunter()
+    {
+        this.m_iTeamDamage = 0;
+        for (int i = 1; i <= MaxClients; i++)
+        {
+            this.m_iDamage[i] = 0;
+            this.m_iShotsFired[i] = 0;
+        }
+    }
+}
+HunterSkillCache_t g_Hunter[L4D2_MAXPLAYERS + 1];
+
 Action HunterLungeAtVictim_OnShoved(any action, int actor, int entity, ActionDesiredResult result)
 {
+    if (actor <= 0 || actor > MaxClients)
+        return Plugin_Continue;
+
+    if (!IsClientInGame(actor))
+        return Plugin_Continue;
+
     //PrintToServer("[Skill Detect] HunterLungeAtVictim_OnShoved called, entity: %d, actor: %d", entity, actor);
     HandleDeadstop(entity, actor);
-    g_InfectedSkillCache[actor].ResetHunter();
+    g_Hunter[actor].ResetHunter();
     return Plugin_Continue;
 }
 
 // after takedamage hook.
 Action HunterLungeAtVictim_OnInjured(any action, int actor, CTakeDamageInfo info, ActionDesiredResult result)
 {
+    if (actor <= 0 || actor > MaxClients)
+        return Plugin_Continue;
+
+    if (!IsClientInGame(actor))
+        return Plugin_Continue;
+
     // already had a victim, not a skeet.
     if (g_InfectedSkillCache[actor].m_iSpecialVictim)
     {
-        g_InfectedSkillCache[actor].ResetHunter();
+        g_Hunter[actor].ResetHunter();
         return Plugin_Continue;
     }
 
@@ -32,32 +100,38 @@ Action HunterLungeAtVictim_OnInjured(any action, int actor, CTakeDamageInfo info
 
     if (damagetype & DMG_BUCKSHOT)
     {
-        if (!g_SurvivorSkillCache[attacker].m_bShotCounted)
+        if (!g_Survivor[attacker].m_bShotCounted)
         {
             // count this shotgun pellet as once.
-            g_InfectedSkillCache[actor].m_iShotsFired[attacker]++;
+            g_Hunter[actor].m_iShotsFired[attacker]++;
             //PrintToServer("[Skill Detect] HunterLungeAtVictim_OnInjured: shotgun pellet, shots fired: %d", g_InfectedSkillCache[actor].m_iShotsFired[attacker]);
-            g_SurvivorSkillCache[attacker].m_bShotCounted = true;
+            g_Survivor[attacker].m_bShotCounted = true;
         }
     }
     else if (damagetype & DMG_BULLET)
     {
         // just count this into.
-        g_InfectedSkillCache[actor].m_iShotsFired[attacker]++;
+        g_Hunter[actor].m_iShotsFired[attacker]++;
         //PrintToServer("[Skill Detect] HunterLungeAtVictim_OnInjured: bullet, shots fired: %d", g_InfectedSkillCache[actor].m_iShotsFired[attacker]);
     }
 
-    g_InfectedSkillCache[actor].m_iHunterShotDmg[attacker] += RoundToNearest(damage);
-    g_InfectedSkillCache[actor].m_iHunterShotDmgTeam += RoundToNearest(damage);
+    g_Hunter[actor].m_iDamage[attacker] += RoundToNearest(damage);
+    g_Hunter[actor].m_iTeamDamage += RoundToNearest(damage);
     return Plugin_Continue;
 }
 
 Action HunterLungeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo info, ActionDesiredResult result)
 {
+    if (actor <= 0 || actor > MaxClients)
+        return Plugin_Continue;
+
+    if (!IsClientInGame(actor))
+        return Plugin_Continue;
+
     // already had a victim, not a skeet.
     if (g_InfectedSkillCache[actor].m_iSpecialVictim)
     {
-        g_InfectedSkillCache[actor].ResetHunter();
+        g_Hunter[actor].ResetHunter();
         return Plugin_Continue;
     }
 
@@ -72,8 +146,8 @@ Action HunterLungeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo info,
         return Plugin_Continue;
     
     // skeet?
-    if (g_InfectedSkillCache[actor].m_iHunterShotDmgTeam > g_InfectedSkillCache[actor].m_iHunterShotDmg[attacker] && 
-        g_InfectedSkillCache[actor].m_iHunterShotDmgTeam >= (L4D_HasPlayerControlledZombies() ? g_iPounceInterruptDefault : g_iPounceInterrupt))
+    if (g_Hunter[actor].m_iTeamDamage > g_Hunter[actor].m_iDamage[attacker] && 
+        g_Hunter[actor].m_iTeamDamage >= (L4D_HasPlayerControlledZombies() ? g_iPounceInterruptDefault : g_iPounceInterrupt))
     {
         // team skeet
         HandleSkeet(attacker, actor, _, _, _, true);
@@ -118,38 +192,34 @@ Action HunterLungeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo info,
             HandleSkeet(attacker, actor, true);
     }
 
-    g_InfectedSkillCache[actor].ResetHunter();
+    g_Hunter[actor].ResetHunter();
     return Plugin_Continue;
 }
 
 Action HunterLungeAtVictim_OnStart(any action, int actor, any priorAction, ActionResult result)
 {
+    if (actor <= 0 || actor > MaxClients)
+        return Plugin_Continue;
+
+    if (!IsClientInGame(actor))
+        return Plugin_Continue;
+
     //PrintToServer("[Skill Detect] HunterLungeAtVictim_OnStart called");
-    g_InfectedSkillCache[actor].m_vecPouncePosition.GetClientAbsOrigin(actor);
+    g_Hunter[actor].m_vecPounceStartPos.GetClientAbsOrigin(actor);
     return Plugin_Continue;
 }
 
 Action HunterLungeAtVictim_OnEnd(any action, int actor, any priorAction, ActionResult result)
 {
+    if (actor <= 0 || actor > MaxClients)
+        return Plugin_Continue;
+
+    if (!IsClientInGame(actor))
+        return Plugin_Continue;
+
     //PrintToServer("[Skill Detect] HunterLungeAtVictim_OnEnd called");
-    g_InfectedSkillCache[actor].ResetHunter();
+    g_Hunter[actor].ResetHunter();
     return Plugin_Continue;
-}
-
-void Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
-{
-    int client = GetClientOfUserId(event.GetInt("userid"));
-    if (client <= 0 || client > MaxClients)
-        return;
-
-    if (!IsClientInGame(client))
-        return;
-
-    int wepid = event.GetInt("weaponid");
-    if (wepid == WEPID_SHOTGUN_CHROME || wepid == WEPID_SHOTGUN_SPAS || wepid == WEPID_AUTOSHOTGUN || wepid == WEPID_PUMPSHOTGUN)
-    {
-        g_SurvivorSkillCache[client].m_bShotCounted = false;
-    }
 }
 
 void Event_LungePounce(Event event, const char[] name, bool dontBroadcast)
@@ -157,19 +227,23 @@ void Event_LungePounce(Event event, const char[] name, bool dontBroadcast)
     int client = GetClientOfUserId(event.GetInt("userid"));
     int victim = GetClientOfUserId(event.GetInt("victim"));
 
-    g_InfectedSkillCache[client].m_flPinTime[0] = GetGameTime();
+    g_Hunter[client].m_IncapStartTimer.Start();
 
     // clear hunter-hit stats (not skeeted)
-    g_InfectedSkillCache[client].ResetHunter();
+    g_Hunter[client].ResetHunter();
 
     // check if it was a DP
     // ignore if no real pounce start pos
-    if (g_InfectedSkillCache[client].m_vecPouncePosition.IsZero())
+    if (g_Hunter[client].m_vecPounceStartPos.IsZero())
         return;
 
     Vector endPos;
     endPos.GetClientAbsOrigin(client);
-    float fHeight  = g_InfectedSkillCache[client].m_vecPouncePosition.z - endPos.z;
+    float fHeight  = g_Hunter[client].m_vecPounceStartPos.z - endPos.z;
+
+    // if it's not a highpounce, ignore
+    if (fHeight < g_hCvar_HunterDPThresh.FloatValue)
+        return;
 
     // from pounceannounce:
     // distance supplied isn't the actual 2d vector distance needed for damage calculation. See more about it at
@@ -180,7 +254,7 @@ void Event_LungePounce(Event event, const char[] name, bool dontBroadcast)
     float fMaxDmg = g_hCvar_MaxPounceDamage.FloatValue;
 
     // calculate 2d distance between previous position and pounce position
-    int distance = RoundToNearest(g_InfectedSkillCache[client].m_vecPouncePosition.Distance(endPos));
+    int distance = RoundToNearest(g_Hunter[client].m_vecPounceStartPos.Distance(endPos));
 
     // get damage using hunter damage formula
     // check if this is accurate, seems to differ from actual damage done!
@@ -196,11 +270,19 @@ void Event_LungePounce(Event event, const char[] name, bool dontBroadcast)
         fDamage = fMaxDmg + 1.0;
     }
 
+    bool bIncap = false;
+    int health = GetEntProp(victim, Prop_Data, "m_iHealth");
+    if (RoundToNearest(fDamage) > health)
+    {
+        bIncap = true;
+    }
+
     DataPack pack = new DataPack();
     pack.WriteCell(client);
     pack.WriteCell(victim);
     pack.WriteFloat(fDamage);
     pack.WriteFloat(fHeight);
+    pack.WriteCell(bIncap);
     CreateTimer(0.05, Timer_HunterDP, pack);
 }
 
@@ -211,7 +293,8 @@ static void Timer_HunterDP(Handle timer, DataPack pack)
     int victim  = pack.ReadCell();
     float fDamage = pack.ReadFloat();
     float fHeight = pack.ReadFloat();
+    bool bIncap = pack.ReadCell();
     delete pack;
 
-    HandleHunterDP(client, victim, g_InfectedSkillCache[client].m_iPounceDamage, fDamage, fHeight);
+    HandleHunterDP(client, victim, g_Hunter[client].m_iPounceDamage, fDamage, fHeight, bIncap);
 }

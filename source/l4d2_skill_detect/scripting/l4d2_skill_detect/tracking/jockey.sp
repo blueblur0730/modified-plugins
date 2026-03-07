@@ -15,19 +15,13 @@ void Event_JockeyRide(Event event, const char[] name, bool dontBroadcast)
 
     // minimum distance travelled?
     // ignore if no real pounce start pos
-    if (g_InfectedSkillCache[client].m_vecLeapPosistion.Set(0.0, 0.0, 0.0))
+    if (g_InfectedSkillCache[client].m_vecLeapStartPos.Set(0.0, 0.0, 0.0))
         return;
 
     Vector endPos;
     endPos.GetClientAbsOrigin(client);
-    float fHeight = g_InfectedSkillCache[client].m_vecLeapPosistion.z - endPos.z;
+    float fHeight = g_InfectedSkillCache[client].m_vecLeapStartPos.z - endPos.z;
 
     // (high) pounce
     HandleJockeyDP(client, victim, fHeight);
-}
-
-void TraceAttackPost_Jockey(int victim, int attacker, int inflictor, float damage, int damagetype, int ammotype, int hitbox, int hitgroup)
-{
-    // track pinning
-    g_InfectedSkillCache[victim].m_iSpecialVictim = GetEntPropEnt(victim, Prop_Send, "m_jockeyVictim");
 }

@@ -48,6 +48,28 @@
         "chi"		"{olive}{1}{default} {blue}一刀{default} 击倒了残血的{olive}{2}{default} ({blue}{3} 伤害{default})"
 	}
 
+    // deathcharges
+	"DeathCharged"
+	{
+        "#format"   "{1:N},{2:N},{3:s},{4:i}" // 1:attacker 2:victim 3:(bCarried) ? "" : Buffer 4:RoundFloat(height)
+		"en"		"{olive}{1}{default} {red}death-charged{default} {olive}{2}{default} {3}({red}height{default}: {red}{4}{default})"
+        "chi"		"{olive}{1}{default} {red}冲锋秒杀了{default} {3}{olive}{2}{default} ({red}高度{default}: {red}{4}{default})"
+	}
+
+	"ChargingSkeeted"
+	{
+		"#format"   "{1:N},{2:N},{3:.02f}" // 1: attacker, 2: victim, 3: time
+		"en"		"{olive}{1}{default} {blue}skeeted the charging{default} {olive}{2}{default} for {blue}{3} seconds{default}."
+        "chi"		"{olive}{1}{default} {blue}杀死了冲锋中的{default} {olive}{2}{default} ({blue}{3} 秒{default})."
+	}
+	
+	"TeamChargingSkeeted"
+	{
+		"#format"	"{1:N},{2:N},{3:d},{4:d},{5:.02f},{6:s}" // 1: attacker, 2: victim, 3: shots fired, 4: dmg, 5: time, 6: plural
+		"en"		"{olive}{2}{default} team-skeeted the charging {olive}{1}{default} {blue}({default}{3} {green}shot{6}{default}/{4} {green}dmg{default}/{5} {green}seconds{blue}){default}"
+        "chi"		"{olive}{2}{default} 团队击杀了冲锋的 {olive}{1}{default} {blue}({default}{3} {green}枪{6}{default}/{4} {green}伤害{default}/{5} {green}秒{blue}){default}"
+	}
+
     // deadstops
 	"Deadstopped"
 	{
@@ -66,9 +88,9 @@
 
 	"TeamSkeeted"
 	{
-        "#format"   "{1:N},{2:N},{3:d},{4:d},{5:s},{6:s}" // 1:victim, 2:attacker, 3: shots, 4:dmg, 5:plural, 6: assisters string.
-		"en"		"{olive}{1}{default} was team-skeeted by {blue}{2}{default} ({blue}{3} shot{5}{default}/{blue}{4} dmg{default}). Assisters: ({6})"
-        "chi"		"{blue}{2}{default} 团队空爆了 {olive}{1}{default} ({blue}{3} 枪{5}{default}/{blue}{4} 伤害{default}). 协助者: ({6})"
+        "#format"   "{1:N},{2:N},{3:d},{4:d},{5:s}" // 1:victim, 2:attacker, 3: shots, 4:dmg, 5:plural
+		"en"		"{olive}{1}{default} was team-skeeted by {blue}{2}{default} {blue}({default}{3} {green}shot{5}{default}/{4} {green}dmg{blue}){default}."
+        "chi"		"{blue}{2}{default} 团队空爆了 {olive}{1}{default} {blue}({default}{3} {green}枪{5}{default}/{4} {green}伤害{blue}){default}."
 	}
 
 	"Skeeted"
@@ -153,14 +175,6 @@
         "chi"		"{olive}{1}{default} {red}高扑了{default} {olive}{2}{default} ({red}高度{default}: {red}{3}{default})"
 	}
 
-    // deathcharges
-	"DeathCharged"
-	{
-        "#format"   "{1:N},{2:N},{3:s},{4:i}" // 1:attacker 2:victim 3:(bCarried) ? "" : Buffer 4:RoundFloat(height)
-		"en"		"{olive}{1}{default} {red}death-charged{default} {olive}{2}{default} {3}({red}height{default}: {red}{4}{default})"
-        "chi"		"{olive}{1}{default} {red}冲锋秒杀了{default} {3}{olive}{2}{default} ({red}高度{default}: {red}{4}{default})"
-	}
-
     // SI clears    (cleartimeA = pummel/pounce/ride/choke, cleartimeB = tongue drag, charger carry)
 	"SIClear"
 	{
@@ -224,6 +238,20 @@
         "#format"   "{1:N}" // 1:attacker
 		"en"		"{olive}{1}{default} triggered an alarm."
         "chi"		"{olive}{1}{default} 触发了警报车."
+	}
+
+	"AssisterString"
+	{
+		"#format"	"{1:N},{2:d},{3:d}"
+		"en"		"{blue}{1}{default} {blue}[{default}{2} {green}shot{default}/{3} {green}dmg{blue}]{default}"
+		"chi"		"{blue}{1}{default} {blue}[{default}{2} {green}枪{default}/{3} {green}伤害{blue}]{default}"
+	}
+
+	"Assisters"
+	{
+		"#format"	"{1:s}"
+		"en"		"{olive}Assisters{default}: {1}"
+		"chi"		"{olive}协助者{default}: {1}"
 	}
 
 	"Shoving"
