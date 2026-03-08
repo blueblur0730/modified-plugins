@@ -213,12 +213,9 @@ Action ChargerChargeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo inf
             return Plugin_Continue;
         }
 
-        if (!g_Charger[actor].m_ChargeTimer.IsGreaterThan(g_hCvar_ClearThreh.FloatValue))
-        {
-            // a clear. handled on player_death.
-            if (g_Charger[actor].m_bCarriedVictim)
-                return Plugin_Continue;
-        }
+        // a clear. handled on player_death.
+        if (g_Charger[actor].m_bCarriedVictim && g_Charger[actor].m_ChargeTimer.IsLessThan(g_hCvar_ClearThreh.FloatValue))
+            return Plugin_Continue;
 
         HandleChargingSkeet(attacker, actor, g_Charger[actor].m_ChargeTimer.GetElapsedTime(), (g_Charger[actor].m_iTeamDamage > 0 && g_Charger[actor].m_iTeamDamage > g_Charger[actor].m_iDamage[attacker]));
         g_Charger[actor].ResetCharger();

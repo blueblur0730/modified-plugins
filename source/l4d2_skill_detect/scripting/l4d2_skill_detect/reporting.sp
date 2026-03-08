@@ -426,10 +426,10 @@ void HandleChargingSkeet(int attacker, int victim, float flTime, bool bTeamSkeet
                 Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
                 CPrintToChat(i, "%t %t", "Tag+", "TeamChargingSkeeted", 
                             victim, attacker, 
-                            g_Hunter[victim].m_iShotsFired[attacker],
-                            g_Hunter[victim].m_iDamage[attacker], 
+                            g_Charger[victim].m_iShotsFired[attacker],
+                            g_Charger[victim].m_iDamage[attacker], 
                             flTime,
-                            g_Hunter[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "");
+                            g_Charger[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "");
 
                 CPrintToChat(i, "%t %t", "Tag+", "Assisters", szBuffer);
             }

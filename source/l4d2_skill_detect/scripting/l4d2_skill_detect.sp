@@ -145,7 +145,7 @@ int g_iPounceInterrupt = 150;             // default 150, damage that is greater
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.5.1"
+#define PLUGIN_VERSION "r2.5.2"
 
 public Plugin myinfo =
 {
@@ -251,16 +251,6 @@ public void OnPluginEnd()
     delete g_hMapEntityCreated;
 
     _skill_detect_tracking_OnPluginEnd();
-}
-
-public void OnEntityCreated(int entity, const char[] classname)
-{
-    _skill_detect_tracking_OnEntityCreated(entity, classname);
-}
-
-public void OnEntityDestroyed(int entity)
-{
-    _skill_detect_tracking_OnEntityDestroyed(entity);
 }
 
 public void OnAllPluginsLoaded()

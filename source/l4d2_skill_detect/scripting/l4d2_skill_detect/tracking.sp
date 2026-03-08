@@ -200,7 +200,7 @@ void _skill_detect_tracking_OnPluginEnd()
 }
 
 // entity creation
-void _skill_detect_tracking_OnEntityCreated(int entity, const char[] classname)
+public void OnEntityCreated(int entity, const char[] classname)
 {
     if (entity < 1 || !IsValidEntity(entity) || !IsValidEdict(entity))
         return;
@@ -239,7 +239,7 @@ void _skill_detect_tracking_OnEntityCreated(int entity, const char[] classname)
 }
 
 // entity destruction
-void _skill_detect_tracking_OnEntityDestroyed(int entity)
+public void OnEntityDestroyed(int entity)
 {
     int index = g_hArray_TankRockTrace.FindValue(entity, TankRockTrace_t::m_iRock);
     if (index != -1)
@@ -302,7 +302,7 @@ static void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
     g_hArray_CarAlarmTrace.Clear();
 }
 
-void Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
+static void Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(event.GetInt("userid"));
     if (client <= 0 || client > MaxClients)
@@ -464,7 +464,7 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
             case ZC_CHARGER:
             {
                 // check whether it was a clear
-                if (g_InfectedSkillCache[victim].m_iSpecialVictim > 0 && !g_Charger[victim].m_ChargeTimer.IsGreaterThan(g_hCvar_ClearThreh.FloatValue))
+                if (g_Charger[victim].m_bCarriedVictim && g_Charger[victim].m_ChargeTimer.IsLessThan(g_hCvar_ClearThreh.FloatValue))
                 {
                     HandleClear(attacker, victim, g_InfectedSkillCache[victim].m_iSpecialVictim, ZC_CHARGER, (g_Charger[victim].m_PummelTimer.HasStarted()) ? (g_Charger[victim].m_PummelTimer.GetElapsedTime()) : -1.0, (g_Charger[victim].m_ChargeTimer.GetElapsedTime()));
                     g_Charger[victim].ResetCharger();

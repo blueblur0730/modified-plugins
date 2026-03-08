@@ -68,6 +68,11 @@ Action HunterLungeAtVictim_OnShoved(any action, int actor, int entity, ActionDes
         return Plugin_Continue;
 
     //PrintToServer("[Skill Detect] HunterLungeAtVictim_OnShoved called, entity: %d, actor: %d", entity, actor);
+
+    // still in lunge when deadstopped, check this.
+    if (!GetEntProp(entity, Prop_Send, "m_isAttemptingTopounce"))
+        return Plugin_Continue;
+
     HandleDeadstop(entity, actor);
     g_Hunter[actor].ResetHunter();
     return Plugin_Continue;
