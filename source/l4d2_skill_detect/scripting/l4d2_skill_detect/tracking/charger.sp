@@ -187,7 +187,7 @@ Action ChargerChargeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo inf
     {
         Vector vecPos;
         vecPos.GetClientAbsOrigin(actor);
-        float fHeight = g_Charger[actor].m_vecCarryStartPos.z - vecPos.z;
+        float fHeight = FloatAbs(g_Charger[actor].m_vecCarryStartPos.z) - FloatAbs(vecPos.z);
 
         // carried dewath charge, the impacted death charge will be handled on player_death.
         HandleDeathCharge(actor, g_InfectedSkillCache[actor].m_iSpecialVictim, fHeight, g_Charger[actor].m_vecCarryStartPos.Distance(vecPos, false), true);

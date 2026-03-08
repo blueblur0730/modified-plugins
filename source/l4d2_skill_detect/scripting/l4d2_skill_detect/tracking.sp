@@ -3,60 +3,6 @@
 #endif
 #define _skill_detect_tracking_included
 
-#define L4D2_MAXPLAYERS        32
-
-#define POUNCE_CHECK_TIME      0.1
-#define HOP_CHECK_TIME         0.1
-#define HOPEND_CHECK_TIME      0.1     // after streak end (potentially) detected, to check for realz?
-#define SHOVE_TIME             0.05
-#define MAX_CHARGE_TIME        12.0      // maximum time to pass before charge checking ends
-#define CHARGE_CHECK_TIME      0.25      // check interval for survivors flying from impacts
-#define CHARGE_END_CHECK       2.5      // after client hits ground after getting impact-charged: when to check whether it was a death
-#define CHARGE_END_RECHECK     3.0      // safeguard wait to recheck on someone getting incapped out of bounds
-#define VOMIT_DURATION_TIME    2.25      // how long the boomer vomit stream lasts -- when to check for boom count
-#define ROCK_CHECK_TIME        0.34      // how long to wait after rock entity is destroyed before checking for skeet/eat (high to avoid lag issues)
-#define CARALARM_MIN_TIME      0.11      // maximum time after touch/shot => alarm to connect the two events (test this for LAG)
-
-#define WITCH_CHECK_TIME       0.1      // time to wait before checking for witch crown after shoots fired
-#define WITCH_DELETE_TIME      0.15      // time to wait before deleting entry from witch Map after entity is destroyed
-
-#define MIN_DC_TRIGGER_DMG     300       // minimum amount a 'trigger' / drown must do before counted as a death action
-#define MIN_DC_FALL_DMG        175       // minimum amount of fall damage counts as death-falling for a deathcharge
-#define WEIRD_FLOW_THRESH      900.0       // -9999 seems to be break flow.. but meh
-#define MIN_FLOWDROPHEIGHT     350.0       // minimum height a survivor has to have dropped before a WEIRD_FLOW value is treated as a DC spot
-#define MIN_DC_RECHECK_DMG     100       // minimum damage from map to have taken on first check, to warrant recheck
-
-#define HOP_ACCEL_THRESH       0.01      // bhop speed increase must be higher than this for it to count as part of a hop streak
-
-#define DMGARRAYEXT            7       // L4D2_MAXPLAYERS+# -- extra indices in witch_dmg_array + 1
-
-#define CUT_SHOVED             1       // smoker got shoved
-#define CUT_SHOVEDSURV         2       // survivor got shoved
-#define CUT_KILL               3       // reason for tongue break (release_type)
-#define CUT_SLASH              4       // this is used for others shoving a survivor free too, don't trust .. it involves tongue damage?
-
-#define VICFLG_CARRIED         (1 << 0)      // was the one that the charger carried (not impacted)
-#define VICFLG_FALL            (1 << 1)      // flags stored per charge victim, to check for deathchargeroony -- fallen
-#define VICFLG_DROWN           (1 << 2)      // drowned
-#define VICFLG_HURTLOTS        (1 << 3)      // whether the victim was hurt by 400 dmg+ at once
-#define VICFLG_TRIGGER         (1 << 4)      // killed by trigger_hurt
-#define VICFLG_AIRDEATH        (1 << 5)      // died before they hit the ground (impact check)
-#define VICFLG_KILLEDBYOTHER   (1 << 6)      // if the survivor was killed by an SI other than the charger
-#define VICFLG_WEIRDFLOW       (1 << 7)      // when survivors get out of the map and such
-#define VICFLG_WEIRDFLOWDONE   (1 << 8)      //      checked, don't recheck for this
-
-#define ZC_SMOKER              1
-#define ZC_BOOMER              2
-#define ZC_HUNTER              3
-#define ZC_SPITTER             4
-#define ZC_JOCKEY              5
-#define ZC_CHARGER             6
-#define ZC_WITCH               7
-#define ZC_TANK                8
-
-#define L4D1_ZOMBIECLASS_TANK 5
-#define L4D2_ZOMBIECLASS_TANK 8
-
 enum struct InfectedSkillCache_t
 {
     // all SI / pinners
@@ -64,10 +10,7 @@ enum struct InfectedSkillCache_t
     float m_flPinTime[2];       // time the SI pinned a target: 0 = start of pin (tongue pull, charger carry); 1 = carry end / tongue reigned in
     int m_iSpecialVictim;       // current victim (set in traceattack, so we can check on death)
 
-    // leap
-    Vector m_vecLeapStartPos;                                      // position that a jockey leapt from    
-
-    // deadstops
+    // shoves
     float m_flVictimLastShove[L4D2_MAXPLAYERS + 1];       // when was the player shoved last by attacker? (to prevent doubles)
 
     // pops
@@ -261,10 +204,10 @@ public void OnActionCreated( BehaviorAction action, int actor, const char[] name
 {
     if (strcmp(name, "HunterLungeAtVictim") == 0)
     {
+        action.OnUpdate = HunterLungeAtVictim_Update;
         action.OnShoved = HunterLungeAtVictim_OnShoved;
         action.OnInjured = HunterLungeAtVictim_OnInjured;
         action.OnKilled = HunterLungeAtVictim_OnKilled;
-        action.OnStart = HunterLungeAtVictim_OnStart;
         action.OnEnd = HunterLungeAtVictim_OnEnd;
     }
     else if (strcmp(name, "ChargerChargeAtVictim") == 0)
@@ -274,6 +217,14 @@ public void OnActionCreated( BehaviorAction action, int actor, const char[] name
         action.OnEnd = ChargerChargeAtVictim_OnEnd;
         action.OnInjured = ChargerChargeAtVictim_OnInjured;
         action.OnKilled = ChargerChargeAtVictim_OnKilled;
+    }
+    else if (strcmp(name, "JockeyLeap") == 0)
+    {
+        action.OnUpdate = JockeyLeap_Update;
+        action.OnEnd = JockeyLeap_OnEnd;
+        action.OnInjured = JockeyLeap_OnInjured;
+        action.OnKilled = JockeyLeap_OnKilled;
+        action.OnShoved = JockeyLeap_OnShoved;
     }
 }
 
@@ -405,7 +356,6 @@ static void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
         case ZC_HUNTER:
         {
             g_Hunter[client].ResetHunter();
-            g_Hunter[client].m_vecPounceStartPos.Set(0.0, 0.0, 0.0);
         }
 
         case ZC_CHARGER:
@@ -415,7 +365,7 @@ static void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
 
         case ZC_JOCKEY:
         {
-            g_InfectedSkillCache[client].m_vecLeapStartPos.Set(0.0, 0.0, 0.0);
+            g_Jockey[client].m_vecLeapStartPos.Set(0.0, 0.0, 0.0);
         }
     }
 }
@@ -436,6 +386,8 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
                 // check whether it was a clear
                 if (g_InfectedSkillCache[victim].m_iSpecialVictim > 0)
                     HandleClear(attacker, victim, g_InfectedSkillCache[victim].m_iSpecialVictim, ZC_HUNTER, (g_Hunter[victim].m_IncapStartTimer.GetElapsedTime()), -1.0);
+                
+                g_Hunter[victim].m_IncapStartTimer.Invalidate();
             }
 
             case ZC_SMOKER:

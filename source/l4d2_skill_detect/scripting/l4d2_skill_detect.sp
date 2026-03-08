@@ -31,6 +31,7 @@ enum strOEC
 
 GlobalForward
     g_hForwardSkeet           = null,
+    g_hForwardJockeySkeet     = null,
     g_hForwardHunterDeadstop  = null,
     g_hForwardSIShove         = null,
     g_hForwardBoomerPop       = null,
@@ -61,6 +62,7 @@ ConVar
 
     g_hCvar_Report,
     g_hCvar_RepSkeet,
+    g_hCvar_RepJockeySkeet,
     g_hCvar_RepLevel,
     g_hCvar_RepHurtLevel,
     g_hCvar_RepCrow,
@@ -145,7 +147,7 @@ int g_iPounceInterrupt = 150;             // default 150, damage that is greater
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.5.2"
+#define PLUGIN_VERSION "r2.6.0"
 
 public Plugin myinfo =
 {
@@ -159,6 +161,7 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
 {
     g_hForwardSkeet            = new GlobalForward("SkillDetect_OnSkeet", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
+    g_hForwardJockeySkeet      = new GlobalForward("SkillDetect_OnJockeySkeet", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
     g_hForwardSIShove          = new GlobalForward("SkillDetect_OnSpecialShoved", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
     g_hForwardHunterDeadstop   = new GlobalForward("SkillDetect_OnHunterDeadstop", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardBoomerPop        = new GlobalForward("SkillDetect_OnBoomerPop", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Float);
@@ -192,6 +195,7 @@ public void OnPluginStart()
     // cvars: config
     g_hCvar_Report            = CreateConVar("l4d2_skill_detect_report_enable", "1", "Whether to report in chat.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepSkeet          = CreateConVar("l4d2_skill_detect_report_skeet", "1", "Enable skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepJockeySkeet    = CreateConVar("l4d2_skill_detect_report_jockey_skeet", "1", "Enable jockey skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepLevel          = CreateConVar("l4d2_skill_detect_report_level", "1", "Enable level reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepHurtLevel      = CreateConVar("l4d2_skill_detect_report_hurtlevel", "1", "Enable hurt-level reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepCrow           = CreateConVar("l4d2_skill_detect_report_crow", "1", "Enable crow reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
@@ -216,7 +220,7 @@ public void OnPluginStart()
     g_hCvar_AllowGLSkeet      = CreateConVar("l4d2_skill_detect_skeet_allowgl", "1", "Whether to count/forward direct GL hits as skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_SelfClearThresh   = CreateConVar("l4d2_skill_detect_selfclear_damage", "200", "How much damage a survivor must at least do to a smoker for him to count as self-clearing.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_HunterDPThresh    = CreateConVar("l4d2_skill_detect_hunterdp_height", "400", "Minimum height of hunter pounce for it to count as a DP.", FCVAR_NONE, true, 0.0, false);
-    g_hCvar_JockeyDPThresh    = CreateConVar("l4d2_skill_detect_jockeydp_height", "300", "How much height distance a jockey must make for his 'DP' to count as a reportable highpounce.", FCVAR_NONE, true, 0.0, false);
+    g_hCvar_JockeyDPThresh    = CreateConVar("l4d2_skill_detect_jockeydp_height", "400", "How much height distance a jockey must make for his 'DP' to count as a reportable highpounce.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_ClearThreh        = CreateConVar("l4d2_skill_detect_clear_max_time", "1.0", "How much time a clear must last for it to count.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_DeathChargeHeight = CreateConVar("l4d2_skill_detect_deathcharge_height", "375.0", "How much height distance a charger must take its victim for a deathcharge to be reported.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_DeathChargeHeightBlow = CreateConVar("l4d2_skill_detect_deathcharge_height_blow", "200.0", "How much height distance a charger must take its victim for a deathcharge to be reported when blown up.", FCVAR_NONE, true, 0.0, false);

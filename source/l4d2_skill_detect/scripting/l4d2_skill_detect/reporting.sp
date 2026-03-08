@@ -202,6 +202,98 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
     Call_Finish();
 }
 
+void HandleJockeySkeet(int attacker, int victim, bool bMelee = false, bool bSniper = false, bool bGL = false, bool bTeamSkeeted = false)
+{
+    // report?
+    if (g_hCvar_Report.BoolValue && g_hCvar_RepJockeySkeet.BoolValue)
+    {
+        if (bTeamSkeeted)
+        {
+            for (int i = 1; i < MaxClients; i++)
+            {
+                if (!IsClientInGame(i) || IsFakeClient(i))
+                    continue;
+
+                int iArr[L4D2_MAXPLAYERS + 1][3];
+                g_Jockey[victim].SortSkeetDmg(iArr);
+
+                int count = 0;
+                char szBuffer[256];
+                for (int j = 1; j < L4D2_MAXPLAYERS; j++)
+                {
+                    int index = iArr[j][0];
+                    int damage = iArr[j][1];
+                    int shotsFired = iArr[j][2];
+
+                    //PrintToServer("index: %d, damage: %d, shotsFired: %d", index, damage, shotsFired);
+                    if (!IsValidEdict(index) || damage <= 0 || index == attacker)
+                        continue;
+
+                    count++;
+                    if (count > 2)
+                        break;
+
+                    char szTemp[128];
+                    count == 1 ?
+                    Format(szTemp, sizeof(szTemp), "%T", "AssisterString", j, index, shotsFired, damage) :
+                    Format(szTemp, sizeof(szTemp), ", %T", "AssisterString", j, index, shotsFired, damage);
+                    StrCat(szBuffer, sizeof(szBuffer), szTemp);
+                }
+
+                char sBuffer[8];
+                Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
+                CPrintToChat(i, "%t %t", "Tag+", "TeamSkeeted", 
+                            victim, attacker, 
+                            g_Jockey[victim].m_iShotsFired[attacker],
+                            g_Jockey[victim].m_iDamage[attacker], 
+                            g_Jockey[victim].m_iShotsFired[attacker] > 1 ? sBuffer : ""
+                        );
+
+                CPrintToChat(i, "%t %t", "Tag+", "Assisters", szBuffer);
+            }
+        }
+        else if (bMelee)
+        {
+			CPrintToChatAll("%t %t", "Tag+++", "SkeetedMelee", attacker, victim);
+        }
+        else if (bSniper)
+        {
+            for (int i = 1; i < MaxClients; i++)
+            {
+                if (!IsClientInGame(i) || IsFakeClient(i))
+                    continue;
+                char sBuffer[8];
+                Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
+                CPrintToChat(i, "%t %t", "Tag++", "SkeetedSniper", attacker, victim, g_Jockey[victim].m_iShotsFired[attacker], g_Jockey[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "");
+            }
+        }
+		else if (bGL)
+		{
+			CPrintToChatAll("%t %t", "Tag++++", "SkeetedGL", attacker, victim);
+		}
+		else
+		{
+            for (int i = 1; i < MaxClients; i++)
+            {
+                if (!IsClientInGame(i) || IsFakeClient(i))
+                    continue;
+                char sBuffer[8];
+                Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
+                CPrintToChat(i, "%t %t", "Tag+", "Skeeted", attacker, victim, g_Jockey[victim].m_iShotsFired[attacker], g_Jockey[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "");
+            }
+		}
+    }
+
+    // call forward
+    Call_StartForward(g_hForwardJockeySkeet);
+    Call_PushCell(attacker);
+    Call_PushCell(victim);
+    Call_PushCell(bMelee);
+    Call_PushCell(bSniper);
+    Call_PushCell(bGL);
+    Call_Finish();
+}
+
 // crown
 void HandleCrown(int attacker)
 {

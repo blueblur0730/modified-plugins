@@ -59,8 +59,8 @@
 	"ChargingSkeeted"
 	{
 		"#format"   "{1:N},{2:N},{3:.02f}" // 1: attacker, 2: victim, 3: time
-		"en"		"{olive}{1}{default} {blue}skeeted the charging{default} {olive}{2}{default} for {blue}{3} seconds{default}."
-        "chi"		"{olive}{1}{default} {blue}杀死了冲锋中的{default} {olive}{2}{default} ({blue}{3} 秒{default})."
+		"en"		"{olive}{1}{default} skeeted the charging {olive}{2}{default} {blue}({3} {green}seconds{blue}){default}."
+        "chi"		"{olive}{1}{default} 杀死了冲锋中的 {olive}{2}{default} {blue}({default}{3} {green}秒{blue}){default}."
 	}
 	
 	"TeamChargingSkeeted"

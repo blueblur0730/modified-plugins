@@ -7,16 +7,7 @@ void Event_PlayerJumped(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(event.GetInt("userid"));
 
-    if (IsValidInfected(client))
-    {
-        int zClass = GetEntProp(client, Prop_Send, "m_zombieClass");
-        if (zClass != ZC_JOCKEY)
-            return;
-
-        // where did jockey jump from?
-        g_InfectedSkillCache[client].m_vecLeapStartPos.GetClientAbsOrigin(client);
-    }
-    else if (IsValidSurvivor(client))
+    if (IsValidSurvivor(client))
     {
         // could be the start or part of a hopping streak
 
