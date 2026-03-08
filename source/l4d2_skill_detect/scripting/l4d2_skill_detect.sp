@@ -147,7 +147,7 @@ int g_iPounceInterrupt = 150;             // default 150, damage that is greater
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.6.0"
+#define PLUGIN_VERSION "r2.6.1"
 
 public Plugin myinfo =
 {
@@ -171,7 +171,7 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
     g_hForwardDrawCrown        = new GlobalForward("SkillDetect_OnWitchDrawCrown", ET_Ignore, Param_Cell);
     g_hForwardTongueCut        = new GlobalForward("SkillDetect_OnTongueCut", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardSmokerSelfClear  = new GlobalForward("SkillDetect_OnSmokerSelfClear", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
-    g_hForwardRockSkeeted      = new GlobalForward("SkillDetect_OnTankRockSkeeted", ET_Ignore, Param_Cell, Param_Cell);
+    g_hForwardRockSkeeted      = new GlobalForward("SkillDetect_OnTankRockSkeeted", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
     g_hForwardRockEaten        = new GlobalForward("SkillDetect_OnTankRockEaten", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardHunterDP         = new GlobalForward("SkillDetect_OnHunterHighPounce", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Float, Param_Float, Param_Cell);
     g_hForwardJockeyDP         = new GlobalForward("SkillDetect_OnJockeyHighPounce", ET_Ignore, Param_Cell, Param_Cell, Param_Float, Param_Cell);

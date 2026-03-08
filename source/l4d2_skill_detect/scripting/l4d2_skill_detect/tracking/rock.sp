@@ -9,6 +9,7 @@ enum struct TankRockTrace_t
     int m_iRock;           // rock entity index
     int m_iDamageTaken;    // how much damage was taken by the player
     int m_iSkeeter;        // who skeeted the rock
+    bool m_bEaten;         // the rock has been eaten
 }
 ArrayList g_hArray_TankRockTrace;
 
@@ -34,10 +35,14 @@ void OnTouchPost_Rock(int entity, int other)
     int index = g_hArray_TankRockTrace.FindValue(entity, TankRockTrace_t::m_iRock);
     if (index != -1)
     {
-        TankRockTrace_t rockTrace;
-        g_hArray_TankRockTrace.GetArray(index, rockTrace, sizeof(rockTrace));
-        rockTrace.m_iDamageTaken = -1;
-        g_hArray_TankRockTrace.SetArray(index, rockTrace, sizeof(rockTrace));
+        if (IsValidSurvivor(other))
+        {
+            TankRockTrace_t rockTrace;
+            g_hArray_TankRockTrace.GetArray(index, rockTrace, sizeof(rockTrace));
+            rockTrace.m_bEaten = true;
+            g_hArray_TankRockTrace.SetArray(index, rockTrace, sizeof(rockTrace));
+            HandleRockEaten(attacker, victim);
+        }
 
         SDKUnhook(entity, SDKHook_TouchPost, OnTouchPost_Rock);
     }
@@ -54,6 +59,6 @@ void Timer_CheckRockSkeet(Handle timer, int index)
     g_hArray_TankRockTrace.GetArray(index, rockTrace, sizeof(rockTrace))
     g_hArray_TankRockTrace.Erase(index);
 
-    if (rockTrace.m_iDamageTaken > 0)
-        HandleRockSkeeted(rockTrace.m_iSkeeter, rockTrace.m_iThrower);
+    if (!rockTrace.m_bEaten)
+        HandleRockSkeeted(rockTrace.m_iSkeeter, rockTrace.m_iThrower, rockTrace.m_iDamageTaken);
 }

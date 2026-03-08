@@ -309,20 +309,6 @@ static void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
                 if (damagetype & DMG_CRUSH)
                     g_Hunter[attacker].m_iPounceDamage = damage;
             }
-
-            case ZC_TANK:
-            {
-                char weapon[10];
-                event.GetString("weapon", weapon, sizeof(weapon));
-
-                if (StrEqual(weapon, "tank_rock"))
-                {
-                    if (IsValidSurvivor(victim))
-                        HandleRockEaten(attacker, victim);
-                }
-
-                return;
-            }
         }
     }
 }

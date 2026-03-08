@@ -373,7 +373,7 @@ void HandleRockEaten(int attacker, int victim)
     Call_Finish();
 }
 
-void HandleRockSkeeted(int attacker, int victim)
+void HandleRockSkeeted(int attacker, int victim, int damage)
 {
     if (g_hCvar_Report.BoolValue && g_hCvar_RepRockSkeet.BoolValue)
     {
@@ -387,6 +387,7 @@ void HandleRockSkeeted(int attacker, int victim)
     Call_StartForward(g_hForwardRockSkeeted);
     Call_PushCell(attacker);
     Call_PushCell(victim);
+    Call_PushCell(damage);
     Call_Finish();
 }
 
