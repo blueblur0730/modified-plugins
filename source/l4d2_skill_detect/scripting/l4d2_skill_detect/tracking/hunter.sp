@@ -98,6 +98,12 @@ Action HunterLungeAtVictim_OnInjured(any action, int actor, CTakeDamageInfo info
 
     //PrintToServer("[Skill Detect] HunterLungeAtVictim_OnInjured called: attacker: %d, actor: %d, weapon: %d, damage: %.02f, damage type: %d, damage custom: %d, health: %d", attacker, actor, weapon, damage, damagetype, damagecustom, health);
 
+    if (attacker <= 0 || attacker > MaxClients)
+        return Plugin_Continue;
+
+    if (!IsClientInGame(attacker))
+        return Plugin_Continue;
+
     if (damagetype & DMG_BUCKSHOT)
     {
         if (!g_Survivor[attacker].m_bShotCounted)
@@ -142,7 +148,10 @@ Action HunterLungeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo info,
 
     //PrintToServer("[Skill Detect] HunterLungeAtVictim_OnKilled called: attacker: %d, actor: %d, weapon: %d, damage: %.02f, damage type: %d", attacker, actor, weapon, damage, damagetype);
 
-    if (!IsValidSurvivor(attacker))
+    if (attacker <= 0 || attacker > MaxClients)
+        return Plugin_Continue;
+
+    if (!IsClientInGame(attacker) || GetClientTeam(attacker) != 2)
         return Plugin_Continue;
     
     // skeet?

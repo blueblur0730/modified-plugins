@@ -166,7 +166,14 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
         }
         else if (bSniper)
         {
-			CPrintToChatAll("%t %t", "Tag++", "SkeetedSniper", attacker, victim, g_Hunter[victim].m_iShotsFired[attacker]);
+            for (int i = 1; i < MaxClients; i++)
+            {
+                if (!IsClientInGame(i) || IsFakeClient(i))
+                    continue;
+                char sBuffer[8];
+                Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
+                CPrintToChat(i, "%t %t", "Tag++", "SkeetedSniper", attacker, victim, g_Hunter[victim].m_iShotsFired[attacker], g_Hunter[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "");
+            }
         }
 		else if (bGL)
 		{
@@ -174,7 +181,14 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
 		}
 		else
 		{
-			CPrintToChatAll("%t %t", "Tag+", "Skeeted", attacker, victim, g_Hunter[victim].m_iShotsFired[attacker]);
+            for (int i = 1; i < MaxClients; i++)
+            {
+                if (!IsClientInGame(i) || IsFakeClient(i))
+                    continue;
+                char sBuffer[8];
+                Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
+                CPrintToChat(i, "%t %t", "Tag+", "Skeeted", attacker, victim, g_Hunter[victim].m_iShotsFired[attacker], g_Hunter[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "");
+            }
 		}
     }
 

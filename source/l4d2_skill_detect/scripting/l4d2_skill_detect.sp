@@ -145,7 +145,7 @@ int g_iPounceInterrupt = 150;             // default 150, damage that is greater
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.5.0"
+#define PLUGIN_VERSION "r2.5.1"
 
 public Plugin myinfo =
 {

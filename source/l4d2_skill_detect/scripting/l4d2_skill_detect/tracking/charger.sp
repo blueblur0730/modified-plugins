@@ -220,10 +220,10 @@ Action ChargerChargeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo inf
                 return Plugin_Continue;
         }
 
-        HandleChargingSkeet(attacker, actor, g_Charger[actor].m_ChargeTimer.GetElapsedTime(), (g_Charger[actor].m_iTeamDamage > 0 && g_Charger[actor].m_iTeamDamage >= g_Charger[actor].m_iDamage[attacker]));
+        HandleChargingSkeet(attacker, actor, g_Charger[actor].m_ChargeTimer.GetElapsedTime(), (g_Charger[actor].m_iTeamDamage > 0 && g_Charger[actor].m_iTeamDamage > g_Charger[actor].m_iDamage[attacker]));
+        g_Charger[actor].ResetCharger();
     }
 
-    g_Charger[actor].ResetCharger();
     return Plugin_Continue;
 }
 

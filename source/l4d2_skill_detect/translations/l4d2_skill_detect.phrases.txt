@@ -109,9 +109,9 @@
 
 	"SkeetedSniper"
 	{
-        "#format"   "{1:N},{2:N},{3:d}" // 1:attacker 2:victim, 3:shots fired
-		"en"		"{blue}{1}{default} {blue}sniper-skeeted{default} {olive}{2}{default} ({blue}{3} shot{default})."
-        "chi"		"{blue}{1}{default} {blue}狙击空爆了{default} {olive}{2}{default} ({blue}{3} 枪{default})."
+        "#format"   "{1:N},{2:N},{3:d},{4:s}" // 1:attacker 2:victim, 3:shots fired, 4:plural
+		"en"		"{blue}{1}{default} {blue}sniper-skeeted{default} {olive}{2}{default} in {blue}{3}{default} shot{4}."
+        "chi"		"{blue}{1}{default} {blue}狙击空爆了{default} {olive}{2}{default} ({blue}{3}{default} 枪{4})."
 	}
 
 	"SkeetedGL"
