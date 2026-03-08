@@ -41,7 +41,7 @@ void OnTouchPost_Rock(int entity, int other)
             g_hArray_TankRockTrace.GetArray(index, rockTrace, sizeof(rockTrace));
             rockTrace.m_bEaten = true;
             g_hArray_TankRockTrace.SetArray(index, rockTrace, sizeof(rockTrace));
-            HandleRockEaten(attacker, victim);
+            HandleRockEaten(rockTrace.m_iThrower, other);
         }
 
         SDKUnhook(entity, SDKHook_TouchPost, OnTouchPost_Rock);
