@@ -240,6 +240,13 @@
         "chi"		"{olive}{1}{default} 触发了警报车."
 	}
 
+	"MultipleImpacts"
+	{
+        "#format"   "{1:d},{2:d}" // 1:survivor 2:infected
+		"en"		"{olive}{1}{default} multiple-impacted {olive}{2}{default} survivors."
+        "chi"		"{olive}{1}{default} 冲锋多重撞击了 {olive}{2}{default} 名生还者."
+	}
+
 	"AssisterString"
 	{
 		"#format"	"{1:N},{2:d},{3:d}"

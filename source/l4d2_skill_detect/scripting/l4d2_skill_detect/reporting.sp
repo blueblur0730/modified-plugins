@@ -19,7 +19,7 @@ static const char g_csSIClassName[][] = {
 void HandlePop(int attacker, int victim, int shoveCount, float timeAlive)
 {
     // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepPop.BoolValue)
+    if (g_hCvar_RepPop.BoolValue)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -39,7 +39,7 @@ void HandlePop(int attacker, int victim, int shoveCount, float timeAlive)
 void HandleLevel(int attacker, int victim)
 {
     // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepLevel.BoolValue)
+    if (g_hCvar_RepLevel.BoolValue)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -57,7 +57,7 @@ void HandleLevel(int attacker, int victim)
 void HandleLevelHurt(int attacker, int victim, int damage)
 {
     // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepHurtLevel.BoolValue)
+    if (g_hCvar_RepHurtLevel.BoolValue)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -77,7 +77,7 @@ void HandleLevelHurt(int attacker, int victim, int damage)
 void HandleDeadstop(int attacker, int victim)
 {
     // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepDeadStop.BoolValue)
+    if (g_hCvar_RepDeadStop.BoolValue)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -94,7 +94,7 @@ void HandleDeadstop(int attacker, int victim)
 void HandleShove(int attacker, int victim, int zombieClass)
 {
     // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepShove.BoolValue)
+    if ( g_hCvar_RepShove.BoolValue)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -113,7 +113,7 @@ void HandleShove(int attacker, int victim, int zombieClass)
 void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = false, bool bGL = false, bool bTeamSkeeted = false)
 {
     // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepSkeet.BoolValue)
+    if ( g_hCvar_RepSkeet.BoolValue)
     {
         if (bTeamSkeeted)
         {
@@ -205,7 +205,7 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
 void HandleJockeySkeet(int attacker, int victim, bool bMelee = false, bool bSniper = false, bool bGL = false, bool bTeamSkeeted = false)
 {
     // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepJockeySkeet.BoolValue)
+    if ( g_hCvar_RepJockeySkeet.BoolValue)
     {
         if (bTeamSkeeted)
         {
@@ -298,7 +298,7 @@ void HandleJockeySkeet(int attacker, int victim, bool bMelee = false, bool bSnip
 void HandleCrown(int attacker)
 {
     // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepCrow.BoolValue)
+    if ( g_hCvar_RepCrow.BoolValue)
     {
         if (!IsValidClientInGame(attacker))
             return;
@@ -314,7 +314,7 @@ void HandleCrown(int attacker)
 // drawcrown
 void HandleDrawCrown(int attacker)
 {
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepDrawCrow.BoolValue)
+    if ( g_hCvar_RepDrawCrow.BoolValue)
     {
         if (!IsValidClientInGame(attacker)) 
             return;
@@ -331,7 +331,7 @@ void HandleDrawCrown(int attacker)
 // smoker clears
 void HandleTongueCut(int attacker, int victim)
 {
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepTongueCut.BoolValue)
+    if ( g_hCvar_RepTongueCut.BoolValue)
     {
         if (!IsValidClientInGame(victim) || !IsValidClientInGame(attacker))
             return;
@@ -348,7 +348,7 @@ void HandleTongueCut(int attacker, int victim)
 
 void HandleSmokerSelfClear(int attacker, int victim, bool withShove = false)
 {
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepSelfClear.BoolValue && (!withShove || g_hCvar_RepSelfClearShove.BoolValue))
+    if ( g_hCvar_RepSelfClear.BoolValue && (!withShove || g_hCvar_RepSelfClearShove.BoolValue))
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -385,7 +385,7 @@ void HandleRockEaten(int attacker, int victim)
 
 void HandleRockSkeeted(int attacker, int victim, int damage)
 {
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepRockSkeet.BoolValue)
+    if ( g_hCvar_RepRockSkeet.BoolValue)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -405,7 +405,7 @@ void HandleRockSkeeted(int attacker, int victim, int damage)
 void HandleHunterDP(int attacker, int victim, int actualDamage, float calculatedDamage, float height, bool playerIncapped = false)
 {
     // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepHunterDP.BoolValue && !playerIncapped)
+    if ( g_hCvar_RepHunterDP.BoolValue && !playerIncapped)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -425,7 +425,7 @@ void HandleHunterDP(int attacker, int victim, int actualDamage, float calculated
 void HandleJockeyDP(int attacker, int victim, float height)
 {
     // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepJockeyDP.BoolValue && height >= g_hCvar_JockeyDPThresh.FloatValue)
+    if ( g_hCvar_RepJockeyDP.BoolValue && height >= g_hCvar_JockeyDPThresh.FloatValue)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -445,7 +445,7 @@ void HandleJockeyDP(int attacker, int victim, float height)
 void HandleDeathCharge(int attacker, int victim, float height, float distance, bool bCarried = true)
 {
     // report?
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepDeathCharge.BoolValue && height >= g_hCvar_DeathChargeHeight.FloatValue)
+    if ( g_hCvar_RepDeathCharge.BoolValue && height >= g_hCvar_DeathChargeHeight.FloatValue)
     {
         if (bCarried)
         {
@@ -484,7 +484,7 @@ void HandleDeathCharge(int attacker, int victim, float height, float distance, b
 
 void HandleChargingSkeet(int attacker, int victim, float flTime, bool bTeamSkeeted = false)
 {
-    if (g_hCvar_Report.BoolValue && g_hCvar_RepChargingSkeet.BoolValue)
+    if ( g_hCvar_RepChargingSkeet.BoolValue)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -663,5 +663,18 @@ void HandleCarAlarmTriggered(int survivor, int infected, CarAlarmReason_t reason
     Call_PushCell(survivor);
     Call_PushCell(infected);
     Call_PushCell(reason);
+    Call_Finish();
+}
+
+void HandleMultiImpact(int attacker, int numImpacts)
+{
+    if (g_hCvar_RepNumImpacts.BoolValue)
+    {
+        CPrintToChatAll("%t %t", "Tag+", "MultipleImpacts", attacker, numImpacts);
+    }
+
+    Call_StartForward(g_hForwardNumImpacts);
+    Call_PushCell(attacker);
+    Call_PushCell(numImpacts);
     Call_Finish();
 }

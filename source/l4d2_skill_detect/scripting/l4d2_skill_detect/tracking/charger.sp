@@ -165,6 +165,12 @@ void Event_ChargerChargeEnd(Event event, const char[] name, bool dontBroadcast)
 
     if (!IsFakeClient(charger))
         SDKUnhook(charger, SDKHook_OnTakeDamageAlivePost, OnChargerTakeDamageAlivePost);
+
+    if (g_Charger[charger].m_iNumImpacts > 1)
+    {
+        HandleMultiImpact(charger, g_Charger[charger].m_iNumImpacts);
+        g_Charger[charger].m_iNumImpacts = 0;
+    }
 }
 
 void Event_ChargerPummelStart(Event event, const char[] name, bool dontBroadcast)
@@ -193,6 +199,7 @@ void Event_ChargeImpact(Event event, const char[] name, bool dontBroadcast)
 
     //PrintToServer("[Skill Detect] Event_ChargeImpact called, victim: %N, client: %N", victim, client);
     SDKHook(victim, SDKHook_PostThinkPost, OnFlingPostThinkPost);
+    g_Charger[victim].m_iNumImpacts++;
 }
 
 // an attempt to rebuild CTerrorPlayer::EstimateFallingDamage. but without loop.

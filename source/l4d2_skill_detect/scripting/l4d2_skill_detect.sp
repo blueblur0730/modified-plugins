@@ -50,7 +50,8 @@ GlobalForward
     g_hForwardClear           = null,
     g_hForwardVomitLanded     = null,
     g_hForwardBHopStreak      = null,
-    g_hForwardAlarmTriggered  = null;
+    g_hForwardAlarmTriggered  = null,
+    g_hForwardNumImpacts      = null;
 
 StringMap
     g_hMapWeapons       = null,       // weapon check
@@ -58,7 +59,6 @@ StringMap
 
 // cvars
 ConVar
-    g_hCvar_Report,
     g_hCvar_RepSkeet,
     g_hCvar_RepJockeySkeet,
     g_hCvar_RepLevel,
@@ -79,6 +79,7 @@ ConVar
     g_hCvar_RepInstanClear,
     g_hCvar_RepBhopStreak,
     g_hCvar_RepCarAlarm,
+    g_hCvar_RepNumImpacts,
 
     g_hCvar_AllowMelee,              // cvar whether to count melee skeets
     g_hCvar_AllowSniper,             // cvar whether to count sniper headshot skeets
@@ -120,7 +121,7 @@ int g_iPounceInterrupt = 150;             // default 150, damage that is greater
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.8.0"
+#define PLUGIN_VERSION "r3.0.0"
 
 public Plugin myinfo =
 {
@@ -154,6 +155,7 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
     g_hForwardVomitLanded      = new GlobalForward("SkillDetect_OnBoomerVomitLanded", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardBHopStreak       = new GlobalForward("SkillDetect_OnBunnyHopStreak", ET_Ignore, Param_Cell, Param_Cell, Param_Float);
     g_hForwardAlarmTriggered   = new GlobalForward("SkillDetect_OnCarAlarmTriggered", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+    g_hForwardNumImpacts       = new GlobalForward("SkillDetect_OnMultipleImpacts", ET_Ignore, Param_Cell, Param_Cell);
 
     RegPluginLibrary("l4d2_skill_detect");
     return APLRes_Success;
@@ -164,41 +166,41 @@ public void OnPluginStart()
     LoadTranslation("l4d2_skill_detect.phrases");
 
     // cvars: config
-    g_hCvar_Report            = CreateConVar("l4d2_skill_detect_report_enable", "1", "Whether to report in chat.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepSkeet          = CreateConVar("l4d2_skill_detect_report_skeet", "1", "Enable skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepJockeySkeet    = CreateConVar("l4d2_skill_detect_report_jockey_skeet", "1", "Enable jockey skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepLevel          = CreateConVar("l4d2_skill_detect_report_level", "1", "Enable level reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepHurtLevel      = CreateConVar("l4d2_skill_detect_report_hurtlevel", "1", "Enable hurt-level reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepCrow           = CreateConVar("l4d2_skill_detect_report_crow", "1", "Enable crow reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepDrawCrow       = CreateConVar("l4d2_skill_detect_report_drawcrow", "1", "Enable draw-crow reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepTongueCut      = CreateConVar("l4d2_skill_detect_report_tonguecut", "1", "Enable tongue-cut reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepSelfClear      = CreateConVar("l4d2_skill_detect_report_sc", "1", "Enable self clear reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepSelfClearShove = CreateConVar("l4d2_skill_detect_report_scs", "1", "Enable self clear Shove reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepRockSkeet      = CreateConVar("l4d2_skill_detect_report_rockskeet", "1", "Enable rock-skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepDeadStop       = CreateConVar("l4d2_skill_detect_report_deadstop", "1", "Enable deadstop reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepPop            = CreateConVar("l4d2_skill_detect_report_pop", "1", "Enable pop reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepShove          = CreateConVar("l4d2_skill_detect_report_shove", "1", "Enable shove reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepHunterDP       = CreateConVar("l4d2_skill_detect_report_hunterdp", "1", "Enable hunter DP reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepJockeyDP       = CreateConVar("l4d2_skill_detect_report_jockeydp", "1", "Enable jockey DP reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepDeathCharge    = CreateConVar("l4d2_skill_detect_report_deadcharger", "1", "Enable deadcharger reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepChargingSkeet  = CreateConVar("l4d2_skill_detect_report_chargerskeet", "1", "Enable charger-skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepInstanClear    = CreateConVar("l4d2_skill_detect_report_instanclear", "1", "Enable instan-clear reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepBhopStreak     = CreateConVar("l4d2_skill_detect_report_bhop", "1", "Enable bhop streak reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_RepCarAlarm       = CreateConVar("l4d2_skill_detect_report_caralarm", "1", "Enable car alarm reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepSkeet                    = CreateConVar("l4d2_skill_detect_report_skeet", "1", "Enable skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepJockeySkeet              = CreateConVar("l4d2_skill_detect_report_jockey_skeet", "1", "Enable jockey skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepLevel                    = CreateConVar("l4d2_skill_detect_report_level", "1", "Enable level reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepHurtLevel                = CreateConVar("l4d2_skill_detect_report_hurtlevel", "1", "Enable hurt-level reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepCrow                     = CreateConVar("l4d2_skill_detect_report_crow", "1", "Enable crow reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepDrawCrow                 = CreateConVar("l4d2_skill_detect_report_drawcrow", "1", "Enable draw-crow reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepTongueCut                = CreateConVar("l4d2_skill_detect_report_tonguecut", "1", "Enable tongue-cut reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepSelfClear                = CreateConVar("l4d2_skill_detect_report_sc", "1", "Enable self clear reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepSelfClearShove           = CreateConVar("l4d2_skill_detect_report_scs", "1", "Enable self clear Shove reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepRockSkeet                = CreateConVar("l4d2_skill_detect_report_rockskeet", "1", "Enable rock-skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepDeadStop                 = CreateConVar("l4d2_skill_detect_report_deadstop", "1", "Enable deadstop reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepPop                      = CreateConVar("l4d2_skill_detect_report_pop", "1", "Enable pop reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepShove                    = CreateConVar("l4d2_skill_detect_report_shove", "1", "Enable shove reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepHunterDP                 = CreateConVar("l4d2_skill_detect_report_hunterdp", "1", "Enable hunter DP reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepJockeyDP                 = CreateConVar("l4d2_skill_detect_report_jockeydp", "1", "Enable jockey DP reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepDeathCharge              = CreateConVar("l4d2_skill_detect_report_deadcharger", "1", "Enable deadcharger reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepChargingSkeet            = CreateConVar("l4d2_skill_detect_report_chargerskeet", "1", "Enable charger-skeet reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepInstanClear              = CreateConVar("l4d2_skill_detect_report_instanclear", "1", "Enable instan-clear reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepBhopStreak               = CreateConVar("l4d2_skill_detect_report_bhop", "1", "Enable bhop streak reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepCarAlarm                 = CreateConVar("l4d2_skill_detect_report_caralarm", "1", "Enable car alarm reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepNumImpacts               = CreateConVar("l4d2_skill_detect_report_multi_impacts", "1", "Enable multi impact reporting.", FCVAR_NONE, true, 0.0, true, 1.0); 
 
-    g_hCvar_AllowMelee        = CreateConVar("l4d2_skill_detect_skeet_allowmelee", "1", "Whether to count/forward melee skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_AllowSniper       = CreateConVar("l4d2_skill_detect_skeet_allowsniper", "1", "Whether to count/forward sniper/magnum headshots as skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_AllowGLSkeet      = CreateConVar("l4d2_skill_detect_skeet_allowgl", "1", "Whether to count/forward direct GL hits as skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_HunterDPThresh    = CreateConVar("l4d2_skill_detect_hunterdp_height", "400", "Minimum height of hunter pounce for it to count as a DP.", FCVAR_NONE, true, 0.0, false);
-    g_hCvar_JockeyDPThresh    = CreateConVar("l4d2_skill_detect_jockeydp_height", "400", "How much height distance a jockey must make for his 'DP' to count as a reportable highpounce.", FCVAR_NONE, true, 0.0, false);
-    g_hCvar_ClearThreh        = CreateConVar("l4d2_skill_detect_clear_max_time", "1.0", "How much time a clear must last for it to count.", FCVAR_NONE, true, 0.0, false);
-    g_hCvar_DeathChargeHeight = CreateConVar("l4d2_skill_detect_deathcharge_height", "375.0", "How much height distance a charger must take its victim for a deathcharge to be reported.", FCVAR_NONE, true, 0.0, false);
-    g_hCvar_DeathChargeHeightBlow = CreateConVar("l4d2_skill_detect_deathcharge_height_blow", "200.0", "How much height distance a charger must take its victim for a deathcharge to be reported when blown up.", FCVAR_NONE, true, 0.0, false);
-    g_hCvar_DeathChargeBlowCheckHealth = CreateConVar("l4d2_skill_detect_deathcharge_blow_check_health", "0", "Whether to check health when being blown up by a charger.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_InstaTime         = CreateConVar("l4d2_skill_detect_instaclear_time", "0.75", "A clear within this time (in seconds) counts as an insta-clear.", FCVAR_NONE, true, 0.0, false);
-    g_hCvar_BHopMinStreak     = CreateConVar("l4d2_skill_detect_bhopstreak", "3", "The lowest bunnyhop streak that will be reported.", FCVAR_NONE, true, 0.0, false);
-    g_hCvar_BHopMinInitSpeed  = CreateConVar("l4d2_skill_detect_bhopinitspeed", "150", "The minimal speed of the first jump of a bunnyhopstreak (0 to allow 'hops' from standstill).", FCVAR_NONE, true, 0.0, false);
-    g_hCvar_BHopContSpeed     = CreateConVar("l4d2_skill_detect_bhopkeepspeed", "300", "The minimal speed at which hops are considered succesful even if not speed increase is made.", FCVAR_NONE, true, 0.0, false);
+    g_hCvar_AllowMelee                  = CreateConVar("l4d2_skill_detect_skeet_allowmelee", "1", "Whether to count/forward melee skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_AllowSniper                 = CreateConVar("l4d2_skill_detect_skeet_allowsniper", "1", "Whether to count/forward sniper/magnum headshots as skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_AllowGLSkeet                = CreateConVar("l4d2_skill_detect_skeet_allowgl", "1", "Whether to count/forward direct GL hits as skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_HunterDPThresh              = CreateConVar("l4d2_skill_detect_hunterdp_height", "400", "Minimum height of hunter pounce for it to count as a DP.", FCVAR_NONE, true, 0.0, false);
+    g_hCvar_JockeyDPThresh              = CreateConVar("l4d2_skill_detect_jockeydp_height", "400", "How much height distance a jockey must make for his 'DP' to count as a reportable highpounce.", FCVAR_NONE, true, 0.0, false);
+    g_hCvar_ClearThreh                  = CreateConVar("l4d2_skill_detect_clear_max_time", "1.0", "How much time a clear must last for it to count.", FCVAR_NONE, true, 0.0, false);
+    g_hCvar_DeathChargeHeight           = CreateConVar("l4d2_skill_detect_deathcharge_height", "375.0", "How much height distance a charger must take its victim for a deathcharge to be reported.", FCVAR_NONE, true, 0.0, false);
+    g_hCvar_DeathChargeHeightBlow       = CreateConVar("l4d2_skill_detect_deathcharge_height_blow", "200.0", "How much height distance a charger must take its victim for a deathcharge to be reported when blown up.", FCVAR_NONE, true, 0.0, false);
+    g_hCvar_DeathChargeBlowCheckHealth  = CreateConVar("l4d2_skill_detect_deathcharge_blow_check_health", "0", "Whether to check health when being blown up by a charger.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_InstaTime                   = CreateConVar("l4d2_skill_detect_instaclear_time", "0.75", "A clear within this time (in seconds) counts as an insta-clear.", FCVAR_NONE, true, 0.0, false);
+    g_hCvar_BHopMinStreak               = CreateConVar("l4d2_skill_detect_bhopstreak", "3", "The lowest bunnyhop streak that will be reported.", FCVAR_NONE, true, 0.0, false);
+    g_hCvar_BHopMinInitSpeed            = CreateConVar("l4d2_skill_detect_bhopinitspeed", "150", "The minimal speed of the first jump of a bunnyhopstreak (0 to allow 'hops' from standstill).", FCVAR_NONE, true, 0.0, false);
+    g_hCvar_BHopContSpeed               = CreateConVar("l4d2_skill_detect_bhopkeepspeed", "300", "The minimal speed at which hops are considered succesful even if not speed increase is made.", FCVAR_NONE, true, 0.0, false);
 
     // Maps
     g_hMapWeapons = new StringMap();

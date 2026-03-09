@@ -79,6 +79,64 @@ enum struct IntervalTimer_t
     float m_timestamp;
 }
 
+enum struct CountdownTimer_t
+{
+	void Init()
+	{
+		this.m_timestamp = -1.0;
+		this.m_duration = 0.0;
+	}
+
+	float Now()
+	{
+		return GetGameTime(); // gpGlobals->curtime
+	}
+
+	void Reset()
+	{
+		this.m_timestamp = this.Now() + this.m_duration;
+	}		
+
+	void Start( float duration )
+	{
+		this.m_timestamp = this.Now() + duration;
+		this.m_duration = duration;
+	}
+
+	void Invalidate()
+	{
+		this.m_timestamp = -1.0;
+	}		
+
+	bool HasStarted()
+	{
+		return (this.m_timestamp > 0.0);
+	}
+
+	bool IsElapsed()
+	{
+		return (this.Now() > this.m_timestamp);
+	}
+
+	float GetElapsedTime()
+	{
+		return this.Now() - this.m_timestamp + this.m_duration;
+	}
+
+	float GetRemainingTime()
+	{
+		return (this.m_timestamp - this.Now());
+	}
+
+	/// return original countdown time
+	float GetCountdownDuration()
+	{
+		return (this.m_timestamp > 0.0) ? this.m_duration : 0.0;
+	}
+
+	float m_duration;
+	float m_timestamp;
+}
 
 /*
 // size 92
