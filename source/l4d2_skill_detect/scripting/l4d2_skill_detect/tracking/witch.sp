@@ -16,7 +16,7 @@ ArrayList g_hArray_WitchTrace;
 void Event_WitchSpawned(Event event, const char[] name, bool dontBroadcast)
 {
     int witch = event.GetInt("witchid");
-    if (!IsValidEdict(witch))
+    if (!IsValidEdict(witch) || !IsWitch(witch))
         return;
     
     int index = g_hArray_WitchTrace.FindValue(witch, WitchTrace_t::m_iWitch);
@@ -25,12 +25,6 @@ void Event_WitchSpawned(Event event, const char[] name, bool dontBroadcast)
         WitchTrace_t witchTrace;
         witchTrace.m_iWitch = witch;
         g_hArray_WitchTrace.PushArray(witchTrace, sizeof(witchTrace));
-    }
-    else
-    {
-        WitchTrace_t witchTrace;
-        witchTrace.m_iWitch = witch;
-        g_hArray_WitchTrace.SetArray(index, witchTrace, sizeof(witchTrace));
     }
 }
 

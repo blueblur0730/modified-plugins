@@ -117,29 +117,7 @@ Action HunterLungeAtVictim_OnInjured(any action, int actor, CTakeDamageInfo info
     int damageType = info.m_bitsDamageType;
     float damage = info.m_flDamage;
 
-    if (attacker <= 0 || attacker > MaxClients)
-        return Plugin_Continue;
-
-    if (!IsClientInGame(attacker))
-        return Plugin_Continue;
-
-    if (damageType & DMG_BUCKSHOT)
-    {
-        if (!g_Survivor[attacker].m_bShotCounted)
-        {
-            // count this shotgun pellet as once.
-            g_Hunter[actor].m_iShotsFired[attacker]++;
-            g_Survivor[attacker].m_bShotCounted = true;
-        }
-    }
-    else if (damageType & DMG_BULLET)
-    {
-        // just count this into.
-        g_Hunter[actor].m_iShotsFired[attacker]++;
-    }
-
-    g_Hunter[actor].m_iDamage[attacker] += RoundToNearest(damage);
-    g_Hunter[actor].m_iTeamDamage += RoundToNearest(damage);
+    ProcessHunterTakeDamage(actor, attacker, damage, damageType);
     return Plugin_Continue;
 }
 
@@ -168,55 +146,7 @@ Action HunterLungeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo info,
     if (!IsClientInGame(attacker) || GetClientTeam(attacker) != 2)
         return Plugin_Continue;
     
-    // skeet?
-    if (g_Hunter[actor].m_iTeamDamage > 0 &&
-        g_Hunter[actor].m_iTeamDamage > g_Hunter[actor].m_iDamage[attacker] && 
-        g_Hunter[actor].m_iTeamDamage >= (L4D_HasPlayerControlledZombies() ? g_iPounceInterruptDefault : g_iPounceInterrupt))
-    {
-        // team skeet
-        HandleSkeet(attacker, actor, _, _, _, true);
-    }
-    else if ((damageType & DMG_BULLET) || (damageType & DMG_BUCKSHOT))
-    {
-        char weaponA[32];
-        strWeaponType weaponTypeA;
-        GetEdictClassname(weapon, weaponA, sizeof(weaponA));
-
-        if (g_hMapWeapons.GetValue(weaponA, weaponTypeA) && (weaponTypeA == WPTYPE_SNIPER || weaponTypeA == WPTYPE_MAGNUM))
-        {
-            if (g_hCvar_AllowSniper.BoolValue)
-                HandleSkeet(attacker, actor, false, true);
-        }
-
-        // single player skeet
-        HandleSkeet(attacker, actor);
-    }
-    else if (damageType & (DMG_BLAST | DMG_PLASMA))
-    {
-        // direct GL hit?
-        /*
-            direct hit is DMG_BLAST | DMG_PLASMA
-            indirect hit is DMG_AIRBOAT
-        */
-
-        char weaponB[32];
-        strWeaponType weaponTypeB;
-        GetEdictClassname(weapon, weaponB, sizeof(weaponB));
-
-        if (g_hMapWeapons.GetValue(weaponB, weaponTypeB) && weaponTypeB == WPTYPE_GL)
-        {
-            if (g_hCvar_AllowGLSkeet.BoolValue)
-                HandleSkeet(attacker, actor, false, false, true);
-        }
-    }
-    else if ((damageType & DMG_SLASH) || (damageType & DMG_CLUB))
-    {
-        // melee skeet
-        if (g_hCvar_AllowMelee.BoolValue)
-            HandleSkeet(attacker, actor, true);
-    }
-
-    g_Hunter[actor].ResetHunter();
+    ProcessHunterSkeet(attacker, actor, weapon, damageType);
     return Plugin_Continue;
 }
 
@@ -292,3 +222,125 @@ void Event_LungePounce(Event event, const char[] name, bool dontBroadcast)
     g_Hunter[client].ResetHunter();
 }
 
+public void L4D_ActivateAbility_Hunter_Post(int client, int ability)
+{
+    if (!IsFakeClient(client))
+    {
+        SDKHook(client, SDKHook_PostThinkPost, OnHunterPostThinkPost);
+        SDKHook(client, SDKHook_OnTakeDamageAlivePost, OnHunterTakeDamageAlivePost);
+    }
+}
+
+void OnHunterPostThinkPost(int client)
+{
+    g_Hunter[client].m_bOnGround = GetEntPropEnt(client, Prop_Send, "m_hGroundEntity") != -1;
+    if (!g_Hunter[client].m_bOnGround)
+    {
+        Vector vecPouncePos;
+        vecPouncePos.GetClientAbsOrigin(client);
+
+        // record the highest pounce position.
+        if (FloatAbs(vecPouncePos.z) > FloatAbs(g_Hunter[client].m_vecPounceStartPos.z))
+            g_Hunter[client].m_vecPounceStartPos.Equal(vecPouncePos);
+    }
+    else
+    {
+        g_Hunter[client].ResetHunter();
+        SDKUnhook(client, SDKHook_PostThinkPost, OnHunterPostThinkPost);
+        SDKUnhook(client, SDKHook_OnTakeDamageAlivePost, OnHunterTakeDamageAlivePost);
+    }
+}
+
+void OnHunterTakeDamageAlivePost(int victim, int attacker, int inflictor, float damage, int damageType)
+{
+    ProcessHunterTakeDamage(victim, attacker, damage, damageType);
+}
+
+void ProcessHunterSkeet(int attacker, int victim, int weapon, int damageType)
+{
+    // skeet?
+    if (g_Hunter[victim].m_iTeamDamage > 0 &&
+        g_Hunter[victim].m_iTeamDamage > g_Hunter[victim].m_iDamage[attacker] && 
+        g_Hunter[victim].m_iTeamDamage >= (L4D_HasPlayerControlledZombies() ? g_iPounceInterruptDefault : g_iPounceInterrupt))
+    {
+        // team skeet
+        HandleSkeet(attacker, victim, _, _, _, true);
+    }
+    else if ((damageType & DMG_BULLET) || (damageType & DMG_BUCKSHOT))
+    {
+        char weaponA[32];
+        strWeaponType weaponTypeA;
+        GetEdictClassname(weapon, weaponA, sizeof(weaponA));
+
+        if (g_hMapWeapons.GetValue(weaponA, weaponTypeA) && (weaponTypeA == WPTYPE_SNIPER || weaponTypeA == WPTYPE_MAGNUM))
+        {
+            if (g_hCvar_AllowSniper.BoolValue)
+                HandleSkeet(attacker, victim, false, true);
+        }
+
+        // single player skeet
+        HandleSkeet(attacker, victim);
+    }
+    else if (damageType & (DMG_BLAST | DMG_PLASMA))
+    {
+        // direct GL hit?
+        /*
+            direct hit is DMG_BLAST | DMG_PLASMA
+            indirect hit is DMG_AIRBOAT
+        */
+
+        char weaponB[32];
+        strWeaponType weaponTypeB;
+        GetEdictClassname(weapon, weaponB, sizeof(weaponB));
+
+        if (g_hMapWeapons.GetValue(weaponB, weaponTypeB) && weaponTypeB == WPTYPE_GL)
+        {
+            if (g_hCvar_AllowGLSkeet.BoolValue)
+                HandleSkeet(attacker, victim, false, false, true);
+        }
+    }
+    else if ((damageType & DMG_SLASH) || (damageType & DMG_CLUB))
+    {
+        // melee skeet
+        if (g_hCvar_AllowMelee.BoolValue)
+            HandleSkeet(attacker, victim, true);
+    }
+
+    g_Hunter[victim].ResetHunter();
+}
+
+static void ProcessHunterTakeDamage(int victim, int attacker, float damage, int damageType)
+{
+    if (victim <= 0 || victim > MaxClients)
+        return;
+
+    if (!IsClientInGame(victim))
+        return;
+
+    if (attacker <= 0 || attacker > MaxClients)
+        return;
+
+    if (!IsClientInGame(attacker))
+        return;
+
+    if (!g_Hunter[victim].m_bOnGround)
+    {
+        if (damageType & DMG_BUCKSHOT)
+        {
+            if (!g_Survivor[attacker].m_bShotCounted)
+            {
+                // count this shotgun pellet as once.
+                g_Hunter[victim].m_iShotsFired[attacker]++;
+                g_Survivor[attacker].m_bShotCounted = true;
+            }
+        }
+        else if (damageType & DMG_BULLET)
+        {
+            // just count this into.
+            g_Hunter[victim].m_iShotsFired[attacker]++;
+        }
+
+        g_Hunter[victim].m_iDamage[attacker] += RoundToNearest(damage);
+        g_Hunter[victim].m_iTeamDamage += RoundToNearest(damage);
+    }
+}

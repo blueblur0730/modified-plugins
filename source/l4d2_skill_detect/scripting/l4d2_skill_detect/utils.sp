@@ -293,6 +293,18 @@ stock bool IsWitch(int iEntity)
     return false;
 }
 
+stock bool IsRock(int iEntity)
+{
+    if (iEntity > 0 && IsValidEntity(iEntity) && IsValidEdict(iEntity))
+    {
+        char strClassName[64];
+        GetEdictClassname(iEntity, strClassName, sizeof(strClassName));
+        return StrEqual(strClassName, "tank_rock");
+    }
+
+    return false;
+}
+
 stock float GetSurvivorDistance(int client)
 {
     return L4D2Direct_GetFlowDistance(client);
@@ -325,41 +337,4 @@ stock float FallingDamageForSpeed( float speed )
     {
         return ( (speed / (720 - 560)) * (speed / (720 - 560)) * 100.0 );
     }
-}
-
-stock void CheckFlag(int bits)
-{
-    PrintToServer("Flag: %d, DMG_GENERIC: %d, DMG_CRUSH: %d, DMG_BULLET: %d, DMG_SLASH: %d, DMG_BURN: %d, DMG_VEHICLE: %d, DMG_FALL: %d, DMG_BLAST: %d, DMG_CLUB: %d, DMG_SHOCK: %d, DMG_SONIC: %d, DMG_ENERGYBEAM: %d, DMG_PREVENT_PHYSICS_FORCE: %d, DMG_NEVERGIB: %d, DMG_ALWAYSGIB: %d, DMG_DROWN: %d, DMG_PARALYZE: %d, DMG_NERVEGAS: %d, DMG_POISON: %d, DMG_RADIATION: %d, DMG_DROWN, %d, DMG_ACID: %d, DMG_SLOWBURN: %d, DMG_REMOVENORAGDOLL: %d, DMG_PHYSGUN: %d, DMG_PLASMA: %d, DMG_AIRBOAT: %d, DMG_DISSOLVE: %d, DMG_BLAST_SURFACE: %d, DMG_DIRECT: %d, DMG_BUCKSHOT: %d", bits, 
-                    (bits & DMG_GENERIC), 
-                    (bits & DMG_CRUSH), 
-                    (bits & DMG_BULLET), 
-                    (bits & DMG_SLASH), 
-                    (bits & DMG_BURN), 
-                    (bits & DMG_VEHICLE), 
-                    (bits & DMG_FALL), 
-                    (bits & DMG_BLAST),
-                    (bits & DMG_CLUB),
-                    (bits & DMG_SHOCK),
-                    (bits & DMG_SONIC),
-                    (bits & DMG_ENERGYBEAM),
-                    (bits & DMG_PREVENT_PHYSICS_FORCE),
-                    (bits & DMG_NEVERGIB),
-                    (bits & DMG_ALWAYSGIB),
-                    (bits & DMG_DROWN),
-                    (bits & DMG_PARALYZE),
-                    (bits & DMG_NERVEGAS),
-                    (bits & DMG_POISON),
-                    (bits & DMG_RADIATION),
-                    (bits & DMG_DROWNRECOVER),
-                    (bits & DMG_ACID),
-                    (bits & DMG_SLOWBURN),
-                    (bits & DMG_REMOVENORAGDOLL),
-                    (bits & DMG_PHYSGUN ),
-                    (bits & DMG_PLASMA),
-                    (bits & DMG_AIRBOAT),
-                    (bits & DMG_DISSOLVE),
-                    (bits & DMG_BLAST_SURFACE),
-                    (bits & DMG_DIRECT),
-                    (bits & DMG_BUCKSHOT)
-                );
 }

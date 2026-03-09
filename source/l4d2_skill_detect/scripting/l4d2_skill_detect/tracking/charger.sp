@@ -5,12 +5,7 @@
 
 /**
  * Handled things:
- * 1. Death charge (carried)
- * 2. Death charge (impacted)
  * 3. Long incapacited charge (carried)
- * 4. Long incapacited charge (impacted)
- * 5. Skeet a charge (not carried)
- * 6. Skeet a charge (carried)
 */
 
 enum struct ChargerSkill_t
@@ -24,6 +19,7 @@ enum struct ChargerSkill_t
     int m_iDamage[L4D2_MAXPLAYERS + 1];         // damage done to each survivor by the charger
     int m_iTeamDamage;                          // damage done by team
     int m_iNumImpacts;                          // number of impacts done by the charger
+    float m_flMeleeDamage;                      // damage done by the charger's melee attack, used for sdkhook.
 
     void SortSkeetDmg(int iArr[L4D2_MAXPLAYERS + 1][3])
     {
@@ -74,60 +70,10 @@ enum struct ChargerSkill_t
 
         this.m_iTeamDamage = 0;
         this.m_iNumImpacts = 0;
+        this.m_flMeleeDamage = 0.0;
     }
 }
 ChargerSkill_t g_Charger[L4D2_MAXPLAYERS + 1];
-
-Action ChargerChargeAtVictim_Update(any action, int actor, float interval, ActionResult result)
-{
-    if (actor <= 0 || actor > MaxClients)
-        return Plugin_Continue;
-
-    if (!IsClientInGame(actor))
-        return Plugin_Continue;
-
-    if (g_Charger[actor].m_bCarriedVictim)
-        return Plugin_Continue;
-
-    if (g_InfectedSkillCache[actor].m_iSpecialVictim > 0)
-        g_Charger[actor].m_bCarriedVictim = true;
- 
-    g_Charger[actor].m_vecCarryStartPos.GetClientAbsOrigin(actor);
-    return Plugin_Continue;
-}
-
-Action ChargerChargeAtVictim_OnStart(any action, int actor, any priorAction, ActionResult result)
-{
-    if (actor <= 0 || actor > MaxClients)
-        return Plugin_Continue;
-
-    if (!IsClientInGame(actor))
-        return Plugin_Continue;
-
-    //PrintToServer("[Skill Detect] ChargerChargeAtVictim_OnStart called.");
-    g_Charger[actor].m_ChargeTimer.Start();
-    return Plugin_Continue;
-}
-
-Action ChargerChargeAtVictim_OnEnd(any action, int actor, any priorAction, ActionResult result)
-{
-    if (actor <= 0 || actor > MaxClients)
-        return Plugin_Continue;
-
-    if (!IsClientInGame(actor))
-        return Plugin_Continue;
-
-    //PrintToServer("[Skill Detect] ChargerChargeAtVictim_OnEnd called.");
-
-    // when killed, OnEnd is not called.
-    if (g_Charger[actor].m_bCarriedVictim)
-    {
-        g_Charger[actor].m_PummelTimer.Start();
-        // long incapacited charge check.
-    }
-
-    return Plugin_Continue;
-}
 
 Action ChargerChargeAtVictim_OnInjured(any action, int actor, CTakeDamageInfo info, ActionDesiredResult result)
 {
@@ -148,23 +94,7 @@ Action ChargerChargeAtVictim_OnInjured(any action, int actor, CTakeDamageInfo in
     int damageType = info.m_bitsDamageType;
     float damage = info.m_flDamage;
 
-    if (damageType & DMG_BUCKSHOT)
-    {
-        if (!g_Survivor[attacker].m_bShotCounted)
-        {
-            // count this shotgun pellet as once.
-            g_Charger[actor].m_iShotsFired[attacker]++;
-            g_Survivor[attacker].m_bShotCounted = true;
-        }
-    }
-    else if (damageType & DMG_BULLET)
-    {
-        // just count this into.
-        g_Charger[actor].m_iShotsFired[attacker]++;
-    }
-
-    g_Charger[actor].m_iDamage[attacker] += RoundToNearest(damage);
-    g_Charger[actor].m_iTeamDamage += RoundToNearest(damage);
+    ProcessChargerTakeDamage(actor, attacker, damage, damageType);
     return Plugin_Continue;
 }
 
@@ -182,46 +112,69 @@ Action ChargerChargeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo inf
     //PrintToServer("[Skill Detect] ChargerChargeAtVictim_OnKilled called. Damage: %.2f, Type: %i", damage, damageType);
     //CheckFlag(damageType);
  
-    // a death charge by falling into the void, could be a hurt trigger or something else, anyway not a player.
-    if ((damageType & DMG_FALL) && (attacker < 1 || attacker > MaxClients) && g_Charger[actor].m_bCarriedVictim)
-    {
-        Vector vecPos;
-        vecPos.GetClientAbsOrigin(actor);
-        float fHeight = FloatAbs(g_Charger[actor].m_vecCarryStartPos.z) - FloatAbs(vecPos.z);
-
-        // carried dewath charge, the impacted death charge will be handled on player_death.
-        HandleDeathCharge(actor, g_InfectedSkillCache[actor].m_iSpecialVictim, fHeight, g_Charger[actor].m_vecCarryStartPos.Distance(vecPos, false), true);
-        g_Charger[actor].ResetCharger();
-        return Plugin_Continue;
-    }
-    
     if (attacker <= 0 || attacker > MaxClients)
         return Plugin_Continue;
 
     if (!IsClientInGame(attacker))
         return Plugin_Continue;
 
-    // skeeting a charger, consider as a skeet.
-    if (GetClientTeam(attacker) == 2)
-    {
-        // melee?
-        if ((damageType & DMG_SLASH) || (damageType & DMG_CLUB))
-        {
-            int iChargeHealth = g_hCvar_ChargerHealth.IntValue;
-            (RoundToNearest(damage) > (iChargeHealth * 0.65)) ? HandleLevel(attacker, actor) : HandleLevelHurt(attacker, actor, RoundToNearest(damage));
-            g_Charger[actor].ResetCharger();
-            return Plugin_Continue;
-        }
-
-        // a clear. handled on player_death.
-        if (g_Charger[actor].m_bCarriedVictim && g_Charger[actor].m_ChargeTimer.IsLessThan(g_hCvar_ClearThreh.FloatValue))
-            return Plugin_Continue;
-
-        HandleChargingSkeet(attacker, actor, g_Charger[actor].m_ChargeTimer.GetElapsedTime(), (g_Charger[actor].m_iTeamDamage > 0 && g_Charger[actor].m_iTeamDamage > g_Charger[actor].m_iDamage[attacker]));
-        g_Charger[actor].ResetCharger();
-    }
-
+    ProcessChargerSkill(actor, attacker, damage, damageType);
     return Plugin_Continue;
+}
+
+void Event_ChargerCarryStart(Event event, const char[] name, bool dontBroadcast)
+{
+    int attacker = GetClientOfUserId(event.GetInt("userid"));
+    int victim = GetClientOfUserId(event.GetInt("victim"));
+
+    if (!IsValidInfected(attacker) || !IsValidSurvivor(victim))
+        return;
+
+    g_Charger[attacker].m_bCarriedVictim = true;
+    g_Charger[attacker].m_vecCarryStartPos.GetClientAbsOrigin(attacker);
+}
+
+void Event_ChargerCarryEnd(Event event, const char[] name, bool dontBroadcast)
+{
+    int attacker = GetClientOfUserId(event.GetInt("userid"));
+    int victim = GetClientOfUserId(event.GetInt("victim"));
+
+    if (!IsValidInfected(attacker) || !IsValidSurvivor(victim))
+        return;
+
+    if (g_Charger[attacker].m_bCarriedVictim && IsValidSurvivor(g_InfectedSkillCache[attacker].m_iSpecialVictim))
+    {
+        // long incapacited charge check.
+        Vector vecPos;
+        vecPos.GetClientAbsOrigin(attacker);
+
+        float flHeight = FloatAbs(vecPos.z) - FloatAbs(g_Charger[attacker].m_vecCarryStartPos.z);
+        if (flHeight >= 360.0)  // should not be hardcoded valve.
+        {
+            HandleDeathCharge(attacker, victim, flHeight, g_Charger[attacker].m_vecCarryStartPos.Distance(vecPos, false), true);
+        }
+    }
+}
+
+void Event_ChargerChargeEnd(Event event, const char[] name, bool dontBroadcast)
+{
+    int charger = GetClientOfUserId(event.GetInt("userid"));
+
+    if (!IsValidInfected(charger))
+        return;
+
+    if (!IsFakeClient(charger))
+        SDKUnhook(charger, SDKHook_OnTakeDamageAlivePost, OnChargerTakeDamageAlivePost);
+}
+
+void Event_ChargerPummelStart(Event event, const char[] name, bool dontBroadcast)
+{
+    int charger = GetClientOfUserId(event.GetInt("userid"));
+
+    if (!IsValidInfected(charger))
+        return;
+
+    g_Charger[charger].m_PummelTimer.Start();
 }
 
 // when being impacted and flung away by a charger.
@@ -243,7 +196,7 @@ void Event_ChargeImpact(Event event, const char[] name, bool dontBroadcast)
 }
 
 // an attempt to rebuild CTerrorPlayer::EstimateFallingDamage. but without loop.
-void OnFlingPostThinkPost(int client)
+static void OnFlingPostThinkPost(int client)
 {
     if (GetEntPropEnt(client, Prop_Send, "m_hGroundEntity") == -1)
     {
@@ -325,4 +278,90 @@ static bool TR_Filter(int entity, int contentsMask, any data)
         return false;
 
     return true;
+}
+
+public void L4D_ActivateAbility_Charger_Post(int client, int ability)
+{
+    if (!IsFakeClient(client))
+    {
+        g_Charger[client].m_ChargeTimer.Start();
+        SDKHook(client, SDKHook_OnTakeDamageAlivePost, OnChargerTakeDamageAlivePost);
+    }
+}
+
+void OnChargerTakeDamageAlivePost(int victim, int attacker, int inflictor, float damage, int damageType)
+{
+    if (victim <= 0 || victim > MaxClients)
+        return;
+
+    if (!IsClientInGame(victim))
+        return;
+
+    if (attacker <= 0 || attacker > MaxClients)
+        return;
+
+    if (!IsClientInGame(attacker))
+        return;
+
+    if ((damageType & DMG_SLASH) || (damageType & DMG_CLUB))
+        g_Charger[victim].m_flMeleeDamage = damage;
+    
+    ProcessChargerTakeDamage(victim, attacker, damage, damageType);
+}
+
+static void ProcessChargerTakeDamage(int victim, int attacker, float damage, int damageType)
+{
+    if (damageType & DMG_BUCKSHOT)
+    {
+        if (!g_Survivor[attacker].m_bShotCounted)
+        {
+            // count this shotgun pellet as once.
+            g_Charger[victim].m_iShotsFired[attacker]++;
+            g_Survivor[attacker].m_bShotCounted = true;
+        }
+    }
+    else if (damageType & DMG_BULLET)
+    {
+        // just count this into.
+        g_Charger[victim].m_iShotsFired[attacker]++;
+    }
+
+    g_Charger[victim].m_iDamage[attacker] += RoundToNearest(damage);
+    g_Charger[victim].m_iTeamDamage += RoundToNearest(damage);
+}
+
+void ProcessChargerSkill(int attacker, int victim, float damage, int damageType)
+{
+    // a death charge by falling into the void, could be a hurt trigger or something else, anyway not a player.
+    if (IsValidInfected(victim) && (damageType & DMG_FALL) && (attacker < 1 || attacker > MaxClients) && g_Charger[victim].m_bCarriedVictim)
+    {
+        Vector vecPos;
+        vecPos.GetClientAbsOrigin(victim);
+        float fHeight = FloatAbs(g_Charger[victim].m_vecCarryStartPos.z) - FloatAbs(vecPos.z);
+
+        // carried dewath charge, the impacted death charge will be handled on player_death.
+        HandleDeathCharge(victim, g_InfectedSkillCache[victim].m_iSpecialVictim, fHeight, g_Charger[victim].m_vecCarryStartPos.Distance(vecPos, false), true);
+        g_Charger[victim].ResetCharger();
+        return;
+    }
+
+    // skeeting a charger, consider as a skeet.
+    if (IsValidSurvivor(attacker) && IsValidInfected(victim))
+    {
+        // melee?
+        if ((damageType & DMG_SLASH) || (damageType & DMG_CLUB))
+        {
+            int iChargeHealth = g_hCvar_ChargerHealth.IntValue;
+            (RoundToNearest(damage) > (iChargeHealth * 0.65)) ? HandleLevel(attacker, victim) : HandleLevelHurt(attacker, victim, RoundToNearest(damage));
+            g_Charger[victim].ResetCharger();
+            return;
+        }
+
+        // a clear. handled on player_death.
+        if (g_Charger[victim].m_bCarriedVictim && g_Charger[victim].m_ChargeTimer.IsLessThan(g_hCvar_ClearThreh.FloatValue))
+            return;
+
+        HandleChargingSkeet(attacker, victim, g_Charger[victim].m_ChargeTimer.GetElapsedTime(), (g_Charger[victim].m_iTeamDamage > 0 && g_Charger[victim].m_iTeamDamage > g_Charger[victim].m_iDamage[attacker]));
+        g_Charger[victim].ResetCharger();
+    }
 }

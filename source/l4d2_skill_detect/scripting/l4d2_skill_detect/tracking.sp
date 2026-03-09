@@ -118,6 +118,10 @@ void _skill_detect_tracking_OnPluginStart()
 
     // chargers.
     HookEvent("charger_impact", Event_ChargeImpact, EventHookMode_Post);
+    HookEvent("charger_carry_start", Event_ChargerCarryStart, EventHookMode_Post);
+    HookEvent("charger_carry_end", Event_ChargerCarryEnd, EventHookMode_Post);
+    HookEvent("charger_charge_end", Event_ChargerChargeEnd, EventHookMode_Post);
+    HookEvent("charger_pummel_start", Event_ChargerPummelStart, EventHookMode_Post);
 }
 
 void _skill_detect_tracking_OnPluginEnd()
@@ -139,9 +143,6 @@ public void OnActionCreated( BehaviorAction action, int actor, const char[] name
     }
     else if (strcmp(name, "ChargerChargeAtVictim") == 0)
     {
-        action.Update = ChargerChargeAtVictim_Update;
-        action.OnStart = ChargerChargeAtVictim_OnStart;
-        action.OnEnd = ChargerChargeAtVictim_OnEnd;
         action.OnInjured = ChargerChargeAtVictim_OnInjured;
         action.OnKilled = ChargerChargeAtVictim_OnKilled;
     }
@@ -197,19 +198,26 @@ public void OnEntityCreated(int entity, const char[] classname)
 // entity destruction
 public void OnEntityDestroyed(int entity)
 {
-    int index = g_hArray_TankRockTrace.FindValue(entity, TankRockTrace_t::m_iRock);
-    if (index != -1)
+    int index = -1;
+    if (IsRock(entity))
     {
-        CreateTimer(ROCK_CHECK_TIME, Timer_CheckRockSkeet, index);
-        return;
+        index = g_hArray_TankRockTrace.FindValue(entity, TankRockTrace_t::m_iRock);
+        if (index != -1)
+        {
+            CreateTimer(ROCK_CHECK_TIME, Timer_CheckRockSkeet, index);
+            return;
+        }
     }
 
-    index = g_hArray_WitchTrace.FindValue(entity, WitchTrace_t::m_iWitch);
-    if (index != -1)
+    if (IsWitch(entity))
     {
-        // witch
-        // delayed deletion, to avoid potential problems with crowns not detecting
-        CreateTimer(WITCH_DELETE_TIME, Timer_WitchKeyDelete, index);
+        index = g_hArray_WitchTrace.FindValue(entity, WitchTrace_t::m_iWitch);
+        if (index != -1)
+        {
+            // witch
+            // delayed deletion, to avoid potential problems with crowns not detecting
+            CreateTimer(WITCH_DELETE_TIME, Timer_WitchKeyDelete, index);
+        }
     }
 }
 
@@ -319,6 +327,7 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
 {
     int victim = GetClientOfUserId(event.GetInt("userid"));
     int attacker = GetClientOfUserId(event.GetInt("attacker"));
+    int damageType = event.GetInt("type");
 
     if (IsValidInfected(victim))
     {
@@ -333,6 +342,12 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
                     HandleClear(attacker, victim, g_InfectedSkillCache[victim].m_iSpecialVictim, ZC_HUNTER, (g_Hunter[victim].m_IncapStartTimer.GetElapsedTime()), -1.0);
                 
                 g_Hunter[victim].m_IncapStartTimer.Invalidate();
+
+                if (!IsFakeClient(victim))
+                {
+                    int weapon = GetEntPropEnt(victim, Prop_Send, "m_hActiveWeapon");
+                    ProcessHunterSkeet(attacker, victim, weapon, damageType);
+                }
             }
 
             case ZC_JOCKEY:
@@ -342,6 +357,12 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
                     HandleClear(attacker, victim, g_InfectedSkillCache[victim].m_iSpecialVictim, ZC_JOCKEY, (g_Jockey[victim].m_RideStartTimer.GetElapsedTime()), -1.0);
 
                 g_Jockey[victim].m_RideStartTimer.Invalidate();
+
+                if (!IsFakeClient(victim))
+                {
+                    int weapon = GetEntPropEnt(victim, Prop_Send, "m_hActiveWeapon");
+                    ProcessJockeySkeet(attacker, victim, weapon, damageType);
+                }
             }
 
             case ZC_CHARGER:
@@ -351,6 +372,11 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
                 {
                     HandleClear(attacker, victim, g_InfectedSkillCache[victim].m_iSpecialVictim, ZC_CHARGER, (g_Charger[victim].m_PummelTimer.HasStarted()) ? (g_Charger[victim].m_PummelTimer.GetElapsedTime()) : -1.0, (g_Charger[victim].m_ChargeTimer.GetElapsedTime()));
                     g_Charger[victim].ResetCharger();
+                }
+
+                if (!IsFakeClient(victim))
+                {
+                    ProcessChargerSkill(attacker, victim, g_Charger[victim].m_flMeleeDamage, damageType);
                 }
             }
         }
@@ -373,17 +399,29 @@ static void Event_PlayerShoved(Event event, const char[] name, bool dontBroadcas
         case ZC_HUNTER:
         {
             if (GetEntPropEnt(victim, Prop_Send, "m_pounceVictim") > 0)
+            {
                 HandleClear(attacker, victim, GetEntPropEnt(victim, Prop_Send, "m_pounceVictim"), ZC_HUNTER, (g_Hunter[victim].m_IncapStartTimer.GetElapsedTime()), -1.0, true);
+                g_Hunter[victim].m_IncapStartTimer.Invalidate();
+            }
 
-            g_Hunter[victim].m_IncapStartTimer.Invalidate();
+            if (!IsFakeClient(victim))
+            {
+                bool m_isLunging = view_as<bool>(GetEntProp(GetInfectedAbilityEntity(victim), Prop_Send, "m_isLunging", 1));
+                if (g_Hunter[victim].m_bOnGround && m_isLunging)
+                {
+                    HandleDeadstop(attacker, victim);
+                    g_Hunter[victim].ResetHunter();
+                }
+            }
         }
 
         case ZC_JOCKEY:
         {
             if (GetEntPropEnt(victim, Prop_Send, "m_jockeyVictim") > 0)
+            {
                 HandleClear(attacker, victim, GetEntPropEnt(victim, Prop_Send, "m_jockeyVictim"), ZC_JOCKEY, (g_Jockey[victim].m_RideStartTimer.GetElapsedTime()), -1.0, true);
-
-            g_Jockey[victim].m_RideStartTimer.Invalidate();
+                g_Jockey[victim].m_RideStartTimer.Invalidate();
+            }
         }
 
         case ZC_BOOMER:

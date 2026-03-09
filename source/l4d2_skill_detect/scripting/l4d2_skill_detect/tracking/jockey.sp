@@ -108,7 +108,7 @@ Action JockeyLeap_OnInjured(any action, int actor, CTakeDamageInfo info, ActionD
         return Plugin_Continue;
     
     int attacker = info.m_hAttacker;
-    int damagetype = info.m_bitsDamageType;
+    int damageType = info.m_bitsDamageType;
     float damage = info.m_flDamage;
 
     if (attacker <= 0 || attacker > MaxClients)
@@ -117,23 +117,7 @@ Action JockeyLeap_OnInjured(any action, int actor, CTakeDamageInfo info, ActionD
     if (!IsClientInGame(attacker))
         return Plugin_Continue;
 
-    if (damagetype & DMG_BUCKSHOT)
-    {
-        if (!g_Survivor[attacker].m_bShotCounted)
-        {
-            // count this shotgun pellet as once.
-            g_Jockey[actor].m_iShotsFired[attacker]++;
-            g_Survivor[attacker].m_bShotCounted = true;
-        }
-    }
-    else if (damagetype & DMG_BULLET)
-    {
-        // just count this into.
-        g_Jockey[actor].m_iShotsFired[attacker]++;
-    }
-
-    g_Jockey[actor].m_iDamage[attacker] += RoundToNearest(damage);
-    g_Jockey[actor].m_iTeamDamage += RoundToNearest(damage);
+    ProccessJockeyTakeDamage(actor, attacker, damage, damageType);
     return Plugin_Continue;
 }
 
@@ -157,7 +141,7 @@ Action JockeyLeap_OnKilled(any action, int actor, CTakeDamageInfo info, ActionDe
 
     int attacker = info.m_hAttacker;
     int weapon = info.m_hWeapon;
-    int damagetype = info.m_bitsDamageType;
+    int damageType = info.m_bitsDamageType;
 
     if (attacker <= 0 || attacker > MaxClients)
         return Plugin_Continue;
@@ -165,53 +149,7 @@ Action JockeyLeap_OnKilled(any action, int actor, CTakeDamageInfo info, ActionDe
     if (!IsClientInGame(attacker) || GetClientTeam(attacker) != 2)
         return Plugin_Continue;
     
-    // skeet?
-    if (g_Jockey[actor].m_iTeamDamage > 0 && g_Jockey[actor].m_iTeamDamage > g_Jockey[actor].m_iDamage[attacker])
-    {
-        // team skeet
-        HandleJockeySkeet(attacker, actor, _, _, _, true);
-    }
-    else if ((damagetype & DMG_BULLET) || (damagetype & DMG_BUCKSHOT))
-    {
-        char weaponA[32];
-        strWeaponType weaponTypeA;
-        GetEdictClassname(weapon, weaponA, sizeof(weaponA));
-
-        if (g_hMapWeapons.GetValue(weaponA, weaponTypeA) && (weaponTypeA == WPTYPE_SNIPER || weaponTypeA == WPTYPE_MAGNUM))
-        {
-            if (g_hCvar_AllowSniper.BoolValue)
-                HandleJockeySkeet(attacker, actor, false, true);
-        }
-
-        // single player skeet
-        HandleJockeySkeet(attacker, actor);
-    }
-    else if (damagetype & (DMG_BLAST | DMG_PLASMA))
-    {
-        // direct GL hit?
-        /*
-            direct hit is DMG_BLAST | DMG_PLASMA
-            indirect hit is DMG_AIRBOAT
-        */
-
-        char weaponB[32];
-        strWeaponType weaponTypeB;
-        GetEdictClassname(weapon, weaponB, sizeof(weaponB));
-
-        if (g_hMapWeapons.GetValue(weaponB, weaponTypeB) && weaponTypeB == WPTYPE_GL)
-        {
-            if (g_hCvar_AllowGLSkeet.BoolValue)
-                HandleJockeySkeet(attacker, actor, false, false, true);
-        }
-    }
-    else if ((damagetype & DMG_SLASH) || (damagetype & DMG_CLUB))
-    {
-        // melee skeet
-        if (g_hCvar_AllowMelee.BoolValue)
-            HandleJockeySkeet(attacker, actor, true);
-    }
-
-    g_Jockey[actor].ResetJockey();
+    ProcessJockeySkeet(attacker, actor, weapon, damageType);
     return Plugin_Continue;
 }
 
@@ -249,4 +187,125 @@ void Event_JockeyRide(Event event, const char[] name, bool dontBroadcast)
     // (high) pounce
     HandleJockeyDP(client, victim, fHeight);
     g_Jockey[client].ResetJockey();
+}
+
+public void L4D_ActivateAbility_Jockey_Post(int client, int ability)
+{
+    if (!IsFakeClient(client))
+    {
+        SDKHook(client, SDKHook_PostThinkPost, OnJockeyPostThinkPost);
+        SDKHook(client, SDKHook_OnTakeDamageAlivePost, OnJockeyTakeDamageAlivePost);
+    }
+}
+
+void OnJockeyTakeDamageAlivePost(int victim, int attacker, int inflictor, float damage, int damageType)
+{
+    if (victim <= 0 || victim > MaxClients)
+        return;
+
+    if (!IsClientInGame(victim))
+        return;
+
+    if (attacker <= 0 || attacker > MaxClients)
+        return;
+
+    if (!IsClientInGame(attacker))
+        return;
+
+    ProccessJockeyTakeDamage(victim, attacker, damage, damageType);
+}
+
+void OnJockeyPostThinkPost(int client)
+{
+    g_Jockey[client].m_bOnGround = GetEntPropEnt(client, Prop_Send, "m_hGroundEntity") != -1;
+    if (!g_Jockey[client].m_bOnGround)
+    {
+        Vector vecLeapPos;
+        vecLeapPos.GetClientAbsOrigin(client);
+
+        // record the highest leap position.
+        if (FloatAbs(vecLeapPos.z) > FloatAbs(g_Jockey[client].m_vecLeapStartPos.z))
+            g_Jockey[client].m_vecLeapStartPos.Equal(vecLeapPos);
+    }
+    else
+    {
+        g_Jockey[client].ResetJockey();
+        SDKUnhook(client, SDKHook_PostThinkPost, OnJockeyPostThinkPost);
+        SDKUnhook(client, SDKHook_OnTakeDamageAlivePost, OnJockeyTakeDamageAlivePost);
+    }
+}
+
+static void ProccessJockeyTakeDamage(int victim, int attacker, float damage, int damageType)
+{
+    if (!g_Jockey[victim].m_bOnGround)
+    {
+        if (damageType & DMG_BUCKSHOT)
+        {
+            if (!g_Survivor[attacker].m_bShotCounted)
+            {
+                // count this shotgun pellet as once.
+                g_Jockey[victim].m_iShotsFired[attacker]++;
+                g_Survivor[attacker].m_bShotCounted = true;
+            }
+        }
+        else if (damageType & DMG_BULLET)
+        {
+            // just count this into.
+            g_Jockey[victim].m_iShotsFired[attacker]++;
+        }
+
+        g_Jockey[victim].m_iDamage[attacker] += RoundToNearest(damage);
+        g_Jockey[victim].m_iTeamDamage += RoundToNearest(damage);
+    }
+}
+
+void ProcessJockeySkeet(int attacker, int victim, int weapon, int damageType)
+{
+    // skeet?
+    if (g_Jockey[victim].m_iTeamDamage > 0 && g_Jockey[victim].m_iTeamDamage > g_Jockey[victim].m_iDamage[attacker])
+    {
+        // team skeet
+        HandleJockeySkeet(attacker, victim, _, _, _, true);
+    }
+    else if ((damageType & DMG_BULLET) || (damageType & DMG_BUCKSHOT))
+    {
+        char weaponA[32];
+        strWeaponType weaponTypeA;
+        GetEdictClassname(weapon, weaponA, sizeof(weaponA));
+
+        if (g_hMapWeapons.GetValue(weaponA, weaponTypeA) && (weaponTypeA == WPTYPE_SNIPER || weaponTypeA == WPTYPE_MAGNUM))
+        {
+            if (g_hCvar_AllowSniper.BoolValue)
+                HandleJockeySkeet(attacker, victim, false, true);
+        }
+
+        // single player skeet
+        HandleJockeySkeet(attacker, victim);
+    }
+    else if (damageType & (DMG_BLAST | DMG_PLASMA))
+    {
+        // direct GL hit?
+        /*
+            direct hit is DMG_BLAST | DMG_PLASMA
+            indirect hit is DMG_AIRBOAT
+        */
+
+        char weaponB[32];
+        strWeaponType weaponTypeB;
+        GetEdictClassname(weapon, weaponB, sizeof(weaponB));
+
+        if (g_hMapWeapons.GetValue(weaponB, weaponTypeB) && weaponTypeB == WPTYPE_GL)
+        {
+            if (g_hCvar_AllowGLSkeet.BoolValue)
+                HandleJockeySkeet(attacker, victim, false, false, true);
+        }
+    }
+    else if ((damageType & DMG_SLASH) || (damageType & DMG_CLUB))
+    {
+        // melee skeet
+        if (g_hCvar_AllowMelee.BoolValue)
+            HandleJockeySkeet(attacker, victim, true);
+    }
+
+    g_Jockey[victim].ResetJockey();
 }
