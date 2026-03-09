@@ -11,10 +11,6 @@
 #define HOP_CHECK_TIME         0.1
 #define HOPEND_CHECK_TIME      0.1     // after streak end (potentially) detected, to check for realz?
 #define SHOVE_TIME             0.05
-#define MAX_CHARGE_TIME        12.0      // maximum time to pass before charge checking ends
-#define CHARGE_CHECK_TIME      0.25      // check interval for survivors flying from impacts
-#define CHARGE_END_CHECK       2.5      // after client hits ground after getting impact-charged: when to check whether it was a death
-#define CHARGE_END_RECHECK     3.0      // safeguard wait to recheck on someone getting incapped out of bounds
 #define VOMIT_DURATION_TIME    2.25      // how long the boomer vomit stream lasts -- when to check for boom count
 #define ROCK_CHECK_TIME        0.34      // how long to wait after rock entity is destroyed before checking for skeet/eat (high to avoid lag issues)
 #define CARALARM_MIN_TIME      0.11      // maximum time after touch/shot => alarm to connect the two events (test this for LAG)
@@ -22,23 +18,7 @@
 #define WITCH_CHECK_TIME       0.1      // time to wait before checking for witch crown after shoots fired
 #define WITCH_DELETE_TIME      0.15      // time to wait before deleting entry from witch Map after entity is destroyed
 
-#define MIN_DC_TRIGGER_DMG     300       // minimum amount a 'trigger' / drown must do before counted as a death action
-#define MIN_DC_FALL_DMG        175       // minimum amount of fall damage counts as death-falling for a deathcharge
-#define WEIRD_FLOW_THRESH      900.0       // -9999 seems to be break flow.. but meh
-#define MIN_FLOWDROPHEIGHT     350.0       // minimum height a survivor has to have dropped before a WEIRD_FLOW value is treated as a DC spot
-#define MIN_DC_RECHECK_DMG     100       // minimum damage from map to have taken on first check, to warrant recheck
-
 #define HOP_ACCEL_THRESH       0.01      // bhop speed increase must be higher than this for it to count as part of a hop streak
-
-#define VICFLG_CARRIED         (1 << 0)      // was the one that the charger carried (not impacted)
-#define VICFLG_FALL            (1 << 1)      // flags stored per charge victim, to check for deathchargeroony -- fallen
-#define VICFLG_DROWN           (1 << 2)      // drowned
-#define VICFLG_HURTLOTS        (1 << 3)      // whether the victim was hurt by 400 dmg+ at once
-#define VICFLG_TRIGGER         (1 << 4)      // killed by trigger_hurt
-#define VICFLG_AIRDEATH        (1 << 5)      // died before they hit the ground (impact check)
-#define VICFLG_KILLEDBYOTHER   (1 << 6)      // if the survivor was killed by an SI other than the charger
-#define VICFLG_WEIRDFLOW       (1 << 7)      // when survivors get out of the map and such
-#define VICFLG_WEIRDFLOWDONE   (1 << 8)      //      checked, don't recheck for this
 
 #define ZC_SMOKER              1
 #define ZC_BOOMER              2
@@ -265,21 +245,6 @@ enum struct Vector
         arr[2] = this.z;
         return arr;
     }
-}
-
-stock void PrintDebug(const char[] Message, any...)
-{
-    if (!g_hCvar_Debug.BoolValue)
-        return;
-
-    char sFormat[256];
-    VFormat(sFormat, sizeof(sFormat), Message, 2);
-
-    char Path[PLATFORM_MAX_PATH];
-    if (Path[0] == '\0')
-        BuildPath(Path_SM, Path, PLATFORM_MAX_PATH, "/logs/skill_detect.log");
-
-    LogToFileEx(Path, sFormat);
 }
 
 stock void LoadTranslation(const char[] translation)

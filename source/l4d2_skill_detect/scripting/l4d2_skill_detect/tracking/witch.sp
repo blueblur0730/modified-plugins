@@ -81,10 +81,7 @@ static void CheckWitchCrown(int witch, int attacker, bool bOneShot = false)
 {
     int index = g_hArray_WitchTrace.FindValue(witch, WitchTrace_t::m_iWitch);
     if (index == -1)
-    {
-        PrintDebug("Witch Crown Check: Error: Witch entity not found (entity: %i, oneshot: %i)", witch, bOneShot);
         return;
-    }
 
     WitchTrace_t witchTrace;
     g_hArray_WitchTrace.GetArray(index, witchTrace, sizeof(witchTrace));

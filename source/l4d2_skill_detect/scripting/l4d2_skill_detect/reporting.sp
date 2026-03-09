@@ -562,8 +562,6 @@ void HandleClear(int attacker, int victim, int pinVictim, int zombieClass, float
     if (clearTimeB < 0 && clearTimeB != -1.0)
         clearTimeB = 0.0;
 
-    PrintDebug("Clear: %i freed %i from %i: time: %.2f / %.2f -- class: %s (with shove? %i)", attacker, pinVictim, victim, clearTimeA, clearTimeB, g_csSIClassName[zombieClass], bWithShove);
-
     if (g_hCvar_RepInstanClear.IntValue && attacker != pinVictim)
     {
         float fMinTime = g_hCvar_InstaTime.FloatValue;

@@ -58,8 +58,6 @@ StringMap
 
 // cvars
 ConVar
-    g_hCvar_Debug,
-
     g_hCvar_Report,
     g_hCvar_RepSkeet,
     g_hCvar_RepJockeySkeet,
@@ -103,26 +101,8 @@ int g_iPounceInterrupt = 150;             // default 150, damage that is greater
 /*
     To Do
     -----
-    - fix:  tank rock skeets still unreliable detection (often triggers a 'skeet' when actually landed on someone)
-
-    - fix:  apparently some HR4 cars generate car alarm messages when shot, even when no alarm goes off
-            (combination with car equalize plugin?)
-            - see below: the single hook might also fix this.. -- if not, hook for sound
-            - do a hookoutput on prop_car_alarm's and use that to track the actual alarm
-                going off (might help in the case 2 alarms go off exactly at the same time?)
-
-    - fix:  double prints on car alarms (sometimes? epi + m60)
-
-    - fix:  sometimes instaclear reports double for single clear (0.16s / 0.19s) epi saw this, was for hunter
-    - fix:  deadstops and m2s don't always register .. no idea why..
-    - fix:  sometimes a (first?) round doesn't work for skeet detection.. no hurt/full skeets are reported or counted
-
-    - make forwards fire for every potential action,
-        - include the relevant values, so other plugins can decide for themselves what to consider it
-
     - test chargers getting dislodged with boomer pops?
 
-    - add commonhop check
     - add deathcharge assist check
         - smoker
         - jockey
@@ -130,12 +110,6 @@ int g_iPounceInterrupt = 150;             // default 150, damage that is greater
     - count rock hits even if they do no damage [epi request]
     - sir
         - make separate teamskeet forward, with (for now, up to) 4 skeeters + the damage each did
-    - xan
-        - add detection/display of unsuccesful witch crowns (witch death + info)
-
-    detect...
-        - ? add jockey deadstops (and change forward to reflect type)
-        - ? speedcrown detection?
         - ? spit-on-cap detection
 */
 
@@ -146,7 +120,7 @@ int g_iPounceInterrupt = 150;             // default 150, damage that is greater
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.7.0"
+#define PLUGIN_VERSION "r2.7.1"
 
 public Plugin myinfo =
 {
@@ -188,8 +162,6 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int errMax)
 public void OnPluginStart()
 {
     LoadTranslation("l4d2_skill_detect.phrases");
-
-    g_hCvar_Debug             = CreateConVar("l4d2_skill_detect_detect_debug", "0", "Enable debug messages.", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DONTRECORD);
 
     // cvars: config
     g_hCvar_Report            = CreateConVar("l4d2_skill_detect_report_enable", "1", "Whether to report in chat.", FCVAR_NONE, true, 0.0, true, 1.0);
