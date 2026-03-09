@@ -85,7 +85,6 @@ ConVar
     g_hCvar_AllowMelee,              // cvar whether to count melee skeets
     g_hCvar_AllowSniper,             // cvar whether to count sniper headshot skeets
     g_hCvar_AllowGLSkeet,            // cvar whether to count direct hit GL skeets
-    g_hCvar_SelfClearThresh,         // cvar damage while self-clearing from smokers
     g_hCvar_HunterDPThresh,          // cvar damage for hunter highpounce
     g_hCvar_JockeyDPThresh,          // cvar distance for jockey highpounce
     g_hCvar_ClearThreh,              // cvar for max special clear time
@@ -147,7 +146,7 @@ int g_iPounceInterrupt = 150;             // default 150, damage that is greater
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r2.6.1"
+#define PLUGIN_VERSION "r2.7.0"
 
 public Plugin myinfo =
 {
@@ -218,7 +217,6 @@ public void OnPluginStart()
     g_hCvar_AllowMelee        = CreateConVar("l4d2_skill_detect_skeet_allowmelee", "1", "Whether to count/forward melee skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_AllowSniper       = CreateConVar("l4d2_skill_detect_skeet_allowsniper", "1", "Whether to count/forward sniper/magnum headshots as skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_AllowGLSkeet      = CreateConVar("l4d2_skill_detect_skeet_allowgl", "1", "Whether to count/forward direct GL hits as skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
-    g_hCvar_SelfClearThresh   = CreateConVar("l4d2_skill_detect_selfclear_damage", "200", "How much damage a survivor must at least do to a smoker for him to count as self-clearing.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_HunterDPThresh    = CreateConVar("l4d2_skill_detect_hunterdp_height", "400", "Minimum height of hunter pounce for it to count as a DP.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_JockeyDPThresh    = CreateConVar("l4d2_skill_detect_jockeydp_height", "400", "How much height distance a jockey must make for his 'DP' to count as a reportable highpounce.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_ClearThreh        = CreateConVar("l4d2_skill_detect_clear_max_time", "1.0", "How much time a clear must last for it to count.", FCVAR_NONE, true, 0.0, false);

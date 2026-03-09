@@ -11,15 +11,14 @@ void Event_PlayerJumped(Event event, const char[] name, bool dontBroadcast)
     {
         // could be the start or part of a hopping streak
 
-        float fPos[3];
-        float fVel[3];
-        GetClientAbsOrigin(client, fPos);
-        GetEntPropVector(client, Prop_Data, "m_vecVelocity", fVel);
-        fVel[2] = 0.0;      // safeguard
+        Vector vecPos, vecVel;
+        vecPos.GetClientAbsOrigin(client);
+        vecVel.GetClientVelocity(client);
+        vecVel.z = 0.0;      // safeguard
 
         float fLengthNew;
         float fLengthOld;
-        fLengthNew = GetVectorLength(fVel);
+        fLengthNew = vecVel.Length();
 
         g_Survivor[client].m_bHopCheck = false;
 
@@ -36,7 +35,7 @@ void Event_PlayerJumped(Event event, const char[] name, bool dontBroadcast)
         else
         {
             // check for hopping streak
-            fLengthOld = GetVectorLength(g_Survivor[client].m_flLastHop);
+            fLengthOld = g_Survivor[client].m_vecLastHop.Length();
 
             // if they picked up speed, count it as a hop, otherwise, we're done hopping
             if (fLengthNew - fLengthOld > HOP_ACCEL_THRESH || fLengthNew >= g_hCvar_BHopContSpeed.FloatValue)
@@ -61,9 +60,7 @@ void Event_PlayerJumped(Event event, const char[] name, bool dontBroadcast)
             }
         }
 
-        g_Survivor[client].m_flLastHop[0] = fVel[0];
-        g_Survivor[client].m_flLastHop[1] = fVel[1];
-        g_Survivor[client].m_flLastHop[2] = fVel[2];
+        g_Survivor[client].m_vecLastHop.Equal(vecVel);
 
         if (g_Survivor[client].m_iHops != 0)
         {
@@ -82,11 +79,11 @@ static void Timer_CheckHop(Handle timer, int client)
 
     if (GetEntityFlags(client) & FL_ONGROUND)
     {
-        float fVel[3];
-        GetEntPropVector(client, Prop_Data, "m_vecVelocity", fVel);
-        fVel[2] = 0.0;       // safeguard
+        Vector vecVel;
+        vecVel.GetClientVelocity(client);
+        vecVel.z = 0.0;
 
-        // PrintToChatAll("grounded %i: vel length: %.1f", client, GetVectorLength(fVel) );
+        // PrintToChatAll("grounded %i: vel length: %.1f", client, vecVel.Length() );
         g_Survivor[client].m_bHopCheck = true;
         CreateTimer(HOPEND_CHECK_TIME, Timer_CheckHopStreak, client, TIMER_FLAG_NO_MAPCHANGE);
     }
@@ -101,8 +98,8 @@ static void Timer_CheckHopStreak(Handle timer, int client)
     if (g_Survivor[client].m_bHopCheck && g_Survivor[client].m_iHops)
     {
         HandleBHopStreak(client, g_Survivor[client].m_iHops, g_Survivor[client].m_flHopTopVelocity);
-        g_Survivor[client].m_bIsHopping       = false;
-        g_Survivor[client].m_iHops            = 0;
+        g_Survivor[client].m_bIsHopping = false;
+        g_Survivor[client].m_iHops = 0;
         g_Survivor[client].m_flHopTopVelocity = 0.0;
     }
 
@@ -115,10 +112,10 @@ void Event_PlayerJumpApex(Event event, const char[] name, bool dontBroadcast)
 
     if (g_Survivor[client].m_bIsHopping)
     {
-        float fVel[3];
-        GetEntPropVector(client, Prop_Data, "m_vecVelocity", fVel);
-        fVel[2] = 0.0;
-        float fLength = GetVectorLength(fVel);
+        Vector vecVel;
+        vecVel.GetClientVelocity(client);
+        vecVel.z = 0.0;
+        float fLength = vecVel.Length();
 
         if (fLength > g_Survivor[client].m_flHopTopVelocity)
         {

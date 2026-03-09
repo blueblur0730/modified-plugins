@@ -30,13 +30,6 @@
 
 #define HOP_ACCEL_THRESH       0.01      // bhop speed increase must be higher than this for it to count as part of a hop streak
 
-#define DMGARRAYEXT            7       // L4D2_MAXPLAYERS+# -- extra indices in witch_dmg_array + 1
-
-#define CUT_SHOVED             1       // smoker got shoved
-#define CUT_SHOVEDSURV         2       // survivor got shoved
-#define CUT_KILL               3       // reason for tongue break (release_type)
-#define CUT_SLASH              4       // this is used for others shoving a survivor free too, don't trust .. it involves tongue damage?
-
 #define VICFLG_CARRIED         (1 << 0)      // was the one that the charger carried (not impacted)
 #define VICFLG_FALL            (1 << 1)      // flags stored per charge victim, to check for deathchargeroony -- fallen
 #define VICFLG_DROWN           (1 << 2)      // drowned
@@ -183,16 +176,16 @@ enum struct Vector
         return (this.x == vec.x && this.y == vec.y && this.z == vec.z);
     }
 
-    void Equal(Vector vec) {
-        this.x = vec.x;
-        this.y = vec.y;
-        this.z = vec.z;
-    }
-
     void Set(float x, float y, float z) {
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+
+    void Equal(Vector vec) {
+        this.x = vec.x;
+        this.y = vec.y;
+        this.z = vec.z;
     }
 
     void Add(Vector vec) {
@@ -205,6 +198,19 @@ enum struct Vector
         this.x -= vec.x;
         this.y -= vec.y;
         this.z -= vec.z;
+    }
+
+    float Length(bool squared=false)
+    {
+        float arr[3];
+        arr[0] = this.x;
+        arr[1] = this.y;
+        arr[2] = this.z;
+        return GetVectorLength(arr, squared);
+    }
+
+    float Distance(Vector vec, bool squared=false) {
+        return GetVectorDistance(this.ToArray(), vec.ToArray(), squared);
     }
 
     void GetClientAbsOrigin(int client) {
@@ -225,8 +231,13 @@ enum struct Vector
         this.z = arr[2];
     }
 
-    float Distance(Vector vec, bool squared=false) {
-        return GetVectorDistance(this.ToArray(), vec.ToArray(), squared);
+    void GetClientVelocity(int client) {
+        float arr[3];
+        GetEntPropVector(client, Prop_Data, "m_vecVelocity", arr);
+
+        this.x = arr[0];
+        this.y = arr[1];
+        this.z = arr[2];
     }
 
     void GetPlayerMins(int client) {

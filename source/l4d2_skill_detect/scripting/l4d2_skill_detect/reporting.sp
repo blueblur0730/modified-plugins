@@ -353,7 +353,17 @@ void HandleSmokerSelfClear(int attacker, int victim, bool withShove = false)
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
 
-        CPrintToChatAll("%t %t", "Tag++", "SelfClearedTongue", attacker, victim, (withShove) ? "Shoving" : "none");
+        for (int i = 1; i < MaxClients; i++)
+        {
+            if (!IsClientInGame(i) || IsFakeClient(i))
+                continue;
+
+            char sBuffer[32];
+            Format(sBuffer, sizeof(sBuffer), "%T", "Shoving", i);
+            CPrintToChat(i, "%t %t", "Tag++", "SelfClearedTongue", attacker, victim, (withShove) ? sBuffer : "");
+        }
+
+        
     }
 
     // call forward

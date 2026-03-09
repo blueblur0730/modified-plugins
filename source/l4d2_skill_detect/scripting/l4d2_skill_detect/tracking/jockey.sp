@@ -11,7 +11,7 @@ enum struct JockeySkillCache_t
     int m_iDamage[L4D2_MAXPLAYERS + 1];         // counting shotgun blast damage for hunter / skeeter combo
     bool m_bOnGround;                           // whether the jockey is on the ground or not.
     Vector m_vecLeapStartPos;                   // position that a jockey leapt from
-    IntervalTimer_t m_RideTimer;                // time the jockey rides
+    IntervalTimer_t m_RideStartTimer;           // time the jockey rides
 
     void SortSkeetDmg(int iArr[L4D2_MAXPLAYERS + 1][3])
     {
@@ -50,7 +50,7 @@ enum struct JockeySkillCache_t
     void ResetJockey()
     {
         this.m_vecLeapStartPos.Set(0.0, 0.0, 0.0);
-        this.m_RideTimer.Invalidate();
+        this.m_RideStartTimer.Invalidate();
 
         this.m_iTeamDamage = 0;
         for (int i = 1; i <= MaxClients; i++)
@@ -240,7 +240,7 @@ void Event_JockeyRide(Event event, const char[] name, bool dontBroadcast)
     if (!IsValidInfected(client) || !IsValidSurvivor(victim))
         return;
 
-    g_Jockey[client].m_RideTimer.Start();
+    g_Jockey[client].m_RideStartTimer.Start();
 
     Vector endPos;
     endPos.GetClientAbsOrigin(client);

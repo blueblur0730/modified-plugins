@@ -12,7 +12,7 @@ enum struct HunterSkillCache_t
     int m_iPounceDamage;                      // how much damage on last 'highpounce' done
     bool m_bOnGround;                         // whether the hunter is on the ground or not.
     Vector m_vecPounceStartPos;               // position that a hunter pounced from
-    IntervalTimer_t m_IncapStartTimer;          // timer for when a hunter started incap someone.
+    IntervalTimer_t m_IncapStartTimer;        // timer for when a hunter started incap someone.
 
     void SortSkeetDmg(int iArr[L4D2_MAXPLAYERS + 1][3])
     {
@@ -114,7 +114,7 @@ Action HunterLungeAtVictim_OnInjured(any action, int actor, CTakeDamageInfo info
     }
 
     int attacker = info.m_hAttacker;
-    int damagetype = info.m_bitsDamageType;
+    int damageType = info.m_bitsDamageType;
     float damage = info.m_flDamage;
 
     if (attacker <= 0 || attacker > MaxClients)
@@ -123,7 +123,7 @@ Action HunterLungeAtVictim_OnInjured(any action, int actor, CTakeDamageInfo info
     if (!IsClientInGame(attacker))
         return Plugin_Continue;
 
-    if (damagetype & DMG_BUCKSHOT)
+    if (damageType & DMG_BUCKSHOT)
     {
         if (!g_Survivor[attacker].m_bShotCounted)
         {
@@ -132,7 +132,7 @@ Action HunterLungeAtVictim_OnInjured(any action, int actor, CTakeDamageInfo info
             g_Survivor[attacker].m_bShotCounted = true;
         }
     }
-    else if (damagetype & DMG_BULLET)
+    else if (damageType & DMG_BULLET)
     {
         // just count this into.
         g_Hunter[actor].m_iShotsFired[attacker]++;
@@ -160,7 +160,7 @@ Action HunterLungeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo info,
 
     int attacker = info.m_hAttacker;
     int weapon = info.m_hWeapon;
-    int damagetype = info.m_bitsDamageType;
+    int damageType = info.m_bitsDamageType;
 
     if (attacker <= 0 || attacker > MaxClients)
         return Plugin_Continue;
@@ -176,7 +176,7 @@ Action HunterLungeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo info,
         // team skeet
         HandleSkeet(attacker, actor, _, _, _, true);
     }
-    else if ((damagetype & DMG_BULLET) || (damagetype & DMG_BUCKSHOT))
+    else if ((damageType & DMG_BULLET) || (damageType & DMG_BUCKSHOT))
     {
         char weaponA[32];
         strWeaponType weaponTypeA;
@@ -191,7 +191,7 @@ Action HunterLungeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo info,
         // single player skeet
         HandleSkeet(attacker, actor);
     }
-    else if (damagetype & (DMG_BLAST | DMG_PLASMA))
+    else if (damageType & (DMG_BLAST | DMG_PLASMA))
     {
         // direct GL hit?
         /*
@@ -209,7 +209,7 @@ Action HunterLungeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo info,
                 HandleSkeet(attacker, actor, false, false, true);
         }
     }
-    else if ((damagetype & DMG_SLASH) || (damagetype & DMG_CLUB))
+    else if ((damageType & DMG_SLASH) || (damageType & DMG_CLUB))
     {
         // melee skeet
         if (g_hCvar_AllowMelee.BoolValue)
@@ -291,3 +291,4 @@ void Event_LungePounce(Event event, const char[] name, bool dontBroadcast)
     HandleHunterDP(client, victim, g_Hunter[client].m_iPounceDamage, fDamage, fHeight, bIncap);
     g_Hunter[client].ResetHunter();
 }
+

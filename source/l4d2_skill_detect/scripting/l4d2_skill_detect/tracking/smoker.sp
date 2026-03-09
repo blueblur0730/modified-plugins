@@ -1,74 +1,84 @@
 #if defined _skill_detect_tracking_smoker_included
     #endinput
 #endif
-#define _skill_detect_tracking_smoker_included
+#define _skill_detect_tracking_smoker_included    
+
+enum TongueReleaseType_t
+{
+    TONGUE_RELEASE_NONE = 0,
+    TONGUE_RELEASE_SHOVED = 1,  // smoker got shoved
+    TONGUE_RELEASE_FREED = 2,   // survivor got shoved.
+    TONGUE_RELEASE_KILLED = 3,  // killed smoker.
+    TONGUE_RELEASE_BROKE = 4,   // tongue break by gun/melee.
+}
+
+enum struct SmokerSkillCache_t
+{
+    // smoker clears
+    IntervalTimer_t m_DragStartTimer;   // time the smoker starts to grab a target
+    IntervalTimer_t m_ChokeStartTimer;  // time the smoker starts to choke a target
+}
+SmokerSkillCache_t g_Smoker[L4D2_MAXPLAYERS + 1];
 
 // smoker tongue cutting & self clears
 void Event_TonguePullStopped(Event event, const char[] name, bool dontBroadcast)
 {
     int attacker = GetClientOfUserId(event.GetInt("userid"));
-    int victim = GetClientOfUserId(event.GetInt("victim"));
     int smoker = GetClientOfUserId(event.GetInt("smoker"));
-    int reason = event.GetInt("release_type");
+    int victim = GetClientOfUserId(event.GetInt("victim"));
 
-    if (!IsValidSurvivor(attacker) || !IsValidInfected(smoker))
+    if (!IsValidSurvivor(attacker) || !IsValidInfected(smoker) || !IsValidSurvivor(victim))
         return;
 
-    // clear check -  if the smoker itself was not shoved, handle the clear
-    HandleClear(attacker, smoker, victim,
-                ZC_SMOKER,
-                (g_InfectedSkillCache[smoker].m_flPinTime[1] > 0.0) ? (GetGameTime() - g_InfectedSkillCache[smoker].m_flPinTime[1]) : -1.0,
-                (GetGameTime() - g_InfectedSkillCache[smoker].m_flPinTime[0]),
-                view_as<bool>(reason != CUT_SLASH && reason != CUT_KILL));
+    TongueReleaseType_t reason = view_as<TongueReleaseType_t>(event.GetInt("release_type"));
+    int damageType = event.GetInt("damage_type");
 
-    if (attacker != victim)
-        return;
-
-    if (reason == CUT_KILL)
+    // self clear check.
+    if (victim == attacker)
     {
-        g_InfectedSkillCache[smoker].m_bSmokerClearCheck = true;
-    }
-    else if (g_InfectedSkillCache[smoker].m_bSmokerShoved)
-    {
-        HandleSmokerSelfClear(attacker, smoker, true);
-    }
-    else if (reason == CUT_SLASH)     // note: can't trust this to actually BE a slash..
-    {
-        // check weapon
-        char weapon[32];
-        GetClientWeapon(attacker, weapon, 32);
-
-        // this doesn't count the chainsaw, but that's no-skill anyway
-        if (StrEqual(weapon, "weapon_melee", false))
+        // a tongue cut.
+        if (reason == TONGUE_RELEASE_BROKE && (damageType & DMG_SLASH) || (damageType & DMG_CLUB))
+        {
             HandleTongueCut(attacker, smoker);
+        }
+        else if (reason == TONGUE_RELEASE_SHOVED)
+        {
+            HandleSmokerSelfClear(attacker, smoker, true);
+        }
+        else if (reason == TONGUE_RELEASE_KILLED)
+        {
+            HandleSmokerSelfClear(attacker, smoker, false);
+        }
+    }
+    else
+    {
+        // clear check -  if the smoker itself was not shoved, handle the clear
+        HandleClear(attacker, smoker, victim,
+                    ZC_SMOKER,
+                    (g_Smoker[smoker].m_ChokeStartTimer.HasStarted()) ? (g_Smoker[smoker].m_ChokeStartTimer.GetElapsedTime()) : -1.0,
+                    (g_Smoker[smoker].m_DragStartTimer.GetElapsedTime()),
+                    view_as<bool>(reason == TONGUE_RELEASE_SHOVED || reason == TONGUE_RELEASE_FREED));
+
     }
 }
 
+// tongue grab start.
 void Event_TongueGrab(Event event, const char[] name, bool dontBroadcast)
 {
     int attacker = GetClientOfUserId(event.GetInt("userid"));
-    int victim = GetClientOfUserId(event.GetInt("victim"));
-
-    if (IsValidInfected(attacker) && IsValidSurvivor(victim))
-    {
-        // new pull, clean damage
-        g_InfectedSkillCache[attacker].m_bSmokerClearCheck = false;
-        g_InfectedSkillCache[attacker].m_bSmokerShoved = false;
-        g_InfectedSkillCache[attacker].m_iSmokerVictim = victim;
-        g_InfectedSkillCache[attacker].m_iSmokerVictimDamage = 0;
-        g_InfectedSkillCache[attacker].m_flPinTime[0] = GetGameTime();
-        g_InfectedSkillCache[attacker].m_flPinTime[1] = 0.0;
-    }
+    if (!IsValidInfected(attacker))
+        return;
+    
+    g_Smoker[attacker].m_DragStartTimer.Start();
 }
 
 void Event_ChokeStart(Event event, const char[] name, bool dontBroadcast)
 {
     int attacker = GetClientOfUserId(event.GetInt("userid"));
+    if (!IsValidInfected(attacker))
+        return;
 
-    if (g_InfectedSkillCache[attacker].m_flPinTime[0] == 0.0)
-        g_InfectedSkillCache[attacker].m_flPinTime[0] = GetGameTime();
-
-    g_InfectedSkillCache[attacker].m_flPinTime[1] = GetGameTime();
+    g_Smoker[attacker].m_ChokeStartTimer.Start();
 }
 
 void Event_ChokeStop(Event event, const char[] name, bool dontBroadcast)
@@ -76,15 +86,15 @@ void Event_ChokeStop(Event event, const char[] name, bool dontBroadcast)
     int attacker = GetClientOfUserId(event.GetInt("userid"));
     int victim = GetClientOfUserId(event.GetInt("victim"));
     int smoker = GetClientOfUserId(event.GetInt("smoker"));
-    int reason = event.GetInt("release_type");
 
-    if (!IsValidSurvivor(attacker) || !IsValidInfected(smoker))
+    if (!IsValidSurvivor(attacker) || !IsValidInfected(smoker) || !IsValidSurvivor(victim))
         return;
 
+    TongueReleaseType_t reason = view_as<TongueReleaseType_t>(event.GetInt("release_type"));
     // if the smoker itself was not shoved, handle the clear
     HandleClear(attacker, smoker, victim,
                 ZC_SMOKER,
-                (g_InfectedSkillCache[smoker].m_flPinTime[1] > 0.0) ? (GetGameTime() - g_InfectedSkillCache[smoker].m_flPinTime[1]) : -1.0,
-                (GetGameTime() - g_InfectedSkillCache[smoker].m_flPinTime[0]),
-                view_as<bool>(reason != CUT_SLASH && reason != CUT_KILL));
+                (g_Smoker[smoker].m_ChokeStartTimer.HasStarted()) ? (g_Smoker[smoker].m_ChokeStartTimer.GetElapsedTime()) : -1.0,
+                (g_Smoker[smoker].m_DragStartTimer.GetElapsedTime()),
+                view_as<bool>(reason == TONGUE_RELEASE_FREED || reason == TONGUE_RELEASE_SHOVED));
 }

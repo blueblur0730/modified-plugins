@@ -148,8 +148,8 @@
 	"SelfClearedTongue"
 	{
         "#format"   "{1:N},{2:N},{3:s}" // 1:attacker 2:victim 3:(withShove) ? Buffer : ""
-		"en"		"{olive}{1}{default} {blue}self-cleared{default} from {olive}{2}{default}'s tongue {blue}{3}{default}"
-        "chi"		"{olive}{1}{default} 成功地从 {olive}{2}{default} 的舌头中{blue}{3}自救了{default}"
+		"en"		"{olive}{1}{default} {blue}self-cleared{default} from {olive}{2}{default}'s tongue {blue}{3}{default}."
+        "chi"		"{olive}{1}{default} 成功地从 {olive}{2}{default} 的舌头中{blue}{3}{default}自救了."
 	}
 
     // rocks
