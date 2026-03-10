@@ -38,10 +38,6 @@ enum struct SurvivorSkillCache_t
 }
 SurvivorSkillCache_t g_Survivor[L4D2_MAXPLAYERS + 1];
 
-static ConVar g_hCvar_PounceInterrupt_Default = null;  // z_pounce_damage_interrupt
-int    g_iPounceInterruptDefault = 150;         // z_pounce_damage_interrupt, default 150, damage that is greater that this applied on a flying hunter will be skeeted immediately. but not handle on this plugin :).
-
-ConVar g_hCvar_ChargerHealth     = null;     // z_charger_health
 ConVar g_hCvar_MaxPounceDistance = null;     // z_pounce_damage_range_max
 ConVar g_hCvar_MinPounceDistance = null;     // z_pounce_damage_range_min
 ConVar g_hCvar_MaxPounceDamage = null;       // z_hunter_max_pounce_bonus_damage;
@@ -62,12 +58,6 @@ void _skill_detect_tracking_OnPluginStart()
     g_hArray_WitchTrace = new ArrayList(sizeof(WitchTrace_t));
     g_hArray_CarAlarmTrace = new ArrayList(sizeof(CarAlarmTrace_t));
 
-    // cvars: built in
-    g_hCvar_PounceInterrupt_Default = FindConVar("z_pounce_damage_interrupt");
-    g_hCvar_PounceInterrupt_Default.AddChangeHook(CvarChange_PounceInterrupt);
-    g_iPounceInterruptDefault = g_hCvar_PounceInterrupt_Default.IntValue;
-
-    g_hCvar_ChargerHealth = FindConVar("z_charger_health");
     g_hCvar_MaxPounceDistance = FindConVar("z_pounce_damage_range_max");
     g_hCvar_MinPounceDistance = FindConVar("z_pounce_damage_range_min");
     g_hCvar_MaxPounceDamage = FindConVar("z_hunter_max_pounce_bonus_damage");
@@ -99,7 +89,6 @@ void _skill_detect_tracking_OnPluginStart()
     HookEvent("player_jump_apex", Event_PlayerJumpApex, EventHookMode_Post);
 
     // boomers.
-    HookEvent("player_now_it", Event_PlayerVomit, EventHookMode_Post);
     HookEvent("boomer_exploded", Event_BoomerExploded, EventHookMode_Post);
 
     // witches.
@@ -301,9 +290,7 @@ static void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
     {
         case ZC_BOOMER:
         {
-            g_Boomer[client].m_SpawnTimer.Start();
-            g_Boomer[client].m_bBoomerHitSomebody = false;
-            g_Boomer[client].m_iBoomerGotShoved  = 0;
+            g_Boomer[client].ResetBoomer();
         }
 
         case ZC_HUNTER:
@@ -379,6 +366,29 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
                     ProcessChargerSkill(attacker, victim, g_Charger[victim].m_flMeleeDamage, damageType);
                 }
             }
+
+            case ZC_BOOMER:
+            {
+                int staggerCount = 0;
+                int staggerSurvivor[L4D2_MAXPLAYERS + 1];
+                for (int i = 1; i < MaxClients; i++)
+                {
+                    if (!IsClientInGame(i) || GetClientTeam(i) != 2)
+                        return;
+
+                    if (IsIT(i) && L4D_IsPlayerStaggering(i)) 
+                    {
+                        staggerSurvivor[staggerCount] = i;
+                        staggerCount++;
+                    }
+                }
+
+                // someone popped a boomer and biled their friendly.
+                if (staggerCount > 0)
+                {
+                    HandlePopStagger(attacker, victim, staggerCount, staggerSurvivor);
+                }
+            }
         }
     }
 }
@@ -423,11 +433,6 @@ static void Event_PlayerShoved(Event event, const char[] name, bool dontBroadcas
                 g_Jockey[victim].m_RideStartTimer.Invalidate();
             }
         }
-
-        case ZC_BOOMER:
-        {
-            g_Boomer[victim].m_iBoomerGotShoved++;
-        }
     }
 
     if (!g_InfectedSkillCache[victim].m_VictimLastShoveTimer[attacker].HasStarted() || g_InfectedSkillCache[victim].m_VictimLastShoveTimer[attacker].IsGreaterThan(SHOVE_TIME))
@@ -436,12 +441,3 @@ static void Event_PlayerShoved(Event event, const char[] name, bool dontBroadcas
         g_InfectedSkillCache[victim].m_VictimLastShoveTimer[attacker].Start();
     }
 }
-
-void CvarChange_PounceInterrupt(ConVar convar, const char[] oldValue, const char[] newValue)
-{
-    g_iPounceInterruptDefault = g_hCvar_PounceInterrupt_Default.IntValue;
-    
-    if (g_bSIAdjustment)
-        g_iPounceInterrupt = g_hCvar_PounceInterrupt.IntValue;
-}
-

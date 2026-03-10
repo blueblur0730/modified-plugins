@@ -242,9 +242,23 @@
 
 	"MultipleImpacts"
 	{
-        "#format"   "{1:d},{2:d}" // 1:survivor 2:infected
+        "#format"   "{1:d},{2:d}" // 1:charger 2:count
 		"en"		"{olive}{1}{default} multiple-impacted {olive}{2}{default} survivors."
         "chi"		"{olive}{1}{default} 冲锋多重撞击了 {olive}{2}{default} 名生还者."
+	}
+
+	"VomitLanded"
+	{
+		"#format"   "{1:N},{2:d}" // 1:boomer 2:count
+		"en"		"{olive}{1}{default} landed vomit on {olive}{2}{default} survivors."
+        "chi"		"{olive}{1}{default} 呕吐了 {olive}{2}{default} 名生还者."
+	}
+
+	"PopStagger"
+	{
+		"#format"   "{1:N},{2:N},{3:d}" // 1:boomer 2:count
+		"en"		"{olive}{1}{default} popped {olive}{2}{default}, staggering {olive}{3}{default} survivors."
+        "chi"		"{olive}{1}{default} 打爆了 {olive}{2}{default}, 炸到了 {olive}{3}{default} 名生还者."
 	}
 
 	"AssisterString"

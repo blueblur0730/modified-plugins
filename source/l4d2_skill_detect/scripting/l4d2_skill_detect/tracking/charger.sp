@@ -358,7 +358,11 @@ void ProcessChargerSkill(int attacker, int victim, float damage, int damageType)
         // melee?
         if ((damageType & DMG_SLASH) || (damageType & DMG_CLUB))
         {
-            int iChargeHealth = g_hCvar_ChargerHealth.IntValue;
+            static ConVar z_charger_health = null;
+            if (!z_charger_health)
+                z_charger_health = FindConVar("z_charger_health");
+
+            int iChargeHealth = z_charger_health.IntValue;
             (RoundToNearest(damage) > (iChargeHealth * 0.65)) ? HandleLevel(attacker, victim) : HandleLevelHurt(attacker, victim, RoundToNearest(damage));
             g_Charger[victim].ResetCharger();
             return;

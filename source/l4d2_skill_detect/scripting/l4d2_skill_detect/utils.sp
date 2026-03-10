@@ -138,6 +138,84 @@ enum struct CountdownTimer_t
 	float m_timestamp;
 }
 
+enum struct CountdownTimerWrapper_t
+{
+    float GetTimeStamp()
+    {
+        return LoadFromAddress(this.p + view_as<Address>(4), NumberType_Int32);
+    }
+
+    float GetDuration() 
+    {
+         return LoadFromAddress(this.p + view_as<Address>(8), NumberType_Int32);
+    }
+
+    void SetTimeStamp(float timestamp)
+    {
+        StoreToAddress(this.p + view_as<Address>(4), timestamp, NumberType_Int32);
+    }
+
+    void SetDuration(float duration)
+    {
+        StoreToAddress(this.p + view_as<Address>(8), duration, NumberType_Int32);
+    }
+
+	void Init()
+	{
+		this.SetTimeStamp(-1.0);
+		this.SetDuration(0.0);
+	}
+
+	float Now()
+	{
+		return GetGameTime(); // gpGlobals->curtime
+	}
+
+	void Reset()
+	{
+		this.SetTimeStamp(this.Now() + this.GetDuration());
+	}		
+
+	void Start( float duration )
+	{
+		this.SetTimeStamp(this.Now() + duration);
+		this.SetDuration(duration);
+	}
+
+	void Invalidate()
+	{
+		this.SetTimeStamp(-1.0);
+	}		
+
+	bool HasStarted()
+	{
+		return (this.GetTimeStamp() > 0.0);
+	}
+
+	bool IsElapsed()
+	{
+		return (this.Now() > this.GetTimeStamp());
+	}
+
+	float GetElapsedTime()
+	{
+		return this.Now() - this.GetTimeStamp() + this.GetDuration();
+	}
+
+	float GetRemainingTime()
+	{
+		return (this.GetTimeStamp() - this.Now());
+	}
+
+	/// return original countdown time
+	float GetCountdownDuration()
+	{
+		return (this.GetTimeStamp() > 0.0) ? this.GetDuration() : 0.0;
+	}
+
+    Address p;
+}
+
 /*
 // size 92
 struct CTakeDamageInfo
@@ -368,6 +446,7 @@ stock float GetSurvivorDistance(int client)
     return L4D2Direct_GetFlowDistance(client);
 }
 
+// from smac_stock.inc
 stock bool GetClientAbsVelocity(int client, float velocity[3])
 {
     static int offset = -1;
@@ -384,7 +463,7 @@ stock float fmaxf(float a, float b)
     return (a > b) ? a : b;
 }
 
-// game internal damage calculation.
+// game's internal falling damage calculation.
 stock float FallingDamageForSpeed( float speed )
 {
     if ( speed < 0.0 )
@@ -395,4 +474,32 @@ stock float FallingDamageForSpeed( float speed )
     {
         return ( (speed / (720 - 560)) * (speed / (720 - 560)) * 100.0 );
     }
+}
+
+static stock CountdownTimerWrapper_t GetITTimer(int client)
+{
+    static int iOff_m_itTimer = -1;
+    if (iOff_m_itTimer == -1)
+        iOff_m_itTimer = FindSendPropInfo("CTerrorPlayer", "m_itTimer");
+    
+    CountdownTimerWrapper_t timer;
+    timer.p = view_as<Address>(GetEntData(client, iOff_m_itTimer));
+    return timer;
+}
+
+stock bool IsIT(int client)
+{
+    CountdownTimerWrapper_t m_itTimer; 
+    m_itTimer = GetITTimer(client);
+    return !m_itTimer.IsElapsed();
+}
+
+// from l4d2_shove_kill_adjustment by blueblur.
+stock int GetCurrentShoveCount(int client)
+{
+    static int s_iOff_m_nCurrentShoveCount = -1;
+    if (s_iOff_m_nCurrentShoveCount == -1)
+        s_iOff_m_nCurrentShoveCount = (FindSendPropInfo("CTerrorPlayer", "m_shoveForce") - 8);
+
+    return GetEntData(client, s_iOff_m_nCurrentShoveCount);
 }

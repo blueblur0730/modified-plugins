@@ -258,10 +258,20 @@ void OnHunterTakeDamageAlivePost(int victim, int attacker, int inflictor, float 
 
 void ProcessHunterSkeet(int attacker, int victim, int weapon, int damageType)
 {
+    static ConVar z_pounce_damage_interrupt = null;
+    static ConVar l4d2_si_damage_adjustment_pounce_damage_interrupt = null;
+
+    if (!z_pounce_damage_interrupt)
+        z_pounce_damage_interrupt = FindConVar("z_pounce_damage_interrupt");
+    
+
+    if (g_bSIAdjustment && !l4d2_si_damage_adjustment_pounce_damage_interrupt)
+        l4d2_si_damage_adjustment_pounce_damage_interrupt = FindConVar("l4d2_si_damage_adjustment_pounce_damage_interrupt");
+    
     // skeet?
     if (g_Hunter[victim].m_iTeamDamage > 0 &&
         g_Hunter[victim].m_iTeamDamage > g_Hunter[victim].m_iDamage[attacker] && 
-        g_Hunter[victim].m_iTeamDamage >= (L4D_HasPlayerControlledZombies() ? g_iPounceInterruptDefault : g_iPounceInterrupt))
+        g_Hunter[victim].m_iTeamDamage >= (L4D_HasPlayerControlledZombies() ? z_pounce_damage_interrupt.IntValue : l4d2_si_damage_adjustment_pounce_damage_interrupt.IntValue))
     {
         // team skeet
         HandleSkeet(attacker, victim, _, _, _, true);

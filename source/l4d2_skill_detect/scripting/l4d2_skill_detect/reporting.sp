@@ -598,6 +598,11 @@ void HandleClear(int attacker, int victim, int pinVictim, int zombieClass, float
 // booms
 void HandleVomitLanded(int attacker, int boomCount)
 {
+    if (g_hCvar_RepVomitLanded.BoolValue)
+    {
+        CPrintToChatAll("%t %t", "Tag+", "VomitLanded", attacker, boomCount);
+    }
+
     Call_StartForward(g_hForwardVomitLanded);
     Call_PushCell(attacker);
     Call_PushCell(boomCount);
@@ -676,5 +681,20 @@ void HandleMultiImpact(int attacker, int numImpacts)
     Call_StartForward(g_hForwardNumImpacts);
     Call_PushCell(attacker);
     Call_PushCell(numImpacts);
+    Call_Finish();
+}
+
+void HandlePopStagger(int attacker, int victim, int count, int staggerSurvivor[L4D2_MAXPLAYERS + 1])
+{
+    if (g_hCvar_RepPopStagger.BoolValue)
+    {
+        CPrintToChatAll("%t %t", "Tag+", "PopStagger", attacker, victim, count);
+    }
+
+    Call_StartForward(g_hForwardPopStagger);
+    Call_PushCell(attacker);
+    Call_PushCell(victim);
+    Call_PushCell(count);
+    Call_PushArray(staggerSurvivor, L4D2_MAXPLAYERS + 1);
     Call_Finish();
 }
