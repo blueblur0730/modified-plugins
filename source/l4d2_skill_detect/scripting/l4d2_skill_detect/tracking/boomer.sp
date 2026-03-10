@@ -42,15 +42,12 @@ static void OnVomitPostThinkPost(int client)
             if (!IsClientInGame(i) || GetClientTeam(i) != 2)
                 continue;
 
-            PrintToServer("IsIT %d, L4D_IsPlayerStaggering %d", IsIT(i), L4D_IsPlayerStaggering(i));
             if (IsIT(i) && !L4D_IsPlayerStaggering(i)) 
             {
                 itSurvivor[itCount] = i;
                 itCount++;
             }
         }
-
-        PrintToServer("Boomer vomit ended. It count: %d", itCount);
 
         if (itCount > 1)
             HandleVomitLanded(client, itCount);
