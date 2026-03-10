@@ -142,22 +142,22 @@ enum struct CountdownTimerWrapper_t
 {
     float GetTimeStamp()
     {
-        return LoadFromAddress(this.p + view_as<Address>(4), NumberType_Int32);
+        return view_as<float>(LoadFromAddress(this.p + view_as<Address>(8), NumberType_Int32));
     }
 
     float GetDuration() 
     {
-         return LoadFromAddress(this.p + view_as<Address>(8), NumberType_Int32);
+         return view_as<float>(LoadFromAddress(this.p + view_as<Address>(4), NumberType_Int32));
     }
 
     void SetTimeStamp(float timestamp)
     {
-        StoreToAddress(this.p + view_as<Address>(4), timestamp, NumberType_Int32);
+        StoreToAddress(this.p + view_as<Address>(8), timestamp, NumberType_Int32);
     }
 
     void SetDuration(float duration)
     {
-        StoreToAddress(this.p + view_as<Address>(8), duration, NumberType_Int32);
+        StoreToAddress(this.p + view_as<Address>(4), duration, NumberType_Int32);
     }
 
 	void Init()
@@ -483,7 +483,7 @@ static stock CountdownTimerWrapper_t GetITTimer(int client)
         iOff_m_itTimer = FindSendPropInfo("CTerrorPlayer", "m_itTimer");
     
     CountdownTimerWrapper_t timer;
-    timer.p = view_as<Address>(GetEntData(client, iOff_m_itTimer));
+    timer.p = view_as<Address>(GetEntityAddress(client) + view_as<Address>(iOff_m_itTimer));
     return timer;
 }
 

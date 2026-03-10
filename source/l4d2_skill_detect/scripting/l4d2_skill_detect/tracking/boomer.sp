@@ -7,7 +7,7 @@ enum struct BoomerSkillCache_t
 {
     // pops
     IntervalTimer_t m_SpawnTimer;               // time the SI spawned up
-    CountdownTimer_t m_VomitDurationTimer;          // timer for vomit duration
+    CountdownTimer_t m_VomitDurationTimer;      // timer for vomit duration
 
     void ResetBoomer()
     {
@@ -27,7 +27,7 @@ public void L4D_ActivateAbility_Boomer_Post(int client, int ability)
     SDKHook(client, SDKHook_PostThinkPost, OnVomitPostThinkPost);
 }
 
-void OnVomitPostThinkPost(int client)
+static void OnVomitPostThinkPost(int client)
 {
     // vomit ended or popped during vomitting.
     if (g_Boomer[client].m_VomitDurationTimer.IsElapsed() || !IsPlayerAlive(client))
@@ -40,8 +40,9 @@ void OnVomitPostThinkPost(int client)
         for (int i = 1; i < MaxClients; i++)
         {
             if (!IsClientInGame(i) || GetClientTeam(i) != 2)
-                return;
+                continue;
 
+            PrintToServer("IsIT %d, L4D_IsPlayerStaggering %d", IsIT(i), L4D_IsPlayerStaggering(i));
             if (IsIT(i) && !L4D_IsPlayerStaggering(i)) 
             {
                 itSurvivor[itCount] = i;
@@ -49,7 +50,11 @@ void OnVomitPostThinkPost(int client)
             }
         }
 
-        HandleVomitLanded(client, itCount);
+        PrintToServer("Boomer vomit ended. It count: %d", itCount);
+
+        if (itCount > 1)
+            HandleVomitLanded(client, itCount);
+
         g_Boomer[client].ResetBoomer();
     }
 }

@@ -684,11 +684,19 @@ void HandleMultiImpact(int attacker, int numImpacts)
     Call_Finish();
 }
 
-void HandlePopStagger(int attacker, int victim, int count, int staggerSurvivor[L4D2_MAXPLAYERS + 1])
+void HandlePopStagger(int attacker, int victim, int count, int staggerSurvivor[L4D2_MAXPLAYERS + 1], bool isStaggering)
 {
     if (g_hCvar_RepPopStagger.BoolValue)
     {
-        CPrintToChatAll("%t %t", "Tag+", "PopStagger", attacker, victim, count);
+        for (int i = 1; i < MaxClients; i++)
+        {
+            if (!IsClientInGame(i) || IsFakeClient(i))
+                continue;
+
+            char szBuffer[128];
+            Format(szBuffer, sizeof(szBuffer), "%T", "Staggered", i);
+            CPrintToChat(i, "%t %t", "Tag+", "PopStagger", attacker, victim, count, isStaggering ? szBuffer : "");
+        }
     }
 
     Call_StartForward(g_hForwardPopStagger);

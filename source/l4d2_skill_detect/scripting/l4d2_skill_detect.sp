@@ -121,7 +121,7 @@ ConVar
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r3.1.0"
+#define PLUGIN_VERSION "r3.1.1"
 
 public Plugin myinfo =
 {

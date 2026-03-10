@@ -3,262 +3,262 @@
 	"Tag+"
 	{
 		"en"	"{green}★{default}"
-        "chi"	"{green}★{default}"
+		"chi"	"{green}★{default}"
 	}
 
 	"Tag++"
 	{
 		"en"	"{green}★★{default}"
-        "chi"	"{green}★★{default}"
+		"chi"	"{green}★★{default}"
 	}
 
 	"Tag+++"
 	{
 		"en"	"{green}★★★{default}"
-        "chi"	"{green}★★★{default}"
+		"chi"	"{green}★★★{default}"
 	}
 
 	"Tag++++"
 	{
 		"en"	"{green}★★★★{default}"
-        "chi"	"{green}★★★★{default}"
+		"chi"	"{green}★★★★{default}"
 	}
 
 	// boomer pop
 	"Popped"
 	{
-        "#format"   "{1:N},{2:N}" // 1:attacker 2:victim
+		"#format"   "{1:N},{2:N}" // 1:attacker 2:victim
 		"en"		"{olive}{1}{default} popped {olive}{2}{default}."
-        "chi"		"{olive}{1}{default} 打爆了 {olive}{2}{default}."
+		"chi"		"{olive}{1}{default} 打爆了 {olive}{2}{default}."
 	}
 
     // charger level
 	"Leveled"
 	{
-        "#format"   "{1:N},{2:N}" // 1:attacker, 2:victim
+		"#format"   "{1:N},{2:N}" // 1:attacker, 2:victim
 		"en"		"{olive}{1}{default} {blue}fully{default} leveled {olive}{2}{default}"
-        "chi"		"{olive}{1}{default} {blue}一刀{default} 击倒了 {olive}{2}{default}"
+		"chi"		"{olive}{1}{default} {blue}一刀{default} 击倒了 {olive}{2}{default}"
 	}
 
     // charger level hurt
 	"LeveledHurt"
 	{
-        "#format"   "{1:N},{2:N},{3:i}" // 1:attacker 2:victim 3:damage
+		"#format"   "{1:N},{2:N},{3:i}" // 1:attacker 2:victim 3:damage
 		"en"		"{olive}{1}{default} {blue}chip-leveled{default} {olive}{2}{default} ({blue}{3} dmg{default})"
-        "chi"		"{olive}{1}{default} {blue}一刀{default} 击倒了残血的{olive}{2}{default} ({blue}{3} 伤害{default})"
+		"chi"		"{olive}{1}{default} {blue}一刀{default} 击倒了残血的{olive}{2}{default} ({blue}{3} 伤害{default})"
 	}
 
     // deathcharges
 	"DeathCharged"
 	{
-        "#format"   "{1:N},{2:N},{3:s},{4:i}" // 1:attacker 2:victim 3:(bCarried) ? "" : Buffer 4:RoundFloat(height)
+		"#format"   "{1:N},{2:N},{3:s},{4:i}" // 1:attacker 2:victim 3:(bCarried) ? "" : Buffer 4:RoundFloat(height)
 		"en"		"{olive}{1}{default} {red}death-charged{default} {olive}{2}{default} {3}({red}height{default}: {red}{4}{default})"
-        "chi"		"{olive}{1}{default} {red}冲锋秒杀了{default} {3}{olive}{2}{default} ({red}高度{default}: {red}{4}{default})"
+		"chi"		"{olive}{1}{default} {red}冲锋秒杀了{default} {3}{olive}{2}{default} ({red}高度{default}: {red}{4}{default})"
 	}
 
 	"ChargingSkeeted"
 	{
 		"#format"   "{1:N},{2:N},{3:.02f}" // 1: attacker, 2: victim, 3: time
 		"en"		"{olive}{1}{default} skeeted the charging {olive}{2}{default} {blue}({3} {green}seconds{blue}){default}."
-        "chi"		"{olive}{1}{default} 杀死了冲锋中的 {olive}{2}{default} {blue}({default}{3} {green}秒{blue}){default}."
+		"chi"		"{olive}{1}{default} 杀死了冲锋中的 {olive}{2}{default} {blue}({default}{3} {green}秒{blue}){default}."
 	}
 	
 	"TeamChargingSkeeted"
 	{
 		"#format"	"{1:N},{2:N},{3:d},{4:d},{5:.02f},{6:s}" // 1: attacker, 2: victim, 3: shots fired, 4: dmg, 5: time, 6: plural
 		"en"		"{olive}{2}{default} team-skeeted the charging {olive}{1}{default} {blue}({default}{3} {green}shot{6}{default}/{4} {green}dmg{default}/{5} {green}seconds{blue}){default}"
-        "chi"		"{olive}{2}{default} 团队击杀了冲锋的 {olive}{1}{default} {blue}({default}{3} {green}枪{6}{default}/{4} {green}伤害{default}/{5} {green}秒{blue}){default}"
+		"chi"		"{olive}{2}{default} 团队击杀了冲锋的 {olive}{1}{default} {blue}({default}{3} {green}枪{6}{default}/{4} {green}伤害{default}/{5} {green}秒{blue}){default}"
 	}
 
     // deadstops
 	"Deadstopped"
 	{
-        "#format"   "{1:N},{2:N}" // 1:attacker 2:victim
+		"#format"   "{1:N},{2:N}" // 1:attacker 2:victim
 		"en"		"{olive}{1}{default} {blue}deadstopped{default} {olive}{2}{default}"
-        "chi"		"{olive}{1}{default} {blue}空推了{default} {olive}{2}{default}"
+		"chi"		"{olive}{1}{default} {blue}空推了{default} {olive}{2}{default}"
 	}
 
 	// shove
 	"Shoved"
 	{
-        "#format"   "{1:N},{2:N}" // 1:attacker 2:victim
+		"#format"   "{1:N},{2:N}" // 1:attacker 2:victim
 		"en"		"{olive}{1}{default} {blue}shoved{default} {olive}{2}{default}."
-        "chi"		"{olive}{1}{default} {blue}推开了{default} {olive}{2}{default}."
+		"chi"		"{olive}{1}{default} {blue}推开了{default} {olive}{2}{default}."
 	}
 
 	"TeamSkeeted"
 	{
-        "#format"   "{1:N},{2:N},{3:d},{4:d},{5:s}" // 1:victim, 2:attacker, 3: shots, 4:dmg, 5:plural
+		"#format"   "{1:N},{2:N},{3:d},{4:d},{5:s}" // 1:victim, 2:attacker, 3: shots, 4:dmg, 5:plural
 		"en"		"{olive}{1}{default} was team-skeeted by {blue}{2}{default} {blue}({default}{3} {green}shot{5}{default}/{4} {green}dmg{blue}){default}."
-        "chi"		"{blue}{2}{default} 团队空爆了 {olive}{1}{default} {blue}({default}{3} {green}枪{5}{default}/{4} {green}伤害{blue}){default}."
+		"chi"		"{blue}{2}{default} 团队空爆了 {olive}{1}{default} {blue}({default}{3} {green}枪{5}{default}/{4} {green}伤害{blue}){default}."
 	}
 
 	"Skeeted"
 	{
-        "#format"   "{1:N},{2:N},{3:d},{4:s}" // 1:attacker 2:victim, 3:shots fired
+		"#format"   "{1:N},{2:N},{3:d},{4:s}" // 1:attacker 2:victim, 3:shots fired
 		"en"		"{blue}{1}{default} skeeted {olive}{2}{default} in {blue}{3}{default} shot{4}."
-        "chi"		"{blue}{1}{default} {blue}{3}{default} 枪{4}空爆了 {olive}{2}{default}."
+		"chi"		"{blue}{1}{default} {blue}{3}{default} 枪{4}空爆了 {olive}{2}{default}."
 	}
 
 	"SkeetedMelee"
 	{
-        "#format"   "{1:N},{2:N}" // 1:attacker 2:victim,
+		"#format"   "{1:N},{2:N}" // 1:attacker 2:victim,
 		"en"		"{blue}{1}{default} {blue}melee-skeeted{default} {olive}{2}{default}."
-        "chi"		"{blue}{1}{default} {blue}近战空爆了{default} {olive}{2}{default}."
+		"chi"		"{blue}{1}{default} {blue}近战空爆了{default} {olive}{2}{default}."
 	}
 
 	"SkeetedSniper"
 	{
-        "#format"   "{1:N},{2:N},{3:d},{4:s}" // 1:attacker 2:victim, 3:shots fired, 4:plural
+		"#format"   "{1:N},{2:N},{3:d},{4:s}" // 1:attacker 2:victim, 3:shots fired, 4:plural
 		"en"		"{blue}{1}{default} {blue}sniper-skeeted{default} {olive}{2}{default} in {blue}{3}{default} shot{4}."
-        "chi"		"{blue}{1}{default} {blue}狙击空爆了{default} {olive}{2}{default} ({blue}{3}{default} 枪{4})."
+		"chi"		"{blue}{1}{default} {blue}狙击空爆了{default} {olive}{2}{default} ({blue}{3}{default} 枪{4})."
 	}
 
 	"SkeetedGL"
 	{
-        "#format"   "{1:N},{2:N}" // 1:attacker 2:victim, 3:shots fired
+		"#format"   "{1:N},{2:N}" // 1:attacker 2:victim, 3:shots fired
 		"en"		"{blue}{1}{default} {blue}grenade-launcher-skeeted{default} {olive}{2}{default}."
-        "chi"		"{blue}{1}{default} {blue}榴弹空爆了{default} {olive}{2}{default}."
+		"chi"		"{blue}{1}{default} {blue}榴弹空爆了{default} {olive}{2}{default}."
 	}
 
     // crown
 	"CrownedWitch"
 	{
-        "#format"   "{1:N}" // 1:attacker
+		"#format"   "{1:N}" // 1:attacker
 		"en"		"{olive}{1}{default} crowned a witch."
-        "chi"		"{olive}{1}{default} 秒杀了一个 witch."
+		"chi"		"{olive}{1}{default} 秒杀了一个 witch."
 	}
 
     // drawcrown
 	"DrawCrowned"
 	{
-        "#format"   "{1:N}" // 1:attacker
+		"#format"   "{1:N}" // 1:attacker
 		"en"		"{olive}{1}{default} draw-crowned a witch."
-        "chi"		"{olive}{1}{default} 引秒了一个 witch."
+		"chi"		"{olive}{1}{default} 引秒了一个 witch."
 	}
 
     // smoker clears
 	"CutTongue"
 	{
-        "#format"   "{1:N},{2:N}" // 1:attacker 2:victim
+		"#format"   "{1:N},{2:N}" // 1:attacker 2:victim
 		"en"		"{olive}{1}{default} {blue}cut{default} {olive}{2}{default}'s tongue"
-        "chi"		"{olive}{1}{default} {blue}砍断了{default} {olive}{2}{default} 的舌头"
+		"chi"		"{olive}{1}{default} {blue}砍断了{default} {olive}{2}{default} 的舌头"
 	}
 
 	"SelfClearedTongue"
 	{
-        "#format"   "{1:N},{2:N},{3:s}" // 1:attacker 2:victim 3:(withShove) ? Buffer : ""
+		"#format"   "{1:N},{2:N},{3:s}" // 1:attacker 2:victim 3:(withShove) ? Buffer : ""
 		"en"		"{olive}{1}{default} {blue}self-cleared{default} from {olive}{2}{default}'s tongue {blue}{3}{default}."
-        "chi"		"{olive}{1}{default} 成功地从 {olive}{2}{default} 的舌头中{blue}{3}{default}自救了."
+		"chi"		"{olive}{1}{default} 成功地从 {olive}{2}{default} 的舌头中{blue}{3}{default}自救了."
 	}
 
     // rocks
 	"SkeetedRock"
 	{
-        "#format"   "{1:N},{2:N}" // 1:attacker 2:victim
+		"#format"   "{1:N},{2:N}" // 1:attacker 2:victim
 		"en"		"{olive}{1}{default} {blue}skeeted{default} {olive}{2}{default} 's rock."
-        "chi"		"{olive}{1}{default} {blue}空爆了{default} {olive}{2}{default} 的石头."
+		"chi"		"{olive}{1}{default} {blue}空爆了{default} {olive}{2}{default} 的石头."
 	}
 
     // highpounces
 	"HunterHP"
 	{
-        "#format"   "{1:N},{2:N},{3:i},{4:i}" // 1:attacker 2:victim 3:RoundFloat(calculatedDamage) 4:RoundFloat(height)
+		"#format"   "{1:N},{2:N},{3:i},{4:i}" // 1:attacker 2:victim 3:RoundFloat(calculatedDamage) 4:RoundFloat(height)
 		"en"		"{olive}{1}{default} {red}high-pounced{default} {olive}{2}{default} ({red}{3}{default} dmg, height: {red}{4}{default})"
-        "chi"		"{olive}{1}{default} {red}高扑了{default} {olive}{2}{default} ({red}{3}{default} 伤害, 高度: {red}{4}{default})"
+		"chi"		"{olive}{1}{default} {red}高扑了{default} {olive}{2}{default} ({red}{3}{default} 伤害, 高度: {red}{4}{default})"
 	}
 
 	"JockeyHP"
 	{
-        "#format"   "{1:N},{2:N},{3:i}" // 1:attacker 2:victim 3:RoundFloat(height)
+		"#format"   "{1:N},{2:N},{3:i}" // 1:attacker 2:victim 3:RoundFloat(height)
 		"en"		"{olive}{1}{default} {red}high-pounced{default} {olive}{2}{default} ({red}height{default}: {red}{3}{default})"
-        "chi"		"{olive}{1}{default} {red}高扑了{default} {olive}{2}{default} ({red}高度{default}: {red}{3}{default})"
+		"chi"		"{olive}{1}{default} {red}高扑了{default} {olive}{2}{default} ({red}高度{default}: {red}{3}{default})"
 	}
 
     // SI clears    (cleartimeA = pummel/pounce/ride/choke, cleartimeB = tongue drag, charger carry)
 	"SIClear"
 	{
-        "#format"   "{1:N},{2:N},{3:N},{4:s},{5:.2f}" // 1:attacker 2:pinVictim 3:victim 4:g_csSIClassName[zombieClass] 5:fClearTime
+		"#format"   "{1:N},{2:N},{3:N},{4:s},{5:.2f}" // 1:attacker 2:pinVictim 3:victim 4:g_csSIClassName[zombieClass] 5:fClearTime
 		"en"		"{olive}{1}{default} {blue}insta-cleared{default} {olive}{2}{default} from {olive}{3}{default}'s {4} ({blue}{5} {default}seconds)"
-        "chi"		"{olive}{1}{default} 从 {olive}{3}{default}的 {4} 里 {blue}速救了{default} {olive}{2}{default} ({blue}{5} {default}秒)"
+		"chi"		"{olive}{1}{default} 从 {olive}{3}{default}的 {4} 里 {blue}速救了{default} {olive}{2}{default} ({blue}{5} {default}秒)"
 	}
 	"SIClearTeammate"
 	{
-        "#format"   "{1:N},{2:N},{3:s},{4:.2f}" // 1:attacker 2:victim 3:g_csSIClassName[zombieClass] 4:fClearTime
+		"#format"   "{1:N},{2:N},{3:s},{4:.2f}" // 1:attacker 2:victim 3:g_csSIClassName[zombieClass] 4:fClearTime
 		"en"		"{olive}{1}{default} {blue}insta-cleared{default} {olive}a teammate{default} from {olive}{2}{default}'s {3} ({blue}{4} {default}seconds)"
-        "chi"		"{olive}{1}{default} 从 {olive}{2}{default}的 {3} 里 {blue}速救了{default}{olive}一名队友{default} ({blue}{4} {default}秒)"
+		"chi"		"{olive}{1}{default} 从 {olive}{2}{default}的 {3} 里 {blue}速救了{default}{olive}一名队友{default} ({blue}{4} {default}秒)"
 	}
 
     // bhaps
 	"BunnyHop"
 	{ 
-        "#format"   "{1:i},{2:s},{3:.1f}" // 1:streak 2:(streak > 1) ? "s" : "" 3:maxVelocity
+		"#format"   "{1:i},{2:s},{3:.1f}" // 1:streak 2:(streak > 1) ? "s" : "" 3:maxVelocity
 		"en"		"{olive}You{default} got {blue}{1} bunnyhop{2}{default} in a row ({blue}top speed{default}: {olive}{3}{default})"
-        "chi"		"{olive}你{default}一次性连跳了{2}{blue}{1}{default} 下 ({blue}最高速度{default}: {olive}{3}{default})"
+		"chi"		"{olive}你{default}一次性连跳了{2}{blue}{1}{default} 下 ({blue}最高速度{default}: {olive}{3}{default})"
 	}
 
     // car alarms
 	"CarAlarmHit"
 	{
-        "#format"   "{1:N}" // 1:attacker
+		"#format"   "{1:N}" // 1:attacker
 		"en"		"{olive}{1}{default} triggered an alarm with a hit."
-        "chi"		"{olive}{1}{default} 击打了警报车."
+		"chi"		"{olive}{1}{default} 击打了警报车."
 	}
 
 	"CarAlarmTouched"
 	{
-        "#format"   "{1:N},{2:N}" // 1:infected 2:survivor
+		"#format"   "{1:N},{2:N}" // 1:infected 2:survivor
 		"en"		"{olive}{1}{default} made {olive}{2}{default} trigger an alarm."
-        "chi"		"{olive}{1}{default} 使 {olive}{2}{default} 触发了警报车."
+		"chi"		"{olive}{1}{default} 使 {olive}{2}{default} 触发了警报车."
 	}
 
 	"CarAlarmTouchedSelf"
 	{
-        "#format"   "{1:N}" // 1:attacker
+		"#format"   "{1:N}" // 1:attacker
 		"en"		"{olive}{1}{default} touched an alarmed car."
-        "chi"		"{olive}{1}{default} 触碰了警报车."
+		"chi"		"{olive}{1}{default} 触碰了警报车."
 	}
 
 	"CarAlarmExplosion"
 	{
-        "#format"   "{1:N}" // 1:attacker
+		"#format"   "{1:N}" // 1:attacker
 		"en"		"{olive}{1}{default} triggered an alarm with an explosion."
-        "chi"		"{olive}{1}{default} 使用爆炸触发了警报车."
+		"chi"		"{olive}{1}{default} 使用爆炸触发了警报车."
 	}
 
 	"CarAlarmBoomer"
 	{
-        "#format"   "{1:N},{2:N}" // 1:survivor 2:infected
+		"#format"   "{1:N},{2:N}" // 1:survivor 2:infected
 		"en"		"{olive}{1}{default} triggered an alarm by killing a boomer {olive}{2}{default}."
-        "chi"		"{olive}{1}{default} 因击杀了 boommer {olive}{2}{default} 而触发了警报车."
+		"chi"		"{olive}{1}{default} 因击杀了 boommer {olive}{2}{default} 而触发了警报车."
 	}
 
 	"CarAlarm"
 	{
-        "#format"   "{1:N}" // 1:attacker
+		"#format"   "{1:N}" // 1:attacker
 		"en"		"{olive}{1}{default} triggered an alarm."
-        "chi"		"{olive}{1}{default} 触发了警报车."
+		"chi"		"{olive}{1}{default} 触发了警报车."
 	}
 
 	"MultipleImpacts"
 	{
-        "#format"   "{1:d},{2:d}" // 1:charger 2:count
+		"#format"   "{1:d},{2:d}" // 1:charger 2:count
 		"en"		"{olive}{1}{default} multiple-impacted {olive}{2}{default} survivors."
-        "chi"		"{olive}{1}{default} 冲锋多重撞击了 {olive}{2}{default} 名生还者."
+		"chi"		"{olive}{1}{default} 冲锋多重撞击了 {olive}{2}{default} 名生还者."
 	}
 
 	"VomitLanded"
 	{
 		"#format"   "{1:N},{2:d}" // 1:boomer 2:count
 		"en"		"{olive}{1}{default} landed vomit on {olive}{2}{default} survivors."
-        "chi"		"{olive}{1}{default} 呕吐了 {olive}{2}{default} 名生还者."
+		"chi"		"{olive}{1}{default} 呕吐了 {olive}{2}{default} 名生还者."
 	}
 
 	"PopStagger"
 	{
-		"#format"   "{1:N},{2:N},{3:d}" // 1:boomer 2:count
-		"en"		"{olive}{1}{default} popped {olive}{2}{default}, staggering {olive}{3}{default} survivors."
-        "chi"		"{olive}{1}{default} 打爆了 {olive}{2}{default}, 炸到了 {olive}{3}{default} 名生还者."
+		"#format"   "{1:N},{2:N},{3:d},{4:s}" // 1:boomer 2:count
+		"en"		"{olive}{1}{default} popped a {4}{olive}{2}{default}, staggering {olive}{3}{default} survivors."
+		"chi"		"{olive}{1}{default} 打爆了{4} {olive}{2}{default}, 炸到了 {olive}{3}{default} 名生还者."
 	}
 
 	"AssisterString"
@@ -278,13 +278,19 @@
 	"Shoving"
 	{
 		"en"		"by shoving"
-        "chi"		"使用推开"
+		"chi"		"使用推开"
 	}
 
 	"Bowling"
 	{
 		"en"		"by bowling"
-        "chi"		"被撞飞的"
+		"chi"		"被撞飞的"
+	}
+
+	"Staggering"
+	{
+		"en"		"staggered "
+		"chi"		"一个被推开的"
 	}
 
 	"Plural"

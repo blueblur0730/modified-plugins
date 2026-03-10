@@ -314,8 +314,11 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
 {
     int victim = GetClientOfUserId(event.GetInt("userid"));
     int attacker = GetClientOfUserId(event.GetInt("attacker"));
-    int damageType = event.GetInt("type");
 
+    if (!IsValidSurvivor(attacker) || !IsValidInfected(victim))
+        return;
+
+    int damageType = event.GetInt("type");
     if (IsValidInfected(victim))
     {
         int zClass = GetEntProp(victim, Prop_Send, "m_zombieClass");
@@ -369,27 +372,43 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
 
             case ZC_BOOMER:
             {
-                int staggerCount = 0;
-                int staggerSurvivor[L4D2_MAXPLAYERS + 1];
-                for (int i = 1; i < MaxClients; i++)
-                {
-                    if (!IsClientInGame(i) || GetClientTeam(i) != 2)
-                        return;
-
-                    if (IsIT(i) && L4D_IsPlayerStaggering(i)) 
-                    {
-                        staggerSurvivor[staggerCount] = i;
-                        staggerCount++;
-                    }
-                }
-
-                // someone popped a boomer and biled their friendly.
-                if (staggerCount > 0)
-                {
-                    HandlePopStagger(attacker, victim, staggerCount, staggerSurvivor);
-                }
+                DataPack pack = new DataPack();
+                pack.WriteCell(victim);
+                pack.WriteCell(attacker);
+                pack.WriteCell(L4D_IsPlayerStaggering(victim))
+                
+                RequestFrame(OnNextFrame_BoomerDeath, pack);
             }
         }
+    }
+}
+
+static void OnNextFrame_BoomerDeath(DataPack pack)
+{
+    pack.Reset();
+    int victim = pack.ReadCell();
+    int attacker = pack.ReadCell();
+    bool isStaggering = pack.ReadCell();
+    delete pack;
+
+    int staggerCount = 0;
+    int staggerSurvivor[L4D2_MAXPLAYERS + 1];
+    for (int i = 1; i < MaxClients; i++)
+    {
+        if (!IsClientInGame(i) || GetClientTeam(i) != 2)
+            continue;
+
+        if (IsIT(i) && L4D_IsPlayerStaggering(i)) 
+        {
+            staggerSurvivor[staggerCount] = i;
+            staggerCount++;
+        }
+    }
+
+    // someone popped a boomer and biled their friendly.
+    if (staggerCount > 0)
+    {
+        HandlePopStagger(attacker, victim, staggerCount, staggerSurvivor, isStaggering);
     }
 }
 
