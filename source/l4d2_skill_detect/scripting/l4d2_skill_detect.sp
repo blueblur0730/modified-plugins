@@ -52,7 +52,8 @@ GlobalForward
     g_hForwardBHopStreak      = null,
     g_hForwardAlarmTriggered  = null,
     g_hForwardNumImpacts      = null,
-    g_hForwardPopStagger      = null;
+    g_hForwardPopStagger      = null,
+    g_hForwardBoomerStaggerTeammate = null;
 
 StringMap
     g_hMapWeapons       = null,       // weapon check
@@ -83,6 +84,7 @@ ConVar
     g_hCvar_RepNumImpacts,
     g_hCvar_RepPopStagger,
     g_hCvar_RepVomitLanded,
+    g_hCvar_RepBoomerStaggerTeammate,
 
     g_hCvar_AllowMelee,              // cvar whether to count melee skeets
     g_hCvar_AllowSniper,             // cvar whether to count sniper headshot skeets
@@ -101,15 +103,7 @@ ConVar
 /*
     To Do
     -----
-    - test chargers getting dislodged with boomer pops?
-
-    - add deathcharge assist check
-        - smoker
-        - jockey
-
-    - count rock hits even if they do no damage [epi request]
     - sir
-        - make separate teamskeet forward, with (for now, up to) 4 skeeters + the damage each did
         - ? spit-on-cap detection
 */
 
@@ -121,7 +115,7 @@ ConVar
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r3.1.1"
+#define PLUGIN_VERSION "r3.3.0"
 
 public Plugin myinfo =
 {

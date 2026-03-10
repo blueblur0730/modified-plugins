@@ -513,3 +513,11 @@ stock int GetCurrentShoveCount(int client)
 
     return GetEntData(client, s_iOff_m_nCurrentShoveCount);
 }
+
+stock bool IsDominator(int class)
+{
+    if (class == ZC_HUNTER || class == ZC_JOCKEY || class == ZC_CHARGER || class == ZC_SMOKER)
+        return true;
+
+    return false;
+}

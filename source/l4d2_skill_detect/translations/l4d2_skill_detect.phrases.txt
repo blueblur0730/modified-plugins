@@ -282,6 +282,13 @@
 		"chi"		"{olive}协助者{default}: {olive}{1}{default}."
 	}
 
+	"BoomerStaggerTeammate"
+	{
+		"#format"	"{1:N}"
+		"en"		"{olive}{1}{default} exploison-staggered you from dominating the survivor."
+		"chi"		"{olive}{1}{default} 的爆炸将你控制的生还者推开了."
+	}
+
 	"Shoving"
 	{
 		"en"		"by shoving"

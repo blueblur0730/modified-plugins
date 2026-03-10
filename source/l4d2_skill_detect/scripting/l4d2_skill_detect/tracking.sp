@@ -217,6 +217,26 @@ public void L4D2_OnDominatedBySpecialInfected(int victim, int dominator)
 
 }
 
+public void L4D2_OnStagger_Post(int client, int source)
+{
+    if (!IsValidInfected(client) || !IsValidInfected(source))
+        return;
+
+    if (IsFakeClient(client) || IsFakeClient(source))
+        return;
+
+    int victimClass = GetEntProp(client, Prop_Send, "m_zombieClass");
+    int sourceClass = GetEntProp(source, Prop_Send, "m_zombieClass");
+
+    if (sourceClass == ZC_BOOMER)
+    {
+        if (IsDominator(victimClass))
+        {
+            HandleBoomerStaggerTeammate(client, source);
+        }
+    }
+}
+
 static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
     for (int i = 1; i <= MaxClients; i++)

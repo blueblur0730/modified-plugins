@@ -724,3 +724,16 @@ void HandlePopStagger(int attacker, int victim, int count, int staggerSurvivor[L
     Call_PushArray(staggerSurvivor, L4D2_MAXPLAYERS + 1);
     Call_Finish();
 }
+
+void HandleBoomerStaggerTeammate(int victim, int source)
+{
+    if (g_hCvar_RepBoomerStaggerTeammate.BoolValue)
+    {
+        CPrintToChat(victim, "%t %t", "Tag+", "BoomerStaggerTeammate", source);
+    }
+
+    Call_StartForward(g_hForwardBoomerStaggerTeammate);
+    Call_PushCell(victim);
+    Call_PushCell(source);
+    Call_Finish();
+}

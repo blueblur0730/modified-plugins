@@ -28,6 +28,7 @@ void SetupForwards()
     g_hForwardAlarmTriggered   = new GlobalForward("SkillDetect_OnCarAlarmTriggered", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
     g_hForwardNumImpacts       = new GlobalForward("SkillDetect_OnMultipleImpacts", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardPopStagger       = new GlobalForward("SkillDetect_OnBoomerPopStagger", ET_Ignore, Param_Cell, Param_Cell, Param_Array);
+    g_hForwardBoomerStaggerTeammate = new GlobalForward("SkillDetect_OnBoomerStaggerTeammate", ET_Ignore, Param_Cell, Param_Cell);
 }
 
 void SetupConVars()
@@ -56,6 +57,7 @@ void SetupConVars()
     g_hCvar_RepNumImpacts               = CreateConVar("l4d2_skill_detect_report_multi_impacts", "1", "Enable multi impact reporting.", FCVAR_NONE, true, 0.0, true, 1.0); 
     g_hCvar_RepPopStagger               = CreateConVar("l4d2_skill_detect_report_popstagger", "1", "Enable boomer pop stagger reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepVomitLanded              = CreateConVar("l4d2_skill_detect_report_vomitlanded", "1", "Enable boomer vomit landed reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
+    g_hCvar_RepBoomerStaggerTeammate    = CreateConVar("l4d2_skill_detect_report_boomerstaggerteammate", "0", "Enable boomer stagger teammate reporting.", FCVAR_NONE, true, 0.0, true, 1.0)
 
     g_hCvar_AllowMelee                  = CreateConVar("l4d2_skill_detect_skeet_allowmelee", "1", "Whether to count/forward melee skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_AllowSniper                 = CreateConVar("l4d2_skill_detect_skeet_allowsniper", "1", "Whether to count/forward sniper/magnum headshots as skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
