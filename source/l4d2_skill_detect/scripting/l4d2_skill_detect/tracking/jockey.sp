@@ -104,7 +104,7 @@ Action JockeyLeap_OnInjured(any action, int actor, CTakeDamageInfo info, ActionD
         return Plugin_Continue;
 
     // already had a victim, not a skeet.
-    if (g_InfectedSkillCache[actor].m_iSpecialVictim)
+    if (g_Infected[actor].m_iSpecialVictim)
         return Plugin_Continue;
     
     int attacker = info.m_hAttacker;
@@ -130,7 +130,7 @@ Action JockeyLeap_OnKilled(any action, int actor, CTakeDamageInfo info, ActionDe
         return Plugin_Continue;
 
     // already had a victim, not a skeet.
-    if (g_InfectedSkillCache[actor].m_iSpecialVictim)
+    if (g_Infected[actor].m_iSpecialVictim)
     {
         g_Jockey[actor].ResetJockey();
         return Plugin_Continue;

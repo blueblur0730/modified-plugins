@@ -17,6 +17,12 @@ enum struct SmokerSkillCache_t
     // smoker clears
     IntervalTimer_t m_DragStartTimer;   // time the smoker starts to grab a target
     IntervalTimer_t m_ChokeStartTimer;  // time the smoker starts to choke a target
+
+    void ResetSmoker()
+    {
+        this.m_DragStartTimer.Invalidate();
+        this.m_ChokeStartTimer.Invalidate();
+    }
 }
 SmokerSkillCache_t g_Smoker[L4D2_MAXPLAYERS + 1];
 

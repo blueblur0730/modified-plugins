@@ -51,9 +51,9 @@
     // deathcharges
 	"DeathCharged"
 	{
-		"#format"   "{1:N},{2:N},{3:s},{4:i}" // 1:attacker 2:victim 3:(bCarried) ? "" : Buffer 4:RoundFloat(height)
-		"en"		"{olive}{1}{default} {red}death-charged{default} {olive}{2}{default} {3}({red}height{default}: {red}{4}{default})"
-		"chi"		"{olive}{1}{default} {red}冲锋秒杀了{default} {3}{olive}{2}{default} ({red}高度{default}: {red}{4}{default})"
+		"#format"   "{1:N},{2:N},{3:s},{4:i},{5:s}" // 1:attacker 2:victim 3:(bCarried) ? "" : Buffer 4:RoundFloat(height), 5: assister
+		"en"		"{olive}{1}{default} {red}death-charged{default} {olive}{2}{default} {3}({red}height{default}: {red}{4}{default}){5}"
+		"chi"		"{olive}{1}{default} {red}冲锋秒杀了{default} {3}{olive}{2}{default} ({red}高度{default}: {red}{4}{default}){5}"
 	}
 
 	"ChargingSkeeted"
@@ -242,7 +242,7 @@
 
 	"MultipleImpacts"
 	{
-		"#format"   "{1:d},{2:d}" // 1:charger 2:count
+		"#format"   "{1:N},{2:d}" // 1:charger 2:count
 		"en"		"{olive}{1}{default} multiple-impacted {olive}{2}{default} survivors."
 		"chi"		"{olive}{1}{default} 冲锋多重撞击了 {olive}{2}{default} 名生还者."
 	}
@@ -275,6 +275,13 @@
 		"chi"		"{olive}协助者{default}: {1}"
 	}
 
+	"DeathChargeAssister"
+	{
+		"#format"	"{1:N}"
+		"en"		"{olive}Assister{default}: {olive}{1}{default}."
+		"chi"		"{olive}协助者{default}: {olive}{1}{default}."
+	}
+
 	"Shoving"
 	{
 		"en"		"by shoving"
@@ -287,7 +294,7 @@
 		"chi"		"被撞飞的"
 	}
 
-	"Staggering"
+	"Staggered"
 	{
 		"en"		"staggered "
 		"chi"		"一个被推开的"

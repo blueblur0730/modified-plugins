@@ -9,18 +9,17 @@ enum struct InfectedSkillCache_t
    int m_iSpecialVictim;                                              // current victim (set in traceattack, so we can check on death)
    IntervalTimer_t m_VictimLastShoveTimer[L4D2_MAXPLAYERS + 1];       // when was the player shoved last by attacker? (to prevent doubles)
 }
-InfectedSkillCache_t g_InfectedSkillCache[L4D2_MAXPLAYERS + 1];
+InfectedSkillCache_t g_Infected[L4D2_MAXPLAYERS + 1];
 
 enum struct SurvivorSkillCache_t
 {
-    // skeet
     bool m_bShotCounted;                // whether the shot has been counted for the hunter
-
-    // levels / charges
     Vector m_vecImpactStartPos;         // position that the player was impacted from
     Vector m_vecImpactLastVelocity;     // velocity of the player when impacted before landed.
     int m_iLastImpactHealth;            // health of the player when impacted before landed.
     int m_iLastImpactAttacker;          // attacker of the player when impacted before landed.
+
+    int m_iSpecialAttacker;             // special attacker who's dominating me.
  
     // hops
     bool m_bIsHopping;             // currently in a hop streak
@@ -212,7 +211,10 @@ public void OnEntityDestroyed(int entity)
 
 public void L4D2_OnDominatedBySpecialInfected(int victim, int dominator)
 {
-    g_InfectedSkillCache[dominator].m_iSpecialVictim = victim;
+    g_Infected[dominator].m_iSpecialVictim = victim;
+
+    g_Survivor[victim].m_iSpecialAttacker = dominator;
+
 }
 
 static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
@@ -222,7 +224,7 @@ static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
         g_Survivor[i].m_bIsHopping = false;
 
         for (int j = 1; j <= MaxClients; j++)
-            g_InfectedSkillCache[i].m_VictimLastShoveTimer[j].Invalidate();
+            g_Infected[i].m_VictimLastShoveTimer[j].Invalidate();
     }
 
     g_hArray_TankRockTrace.Clear();
@@ -284,7 +286,7 @@ static void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
         return;
 
     int zClass = GetEntProp(client, Prop_Send, "m_zombieClass");
-    g_InfectedSkillCache[client].m_iSpecialVictim = 0;
+    g_Infected[client].m_iSpecialVictim = 0;
 
     switch (zClass)
     {
@@ -307,6 +309,11 @@ static void Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast
         {
             g_Jockey[client].ResetJockey();
         }
+
+        case ZC_SMOKER:
+        {
+            g_Smoker[client].ResetSmoker();
+        }
     }
 }
 
@@ -328,8 +335,8 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
             case ZC_HUNTER:
             {
                 // check whether it was a clear
-                if (g_InfectedSkillCache[victim].m_iSpecialVictim > 0)
-                    HandleClear(attacker, victim, g_InfectedSkillCache[victim].m_iSpecialVictim, ZC_HUNTER, (g_Hunter[victim].m_IncapStartTimer.GetElapsedTime()), -1.0);
+                if (g_Infected[victim].m_iSpecialVictim > 0)
+                    HandleClear(attacker, victim, g_Infected[victim].m_iSpecialVictim, ZC_HUNTER, (g_Hunter[victim].m_IncapStartTimer.GetElapsedTime()), -1.0);
                 
                 g_Hunter[victim].m_IncapStartTimer.Invalidate();
 
@@ -343,8 +350,8 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
             case ZC_JOCKEY:
             {
                 // check whether it was a clear
-                if (g_InfectedSkillCache[victim].m_iSpecialVictim > 0)
-                    HandleClear(attacker, victim, g_InfectedSkillCache[victim].m_iSpecialVictim, ZC_JOCKEY, (g_Jockey[victim].m_RideStartTimer.GetElapsedTime()), -1.0);
+                if (g_Infected[victim].m_iSpecialVictim > 0)
+                    HandleClear(attacker, victim, g_Infected[victim].m_iSpecialVictim, ZC_JOCKEY, (g_Jockey[victim].m_RideStartTimer.GetElapsedTime()), -1.0);
 
                 g_Jockey[victim].m_RideStartTimer.Invalidate();
 
@@ -360,7 +367,7 @@ static void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
                 // check whether it was a clear
                 if (g_Charger[victim].m_bCarriedVictim && g_Charger[victim].m_ChargeTimer.IsLessThan(g_hCvar_ClearThreh.FloatValue))
                 {
-                    HandleClear(attacker, victim, g_InfectedSkillCache[victim].m_iSpecialVictim, ZC_CHARGER, (g_Charger[victim].m_PummelTimer.HasStarted()) ? (g_Charger[victim].m_PummelTimer.GetElapsedTime()) : -1.0, (g_Charger[victim].m_ChargeTimer.GetElapsedTime()));
+                    HandleClear(attacker, victim, g_Infected[victim].m_iSpecialVictim, ZC_CHARGER, (g_Charger[victim].m_PummelTimer.HasStarted()) ? (g_Charger[victim].m_PummelTimer.GetElapsedTime()) : -1.0, (g_Charger[victim].m_ChargeTimer.GetElapsedTime()));
                     g_Charger[victim].ResetCharger();
                 }
 
@@ -454,9 +461,9 @@ static void Event_PlayerShoved(Event event, const char[] name, bool dontBroadcas
         }
     }
 
-    if (!g_InfectedSkillCache[victim].m_VictimLastShoveTimer[attacker].HasStarted() || g_InfectedSkillCache[victim].m_VictimLastShoveTimer[attacker].IsGreaterThan(SHOVE_TIME))
+    if (!g_Infected[victim].m_VictimLastShoveTimer[attacker].HasStarted() || g_Infected[victim].m_VictimLastShoveTimer[attacker].IsGreaterThan(SHOVE_TIME))
     {
         HandleShove(attacker, victim, zClass);
-        g_InfectedSkillCache[victim].m_VictimLastShoveTimer[attacker].Start();
+        g_Infected[victim].m_VictimLastShoveTimer[attacker].Start();
     }
 }

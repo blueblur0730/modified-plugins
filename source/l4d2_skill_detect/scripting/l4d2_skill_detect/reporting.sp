@@ -94,7 +94,7 @@ void HandleDeadstop(int attacker, int victim)
 void HandleShove(int attacker, int victim, int zombieClass)
 {
     // report?
-    if ( g_hCvar_RepShove.BoolValue)
+    if (g_hCvar_RepShove.BoolValue)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -113,10 +113,11 @@ void HandleShove(int attacker, int victim, int zombieClass)
 void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = false, bool bGL = false, bool bTeamSkeeted = false)
 {
     // report?
-    if ( g_hCvar_RepSkeet.BoolValue)
+    if (g_hCvar_RepSkeet.BoolValue)
     {
         if (bTeamSkeeted)
         {
+            char szBuffer[256], szTemp[128], sPlural[8];
             for (int i = 1; i < MaxClients; i++)
             {
                 if (!IsClientInGame(i) || IsFakeClient(i))
@@ -126,7 +127,6 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
                 g_Hunter[victim].SortSkeetDmg(iArr);
 
                 int count = 0;
-                char szBuffer[256];
                 for (int j = 1; j < L4D2_MAXPLAYERS; j++)
                 {
                     int index = iArr[j][0];
@@ -140,21 +140,19 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
                     count++;
                     if (count > 2)
                         break;
-
-                    char szTemp[128];
+                    
                     count == 1 ?
                     Format(szTemp, sizeof(szTemp), "%T", "AssisterString", j, index, shotsFired, damage) :
                     Format(szTemp, sizeof(szTemp), ", %T", "AssisterString", j, index, shotsFired, damage);
                     StrCat(szBuffer, sizeof(szBuffer), szTemp);
                 }
 
-                char sBuffer[8];
-                Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
+                Format(sPlural, sizeof(sPlural), "%T", "Plural", i);
                 CPrintToChat(i, "%t %t", "Tag+", "TeamSkeeted", 
                             victim, attacker, 
                             g_Hunter[victim].m_iShotsFired[attacker],
                             g_Hunter[victim].m_iDamage[attacker], 
-                            g_Hunter[victim].m_iShotsFired[attacker] > 1 ? sBuffer : ""
+                            g_Hunter[victim].m_iShotsFired[attacker] > 1 ? sPlural : ""
                         );
 
                 CPrintToChat(i, "%t %t", "Tag+", "Assisters", szBuffer);
@@ -166,11 +164,12 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
         }
         else if (bSniper)
         {
+            char sBuffer[8];
             for (int i = 1; i < MaxClients; i++)
             {
                 if (!IsClientInGame(i) || IsFakeClient(i))
                     continue;
-                char sBuffer[8];
+                
                 Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
                 CPrintToChat(i, "%t %t", "Tag++", "SkeetedSniper", attacker, victim, g_Hunter[victim].m_iShotsFired[attacker], g_Hunter[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "");
             }
@@ -181,11 +180,12 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
 		}
 		else
 		{
+            char sBuffer[8];
             for (int i = 1; i < MaxClients; i++)
             {
                 if (!IsClientInGame(i) || IsFakeClient(i))
                     continue;
-                char sBuffer[8];
+
                 Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
                 CPrintToChat(i, "%t %t", "Tag+", "Skeeted", attacker, victim, g_Hunter[victim].m_iShotsFired[attacker], g_Hunter[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "");
             }
@@ -205,10 +205,11 @@ void HandleSkeet(int attacker, int victim, bool bMelee = false, bool bSniper = f
 void HandleJockeySkeet(int attacker, int victim, bool bMelee = false, bool bSniper = false, bool bGL = false, bool bTeamSkeeted = false)
 {
     // report?
-    if ( g_hCvar_RepJockeySkeet.BoolValue)
+    if (g_hCvar_RepJockeySkeet.BoolValue)
     {
         if (bTeamSkeeted)
         {
+            char szBuffer[256], szTemp[128], sPlural[8];
             for (int i = 1; i < MaxClients; i++)
             {
                 if (!IsClientInGame(i) || IsFakeClient(i))
@@ -218,7 +219,6 @@ void HandleJockeySkeet(int attacker, int victim, bool bMelee = false, bool bSnip
                 g_Jockey[victim].SortSkeetDmg(iArr);
 
                 int count = 0;
-                char szBuffer[256];
                 for (int j = 1; j < L4D2_MAXPLAYERS; j++)
                 {
                     int index = iArr[j][0];
@@ -233,20 +233,18 @@ void HandleJockeySkeet(int attacker, int victim, bool bMelee = false, bool bSnip
                     if (count > 2)
                         break;
 
-                    char szTemp[128];
                     count == 1 ?
                     Format(szTemp, sizeof(szTemp), "%T", "AssisterString", j, index, shotsFired, damage) :
                     Format(szTemp, sizeof(szTemp), ", %T", "AssisterString", j, index, shotsFired, damage);
                     StrCat(szBuffer, sizeof(szBuffer), szTemp);
                 }
 
-                char sBuffer[8];
-                Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
+                Format(sPlural, sizeof(sPlural), "%T", "Plural", i);
                 CPrintToChat(i, "%t %t", "Tag+", "TeamSkeeted", 
                             victim, attacker, 
                             g_Jockey[victim].m_iShotsFired[attacker],
                             g_Jockey[victim].m_iDamage[attacker], 
-                            g_Jockey[victim].m_iShotsFired[attacker] > 1 ? sBuffer : ""
+                            g_Jockey[victim].m_iShotsFired[attacker] > 1 ? sPlural : ""
                         );
 
                 CPrintToChat(i, "%t %t", "Tag+", "Assisters", szBuffer);
@@ -258,11 +256,12 @@ void HandleJockeySkeet(int attacker, int victim, bool bMelee = false, bool bSnip
         }
         else if (bSniper)
         {
+            char sBuffer[8];
             for (int i = 1; i < MaxClients; i++)
             {
                 if (!IsClientInGame(i) || IsFakeClient(i))
                     continue;
-                char sBuffer[8];
+
                 Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
                 CPrintToChat(i, "%t %t", "Tag++", "SkeetedSniper", attacker, victim, g_Jockey[victim].m_iShotsFired[attacker], g_Jockey[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "");
             }
@@ -273,11 +272,12 @@ void HandleJockeySkeet(int attacker, int victim, bool bMelee = false, bool bSnip
 		}
 		else
 		{
+            char sBuffer[8];
             for (int i = 1; i < MaxClients; i++)
             {
                 if (!IsClientInGame(i) || IsFakeClient(i))
                     continue;
-                char sBuffer[8];
+                
                 Format(sBuffer, sizeof(sBuffer), "%T", "Plural", i);
                 CPrintToChat(i, "%t %t", "Tag+", "Skeeted", attacker, victim, g_Jockey[victim].m_iShotsFired[attacker], g_Jockey[victim].m_iShotsFired[attacker] > 1 ? sBuffer : "");
             }
@@ -298,7 +298,7 @@ void HandleJockeySkeet(int attacker, int victim, bool bMelee = false, bool bSnip
 void HandleCrown(int attacker)
 {
     // report?
-    if ( g_hCvar_RepCrow.BoolValue)
+    if (g_hCvar_RepCrow.BoolValue)
     {
         if (!IsValidClientInGame(attacker))
             return;
@@ -314,7 +314,7 @@ void HandleCrown(int attacker)
 // drawcrown
 void HandleDrawCrown(int attacker)
 {
-    if ( g_hCvar_RepDrawCrow.BoolValue)
+    if (g_hCvar_RepDrawCrow.BoolValue)
     {
         if (!IsValidClientInGame(attacker)) 
             return;
@@ -331,7 +331,7 @@ void HandleDrawCrown(int attacker)
 // smoker clears
 void HandleTongueCut(int attacker, int victim)
 {
-    if ( g_hCvar_RepTongueCut.BoolValue)
+    if (g_hCvar_RepTongueCut.BoolValue)
     {
         if (!IsValidClientInGame(victim) || !IsValidClientInGame(attacker))
             return;
@@ -348,22 +348,20 @@ void HandleTongueCut(int attacker, int victim)
 
 void HandleSmokerSelfClear(int attacker, int victim, bool withShove = false)
 {
-    if ( g_hCvar_RepSelfClear.BoolValue && (!withShove || g_hCvar_RepSelfClearShove.BoolValue))
+    if (g_hCvar_RepSelfClear.BoolValue && (!withShove ||g_hCvar_RepSelfClearShove.BoolValue))
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
 
+        char sBuffer[32];
         for (int i = 1; i < MaxClients; i++)
         {
             if (!IsClientInGame(i) || IsFakeClient(i))
                 continue;
 
-            char sBuffer[32];
             Format(sBuffer, sizeof(sBuffer), "%T", "Shoving", i);
             CPrintToChat(i, "%t %t", "Tag++", "SelfClearedTongue", attacker, victim, (withShove) ? sBuffer : "");
         }
-
-        
     }
 
     // call forward
@@ -385,7 +383,7 @@ void HandleRockEaten(int attacker, int victim)
 
 void HandleRockSkeeted(int attacker, int victim, int damage)
 {
-    if ( g_hCvar_RepRockSkeet.BoolValue)
+    if (g_hCvar_RepRockSkeet.BoolValue)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -405,7 +403,7 @@ void HandleRockSkeeted(int attacker, int victim, int damage)
 void HandleHunterDP(int attacker, int victim, int actualDamage, float calculatedDamage, float height, bool playerIncapped = false)
 {
     // report?
-    if ( g_hCvar_RepHunterDP.BoolValue && !playerIncapped)
+    if (g_hCvar_RepHunterDP.BoolValue && !playerIncapped)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -425,7 +423,7 @@ void HandleHunterDP(int attacker, int victim, int actualDamage, float calculated
 void HandleJockeyDP(int attacker, int victim, float height)
 {
     // report?
-    if ( g_hCvar_RepJockeyDP.BoolValue && height >= g_hCvar_JockeyDPThresh.FloatValue)
+    if (g_hCvar_RepJockeyDP.BoolValue && height >= g_hCvar_JockeyDPThresh.FloatValue)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -442,10 +440,10 @@ void HandleJockeyDP(int attacker, int victim, float height)
 }
 
 // deathcharges
-void HandleDeathCharge(int attacker, int victim, float height, float distance, bool bCarried = true)
+void HandleDeathCharge(int attacker, int victim, float height, float distance, int assister = -1, bool bCarried = true)
 {
     // report?
-    if ( g_hCvar_RepDeathCharge.BoolValue && height >= g_hCvar_DeathChargeHeight.FloatValue)
+    if (g_hCvar_RepDeathCharge.BoolValue && height >= g_hCvar_DeathChargeHeight.FloatValue)
     {
         if (bCarried)
         {
@@ -458,17 +456,18 @@ void HandleDeathCharge(int attacker, int victim, float height, float distance, b
                 return;
         }
 
+        char szBuffer[64], szAssister[64];
         for (int i = 1; i < MaxClients; i++)
         {
             if (!IsClientInGame(i) || IsFakeClient(i))
                 continue;
 
-            char Buffer[64];
-            Format(Buffer, sizeof(Buffer), "%T", "Bowling", i);
-            if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
-                return;
+            Format(szBuffer, sizeof(szBuffer), "%T", "Bowling", i);
 
-            CPrintToChat(i, "%t %t", "Tag++++", "DeathCharged", attacker, victim, (bCarried) ? "" : Buffer, RoundFloat(height));
+            if (assister > 0)
+                Format(szAssister, sizeof(szAssister), ", %T", "DeathChargeAssister", i, assister);
+            
+            CPrintToChat(i, "%t %t", "Tag++++", "DeathCharged", attacker, victim, (bCarried) ? "" : szBuffer, RoundFloat(height), assister > 0 ? szAssister : "");
         }
 
     }
@@ -479,12 +478,13 @@ void HandleDeathCharge(int attacker, int victim, float height, float distance, b
     Call_PushFloat(height);
     Call_PushFloat(distance);
     Call_PushCell((bCarried) ? 1 : 0);
+    Call_PushCell(assister);
     Call_Finish();
 }
 
 void HandleChargingSkeet(int attacker, int victim, float flTime, bool bTeamSkeeted = false)
 {
-    if ( g_hCvar_RepChargingSkeet.BoolValue)
+    if (g_hCvar_RepChargingSkeet.BoolValue)
     {
         if (!IsValidClientInGame(attacker) || !IsValidClientInGame(victim))
             return;
@@ -675,7 +675,25 @@ void HandleMultiImpact(int attacker, int numImpacts)
 {
     if (g_hCvar_RepNumImpacts.BoolValue)
     {
-        CPrintToChatAll("%t %t", "Tag+", "MultipleImpacts", attacker, numImpacts);
+        char sTag[8];
+        if (numImpacts == 1)
+        {
+            strcopy(sTag, sizeof(sTag), "Tag+");
+        }
+        else if (numImpacts == 2)
+        {
+            strcopy(sTag, sizeof(sTag), "Tag++");
+        }
+        else if (numImpacts == 3)
+        {
+            strcopy(sTag, sizeof(sTag), "Tag+++");
+        }
+        else if (numImpacts >= 4)
+        {   
+            strcopy(sTag, sizeof(sTag), "Tag++++");
+        }   
+        
+        CPrintToChatAll("%t %t", sTag, "MultipleImpacts", attacker, numImpacts);
     }
 
     Call_StartForward(g_hForwardNumImpacts);
@@ -688,12 +706,12 @@ void HandlePopStagger(int attacker, int victim, int count, int staggerSurvivor[L
 {
     if (g_hCvar_RepPopStagger.BoolValue)
     {
+        char szBuffer[128];
         for (int i = 1; i < MaxClients; i++)
         {
             if (!IsClientInGame(i) || IsFakeClient(i))
                 continue;
 
-            char szBuffer[128];
             Format(szBuffer, sizeof(szBuffer), "%T", "Staggered", i);
             CPrintToChat(i, "%t %t", "Tag+", "PopStagger", attacker, victim, count, isStaggering ? szBuffer : "");
         }

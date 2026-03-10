@@ -463,6 +463,16 @@ stock float fmaxf(float a, float b)
     return (a > b) ? a : b;
 }
 
+stock float fminf(float a, float b)
+{
+    return (a > b) ? b : a;
+}
+
+stock float clamp(float value, float min, float max)
+{
+    return fminf(fmaxf(value, min), max);
+}
+
 // game's internal falling damage calculation.
 stock float FallingDamageForSpeed( float speed )
 {

@@ -107,7 +107,7 @@ Action HunterLungeAtVictim_OnInjured(any action, int actor, CTakeDamageInfo info
         return Plugin_Continue;
 
     // already had a victim, not a skeet.
-    if (g_InfectedSkillCache[actor].m_iSpecialVictim)
+    if (g_Infected[actor].m_iSpecialVictim)
     {
         g_Hunter[actor].ResetHunter();
         return Plugin_Continue;
@@ -130,7 +130,7 @@ Action HunterLungeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo info,
         return Plugin_Continue;
 
     // already had a victim, not a skeet.
-    if (g_InfectedSkillCache[actor].m_iSpecialVictim)
+    if (g_Infected[actor].m_iSpecialVictim)
         return Plugin_Continue;
 
     if (g_Hunter[actor].m_bOnGround)

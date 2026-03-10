@@ -21,6 +21,8 @@ enum struct ChargerSkill_t
     int m_iNumImpacts;                          // number of impacts done by the charger
     float m_flMeleeDamage;                      // damage done by the charger's melee attack, used for sdkhook.
 
+    int m_iAssister;                            // assister who's dominating the victim before we carry them.
+
     void SortSkeetDmg(int iArr[L4D2_MAXPLAYERS + 1][3])
     {
         for (int i = 1; i < L4D2_MAXPLAYERS; i++)
@@ -122,6 +124,7 @@ Action ChargerChargeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo inf
     return Plugin_Continue;
 }
 
+// this is before OnStartBeingCarried and m_carryVictim being set, so we can actually get the victim's status before being carried.
 void Event_ChargerCarryStart(Event event, const char[] name, bool dontBroadcast)
 {
     int attacker = GetClientOfUserId(event.GetInt("userid"));
@@ -132,6 +135,15 @@ void Event_ChargerCarryStart(Event event, const char[] name, bool dontBroadcast)
 
     g_Charger[attacker].m_bCarriedVictim = true;
     g_Charger[attacker].m_vecCarryStartPos.GetClientAbsOrigin(attacker);
+
+    if (IsValidInfected(g_Survivor[victim].m_iSpecialAttacker))
+    {
+        int zClass = GetEntProp(g_Survivor[victim].m_iSpecialAttacker, Prop_Send, "m_zombieClass");
+        if (zClass != ZC_CHARGER && (zClass == ZC_JOCKEY || zClass == ZC_SMOKER))
+        {
+            g_Charger[attacker].m_iAssister = g_Survivor[victim].m_iSpecialAttacker;
+        }
+    }
 }
 
 void Event_ChargerCarryEnd(Event event, const char[] name, bool dontBroadcast)
@@ -142,7 +154,7 @@ void Event_ChargerCarryEnd(Event event, const char[] name, bool dontBroadcast)
     if (!IsValidInfected(attacker) || !IsValidSurvivor(victim))
         return;
 
-    if (g_Charger[attacker].m_bCarriedVictim && IsValidSurvivor(g_InfectedSkillCache[attacker].m_iSpecialVictim))
+    if (g_Charger[attacker].m_bCarriedVictim && IsValidSurvivor(g_Infected[attacker].m_iSpecialVictim))
     {
         // long incapacited charge check.
         Vector vecPos;
@@ -151,7 +163,7 @@ void Event_ChargerCarryEnd(Event event, const char[] name, bool dontBroadcast)
         float flHeight = FloatAbs(vecPos.z) - FloatAbs(g_Charger[attacker].m_vecCarryStartPos.z);
         if (flHeight >= 360.0)  // should not be hardcoded valve.
         {
-            HandleDeathCharge(attacker, victim, flHeight, g_Charger[attacker].m_vecCarryStartPos.Distance(vecPos, false), true);
+            HandleDeathCharge(attacker, victim, flHeight, g_Charger[attacker].m_vecCarryStartPos.Distance(vecPos, false), g_Charger[attacker].m_iAssister, true);
         }
     }
 }
@@ -166,7 +178,7 @@ void Event_ChargerChargeEnd(Event event, const char[] name, bool dontBroadcast)
     if (!IsFakeClient(charger))
         SDKUnhook(charger, SDKHook_OnTakeDamageAlivePost, OnChargerTakeDamageAlivePost);
 
-    if (g_Charger[charger].m_iNumImpacts > 1)
+    if (g_Charger[charger].m_iNumImpacts > 0)
     {
         HandleMultiImpact(charger, g_Charger[charger].m_iNumImpacts);
         g_Charger[charger].m_iNumImpacts = 0;
@@ -183,7 +195,22 @@ void Event_ChargerPummelStart(Event event, const char[] name, bool dontBroadcast
     g_Charger[charger].m_PummelTimer.Start();
 }
 
-// when being impacted and flung away by a charger.
+// right before charger_impact. we still have jockey or smoker on our head.
+public Action L4D2_OnPlayerFling(int client, int attacker, float vecDir[3])
+{
+    if (IsValidInfected(g_Survivor[client].m_iSpecialAttacker))
+    {
+        int zClass = GetEntProp(g_Survivor[client].m_iSpecialAttacker, Prop_Send, "m_zombieClass");
+        if (zClass != ZC_CHARGER && (zClass == ZC_JOCKEY || zClass == ZC_SMOKER))
+        {
+            g_Charger[attacker].m_iAssister = g_Survivor[client].m_iSpecialAttacker;
+        }
+    }
+
+    return Plugin_Continue;
+}
+
+// when being impacted and flung away by a charger. post fling.
 void Event_ChargeImpact(Event event, const char[] name, bool dontBroadcast)
 {
     //PrintToServer("[Skill Detect] Event_ChargeImpact called.");
@@ -199,7 +226,7 @@ void Event_ChargeImpact(Event event, const char[] name, bool dontBroadcast)
 
     //PrintToServer("[Skill Detect] Event_ChargeImpact called, victim: %N, client: %N", victim, client);
     SDKHook(victim, SDKHook_PostThinkPost, OnFlingPostThinkPost);
-    g_Charger[victim].m_iNumImpacts++;
+    g_Charger[client].m_iNumImpacts++;
 }
 
 // an attempt to rebuild CTerrorPlayer::EstimateFallingDamage. but without loop.
@@ -250,15 +277,11 @@ static void OnFlingPostThinkPost(int client)
         //PrintToServer("[Skill Detect] fallVel: %.2f", fallVel);
         delete trace;
         float fallingSpeedDamage = FallingDamageForSpeed( -(fallVel + 560) );
-        fallingSpeedDamage = fmaxf(fallingSpeedDamage, 0.0);
         //PrintToServer("[Skill Detect] fallingSpeedDamage: %.2f", fallingSpeedDamage);
 
         if (fallingSpeedDamage > 0.0)
         {
-            if (fallingSpeedDamage > FindConVar("survivor_incap_max_fall_damage").FloatValue)
-            {
-                fallingSpeedDamage = FindConVar("survivor_incap_max_fall_damage").FloatValue;
-            }
+            fallingSpeedDamage = clamp(fallingSpeedDamage, 0.0, FindConVar("survivor_incap_max_fall_damage").FloatValue);
 
             //PrintToServer("[Skill Detect] fallingSpeedDamage: %.2f, LAST HEALTH: %d", fallingSpeedDamage, g_Survivor[client].m_iLastImpactHealth);
             if (g_hCvar_DeathChargeBlowCheckHealth.BoolValue)
@@ -271,7 +294,7 @@ static void OnFlingPostThinkPost(int client)
             vecLandedPos.GetClientAbsOrigin(client);
             float flHeight = g_Survivor[client].m_vecImpactStartPos.z - vecLandedPos.z;
             //PrintToServer("[Skill Detect] flHeight: %.2f", flHeight);
-            HandleDeathCharge(g_Survivor[client].m_iLastImpactAttacker, client, flHeight, g_Survivor[client].m_vecImpactStartPos.Distance(vecLandedPos), false);
+            HandleDeathCharge(g_Survivor[client].m_iLastImpactAttacker, client, flHeight, g_Survivor[client].m_vecImpactStartPos.Distance(vecLandedPos), g_Charger[client].m_iAssister, false);
         }
 
         g_Survivor[client].ResetImpact();
@@ -347,7 +370,7 @@ void ProcessChargerSkill(int attacker, int victim, float damage, int damageType)
         float fHeight = FloatAbs(g_Charger[victim].m_vecCarryStartPos.z) - FloatAbs(vecPos.z);
 
         // carried dewath charge, the impacted death charge will be handled on player_death.
-        HandleDeathCharge(victim, g_InfectedSkillCache[victim].m_iSpecialVictim, fHeight, g_Charger[victim].m_vecCarryStartPos.Distance(vecPos, false), true);
+        HandleDeathCharge(victim, g_Infected[victim].m_iSpecialVictim, fHeight, g_Charger[victim].m_vecCarryStartPos.Distance(vecPos, false), g_Charger[attacker].m_iAssister, true);
         g_Charger[victim].ResetCharger();
         return;
     }

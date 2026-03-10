@@ -20,7 +20,7 @@ void SetupForwards()
     g_hForwardRockEaten        = new GlobalForward("SkillDetect_OnTankRockEaten", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardHunterDP         = new GlobalForward("SkillDetect_OnHunterHighPounce", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Float, Param_Float, Param_Cell);
     g_hForwardJockeyDP         = new GlobalForward("SkillDetect_OnJockeyHighPounce", ET_Ignore, Param_Cell, Param_Cell, Param_Float, Param_Cell);
-    g_hForwardDeathCharge      = new GlobalForward("SkillDetect_OnDeathCharge", ET_Ignore, Param_Cell, Param_Cell, Param_Float, Param_Float, Param_Cell);
+    g_hForwardDeathCharge      = new GlobalForward("SkillDetect_OnDeathCharge", ET_Ignore, Param_Cell, Param_Cell, Param_Float, Param_Float, Param_Cell, Param_Cell);
     g_hForwardChargingSkeet    = new GlobalForward("SkillDetect_OnChargingSkeet", ET_Ignore, Param_Cell, Param_Cell, Param_Float);
     g_hForwardClear            = new GlobalForward("SkillDetect_OnSpecialClear", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Float, Param_Float, Param_Cell);
     g_hForwardVomitLanded      = new GlobalForward("SkillDetect_OnBoomerVomitLanded", ET_Ignore, Param_Cell, Param_Cell);
