@@ -37,6 +37,8 @@ enum struct SurvivorSkillCache_t
 }
 SurvivorSkillCache_t g_Survivor[L4D2_MAXPLAYERS + 1];
 
+CountdownTimer_t g_MultiDominationTimer;
+
 ConVar g_hCvar_MaxPounceDistance = null;     // z_pounce_damage_range_max
 ConVar g_hCvar_MinPounceDistance = null;     // z_pounce_damage_range_min
 ConVar g_hCvar_MaxPounceDamage = null;       // z_hunter_max_pounce_bonus_damage;
@@ -212,9 +214,7 @@ public void OnEntityDestroyed(int entity)
 public void L4D2_OnDominatedBySpecialInfected(int victim, int dominator)
 {
     g_Infected[dominator].m_iSpecialVictim = victim;
-
     g_Survivor[victim].m_iSpecialAttacker = dominator;
-
 }
 
 public void L4D2_OnStagger_Post(int client, int source)
@@ -237,6 +237,11 @@ public void L4D2_OnStagger_Post(int client, int source)
     }
 }
 
+public void OnGameFrame()
+{
+    CheckMultiDominationTimer(false);
+}
+
 static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
     for (int i = 1; i <= MaxClients; i++)
@@ -249,6 +254,7 @@ static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 
     g_hArray_TankRockTrace.Clear();
     g_hArray_WitchTrace.Clear();
+    g_MultiDominationTimer.Invalidate();
 }
 
 static void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
@@ -485,5 +491,25 @@ static void Event_PlayerShoved(Event event, const char[] name, bool dontBroadcas
     {
         HandleShove(attacker, victim, zClass);
         g_Infected[victim].m_VictimLastShoveTimer[attacker].Start();
+    }
+}
+
+void CheckMultiDominationTimer(bool bEvent = false)
+{
+    if (g_MultiDominationTimer.HasStarted())
+    {
+        if (g_MultiDominationTimer.IsElapsed() && !bEvent)
+        {
+            HandleMultiDomination();
+            g_MultiDominationTimer.Invalidate();
+        }
+        else if (bEvent)
+        {
+            g_MultiDominationTimer.Reset();
+        }
+    }
+    else if (bEvent)
+    {
+        g_MultiDominationTimer.Start(g_hCvar_MultiDominationTimeThresh.FloatValue);
     }
 }

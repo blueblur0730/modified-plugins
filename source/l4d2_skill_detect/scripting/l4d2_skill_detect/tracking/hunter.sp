@@ -165,6 +165,8 @@ Action HunterLungeAtVictim_OnEnd(any action, int actor, any priorAction, ActionR
 
 void Event_LungePounce(Event event, const char[] name, bool dontBroadcast)
 {
+    CheckMultiDominationTimer(true);
+
     int client = GetClientOfUserId(event.GetInt("userid"));
     int victim = GetClientOfUserId(event.GetInt("victim"));
 

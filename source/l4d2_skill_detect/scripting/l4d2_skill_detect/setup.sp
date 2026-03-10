@@ -29,6 +29,7 @@ void SetupForwards()
     g_hForwardNumImpacts       = new GlobalForward("SkillDetect_OnMultipleImpacts", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardPopStagger       = new GlobalForward("SkillDetect_OnBoomerPopStagger", ET_Ignore, Param_Cell, Param_Cell, Param_Array);
     g_hForwardBoomerStaggerTeammate = new GlobalForward("SkillDetect_OnBoomerStaggerTeammate", ET_Ignore, Param_Cell, Param_Cell);
+    g_hForwardMultiDomination  = new GlobalForward("SkillDetect_OnMultiDomination", ET_Ignore, Param_Cell, Param_Array);
 }
 
 void SetupConVars()
@@ -58,6 +59,7 @@ void SetupConVars()
     g_hCvar_RepPopStagger               = CreateConVar("l4d2_skill_detect_report_popstagger", "1", "Enable boomer pop stagger reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepVomitLanded              = CreateConVar("l4d2_skill_detect_report_vomitlanded", "1", "Enable boomer vomit landed reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_RepBoomerStaggerTeammate    = CreateConVar("l4d2_skill_detect_report_boomerstaggerteammate", "0", "Enable boomer stagger teammate reporting.", FCVAR_NONE, true, 0.0, true, 1.0)
+    g_hCvar_RepMultiDomination          = CreateConVar("l4d2_skill_detect_report_multidomination", "1", "Enable multi-domination reporting.", FCVAR_NONE, true, 0.0, true, 1.0);
 
     g_hCvar_AllowMelee                  = CreateConVar("l4d2_skill_detect_skeet_allowmelee", "1", "Whether to count/forward melee skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
     g_hCvar_AllowSniper                 = CreateConVar("l4d2_skill_detect_skeet_allowsniper", "1", "Whether to count/forward sniper/magnum headshots as skeets.", FCVAR_NONE, true, 0.0, true, 1.0);
@@ -72,7 +74,7 @@ void SetupConVars()
     g_hCvar_BHopMinStreak               = CreateConVar("l4d2_skill_detect_bhopstreak", "3", "The lowest bunnyhop streak that will be reported.", FCVAR_NONE, true, 0.0, false);
     g_hCvar_BHopMinInitSpeed            = CreateConVar("l4d2_skill_detect_bhopinitspeed", "150", "The minimal speed of the first jump of a bunnyhopstreak (0 to allow 'hops' from standstill).", FCVAR_NONE, true, 0.0, false);
     g_hCvar_BHopContSpeed               = CreateConVar("l4d2_skill_detect_bhopkeepspeed", "300", "The minimal speed at which hops are considered succesful even if not speed increase is made.", FCVAR_NONE, true, 0.0, false);
-
+    g_hCvar_MultiDominationTimeThresh   = CreateConVar("l4d2_skill_detect_multidomination_time_thresh", "2.0", "The minimum time a player must be dominating another player to count as a multi-domination.", FCVAR_NONE, true, 0.0, false);
 }
 
 void SetupStringMaps()

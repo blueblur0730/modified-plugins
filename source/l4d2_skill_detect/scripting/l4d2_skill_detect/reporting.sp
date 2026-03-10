@@ -737,3 +737,48 @@ void HandleBoomerStaggerTeammate(int victim, int source)
     Call_PushCell(source);
     Call_Finish();
 }
+
+void HandleMultiDomination()
+{
+    int count = 0;
+    int iDominators[L4D2_MAXPLAYERS + 1];
+
+    for (int i = 1; i < MaxClients; i++)
+    {
+        if (!IsClientInGame(i))
+            continue;
+
+        if (IsValidInfected(g_Survivor[i].m_iSpecialAttacker))
+        {
+            iDominators[count] = i;
+            count++;
+        }    
+    }
+    
+    if (g_hCvar_RepMultiDomination.BoolValue)
+    {
+        if (count > 1)
+        {
+            char sBuffer[8];
+            if (count == 2)
+            {
+                strcopy(sBuffer, sizeof(sBuffer), "Tag++");
+            }
+            else if (count == 3)
+            {
+                strcopy(sBuffer, sizeof(sBuffer), "Tag+++");
+            }
+            else if (count >= 4)
+            {
+                strcopy(sBuffer, sizeof(sBuffer), "Tag++++");
+            }
+
+            CPrintToChatAll("%t %t", sBuffer, "MultiDomination", count);
+        }
+    }
+
+    Call_StartForward(g_hForwardMultiDomination);
+    Call_PushCell(count);
+    Call_PushArray(iDominators, L4D2_MAXPLAYERS + 1);
+    Call_Finish();
+}

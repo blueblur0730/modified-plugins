@@ -289,6 +289,13 @@
 		"chi"		"{olive}{1}{default} 的爆炸将你控制的生还者推开了."
 	}
 
+	"MultiDomination"
+	{
+		"#format"	"{1:d}"
+		"en"		"{red}Infected Team{default} landed a {red}{1}{default} dominations in a row."
+		"chi"		"{red}感染者团队{default} 达成了一波 {red}{1}{default} 控."
+	}
+
 	"Shoving"
 	{
 		"en"		"by shoving"

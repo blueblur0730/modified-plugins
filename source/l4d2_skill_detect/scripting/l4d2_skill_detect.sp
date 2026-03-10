@@ -53,7 +53,8 @@ GlobalForward
     g_hForwardAlarmTriggered  = null,
     g_hForwardNumImpacts      = null,
     g_hForwardPopStagger      = null,
-    g_hForwardBoomerStaggerTeammate = null;
+    g_hForwardBoomerStaggerTeammate = null,
+    g_hForwardMultiDomination = null;
 
 StringMap
     g_hMapWeapons       = null,       // weapon check
@@ -85,6 +86,7 @@ ConVar
     g_hCvar_RepPopStagger,
     g_hCvar_RepVomitLanded,
     g_hCvar_RepBoomerStaggerTeammate,
+    g_hCvar_RepMultiDomination,
 
     g_hCvar_AllowMelee,              // cvar whether to count melee skeets
     g_hCvar_AllowSniper,             // cvar whether to count sniper headshot skeets
@@ -98,7 +100,8 @@ ConVar
     g_hCvar_InstaTime,               // cvar clear within this time or lower for instaclear
     g_hCvar_BHopMinStreak,           // cvar this many hops in a row+ = streak
     g_hCvar_BHopMinInitSpeed,        // cvar lower than this and the first jump won't be seen as the start of a streak
-    g_hCvar_BHopContSpeed;
+    g_hCvar_BHopContSpeed,
+    g_hCvar_MultiDominationTimeThresh;
 
 /*
     To Do
@@ -115,7 +118,7 @@ ConVar
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r3.3.0"
+#define PLUGIN_VERSION "r3.4.0"
 
 public Plugin myinfo =
 {

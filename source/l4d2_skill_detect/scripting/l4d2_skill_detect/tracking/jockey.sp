@@ -172,6 +172,8 @@ Action JockeyLeap_OnShoved(any action, int actor, int entity, ActionDesiredResul
 
 void Event_JockeyRide(Event event, const char[] name, bool dontBroadcast)
 {
+    CheckMultiDominationTimer(true);
+
     int client = GetClientOfUserId(event.GetInt("userid"));
     int victim = GetClientOfUserId(event.GetInt("victim"));
 

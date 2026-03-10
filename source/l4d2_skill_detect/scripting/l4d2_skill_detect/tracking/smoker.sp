@@ -71,6 +71,8 @@ void Event_TonguePullStopped(Event event, const char[] name, bool dontBroadcast)
 // tongue grab start.
 void Event_TongueGrab(Event event, const char[] name, bool dontBroadcast)
 {
+    CheckMultiDominationTimer(true);
+
     int attacker = GetClientOfUserId(event.GetInt("userid"));
     if (!IsValidInfected(attacker))
         return;

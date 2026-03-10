@@ -127,6 +127,8 @@ Action ChargerChargeAtVictim_OnKilled(any action, int actor, CTakeDamageInfo inf
 // this is before OnStartBeingCarried and m_carryVictim being set, so we can actually get the victim's status before being carried.
 void Event_ChargerCarryStart(Event event, const char[] name, bool dontBroadcast)
 {
+    CheckMultiDominationTimer(true);
+
     int attacker = GetClientOfUserId(event.GetInt("userid"));
     int victim = GetClientOfUserId(event.GetInt("victim"));
 
