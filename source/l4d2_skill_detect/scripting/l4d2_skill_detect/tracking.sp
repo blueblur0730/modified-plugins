@@ -231,6 +231,7 @@ public void L4D2_OnStagger_Post(int client, int source)
     if (sourceClass == ZC_BOOMER)
     {
         if (IsDominator(victimClass))
+        if (IsDominator(victimClass) && IsValidSurvivor(g_Infected[client].m_iSpecialVictim))
         {
             HandleBoomerStaggerTeammate(client, source);
         }
