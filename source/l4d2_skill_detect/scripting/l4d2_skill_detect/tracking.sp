@@ -230,7 +230,6 @@ public void L4D2_OnStagger_Post(int client, int source)
 
     if (sourceClass == ZC_BOOMER)
     {
-        if (IsDominator(victimClass))
         if (IsDominator(victimClass) && IsValidSurvivor(g_Infected[client].m_iSpecialVictim))
         {
             HandleBoomerStaggerTeammate(client, source);
@@ -426,7 +425,6 @@ static void OnNextFrame_BoomerDeath(DataPack pack)
     delete pack;
 
     int staggerCount = 0;
-    int staggerSurvivor[L4D2_MAXPLAYERS + 1];
     for (int i = 1; i < MaxClients; i++)
     {
         if (!IsClientInGame(i) || GetClientTeam(i) != 2)
@@ -434,7 +432,6 @@ static void OnNextFrame_BoomerDeath(DataPack pack)
 
         if (IsIT(i) && L4D_IsPlayerStaggering(i)) 
         {
-            staggerSurvivor[staggerCount] = i;
             staggerCount++;
         }
     }
@@ -442,7 +439,7 @@ static void OnNextFrame_BoomerDeath(DataPack pack)
     // someone popped a boomer and biled their friendly.
     if (staggerCount > 0)
     {
-        HandlePopStagger(attacker, victim, staggerCount, staggerSurvivor, isStaggering);
+        HandlePopStagger(attacker, victim, staggerCount, isStaggering);
     }
 }
 

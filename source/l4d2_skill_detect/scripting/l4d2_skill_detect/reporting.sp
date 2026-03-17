@@ -702,7 +702,7 @@ void HandleMultiImpact(int attacker, int numImpacts)
     Call_Finish();
 }
 
-void HandlePopStagger(int attacker, int victim, int count, int staggerSurvivor[L4D2_MAXPLAYERS + 1], bool isStaggering)
+void HandlePopStagger(int attacker, int victim, int count, bool isStaggering)
 {
     if (g_hCvar_RepPopStagger.BoolValue)
     {
@@ -721,7 +721,7 @@ void HandlePopStagger(int attacker, int victim, int count, int staggerSurvivor[L
     Call_PushCell(attacker);
     Call_PushCell(victim);
     Call_PushCell(count);
-    Call_PushArray(staggerSurvivor, L4D2_MAXPLAYERS + 1);
+    Call_PushCell(isStaggering);
     Call_Finish();
 }
 

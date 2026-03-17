@@ -22,9 +22,7 @@ enum strWeaponType
 // Map values: OnEntityCreated classname
 enum strOEC
 {
-    OEC_WITCH,
     OEC_TANKROCK,
-    OEC_TRIGGER,
     OEC_CARALARM,
     OEC_CARGLASS
 };
@@ -118,7 +116,7 @@ ConVar
 #include "l4d2_skill_detect/tracking.sp"
 #include "l4d2_skill_detect/reporting.sp"
 
-#define PLUGIN_VERSION "r3.4.1"
+#define PLUGIN_VERSION "r3.4.2"
 
 public Plugin myinfo =
 {

@@ -27,7 +27,7 @@ void SetupForwards()
     g_hForwardBHopStreak       = new GlobalForward("SkillDetect_OnBunnyHopStreak", ET_Ignore, Param_Cell, Param_Cell, Param_Float);
     g_hForwardAlarmTriggered   = new GlobalForward("SkillDetect_OnCarAlarmTriggered", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
     g_hForwardNumImpacts       = new GlobalForward("SkillDetect_OnMultipleImpacts", ET_Ignore, Param_Cell, Param_Cell);
-    g_hForwardPopStagger       = new GlobalForward("SkillDetect_OnBoomerPopStagger", ET_Ignore, Param_Cell, Param_Cell, Param_Array);
+    g_hForwardPopStagger       = new GlobalForward("SkillDetect_OnBoomerPopStagger", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
     g_hForwardBoomerStaggerTeammate = new GlobalForward("SkillDetect_OnBoomerStaggerTeammate", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardMultiDomination  = new GlobalForward("SkillDetect_OnMultiDomination", ET_Ignore, Param_Cell, Param_Array);
 }
@@ -89,8 +89,6 @@ void SetupStringMaps()
 
     g_hMapEntityCreated = new StringMap();
     g_hMapEntityCreated.SetValue("tank_rock", OEC_TANKROCK);
-    g_hMapEntityCreated.SetValue("witch", OEC_WITCH);
-    g_hMapEntityCreated.SetValue("trigger_hurt", OEC_TRIGGER);
     g_hMapEntityCreated.SetValue("prop_car_alarm", OEC_CARALARM);
     g_hMapEntityCreated.SetValue("prop_car_glass", OEC_CARGLASS);
 }
