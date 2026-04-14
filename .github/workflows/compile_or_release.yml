@@ -96,6 +96,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v6
+        name: Checkout Repo
+        with:
+          submodules: recursive
+
       - name: Prepare Env
         run: | 
              echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
