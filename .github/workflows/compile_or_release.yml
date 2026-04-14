@@ -88,7 +88,7 @@ jobs:
 
     # only release if the workflow is manually triggered
     # if: contains(fromJson('["workflow_dispatch"]'), github.event_name)
-    # needs: build
+    needs: build
     if: always()
     runs-on: ubuntu-latest
 
