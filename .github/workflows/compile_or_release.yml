@@ -109,15 +109,15 @@ jobs:
           path: tmp/
           pattern: modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}
 
-      - name: Prepare Release
-        if: steps.download.outcome == 'success'
-        working-directory: tmp/
-        run: |
-          for i in */; 
-          do 
-            zip -0 -r "${i%/}.zip" "$i" & 
-          done; 
-          wait
+      # - name: Prepare Release
+      #  if: steps.download.outcome == 'success'
+      #  working-directory: tmp/
+      #  run: |
+      #    for i in */; 
+      #    do 
+      #      zip -0 -r "${i%/}.zip" "$i" & 
+      #    done; 
+      #    wait
 
       - name: Release (Pull Request)
         if: steps.download.outcome == 'success' && github.event_name == 'pull_request'
@@ -126,6 +126,7 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.name }}
           PR_AUTHOR_EMAIL: ${{ github.event.pull_request.user.email }}
 
+        working-directory: tmp/
         uses: xresloader/upload-to-github-release@v1.6.1
         with:
           file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}.zip
@@ -147,6 +148,7 @@ jobs:
 
       - name: Release (Push)
         if: steps.download.outcome == 'success' && github.event_name == 'push'
+        working-directory: tmp/
         uses: xresloader/upload-to-github-release@v1.6.1
         with:
           file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}.zip
@@ -166,6 +168,7 @@ jobs:
 
       - name: Release (Dispatch)
         if: steps.download.outcome == 'success' && github.event_name == 'workflow_dispatch'
+        working-directory: tmp/
         uses: xresloader/upload-to-github-release@v1.6.1
         with:
           file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}.zip
