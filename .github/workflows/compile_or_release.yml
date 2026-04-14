@@ -66,17 +66,21 @@ jobs:
             README.md
             README-cn.md
 
-  # delete:
-  #   name: delete old assets
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Delete current release assets
-  #       uses: andreaswilli/delete-release-assets-action@v4.0.0
-  #       with:
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
-  #         # tagPrefix:
-  #         tag: release
-  #         deleteOnlyFromDrafts: false
+  delete:
+     name: delete old assets
+     runs-on: ubuntu-latest
+     steps:
+       - name: Prepare Env
+         run: | 
+              echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+       - name: Delete current release assets
+         uses: andreaswilli/delete-release-assets-action@v4.0.0
+         with:
+           github_token: ${{ secrets.GITHUB_TOKEN }}
+           # tagPrefix:
+           tag: release-${{ env.DATE }}
+           deleteOnlyFromDrafts: false
 
   release:
     strategy:
@@ -89,7 +93,6 @@ jobs:
     # only release if the workflow is manually triggered
     # if: contains(fromJson('["workflow_dispatch"]'), github.event_name)
     needs: build
-    if: always()
     runs-on: ubuntu-latest
 
     steps:
@@ -116,15 +119,6 @@ jobs:
           done; 
           wait
 
-      - name: Create New Release
-        if: steps.download.outcome == 'success'
-        uses: softprops/action-gh-release@v3
-        with:
-          name: modified-plugins ${{ env.DATE }}
-          tag_name: release
-          make_latest: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Release (Pull Request)
         if: steps.download.outcome == 'success' && github.event_name == 'pull_request'
         env:
@@ -138,11 +132,11 @@ jobs:
           draft: false
           prerelease: false
           branches: main
-          tag_name: release
+          tag_name: release-${{ env.DATE }}
           tags: true
           update_latest_release: true
           overwrite: true
-          default_release_name: modified-plugins
+          default_release_name: modified-plugins-${{ env.DATE }}
           update_release_body: | 
            ## Release Updated On Pull Request:
             - ${{ github.event.pull_request.number }} 
@@ -159,11 +153,11 @@ jobs:
           draft: false
           prerelease: false
           branches: main
-          tag_name: release
+          tag_name: release-${{ env.DATE }}
           tags: true
           update_latest_release: true
           overwrite: true
-          default_release_name: modified-plugins
+          default_release_name: modified-plugins-${{ env.DATE }}
           update_release_body: |
            ## Release Updated On Commit: 
             - (${{ env.GITHUB_SHA_SHORT }}) 
@@ -178,11 +172,11 @@ jobs:
           draft: false
           prerelease: false
           branches: main
-          tag_name: release
+          tag_name: release-${{ env.DATE }}
           tags: true
           update_latest_release: true
           overwrite: true
-          default_release_name: modified-plugins
+          default_release_name: modified-plugins-${{ env.DATE }}
           update_release_body: |
            ## Release Updated On Manually Triggered Workflow
             - (${{ env.GITHUB_SHA_SHORT }}) (by ${{ github.triggering_actor }})
