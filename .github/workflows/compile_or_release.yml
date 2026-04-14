@@ -48,6 +48,7 @@ jobs:
           version: ${{ matrix.sm_version }}
 
       - name: Configure and Build
+        id: build
         continue-on-error: true
         run: |
           python3 configure.py --spcomp-dir "$scriptingPath"
@@ -55,7 +56,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         name: Upload the Package
-        if: success()
+        if: steps.build.outcome == 'success'
         with:
           name: modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}
           path: |
