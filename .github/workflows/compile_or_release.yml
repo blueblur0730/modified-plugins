@@ -128,7 +128,7 @@ jobs:
 
         uses: xresloader/upload-to-github-release@v1.6.1
         with:
-          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
+          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}.zip
           draft: false
           prerelease: false
           branches: main
@@ -149,7 +149,7 @@ jobs:
         if: steps.download.outcome == 'success' && github.event_name == 'push'
         uses: xresloader/upload-to-github-release@v1.6.1
         with:
-          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
+          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}.zip
           draft: false
           prerelease: false
           branches: main
@@ -168,7 +168,7 @@ jobs:
         if: steps.download.outcome == 'success' && github.event_name == 'workflow_dispatch'
         uses: xresloader/upload-to-github-release@v1.6.1
         with:
-          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
+          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}.zip
           draft: false
           prerelease: false
           branches: main
