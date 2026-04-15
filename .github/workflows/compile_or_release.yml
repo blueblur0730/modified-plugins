@@ -134,7 +134,7 @@ jobs:
           file: "modified-plugins-sm-${{ matrix.sm_version }}-*.zip"
           draft: false
           prerelease: false
-          branches: main
+          branches: master
           tag_name: release-${{ env.DATE }}
           tags: true
           update_latest_release: true
@@ -155,7 +155,7 @@ jobs:
           file: "modified-plugins-sm-${{ matrix.sm_version }}-*.zip"
           draft: false
           prerelease: false
-          branches: main
+          branches: master
           tag_name: release-${{ env.DATE }}
           tags: true
           update_latest_release: true
@@ -174,7 +174,7 @@ jobs:
           file: "modified-plugins-sm-${{ matrix.sm_version }}-*.zip"
           draft: false
           prerelease: false
-          branches: main
+          branches: master
           tag_name: release-${{ env.DATE }}
           tags: true
           update_latest_release: true
