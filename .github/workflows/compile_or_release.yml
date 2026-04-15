@@ -129,7 +129,7 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.name }}
           PR_AUTHOR_EMAIL: ${{ github.event.pull_request.user.email }}
 
-        uses: xresloader/upload-to-github-release@v1
+        uses: xresloader/upload-to-github-release@main
         with:
           file: "modified-plugins-sm-${{ matrix.sm_version }}-*.zip"
           draft: false
@@ -150,7 +150,7 @@ jobs:
 
       - name: Release (Push)
         if: github.event_name == 'push'
-        uses: xresloader/upload-to-github-release@v1
+        uses: xresloader/upload-to-github-release@main
         with:
           file: "modified-plugins-sm-${{ matrix.sm_version }}-*.zip"
           draft: false
@@ -169,7 +169,7 @@ jobs:
 
       - name: Release (Dispatch)
         if: github.event_name == 'workflow_dispatch'
-        uses: xresloader/upload-to-github-release@v1
+        uses: xresloader/upload-to-github-release@main
         with:
           file: "modified-plugins-sm-${{ matrix.sm_version }}-*.zip"
           draft: false
