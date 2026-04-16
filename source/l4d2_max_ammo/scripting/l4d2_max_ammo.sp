@@ -34,6 +34,7 @@ static const char g_sShortName[6][5][] =
 enum struct WeaponAmmo_t
 {
     int weapon;
+    int weaponRef;
     int currentAmmo;
     bool bToBeTransitioned;
 }
@@ -42,7 +43,7 @@ ArrayList g_hWeaponAmmoList;
 Handle g_hSDKCall_OnAmmoPickedUp;
 int g_iOff_CTerrorWeapon_m_upgradedAmmoCount;
 
-#define PLUGIN_VERSION "1.4.0"
+#define PLUGIN_VERSION "1.4.1"
 public Plugin myinfo =
 {
 	name = "[L4D2] Max Ammo",
@@ -155,7 +156,7 @@ void OnWeaponEquipPost(int client, int weapon)
         return;
 
     DataPack data = new DataPack();
-    data.WriteCell(weapon);
+    data.WriteCell(EntIndexToEntRef(weapon));
     data.WriteCell(client);
     RequestFrame(OnNextFrame_OnEquipWeaponPost, data);  // m_iAmmo needs to be set on the next frame.
     //PrintToServer("Client %d equipped weapon %d", client, weapon);
@@ -164,11 +165,12 @@ void OnWeaponEquipPost(int client, int weapon)
 void OnNextFrame_OnEquipWeaponPost(DataPack data)
 {
     data.Reset();
-    int weapon = data.ReadCell();
+    int weaponRef = data.ReadCell();
+    int weapon = EntRefToEntIndex(weaponRef);
     int client = data.ReadCell();
     delete data;
 
-    int index = g_hWeaponAmmoList.FindValue(weapon, WeaponAmmo_t::weapon);
+    int index = g_hWeaponAmmoList.FindValue(weaponRef, WeaponAmmo_t::weaponRef);
     if (index != -1)
     {
         bool bToBeTransitioned = false;
@@ -199,6 +201,7 @@ void OnNextFrame_OnEquipWeaponPost(DataPack data)
 
         WeaponAmmo_t weaponAmmo;
         weaponAmmo.weapon = weapon;
+        weaponAmmo.weaponRef = weaponRef;
         weaponAmmo.currentAmmo = maxAmmo;
         g_hWeaponAmmoList.PushArray(weaponAmmo);
         SDKHook(weapon, SDKHook_ReloadPost, OnWeaponReloadPost);
@@ -224,8 +227,10 @@ void OnWeaponReloadPost(int weapon, bool bSuccessful)
     if (!IsTargetWeapon(weapon))
         return;
 
+    int weapoonRef = EntIndexToEntRef(weapon);
+
     // we can actually vmthook FinshReload here but it's way too nasty.
-    int index = g_hWeaponAmmoList.FindValue(weapon, WeaponAmmo_t::weapon);
+    int index = g_hWeaponAmmoList.FindValue(weapoonRef, WeaponAmmo_t::weaponRef);
     if (index != -1)
     {
         WeaponAmmo_t weaponAmmo;
@@ -304,7 +309,8 @@ public void L4D_OnPlayerItemTransitioning(int client, int weapon)
     if (client <= 0 || client > MaxClients)
         return;
 
-    int index = g_hWeaponAmmoList.FindValue(weapon, WeaponAmmo_t::weapon);
+    int weaponRef = EntIndexToEntRef(weapon);
+    int index = g_hWeaponAmmoList.FindValue(weaponRef, WeaponAmmo_t::weaponRef);
     //PrintToServer("[Max Ammo] Client %d transitioning weapon %d, index %d", client, weapon, index);
     if (index != -1)
     {
@@ -329,13 +335,15 @@ public void L4D_OnPlayerItemTransitioned(int client, int weapon, int oldindex)
         WeaponAmmo_t weaponAmmo;
         g_hWeaponAmmoList.GetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
         weaponAmmo.weapon = weapon;
+        weaponAmmo.weaponRef = EntIndexToEntRef(weapon);
         g_hWeaponAmmoList.SetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
     }
 }
 
 public void L4D_OnEntityTransitioning(int entity)
 {
-    int index = g_hWeaponAmmoList.FindValue(entity, WeaponAmmo_t::weapon);
+    int weaponRef = EntIndexToEntRef(entity);
+    int index = g_hWeaponAmmoList.FindValue(weaponRef, WeaponAmmo_t::weaponRef);
     if (index != -1)
     {
         WeaponAmmo_t weaponAmmo;
@@ -353,6 +361,7 @@ public void L4D_OnEntityTransitioned(int entity, int oldindex)
         WeaponAmmo_t weaponAmmo;
         g_hWeaponAmmoList.GetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
         weaponAmmo.weapon = entity;
+        weaponAmmo.weaponRef = EntIndexToEntRef(entity);
         g_hWeaponAmmoList.SetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
     }
 }
