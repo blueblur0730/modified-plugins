@@ -14,6 +14,7 @@ InfectedSkillCache_t g_Infected[L4D2_MAXPLAYERS + 1];
 enum struct SurvivorSkillCache_t
 {
     bool m_bShotCounted;                // whether the shot has been counted for the hunter
+
     Vector m_vecImpactStartPos;         // position that the player was impacted from
     Vector m_vecImpactLastVelocity;     // velocity of the player when impacted before landed.
     int m_iLastImpactHealth;            // health of the player when impacted before landed.
@@ -38,6 +39,7 @@ enum struct SurvivorSkillCache_t
 SurvivorSkillCache_t g_Survivor[L4D2_MAXPLAYERS + 1];
 
 CountdownTimer_t g_MultiDominationTimer;
+CountdownTimer_t g_MultiDominationCooldownTimer;
 
 ConVar g_hCvar_MaxPounceDistance = null;     // z_pounce_damage_range_max
 ConVar g_hCvar_MinPounceDistance = null;     // z_pounce_damage_range_min
@@ -149,7 +151,7 @@ public void OnActionCreated( BehaviorAction action, int actor, const char[] name
 // entity creation
 public void OnEntityCreated(int entity, const char[] classname)
 {
-    if (entity < 1 || !IsValidEntity(entity) || !IsValidEdict(entity))
+    if (entity < 1 || !IsValidEdict(entity))
         return;
 
     strOEC classnameOEC;
@@ -255,6 +257,7 @@ static void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
     g_hArray_TankRockTrace.Clear();
     g_hArray_WitchTrace.Clear();
     g_MultiDominationTimer.Invalidate();
+    g_MultiDominationCooldownTimer.Invalidate();
 }
 
 static void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
@@ -500,6 +503,7 @@ void CheckMultiDominationTimer(bool bEvent = false)
         {
             HandleMultiDomination();
             g_MultiDominationTimer.Invalidate();
+            g_MultiDominationCooldownTimer.Start(10.0);
         }
         else if (bEvent)
         {
@@ -508,6 +512,10 @@ void CheckMultiDominationTimer(bool bEvent = false)
     }
     else if (bEvent)
     {
+        if (g_MultiDominationTimer.HasStarted() && !g_MultiDominationCooldownTimer.IsElapsed())
+            return;
+        
+        g_MultiDominationCooldownTimer.Invalidate();
         g_MultiDominationTimer.Start(g_hCvar_MultiDominationTimeThresh.FloatValue);
     }
 }
