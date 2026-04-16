@@ -194,7 +194,7 @@ public void OnEntityDestroyed(int entity)
     if (IsRock(entity))
     {
         index = g_hArray_TankRockTrace.FindValue(entity, TankRockTrace_t::m_iRock);
-        if (index != -1)
+        if (index != -1 && g_hArray_TankRockTrace.Length)
         {
             CreateTimer(ROCK_CHECK_TIME, Timer_CheckRockSkeet, index);
             return;
@@ -204,10 +204,8 @@ public void OnEntityDestroyed(int entity)
     if (IsWitch(entity))
     {
         index = g_hArray_WitchTrace.FindValue(entity, WitchTrace_t::m_iWitch);
-        if (index != -1)
+        if (index != -1 && g_hArray_WitchTrace.Length)
         {
-            // witch
-            // delayed deletion, to avoid potential problems with crowns not detecting
             CreateTimer(WITCH_DELETE_TIME, Timer_WitchKeyDelete, index);
         }
     }
