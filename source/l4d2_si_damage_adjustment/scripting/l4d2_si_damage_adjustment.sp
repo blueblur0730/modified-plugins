@@ -29,7 +29,7 @@ int g_iEnabled = 0;
 ConVar g_hCvar_LeapingInterrupt;
 int g_iLeapingInterrupt = 250;
 
-#define PLUGIN_VERSION "r1.0"
+#define PLUGIN_VERSION "r1.0.1"
 public Plugin myinfo =
 {
     name = "[L4D2] SI Damage Adjustment",
@@ -48,16 +48,16 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-    g_hCvar_PounceInterrupt = CreateConVar("l4d2_si_damage_ajustment_pounce_damage_interrupt", "150", "Skeet threshold for AI hunters.", _, true, 0.0);
+    g_hCvar_PounceInterrupt = CreateConVar("l4d2_si_damage_adjustment_pounce_damage_interrupt", "150", "Skeet threshold for AI hunters.", _, true, 0.0);
     g_iPounceInterrupt = g_hCvar_PounceInterrupt.IntValue;
 
     g_hCvar_PounceInterrupt_Default = FindConVar("z_pounce_damage_interrupt");
     g_iPounceInterrupt_Default = g_hCvar_PounceInterrupt_Default.IntValue;
 
-    g_hCvar_Enabled = CreateConVar("l4d2_si_damage_ajustment_enable", "7", "Bit flag: Enables plugin features (add together): 1=Skeet pouncing AI hunter, 2=Debuff charging AI charger, 4=Skeet leapping jockey, 0=off", _, true, 0.0, true, 3.0);
+    g_hCvar_Enabled = CreateConVar("l4d2_si_damage_adjustment_enable", "7", "Bit flag: Enables plugin features (add together): 1=Skeet pouncing AI hunter, 2=Debuff charging AI charger, 4=Skeet leapping jockey, 0=off", _, true, 0.0, true, 3.0);
     g_iEnabled = g_hCvar_Enabled.IntValue;
 
-    g_hCvar_LeapingInterrupt = CreateConVar("l4d2_si_damage_ajustment_leap_damage_interrupt", "250", "Skeet threshold for AI jockeys.", _, true, 0.0);
+    g_hCvar_LeapingInterrupt = CreateConVar("l4d2_si_damage_adjustment_leap_damage_interrupt", "250", "Skeet threshold for AI jockeys.", _, true, 0.0);
     g_iLeapingInterrupt = g_hCvar_LeapingInterrupt.IntValue;
 
     g_hCvar_PounceInterrupt.AddChangeHook(OnConVarChanged);
@@ -162,7 +162,7 @@ Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, in
                 g_iJockeySkeetDamage[victim] += RoundToFloor(damage);
                 if (g_iJockeySkeetDamage[victim] >= g_iLeapingInterrupt)
                 {
-                    g_iHunterSkeetDamage[victim] = 0;
+                    g_iJockeySkeetDamage[victim] = 0;
                     damage = float(GetClientHealth(victim));
                     return Plugin_Changed;
                 }
