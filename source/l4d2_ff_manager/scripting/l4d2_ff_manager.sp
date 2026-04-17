@@ -17,8 +17,24 @@ ConVar
 	g_hCvar_EnableModifier,
 	g_hCvar_Interval;
 
+ConVar z_difficulty;
+
 char g_sConfigPath[64];
 
+/**
+ * We introduced range decay mechanism here (works in the original game too)
+ * Within the Shoot Range, damages are done.
+ * Splict it into two ranges.
+ * 1. Shoot Range: 0 - 1500 units
+ * 2. Gain Range: 1500 - 3000 units (most cases 3000, maybe 2500 or 3500.)
+ * 
+ * See finale damage as f(x), distance as x, basic damage as d, range modifier as r, gain range as g (ussually 1500)
+ * In shoot range the formula is:
+ * f(x) = d * (r ^ (x / 500)), 0 < x <= g
+ * 
+ * See max range as m (usually 3000), in gain range the formula is:
+ * f(x_gain) = f(x) * (m - x / m - g), g < x <= m
+*/
 enum struct DamageData_t
 {
 	int iBasic;
@@ -53,8 +69,8 @@ enum struct WeaponData_t
 
 		this.hMapMelee = new StringMap();
 
-		char z_difficulty[64];
-		FindConVar("z_difficulty").GetString(z_difficulty, sizeof(z_difficulty));
+		char sDifficulty[64];
+		z_difficulty.GetString(sDifficulty, sizeof(sDifficulty));
 
 		if (kv.GotoFirstSubKey())
 		{
@@ -80,8 +96,8 @@ enum struct WeaponData_t
 
 							if (kv.JumpToKey("difficulty"))
 							{
-								data.iDifficultyMultipler = kv.GetNum(z_difficulty, -1);
-								// PrintToServer("Found difficulty key %s for weapon %s, got multiplier %d", z_difficulty, sName, iMultipler);
+								data.iDifficultyMultipler = kv.GetNum(sDifficulty, -1);
+								// PrintToServer("Found difficulty key %s for weapon %s, got multiplier %d", sDifficulty, sName, iMultipler);
 								kv.GoBack();
 							}
 
@@ -101,8 +117,8 @@ enum struct WeaponData_t
 
 					if (kv.JumpToKey("difficulty"))
 					{
-						data.iDifficultyMultipler = kv.GetNum(z_difficulty, -1);
-						// PrintToServer("Found difficulty key %s for weapon %s, got multiplier %d", z_difficulty, sName, iMultipler);
+						data.iDifficultyMultipler = kv.GetNum(sDifficulty, -1);
+						// PrintToServer("Found difficulty key %s for weapon %s, got multiplier %d", sDifficulty, sName, iMultipler);
 						kv.GoBack();
 					}
 
@@ -258,7 +274,7 @@ enum struct DamageCache_t
 } 
 DamageCache_t g_DamageCache[L4D2_MAXPLAYERS + 1];
 
-#define PLUGIN_VERSION "r3.2.1"
+#define PLUGIN_VERSION "r3.2.2"
 public Plugin myinfo =
 {
 	name = "[L4D2] Friendly Fire Manager",
@@ -310,6 +326,13 @@ public void OnPluginStart()
 	for (int i = 1; i <= MaxClients; i++)
 		OnClientPutInServer(i);
 
+	z_difficulty = FindConVar("z_difficulty");
+	z_difficulty.AddChangeHook(OnDifficultyChanged);
+	g_WeaponData.Init();
+}
+
+void OnDifficultyChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+{
 	g_WeaponData.Init();
 }
 
@@ -417,20 +440,6 @@ public void OnGameFrame()
 	}
 }
 
-/**
- * We introduced range decay mechanism here (works in the original game too)
- * Within the Shoot Range, damages are done.
- * Splict it into two ranges.
- * 1. Shoot Range: 0 - 1500 units
- * 2. Gain Range: 1500 - 3000 units (most cases 3000, maybe 2500 or 3500.)
- * 
- * See finale damage as f(x), distance as x, basic damage as d, range modifier as r, gain range as g (ussually 1500)
- * In shoot range the formula is:
- * f(x) = d * (r ^ (x / 500)), 0 < x <= g
- * 
- * See max range as m (usually 3000), in gain range the formula is:
- * f(x_gain) = f(x) * (m - x / m - g), g < x <= m
-*/
 Action OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3])
 {
 	if (victim < 1 || victim > MaxClients)
