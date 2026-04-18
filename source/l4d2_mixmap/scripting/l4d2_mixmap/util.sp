@@ -39,21 +39,6 @@ static const char g_sOfficialMaps[][] = {
 	"L4D2C14"
 }
 
-enum /*SurvivorCharacterType*/
-{
-	SurvivorCharacter_Nick = 0,
-	SurvivorCharacter_Rochelle,
-	SurvivorCharacter_Coach,
-	SurvivorCharacter_Ellis,
-	SurvivorCharacter_Bill,
-	SurvivorCharacter_Zoey,
-	SurvivorCharacter_Francis,
-	SurvivorCharacter_Louis,
-	SurvivorCharacter_Invalid,	  // 8
-
-	SurvivorCharacter_Size	  // 9 size
-};
-
 static const char g_sSurvivorNames[][] = {
 	"Nick",
 	"Rochelle",
@@ -179,6 +164,7 @@ void GetSafeAreaOriginEx(float vec[3])
 	// since we have meesed up with the landmark driving around in different compaigns, this is probably not work,
 	// at least everytime I call this function it just throws me a pretty 0. Nice.
 	// Let's just use the old way.
+	// re3.4.0 edit: Could possibly set s_landmarkname through the current info_landmark entity after transition, then this code may work.
 	/*
 		Address pCheckPoint = SDKCall(g_hSDKCall_GetInitialCheckPoint, L4D_GetPointer(POINTER_NAVMESH));
 		g_hLogger.DebugEx("### GetSafeAreaOrigin: pCheckPoint: %d.", pCheckPoint);
