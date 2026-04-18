@@ -43,7 +43,7 @@ ArrayList g_hWeaponAmmoList;
 Handle g_hSDKCall_OnAmmoPickedUp;
 int g_iOff_CTerrorWeapon_m_upgradedAmmoCount;
 
-#define PLUGIN_VERSION "1.4.1"
+#define PLUGIN_VERSION "1.4.2"
 public Plugin myinfo =
 {
 	name = "[L4D2] Max Ammo",
@@ -159,7 +159,7 @@ void OnWeaponEquipPost(int client, int weapon)
     data.WriteCell(EntIndexToEntRef(weapon));
     data.WriteCell(client);
     RequestFrame(OnNextFrame_OnEquipWeaponPost, data);  // m_iAmmo needs to be set on the next frame.
-    //PrintToServer("Client %d equipped weapon %d", client, weapon);
+    //PrintToServer("[Max Ammo] Client %d equipped weapon %d", client, weapon);
 }
 
 void OnNextFrame_OnEquipWeaponPost(DataPack data)
@@ -246,6 +246,9 @@ void OnWeaponReloadPost(int weapon, bool bSuccessful)
 
         int clipShot = maxClip - currentClip;
         int finishAmmo = currentAmmo - clipShot;
+
+        if (finishAmmo < 0)
+            finishAmmo = 0;
     
         weaponAmmo.currentAmmo = finishAmmo;
         //PrintToServer("[Max Ammo] Client %d reloaded weapon %d, current ammo is %d", client, weapon, finishAmmo);
