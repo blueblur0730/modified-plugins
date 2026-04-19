@@ -63,8 +63,9 @@ jobs:
             README.md
             README-cn.md
 
-  delete:
-    name: delete old assets
+  delete_create:
+    name: Delete and Create Release
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Prepare Env
@@ -78,6 +79,12 @@ jobs:
           # tagPrefix:
           tag: release-${{ env.DATE }}
           deleteOnlyFromDrafts: false
+
+      - name: Create new release
+        uses: actions/create-release@v1
+        with:
+          tag_name: release-${{ env.DATE }}
+          release_name: modified-plugins-${{ env.DATE }}
 
   release:
     strategy:
