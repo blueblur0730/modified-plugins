@@ -5,7 +5,7 @@ name: Compile or Release
 
 on:
   pull_request:
-    paths: ["source/**", "include/**", "pushtrigger.txt"]
+    paths: ["source/**", "include/**"]
     branches: [master]
 
   push:
