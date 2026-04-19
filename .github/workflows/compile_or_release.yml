@@ -5,12 +5,12 @@ name: Compile or Release
 
 on:
   pull_request:
-    paths: ["source/**", "include/**", "pushtrigger.txt"]
-    branches: [master, main, workflow]
+    paths: ["source/**", "include/**"]
+    branches: [master]
 
   push:
     paths: ["source/**", "include/**", "pushtrigger.txt"]
-    branches: [master, main, workflow]
+    branches: [master]
 
   workflow_dispatch:
 
@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         name: Checkout Repo
         with:
           submodules: recursive
@@ -34,12 +34,12 @@ jobs:
       - name: Retrive Date
         run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         name: Prepare Python
         with:
           python-version: 3.11
 
-      - name: Install NinjaBuild
+      - name: Set up NinjaBuild
         run: sudo apt-get update && sudo apt-get install -y ninja-build
 
       - uses: rumblefrog/setup-sp@master
@@ -52,7 +52,7 @@ jobs:
           python3 configure.py --spcomp-dir "$scriptingPath"
           ninja
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         name: Upload the Package
         with:
           name: modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}
@@ -63,17 +63,40 @@ jobs:
             README.md
             README-cn.md
 
-  delete:
-    name: delete old assets
+  delete_create:
+    name: Delete and Create Release
+    needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Prepare Env
+        run: | 
+            echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      - name: Check if tag exists
+        uses: uruz-7/tag-exists-action@v2
+        id: checkTag
+        with:
+          tag: "release-${{ env.DATE }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Delete current release assets
+        if: steps.checkTag.outputs.exists == 'true'
         uses: andreaswilli/delete-release-assets-action@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # tagPrefix:
-          tag: release
+          tag: release-${{ env.DATE }}
           deleteOnlyFromDrafts: false
+
+      - name: Create new release
+        if: steps.checkTag.outputs.exists == 'false'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: release-${{ env.DATE }}
+          release_name: modified-plugins-${{ env.DATE }}
 
   release:
     strategy:
@@ -89,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         name: Checkout Repo
         with:
           submodules: recursive
@@ -100,10 +123,11 @@ jobs:
              echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Download package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4 # version 4+ has some issue with the downloaded artifact path, just use v4.
         with:
           path: tmp/
           pattern: modified-plugins-sm-${{ matrix.sm_version }}-${{ env.DATE }}
+          merge-multiple: false
 
       - name: Prepare Release
         working-directory: tmp/
@@ -121,17 +145,17 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.name }}
           PR_AUTHOR_EMAIL: ${{ github.event.pull_request.user.email }}
 
-        uses: xresloader/upload-to-github-release@v1.6.1
+        uses: xresloader/upload-to-github-release@main
         with:
-          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
+          file: "tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip"
           draft: false
           prerelease: false
-          branches: main
-          tag_name: release
+          branches: master
+          tag_name: release-${{ env.DATE }}
           tags: true
           update_latest_release: true
           overwrite: true
-          default_release_name: modified-plugins
+          default_release_name: modified-plugins-${{ env.DATE }}
           update_release_body: | 
            ## Release Updated On Pull Request:
             - ${{ github.event.pull_request.number }} 
@@ -142,17 +166,17 @@ jobs:
 
       - name: Release (Push)
         if: github.event_name == 'push'
-        uses: xresloader/upload-to-github-release@v1.6.1
+        uses: xresloader/upload-to-github-release@main
         with:
-          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
+          file: "tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip"
           draft: false
           prerelease: false
-          branches: main
-          tag_name: release
+          branches: master
+          tag_name: release-${{ env.DATE }}
           tags: true
           update_latest_release: true
           overwrite: true
-          default_release_name: modified-plugins
+          default_release_name: modified-plugins-${{ env.DATE }}
           update_release_body: |
            ## Release Updated On Commit: 
             - (${{ env.GITHUB_SHA_SHORT }}) 
@@ -161,17 +185,17 @@ jobs:
 
       - name: Release (Dispatch)
         if: github.event_name == 'workflow_dispatch'
-        uses: xresloader/upload-to-github-release@v1.6.1
+        uses: xresloader/upload-to-github-release@main
         with:
-          file: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
+          file: "tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip"
           draft: false
           prerelease: false
-          branches: main
-          tag_name: release
+          branches: master
+          tag_name: release-${{ env.DATE }}
           tags: true
           update_latest_release: true
           overwrite: true
-          default_release_name: modified-plugins
+          default_release_name: modified-plugins-${{ env.DATE }}
           update_release_body: |
            ## Release Updated On Manually Triggered Workflow
             - (${{ env.GITHUB_SHA_SHORT }}) (by ${{ github.triggering_actor }})
