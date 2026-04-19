@@ -721,7 +721,7 @@ void HandlePopStagger(int attacker, int victim, int count, bool isStaggering)
     Call_PushCell(attacker);
     Call_PushCell(victim);
     Call_PushCell(count);
-    Call_PushCell(isStaggering);
+    Call_PushCell(view_as<any>(isStaggering));
     Call_Finish();
 }
 
