@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sm_version: ["1.12", "1.13"]
+        sm_version: ["1.12", "1.13.7295"]
 
     runs-on: ubuntu-latest
 
