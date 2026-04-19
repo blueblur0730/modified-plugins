@@ -72,8 +72,17 @@ jobs:
         run: | 
             echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
+      - name: Check if tag exists
+        uses: uruz-7/tag-exists-action@v2
+        id: checkTag
+        with:
+          tag: "release-${{ env.DATE }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Delete current release assets
-        uses: andreaswilli/delete-release-assets-action@v4.0.0
+        if: steps.checkTag.outputs.exists == 'true'
+        uses: andreaswilli/delete-release-assets-action@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # tagPrefix:
@@ -81,13 +90,13 @@ jobs:
           deleteOnlyFromDrafts: false
 
       - name: Create new release
+        if: steps.checkTag.outputs.exists == 'false'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: release-${{ env.DATE }}
           release_name: modified-plugins-${{ env.DATE }}
-
 
   release:
     strategy:
