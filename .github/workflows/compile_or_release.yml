@@ -82,7 +82,7 @@ jobs:
 
       - name: Delete current release assets
         if: steps.checkTag.outputs.exists == 'true'
-        uses: andreaswilli/delete-release-assets-action@v4
+        uses: andreaswilli/delete-release-assets-action@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # tagPrefix:
