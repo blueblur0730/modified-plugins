@@ -118,7 +118,7 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.name }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_AUTHOR_EMAIL: ${{ github.event.pull_request.user.email }}
 
         uses: xresloader/upload-to-github-release@v1.6.1
