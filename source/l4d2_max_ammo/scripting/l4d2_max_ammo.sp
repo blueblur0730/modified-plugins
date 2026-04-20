@@ -2,34 +2,12 @@
 #pragma newdecls required
 
 #include <sourcemod>
-#include <sdktools>
 #include <sdkhooks>
 #include <left4dhooks>
 #include <l4d2util_weapons>
 #include <l4d_transition_entity>
+#include <dhooks>
 #include <gamedata_wrapper>
-
-static const char g_sShortName[6][5][] = 
-{
-    {
-        "shotgun_spas", "autoshotgun", "", "", ""
-    },
-    {
-        "pumpshotgun", "shotgun_chrome", "", "", ""
-    },
-    {
-        "smg", "smg_mp5", "smg_silenced", "", ""
-    },
-    {
-        "sniper_military", "hunting_rifle", "sniper_awp", "sniper_scout", ""
-    },
-    {
-        "rifle_desert", "rifle_ak47" , "rifle_sg552", "rifle", "rifle_m60"
-    },
-    {
-        "grenade_launcher", "", "", "", ""
-    },
-};
 
 enum struct WeaponAmmo_t
 {
@@ -38,12 +16,9 @@ enum struct WeaponAmmo_t
     int currentAmmo;
     bool bToBeTransitioned;
 }
-
 ArrayList g_hWeaponAmmoList;
-Handle g_hSDKCall_OnAmmoPickedUp;
-int g_iOff_CTerrorWeapon_m_upgradedAmmoCount;
 
-#define PLUGIN_VERSION "1.4.2"
+#define PLUGIN_VERSION "1.4.3"
 public Plugin myinfo =
 {
 	name = "[L4D2] Max Ammo",
@@ -64,26 +39,49 @@ public APLRes AskPluginLoad2(Handle hMyself, bool bLate, char[] sError, int iErr
 public void OnPluginStart()
 {
     GameDataWrapper gd = new GameDataWrapper("l4d2_max_ammo");
-    g_hSDKCall_OnAmmoPickedUp = gd.CreateSDKCallOrFail(SDKCall_Player, SDKConf_Signature, "CTerrorPlayer::OnAmmoPickedUp");
-    g_iOff_CTerrorWeapon_m_upgradedAmmoCount = gd.GetOffset("CTerrorWeapon->m_upgradedAmmoCount");
+    gd.CreateDetourOrFailEx("__l4d2_max_ammo__CAmmoDef::MaxCarry", DTR_CAmmoDef_MaxCarry_Pre);
+    gd.CreateDetourOrFailEx("__l4d2_max_ammo__CWeaponSpawn::Use", DTR_CWeaponSpawn_Use_Pre, DTR_CWeaponSpawn_Use_Post);
+    gd.CreateDetourOrFailEx("__l4d2_max_ammo__CWeaponAmmoSpawn::Use", DTR_CWeaponAmmoSpawn_Use_Pre, DTR_CWeaponAmmoSpawn_Use_Post);
     delete gd;
 
     CreateConVar("l4d2_max_ammo_version", PLUGIN_VERSION, "L4D2 Max Ammo version", FCVAR_NOTIFY | FCVAR_DONTRECORD);
 
+    char sShortName[6][5][] = 
+    {
+        {
+            "shotgun_spas", "autoshotgun", "", "", ""
+        },
+        {
+            "pumpshotgun", "shotgun_chrome", "", "", ""
+        },
+        {
+            "smg", "smg_mp5", "smg_silenced", "", ""
+        },
+        {
+            "sniper_military", "hunting_rifle", "sniper_awp", "sniper_scout", ""
+        },
+        {
+            "rifle_desert", "rifle_ak47" , "rifle_sg552", "rifle", "rifle_m60"
+        },
+        {
+            "grenade_launcher", "", "", "", ""
+        },
+    };
+
     int iInitAmmo[17] = {90, 90, 72, 72, 650, 650, 650, 180, 150, 150, 150, 360, 400, 360, 360, 150, 30};
     char sName[32], sDesc[64], sNum[16];
-    for (int i = 0; i < sizeof(g_sShortName); i++)
+    for (int i = 0; i < sizeof(sShortName); i++)
     {
-        for (int j = 0; j < sizeof(g_sShortName[i]); j++)
+        for (int j = 0; j < sizeof(sShortName[i]); j++)
         {
-            if (strlen(g_sShortName[i][j]) == 0)
+            if (strlen(sShortName[i][j]) == 0)
                 continue;
 
             static int index = -1;
             index++;
 
-            FormatEx(sName, sizeof(sName), "l4d2_max_ammo_%s", g_sShortName[i][j]);
-            FormatEx(sDesc, sizeof(sDesc), "Max ammo for %s weapon.", g_sShortName[i][j]);
+            FormatEx(sName, sizeof(sName), "l4d2_max_ammo_%s", sShortName[i][j]);
+            FormatEx(sDesc, sizeof(sDesc), "Max ammo for %s weapon.", sShortName[i][j]);
             IntToString(iInitAmmo[index], sNum, sizeof(sNum));
             CreateConVar(sName, sNum, sDesc, _, true, 0.0);
         }   
@@ -110,17 +108,6 @@ public void OnClientPutInServer(int client)
 		return;
 
     SDKHook(client, SDKHook_WeaponEquipPost, OnWeaponEquipPost);
-}
-
-public void OnEntityCreated(int entity, const char[] classname)
-{
-    if (!IsValidEdict(entity))
-        return;
-
-    if (strcmp(classname, "weapon_ammo_spawn") == 0)
-    {
-        SDKHook(entity, SDKHook_Use, OnUse);
-    }
 }
 
 public void OnMapStart()
@@ -256,56 +243,6 @@ void OnWeaponReloadPost(int weapon, bool bSuccessful)
     }
 }
 
-// rebuilding CWeaponAmmoSpawn::Use.
-Action OnUse(int entity, int activator, int caller, UseType type, float value)
-{
-    if (!IsValidEdict(entity) || !IsValidEdict(activator))
-        return Plugin_Continue;
-
-    int weapon = GetPlayerWeaponSlot(activator, 0);
-    if (weapon == -1)
-        return Plugin_Continue;
-
-    int wepid = IdentifyWeapon(weapon);
-    if (wepid == WEPID_NONE)
-        return Plugin_Continue;
-
-    if (wepid == WEPID_GRENADE_LAUNCHER || wepid == WEPID_RIFLE_M60)
-    {
-        Event event = CreateEvent("ammo_pile_weapon_cant_use_ammo");
-        event.SetInt("userid", GetClientUserId(activator));
-        event.Fire();
-    }
-    else if (GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType") > 0)
-    {
-        // here we have changed the MaxCarry, so follow our step.
-        char sBuffer[128], weaponName[32];
-        GetEdictClassname(weapon, sBuffer, sizeof(sBuffer));
-        ReplaceString(sBuffer, sizeof(sBuffer), "weapon_", "");
-        Format(sBuffer, sizeof(sBuffer), "l4d2_max_ammo_%s", sBuffer);
-
-        int maxCarry = FindConVar(sBuffer).IntValue;
-        GetEdictClassname(weapon, weaponName, sizeof(weaponName));
-        int maxClip = L4D2_GetIntWeaponAttribute(weaponName, L4D2IWA_ClipSize);
-        int maxAmmo = maxCarry + maxClip;
-
-        int ammoCount = GetOrSetPlayerAmmo(activator, weapon);
-
-        int m_iClip1 = GetEntProp(weapon, Prop_Send, "m_iClip1");
-        int m_upgradedAmmoCount = GetEntData(weapon, g_iOff_CTerrorWeapon_m_upgradedAmmoCount);
-        int realAmmoLeft = m_iClip1 - m_upgradedAmmoCount;
-
-        if (maxAmmo > realAmmoLeft + ammoCount)
-        {
-            GetOrSetPlayerAmmo(activator, weapon, maxAmmo - realAmmoLeft);
-            SDKCall(g_hSDKCall_OnAmmoPickedUp, activator);
-        }
-    }
-
-    // superceded this no matter what.
-    return Plugin_Handled;
-}
-
 // before map changing.
 public void L4D_OnPlayerItemTransitioning(int client, int weapon)
 {
@@ -367,6 +304,66 @@ public void L4D_OnEntityTransitioned(int entity, int oldindex)
         weaponAmmo.weaponRef = EntIndexToEntRef(entity);
         g_hWeaponAmmoList.SetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
     }
+}
+
+bool g_bWeaponSpawn = false;
+bool g_bWeaponAmmoSpawn = false;
+MRESReturn DTR_CAmmoDef_MaxCarry_Pre(DHookReturn hReturn, DHookParam hParams)
+{
+    if (g_bWeaponAmmoSpawn || g_bWeaponSpawn)
+    {
+        //PrintToServer("[Max Ammo] CAmmoDef::MaxCarry called");
+        int client = hParams.Get(2);
+        if (client <= 0 || client > MaxClients)
+            return MRES_Ignored;
+
+        if (!IsClientInGame(client)) 
+            return MRES_Ignored;
+
+        int m_hActiveWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+        if (m_hActiveWeapon == -1 || !IsValidEdict(m_hActiveWeapon))
+            return MRES_Ignored;
+
+        char sBuffer[128];
+        GetEdictClassname(m_hActiveWeapon, sBuffer, sizeof(sBuffer));
+        //PrintToServer("[Max Ammo] Client %d using weapon %d, %s", client, m_hActiveWeapon, sBuffer);
+        ReplaceString(sBuffer, sizeof(sBuffer), "weapon_", "");
+        Format(sBuffer, sizeof(sBuffer), "l4d2_max_ammo_%s", sBuffer);
+        int maxCarry = FindConVar(sBuffer).IntValue;
+
+        hReturn.Value = maxCarry;
+        return MRES_Supercede;
+    }
+
+    return MRES_Ignored;
+}
+
+MRESReturn DTR_CWeaponSpawn_Use_Pre()
+{
+    //PrintToServer("[Max Ammo] CWeaponSpawn::Use_Pre called");
+    g_bWeaponSpawn = true;
+    return MRES_Ignored;
+}
+
+MRESReturn DTR_CWeaponSpawn_Use_Post()
+{
+    //PrintToServer("[Max Ammo] CWeaponSpawn::Use_Post called");
+    g_bWeaponSpawn = false;
+    return MRES_Ignored;
+}
+
+MRESReturn DTR_CWeaponAmmoSpawn_Use_Pre()
+{
+    //PrintToServer("[Max Ammo] CWeaponAmmoSpawn::Use_Pre called");
+    g_bWeaponAmmoSpawn = true;
+    return MRES_Ignored;
+}
+
+MRESReturn DTR_CWeaponAmmoSpawn_Use_Post()
+{
+    //PrintToServer("[Max Ammo] CWeaponAmmoSpawn::Use_Post called");
+    g_bWeaponAmmoSpawn = false;
+    return MRES_Ignored;
 }
 
 stock bool IsTargetWeapon(int weapon)

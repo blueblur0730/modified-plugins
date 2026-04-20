@@ -2,24 +2,112 @@
 {
     "left4dead2"
     {
-        "Offsets"
+        "Functions"
         {
-            "CTerrorWeapon->m_upgradedAmmoCount"
+            "__l4d2_max_ammo__CAmmoDef::MaxCarry"
             {
-                "linux"     "6032"
-                "windows"   "6024"
+                "signature"   "CAmmoDef::MaxCarry"
+                "callconv"    "thiscall"
+                "return"      "int"
+                "this"        "ignore"
+                "arguments"
+                {
+                    "ammoindex"
+                    {
+                        "type"    "int"
+                    }
+                    "self"
+                    {
+                        "type"    "cbaseentity"
+                    }
+                }
+            }
+
+            "__l4d2_max_ammo__CWeaponSpawn::Use"
+            {
+                "signature"   "CWeaponSpawn::Use"
+                "callconv"    "thiscall"
+                "return"      "void"
+                "this"        "entity"
+                "arguments"
+                {
+                    "pActivator"
+                    {
+                        "type"    "cbaseentity"
+                    }
+                    "pCaller"
+                    {
+                        "type"    "cbaseentity"
+                    }
+                    "useType"
+                    {
+                        "type"    "int"
+                    }
+                    "value"
+                    {
+                        "type"    "float"
+                    }
+                }
+            }
+            
+            "__l4d2_max_ammo__CWeaponAmmoSpawn::Use"
+            {
+                "signature"   "CWeaponAmmoSpawn::Use"
+                "callconv"    "thiscall"
+                "return"      "void"
+                "this"        "entity"
+                "arguments"
+                {
+                    "pActivator"
+                    {
+                        "type"    "cbaseentity"
+                    }
+                    "pCaller"
+                    {
+                        "type"    "cbaseentity"
+                    }
+                    "useType"
+                    {
+                        "type"    "int"
+                    }
+                    "value"
+                    {
+                        "type"    "float"
+                    }
+                }
             }
         }
 
         "Signatures"
         {
-            // windows sig: search for string "ammo_pickup".
-            "CTerrorPlayer::OnAmmoPickedUp"
+            // windows sig:
+            // search string is "spawner_give_item".
+            "CWeaponSpawn::Use"
             {
                 "library"   "server"
-                "linux"     "@_ZN13CTerrorPlayer14OnAmmoPickedUpEv"
-                "windows"   "\x56\x57\x6A\x2A\x6A\x2A\x6A\x2A\x68\x2A\x2A\x2A\x2A\x6A\x2A\x83\xEC\x2A\x8B\xF9\x8B\x37\x8B\xCC"
-                /* 56 57 6A ? 6A ? 6A ? 68 ? ? ? ? 6A ? 83 EC ? 8B F9 8B 37 8B CC */
+                "linux"     "@_ZN12CWeaponSpawn3UseEP11CBaseEntityS1_8USE_TYPEf"
+                "windows"   "\x55\x8B\xEC\x83\xEC\x2A\x53\x57\x8B\x7D\x2A\x8B\xD9\x85\xFF\x0F\x84\x2A\x2A\x2A\x2A\x8B\x07"
+                /* 55 8B EC 83 EC ? 53 57 8B 7D ? 8B D9 85 FF 0F 84 ? ? ? ? 8B 07 */
+            }
+
+            // windows sig:
+            // search string is "ammo_pile_weapon_cant_use_ammo"
+            "CWeaponAmmoSpawn::Use"
+            {
+                "library"   "server"
+                "linux"     "@_ZN16CWeaponAmmoSpawn3UseEP11CBaseEntityS1_8USE_TYPEf"
+                "windows"   "\x55\x8B\xEC\x51\x53\x8B\x5D\x2A\x85\xDB\x0F\x84\x2A\x2A\x2A\x2A\x8B\x03\x8B\x90\x2A\x2A\x2A\x2A\x8B\xCB\xFF\xD2"
+                /* 55 8B EC 51 53 8B 5D ? 85 DB 0F 84 ? ? ? ? 8B 03 8B 90 ? ? ? ? 8B CB FF D2 */
+            }
+
+            // credits to Orin, Psykotikism for the signatures.
+            // https://forums.alliedmods.net/showthread.php?t=334274
+            "CAmmoDef::MaxCarry"
+            {
+                "library"   "server"
+                "linux"     "@_ZN8CAmmoDef8MaxCarryEiPK20CBaseCombatCharacter"
+                "windows"   "\x2A\x2A\x2A\x2A\x2A\x2A\x83\x2A\x2A\x7C\x2A\x3B\x2A\x2A\x7D\x2A\x6B\x2A\x2A\x03\x2A\x8B\x2A\x2A\x83\x2A\x2A\x75\x2A\x8B\x2A\x2A\x85\x2A\x74\x2A\x8B\x2A\x2A\x8B\x2A\x2A\x5D"
+                /* ? ? ? ? ? ? 83 ? ? 7C ? 3B ? ? 7D ? 6B ? ? 03 ? 8B ? ? 83 ? ? 75 ? 8B ? ? 85 ? 74 ? 8B ? ? 8B ? ? 5D */
             }
         }
     }
