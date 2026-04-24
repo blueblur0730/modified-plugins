@@ -76,6 +76,23 @@
                     }
                 }
             }
+
+            "__l4d2_max_ammo__CBaseCombatWeapon::FinishReload"
+            {
+                "offset"    "CBaseCombatWeapon::FinishReload"
+                "callconv"  "thiscall"
+                "return"    "void"
+                "this"      "entity"
+            }
+        }
+
+        "Offsets"
+        {
+            "CBaseCombatWeapon::FinishReload"
+            {
+                "linux"     "280"
+                "windows"   "279"
+            }
         }
 
         "Signatures"
