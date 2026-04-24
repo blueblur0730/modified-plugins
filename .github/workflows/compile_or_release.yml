@@ -143,7 +143,7 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-          PR_AUTHOR_EMAIL: ${{ github.event.pull_request.user.email }}
+          #PR_AUTHOR_EMAIL: ${{ github.event.pull_request.user.email }}
 
         uses: xresloader/upload-to-github-release@main
         with:
@@ -159,7 +159,7 @@ jobs:
           update_release_body: | 
            ## Release Updated On Pull Request:
             - ${{ github.event.pull_request.number }} 
-              - ${{ env.PR_TITLE }} (by ${{ env.PR_AUTHOR }} @${{ env.PR_AUTHOR_EMAIL }})
+              - ${{ env.PR_TITLE }} (by ${{ env.PR_AUTHOR }})
               - with number of commits: ${{ github.event.pull_request.commits }}
 
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -179,8 +179,8 @@ jobs:
           default_release_name: modified-plugins-${{ env.DATE }}
           update_release_body: |
            ## Release Updated On Commit: 
-            - (${{ env.GITHUB_SHA_SHORT }}) 
-              - ${{ github.event.commits[0].message }} (by ${{ github.event.commits[0].author.name }} in ${{ github.event.commits[0].timestamp }})
+            - (${{ env.GITHUB_SHA_SHORT }}) (by ${{ github.event.commits[0].author.name }} in ${{ github.event.commits[0].timestamp }})
+              - ${{ github.event.commits[0].message }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release (Dispatch)
