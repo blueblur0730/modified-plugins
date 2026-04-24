@@ -6,7 +6,6 @@
 
 ## 要求
 
-- [Left 4 DHooks Direct](https://forums.alliedmods.net/showthread.php?t=321696) (运行时需要)
 - [l4d_transition_entity](https://github.com/Target5150/MoYu_Server_Stupid_Plugins/tree/master/The%20Last%20Stand/l4d_transition_entity) (运行时需要)
 
 - [gamedata_wrapper.inc](https://github.com/blueblur0730/modified-plugins/blob/main/include/gamedata_wrapper.inc)

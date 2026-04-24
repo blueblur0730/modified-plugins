@@ -3,7 +3,6 @@
 
 #include <sourcemod>
 #include <sdkhooks>
-#include <left4dhooks>
 #include <l4d2util_weapons>
 #include <l4d_transition_entity>
 #include <dhooks>
