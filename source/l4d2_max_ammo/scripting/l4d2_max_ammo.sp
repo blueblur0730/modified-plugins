@@ -19,7 +19,7 @@ enum struct WeaponAmmo_t
 ArrayList g_hWeaponAmmoList;
 DynamicHook g_hHook_FinishReload;
 
-#define PLUGIN_VERSION "1.4.4"
+#define PLUGIN_VERSION "1.4.5"
 public Plugin myinfo =
 {
 	name = "[L4D2] Max Ammo",
@@ -92,6 +92,7 @@ public void OnPluginStart()
 
     g_hWeaponAmmoList = new ArrayList(sizeof(WeaponAmmo_t));
     HookEvent("mission_lost", Event_MissionLost, EventHookMode_PostNoCopy);
+    HookEvent("weapon_drop", Event_WeaponDrop, EventHookMode_Post);
 
     if (g_bLateLoad)
     {
@@ -111,7 +112,6 @@ public void OnClientPutInServer(int client)
 		return;
 
     SDKHook(client, SDKHook_WeaponEquipPost, OnWeaponEquipPost);
-    SDKHook(client, SDKHook_WeaponDropPost, OnWeaponDropPost);
 }
 
 public void OnMapStart()
@@ -130,6 +130,33 @@ public void OnMapStart()
 void Event_MissionLost(Event event, const char[] name, bool dontBroadcast)
 {
     g_hWeaponAmmoList.Clear();
+}
+
+void Event_WeaponDrop(Event event, const char[] name, bool dontBroadcast)
+{
+    int weapon = event.GetInt("propid");
+    if (weapon < MaxClients || !IsValidEdict(weapon))
+        return;
+
+    if (!IsShotgunWeapon(weapon))
+        return;
+
+    int client = GetClientOfUserId(event.GetInt("userid"));
+    if (client <= 0 || client > MaxClients)
+        return;
+
+    if (!IsClientInGame(client) || GetClientTeam(client) != 2)
+        return;
+
+    int weaponRef = EntIndexToEntRef(weapon);
+    int index = g_hWeaponAmmoList.FindValue(weaponRef, WeaponAmmo_t::weaponRef);
+    if (index != -1)
+    {
+        WeaponAmmo_t weaponAmmo;
+        g_hWeaponAmmoList.GetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
+        weaponAmmo.currentAmmo = GetOrSetPlayerAmmo(client, weapon, -1);
+        g_hWeaponAmmoList.SetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
+    }
 }
 
 void OnWeaponEquipPost(int client, int weapon)
@@ -196,32 +223,6 @@ void OnNextFrame_OnEquipWeaponPost(DataPack data)
         g_hWeaponAmmoList.PushArray(weaponAmmo);
         g_hHook_FinishReload.HookEntity(Hook_Post, weapon, DHook_FinishReload_Post);
         //PrintToServer("[Max Ammo] Init. Client %d max ammo for weapon %d is %d", client, weapon, maxAmmo);
-    }
-}
-
-void OnWeaponDropPost(int client, int weapon)
-{
-    if (client <= 0 || client > MaxClients)
-        return;
-
-    if (!IsClientInGame(client) || GetClientTeam(client) != 2)
-        return;
-
-    if (!IsValidEdict(weapon))
-        return;
-
-    if (!IsShotgunWeapon(weapon))
-        return;
-
-    int index = g_hWeaponAmmoList.FindValue(weapon, WeaponAmmo_t::weapon);
-    if (index != -1)
-    {
-        WeaponAmmo_t weaponAmmo;
-        g_hWeaponAmmoList.GetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
-        
-        int maxAmmo = GetOrSetPlayerAmmo(client, weapon, -1);
-        weaponAmmo.currentAmmo = maxAmmo;
-        g_hWeaponAmmoList.SetArray(index, weaponAmmo, sizeof(WeaponAmmo_t));
     }
 }
 
