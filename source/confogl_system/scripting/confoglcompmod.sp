@@ -3,7 +3,7 @@
 
 #define DEBUG_ALL				   0
 
-#define PLUGIN_VERSION			   "1.2"    // rework of 2.4.5
+#define PLUGIN_VERSION			   "1.2.1"    // rework of 2.4.5
 
 // Load this plugin always before confogl_system, always after left4dhooks.
 
