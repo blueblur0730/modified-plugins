@@ -9,6 +9,7 @@
 
 #define INVALID_EHANDLE_INDEX 0xFFFFFFFF
 
+static int g_iOff__win_read_entlist = -1;
 static int g_iOff_TurnedZombieEntry_t_size = -1;
 static int g_iOff_m_TurnedZombieEntry = -1;
 static int g_iOff_m_hRagDollHandle = -1;
@@ -20,7 +21,6 @@ static int g_iOff_m_szModel = -1;
 DynamicDetour g_hDetour = null;
 static Address g_pEntityList = Address_Null;
 
-static Handle g_hSDKCall_GetZombieModelForModel;
 static Handle g_hSDKCall_UTIL_RemoveImmediate;
 static Handle g_hSDKCall_InitRelationshipTable;
 static Handle g_hSDKCall_SetCondition;
@@ -28,7 +28,7 @@ static Handle g_hSDKCall_SetSequenceByName;
 static Handle g_hSDKCall_SetullSizeNormal;
 static Handle g_hSDKCall_SetNextThink;
 
-static const char g_sDefaultTurnedModel[][] = {
+static const char pszZombifiedPlayerModels[][] = {
 	"models/nmr_zombie/badass_infected.mdl",
 	"models/nmr_zombie/bateman_infected.mdl",
 	"models/nmr_zombie/butcher_infected.mdl",
@@ -37,6 +37,17 @@ static const char g_sDefaultTurnedModel[][] = {
 	"models/nmr_zombie/molotov_infected.mdl",
 	"models/nmr_zombie/roje_infected.mdl",
 	"models/nmr_zombie/wally_infected.mdl"
+};
+
+static const char pszPossiblePlayerModels[][] = {
+    "models/player/p_badass.mdl",
+    "models/player/p_bateman.mdl",
+    "models/player/p_butcher.mdl",
+    "models/player/p_hunter.mdl",
+    "models/player/p_jive.mdl",
+    "models/player/p_molotov.mdl",
+    "models/player/p_roje.mdl",
+    "models/player/p_wally.mdl"
 };
 
 methodmap TurnedZombieEntry_t < AddressBase {
@@ -106,9 +117,11 @@ methodmap CNMRiH_TurnedZombie_Watcher < AddressBase {
                                             index * g_iOff_TurnedZombieEntry_t_size);
     }
 
-    // return number of bytes written.
-    public Stringt GetZombieModelForModel(const char[] szModel) {
-        return view_as<Stringt>(SDKCall(g_hSDKCall_GetZombieModelForModel, this.addr, szModel));
+    // nmrih 1.15 update:
+    // this function is now inlined, visible on linux, but not on windows.
+    // so we rebuild it by ourselves for convinience.
+    public static void GetZombieModelForModel(const char[] szModel, char[] szZombieModel, int size) {
+        GetZombieModelForModel(szModel, szZombieModel, size);
     }
 }
 
@@ -163,6 +176,8 @@ void LoadGameData()
     g_hDetour = gd.CreateDetourOrFail("CNMRiH_TurnedZombie_Watcher::TurnThink", true, DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre);
     g_pEntityList = gd.GetAddress("g_pEntityList");
 
+    OperatingSystem iOS = gd.OS;
+    g_iOff__win_read_entlist = gd.GetOffset("_win_entlist_read");
     g_iOff_TurnedZombieEntry_t_size = gd.GetOffset("sizeof(TurnedZombieEntry_t)");
     g_iOff_m_TurnedZombieEntry = gd.GetOffset("CNMRiH_TurnedZombie_Watcher->m_TurnedZombieEntry");
     g_iOff_m_hRagDollHandle = gd.GetOffset("TurnedZombieEntry_t->m_hRagDollHandle");
@@ -170,6 +185,11 @@ void LoadGameData()
     g_iOff_m_angTurnedAngle = gd.GetOffset("TurnedZombieEntry_t->m_angTurnedAngle");
     g_iOff_m_flTurnedTime = gd.GetOffset("TurnedZombieEntry_t->m_flTurnedTime");
     g_iOff_m_szModel = gd.GetOffset("TurnedZombieEntry_t->m_szModel");
+
+    if (iOS == OS_Windows)
+    {
+        g_pEntityList = LoadFromAddress(g_pEntityList + g_iOff__win_read_entlist, NumberType_Int32);
+    }
 
     SDKCallParamsWrapper param1[] = {{SDKType_PlainOldData, SDKPass_Pointer}};
     g_hSDKCall_UTIL_RemoveImmediate = gd.CreateSDKCallOrFail(SDKCall_Static, SDKConf_Signature, "UTIL_RemoveImmediate", param1, sizeof(param1));
@@ -188,16 +208,12 @@ void LoadGameData()
     SDKCallParamsWrapper param5[] = {{SDKType_PlainOldData, SDKPass_Plain}};
     g_hSDKCall_SetullSizeNormal = gd.CreateSDKCallOrFail(SDKCall_Entity, SDKConf_Signature, "CAI_BaseNPC::SetCondition", param5, sizeof(param5));
 
-    SDKCallParamsWrapper param6[] = {{SDKType_String, SDKPass_Pointer}};
-    SDKCallParamsWrapper ret = {SDKType_PlainOldData, SDKPass_Plain};   // pass the raw string pointer.
-    g_hSDKCall_GetZombieModelForModel = gd.CreateSDKCallOrFail(SDKCall_Raw, SDKConf_Signature, "CNMRiH_TurnedZombie_Watcher::GetZombieModelForModel", param6, sizeof(param6), true, ret);
-
     delete gd;
 }   
 
 // for some reason, entity nmrih_turnedzombie_watcher can not return a valid index.
 // so we call these by raw address.
-MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
+static MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
 {
     if (pThis == Address_Null)
         return MRES_Ignored;
@@ -248,16 +264,15 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
                 {
                     char szModel[260], szTurnedModel[260];
                     entry.GetModelName(szModel, sizeof(szModel));
-                    Stringt pModel = CNMRiH_TurnedZombie_Watcher(pThis).GetZombieModelForModel(szModel);
-                    if (!pModel.IsNull())
+                    CNMRiH_TurnedZombie_Watcher.GetZombieModelForModel(szModel, szTurnedModel, sizeof(szTurnedModel));
+                    if (szTurnedModel[0] != '\0')
                     {
-                        pModel.ToCharArray(szTurnedModel, sizeof(szTurnedModel));
                         SetEntityModel(npc_nmrih_turnedzombie, szTurnedModel);   
                     }
                     else
                     {
-                        int random = GetRandomInt(0, sizeof(g_sDefaultTurnedModel) - 1);
-                        SetEntityModel(npc_nmrih_turnedzombie, g_sDefaultTurnedModel[random]);   
+                        int random = GetRandomInt(0, sizeof(pszZombifiedPlayerModels) - 1);
+                        SetEntityModel(npc_nmrih_turnedzombie, pszZombifiedPlayerModels[random]);   
                     }
                 }
 
@@ -280,10 +295,61 @@ MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
     return MRES_Supercede;
 }
 
-void UTIL_RemoveImmediate(Address pEntity)
+static void UTIL_RemoveImmediate(Address pEntity)
 {
     if (pEntity == Address_Null)
         return;
 
     SDKCall(g_hSDKCall_UTIL_RemoveImmediate, pEntity);
+}
+
+static stock void GetZombieModelForModel(const char[] szModel, char[] szZombieModel, int size)
+{
+    int i = 0;
+    while (!V_stristr(pszPossiblePlayerModels[i], szModel))
+    {
+        i++;
+
+        if (i >= sizeof(pszPossiblePlayerModels))
+            return;
+    }
+
+    strcopy(szZombieModel, size, pszZombifiedPlayerModels[i]);
+}
+
+static stock bool V_stristr(const char[] haystack, const char[] needle, char[] buffer = "", int maxlen = 0)
+{
+    int lenHay = strlen(haystack);
+    int lenNeed = strlen(needle);
+    
+    if (lenNeed == 0)
+    {
+        strcopy(buffer, maxlen, haystack);
+        return true;
+    }
+    
+    if (lenHay < lenNeed)
+        return false;
+    
+    char[] lowerHaystack = new char[lenHay + 1];
+    char[] lowerNeedle = new char[lenNeed + 1];
+    strcopy(lowerHaystack, lenHay + 1, haystack);
+    strcopy(lowerNeedle, lenNeed + 1, needle);
+    StrToLower(lowerHaystack);
+    StrToLower(lowerNeedle);
+    
+    int pos = StrContains(lowerHaystack, lowerNeedle);
+    if (pos == -1)
+        return false;
+    
+    if (maxlen > 0 && buffer[0] != '\0')
+        strcopy(buffer, maxlen, haystack[pos]);
+    
+    return true;
+}
+
+static stock void StrToLower(char[] arg) 
+{
+    for (int i = 0; i < strlen(arg); i++) 
+        arg[i] = CharToLower(arg[i]);
 }

@@ -84,14 +84,6 @@ static void Stamina_TargetSelect_MenuHandler(Menu menu, MenuAction action, int c
 // CSDKPlayerShared *m_Shared in class CNMRiH_Player is at offset 4812.
 MRESReturn DTR_SetStamina(Address pThis, DHookParam hParams)
 {
-    static int s_iOff_m_Shared = -1;
-    if (s_iOff_m_Shared == -1)
-    {
-        s_iOff_m_Shared = FindSendPropInfo("CNMRiH_Player", "m_Shared");
-        if (s_iOff_m_Shared <= 0)
-            return MRES_Ignored;
-    }
-
     static ConVar sv_max_stamina;
     if (sv_max_stamina == null)
     {
