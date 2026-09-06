@@ -5,18 +5,17 @@
 
 #define CONFIGS_MODULE_NAME "Configs"
 
-static const char
-	customCfgDir[] = "cfgogl";
-
 static char
 	DirSeparator					 = '\0',
 	configsPath[PLATFORM_MAX_PATH]	 = "\0",
 	cfgPath[PLATFORM_MAX_PATH]		 = "\0",
 	customCfgPath[PLATFORM_MAX_PATH] = "\0",
-	customCfgName[PLATFORM_MAX_PATH] = "\0";
+	customCfgName[PLATFORM_MAX_PATH] = "\0",
+	customCfgDir[PLATFORM_MAX_PATH]  = "\0";
 
 ConVar
-	 hCustomConfig = null;
+	hCustomConfig = null,
+	hCustomConfigDir = null;
 
 void Configs_APL()
 {
@@ -30,10 +29,16 @@ void Configs_OnModuleStart()
 	InitPaths();
 
 	hCustomConfig = CreateConVarEx("customcfg", "", "DONT TOUCH THIS CVAR! This is more magic bullshit!", FCVAR_DONTRECORD | FCVAR_UNLOGGED);
+	hCustomConfigDir = CreateConVarEx("customcfgdir", "cfgogl", "Custom directory for config files.", FCVAR_DONTRECORD | FCVAR_UNLOGGED);
 
 	char cfgString[PLATFORM_MAX_PATH];
 	hCustomConfig.GetString(cfgString, sizeof(cfgString));
 	SetCustomCfg(cfgString);
+
+	char cfgDirString[PLATFORM_MAX_PATH];
+	hCustomConfigDir.GetString(cfgDirString, sizeof(cfgDirString));
+	strcopy(customCfgDir, sizeof(customCfgDir), cfgDirString);
+	hCustomConfigDir.AddChangeHook(OnCustomCfgDirChanged);
 
 	hCustomConfig.RestoreDefault();
 }
@@ -141,6 +146,13 @@ void ExecuteCfg(const char[] sFileName)
 	{
 		g_hLogger.ErrorEx("[%s] Could not execute server config \"%s\", file not found.", CONFIGS_MODULE_NAME, sFilePath);
 	}
+}
+
+static void OnCustomCfgDirChanged(ConVar cv, const char[] oldValue, const char[] newValue)
+{
+	char cfgDirString[PLATFORM_MAX_PATH];
+	hCustomConfigDir.GetString(cfgDirString, sizeof(cfgDirString));
+	strcopy(customCfgDir, sizeof(customCfgDir), cfgDirString);
 }
 
 static int _native_BuildConfigPath(Handle plugin, int numParams)
