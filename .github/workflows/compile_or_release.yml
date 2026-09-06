@@ -24,6 +24,8 @@ jobs:
         sm_version: ["1.12", "1.13.7295"]
 
     runs-on: ubuntu-latest
+    outputs:
+      pushtrigger: ${{ steps.filter.outputs.pushtrigger }}
 
     steps:
       - uses: actions/checkout@v6
@@ -63,10 +65,17 @@ jobs:
             README.md
             README-cn.md
 
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            pushtrigger:
+              - 'pushtrigger.txt'
+
   delete_create:
     name: Delete and Create Release
     needs: build
-    if: github.event_name == 'push' && contains(github.event.head_commit.modified, 'pushtrigger.txt')
+    if: ${{ needs.build.outputs.pushtrigger == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Prepare Env
@@ -106,8 +115,7 @@ jobs:
         sm_version: ["1.12", "1.13.7295"]
 
     name: Release with sm-${{ matrix.sm_version }}
-
-    if: github.event_name == 'push' && contains(github.event.head_commit.modified, 'pushtrigger.txt')
+    if: ${{ needs.build.outputs.pushtrigger == 'true' }}
     needs: build
     runs-on: ubuntu-latest
 
