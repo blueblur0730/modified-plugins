@@ -162,5 +162,5 @@ jobs:
            ## Release Updated On Commit: 
          #   - (${{ env.GITHUB_SHA_SHORT }}) (by ${{ github.event.commits[0].author.name }} in ${{ github.event.commits[0].timestamp }})
          #     - ${{ github.event.commits[0].message }}
-          update_release_body_path: ./release_body.md
+          default_release_body_path: release_body.md
           token: ${{ secrets.GITHUB_TOKEN }}
