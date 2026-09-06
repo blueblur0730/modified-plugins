@@ -213,7 +213,7 @@ void LoadGameData()
 
 // for some reason, entity nmrih_turnedzombie_watcher can not return a valid index.
 // so we call these by raw address.
-static MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
+MRESReturn DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre(Address pThis)
 {
     if (pThis == Address_Null)
         return MRES_Ignored;
