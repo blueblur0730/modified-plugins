@@ -72,42 +72,6 @@ jobs:
             pushtrigger:
               - 'pushtrigger.txt'
 
-  delete_create:
-    name: Delete and Create Release
-    needs: build
-    if: ${{ needs.build.outputs.pushtrigger == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Prepare Env
-        run: | 
-            echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-
-      - name: Check if tag exists
-        uses: uruz-7/tag-exists-action@v2
-        id: checkTag
-        with:
-          tag: "release-${{ env.DATE }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Delete current release assets
-        if: steps.checkTag.outputs.exists == 'true'
-        uses: andreaswilli/delete-release-assets-action@v4.0.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # tagPrefix:
-          tag: release-${{ env.DATE }}
-          deleteOnlyFromDrafts: false
-
-      - name: Create new release
-        if: steps.checkTag.outputs.exists == 'false'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: release-${{ env.DATE }}
-          release_name: modified-plugins-${{ env.DATE }}
-
   release:
     strategy:
       fail-fast: false
@@ -120,11 +84,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
-        name: Checkout Repo
-        with:
-          submodules: recursive
-
       - name: Prepare Env
         run: | 
              echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
@@ -146,21 +105,14 @@ jobs:
           done; 
           wait
 
-      - name: Release (Push)
-        uses: xresloader/upload-to-github-release@main
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v3
         with:
-          file: "tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip"
-          draft: false
-          prerelease: false
-          branches: master
           tag_name: release-${{ env.DATE }}
-          tags: true
-          update_latest_release: true
-          overwrite: true
-          default_release_name: modified-plugins-${{ env.DATE }}
-         # update_release_body: |
-           ## Release Updated On Commit: 
-         #   - (${{ env.GITHUB_SHA_SHORT }}) (by ${{ github.event.commits[0].author.name }} in ${{ github.event.commits[0].timestamp }})
-         #     - ${{ github.event.commits[0].message }}
-          default_release_body_path: release_body.md
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: modified-plugins-${{ env.DATE }}
+          body_path: release_body.md
+          files: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
+          make_latest: true
+          overwrite_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
