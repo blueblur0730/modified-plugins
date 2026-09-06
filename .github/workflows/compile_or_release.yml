@@ -14,6 +14,9 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build with sm-${{ matrix.sm_version }}
@@ -84,6 +87,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v6
+        name: Checkout Repo
+
       - name: Prepare Env
         run: | 
              echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
@@ -114,5 +120,3 @@ jobs:
           files: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
           make_latest: true
           overwrite_files: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
