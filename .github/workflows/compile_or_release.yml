@@ -120,3 +120,4 @@ jobs:
           files: tmp/modified-plugins-sm-${{ matrix.sm_version }}-*.zip
           make_latest: true
           overwrite_files: true
+          token: ${{ secrets.GITHUB_TOKEN }}
