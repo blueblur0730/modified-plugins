@@ -1,5 +1,16 @@
 "Games"
 {
+    "#default"
+    {
+        "Offsets"
+        {
+            "OS"
+            {
+                "linux"     "1"
+                "windows"   "0"
+            }
+        }
+    }
     "nmrih"
     {
         "Functions"
@@ -25,108 +36,146 @@
                 "windows"
                 {
                     "signature"     "CNMRiH_TurnedZombie_Watcher::TurnThink"
-                    "read"          "79"
+                    // "read"          "79"
                 }
             }
         }
 
         "Offsets"
         {
+            "_win_entlist_read"
+            {
+                "windows"       "100"   // 0x64
+                "windows64"     "143"   // 0x8F
+            }
+
             "sizeof(TurnedZombieEntry_t)"
             {
                 "linux"     "292"
+                "linux64"   "292"
                 "windows"   "292"
+                "windows64" "292"
             }
 
             "CNMRiH_TurnedZombie_Watcher->m_TurnedZombieEntry"
             {
-                "linux"     "924"
-                "windows"   "904"
+                "linux"     "932"
+                "linux64"   "1212"
+                "windows"   "920"
+                "windows64" "1176"
             }
 
             "TurnedZombieEntry_t->m_hRagDollHandle"
             {
                 "linux"     "0"
+                "linux64"   "0"
                 "windows"   "0"
+                "windows64" "0"
             }
 
             "TurnedZombieEntry_t->m_vecTurnedPosition"
             {
                 "linux"     "4"
+                "linux64"   "4"
                 "windows"   "4"
+                "windows64" "4"
             }
 
             "TurnedZombieEntry_t->m_angTurnedAngle"
             {
                 "linux"     "16"
+                "linux64"   "16"
                 "windows"   "16"
+                "windows64" "16"
             }
 
             "TurnedZombieEntry_t->m_flTurnedTime"
             {
                 "linux"     "28"
+                "linux64"   "28"
                 "windows"   "28"
+                "windows64" "28"
             }
 
             "TurnedZombieEntry_t->m_szModel"
             {
                 "linux"     "32"
+                "linux64"   "32"
                 "windows"   "32"
+                "windows64" "32"
             }
 
             // Animatings
             "CBaseAnimating->m_pStudioHdr"
             {
-                "linux"     "1204"
-                "windows"   "1204"
+                "linux"     "1216"
+                "linux64"   "1520"
+                "windows"   "1216"
+                "windows64" "1520"
             }
 
             "CStudioHdr->cstudiohdr_t"
             {
                 "linux"     "0"
+                "linux64"   "0"
                 "windows"   "0"
+                "windows64" "0"
             }
 
             "cstudiohdr_t->numbodyparts"
             {
                 "linux"     "232"
+                "liunx64"   "232"
                 "windows"   "232"
+                "windows64" "232"
             }
 
             "cstudiohdr_t->bodypartindex"
             {
                 "linux"     "236"
+                "linux64"   "236"
                 "windows"   "236"
+                "windows64" "236"
             }
 
             "mstudiobodyparts_t->nummodels"
             {
                 "linux"     "4"
+                "linux64"   "4"
                 "windows"   "4"
+                "windows64" "4"
             }
 
             "mstudiobodyparts_t->base"
             {
                 "linux"     "8"
+                "linux64"   "8"
                 "windows"   "8"
+                "windows64" "8"
             }
 
             "mstudiobodyparts_t->sznameindex"
             {
                 "linux"     "0"
+                "linux64"   "0"
                 "windows"   "0"
+                "windows64" "0"
             }
 
             "mstudiobodyparts_t->modelindex"
             {
                 "linux"     "12"
+                "linux64"   "12"
                 "windows"   "12"
+                "windows64" ""
             }
 
             "mstudiomodel_t->name"
             {
                 "linux"     "0"
+                "linux64"   "12"
                 "windows"   "0"
+                "windows64" "12"
             }
             
         }
@@ -144,16 +193,13 @@
             {
                 "library"   "server"
                 "linux"     "@_ZN27CNMRiH_TurnedZombie_Watcher9TurnThinkEv"
-                "windows"   "\x55\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\x8B\x15"
-                /* 55 8B EC 81 EC ? ? ? ? 8B 15 */
-            }
+                "linux64"   "@_ZN27CNMRiH_TurnedZombie_Watcher9TurnThinkEv"
 
-            "CNMRiH_TurnedZombie_Watcher::GetZombieModelForModel"
-            {
-                "library"   "server"
-                "linux"     "@_ZN27CNMRiH_TurnedZombie_Watcher22GetZombieModelForModelEPKc"
-                "windows"   "\x55\x8B\xEC\x56\x33\xF6\x57\x39\x35\x2A\x2A\x2A\x2A\x74\x2A\x8B\x7D\x2A\xB8\x2A\x2A\x2A\x2A\xFF\x30"
-                /* 55 8B EC 56 33 F6 57 39 35 ? ? ? ? 74 ? 8B 7D ? B8 ? ? ? ? FF 30 */
+                "windows"   "\x55\x8B\xEC\x81\xEC\x2A\x2A\x2A\x2A\xF3\x0F\x10\x05\x2A\x2A\x2A\x2A\x8B\xC1"
+                /* 55 8B EC 81 EC ? ? ? ? F3 0F 10 05 ? ? ? ? 8B C1 */
+
+                "windows64" "\x4C\x8B\xDC\x49\x89\x4B\x2A\x41\x55"
+                /* 4C 8B DC 49 89 4B ? 41 55 */
             }
 
             // windows sig:
@@ -165,8 +211,13 @@
             {
                 "library"   "server"
                 "linux"     "@_Z20UTIL_RemoveImmediateP11CBaseEntity"
-                "windows"   "\x55\x8B\xEC\x56\x8B\x75\x2A\x85\xF6\x74\x2A\xF6\x86"
-                /* 55 8B EC 56 8B 75 ? 85 F6 74 ? F6 86 */
+                "linux64"   "@_Z20UTIL_RemoveImmediateP11CBaseEntity"
+
+                "windows"   "\x55\x8B\xEC\x56\x8B\x75\x2A\x85\xF6\x0F\x84\x2A\x2A\x2A\x2A\xF6\x86"
+                /* 55 8B EC 56 8B 75 ? 85 F6 0F 84 ? ? ? ? F6 86 */
+
+                "windows64" "\x48\x85\xC9\x0F\x84\x2A\x2A\x2A\x2A\x53\x48\x83\xEC\x2A\x8B\x81"
+                /* 48 85 C9 0F 84 ? ? ? ? 53 48 83 EC ? 8B 81 */
             }
 
             // windows sig: see CNMRiH_TurnedZombie_Watcher::TurnThink.
@@ -174,8 +225,13 @@
             {
                 "library"   "server"
                 "linux"     "@_ZN11CAI_BaseNPC21InitRelationshipTableEv"
+                "linux64"   "@_ZN11CAI_BaseNPC21InitRelationshipTableEv"
+
                 "windows"   "\x8B\x81\x2A\x2A\x2A\x2A\xBA\x2A\x2A\x2A\x2A\x85\xC0"
                 /* 8B 81 ? ? ? ? BA ? ? ? ? 85 C0 */
+
+                "windows64" "\x48\x8B\x81\x2A\x2A\x2A\x2A\x48\x8D\x15\x2A\x2A\x2A\x2A\x48\x85\xC0\x48\x0F\x45\xD0\x45\x33\xC0"
+                /* 48 8B 81 ? ? ? ? 48 8D 15 ? ? ? ? 48 85 C0 48 0F 45 D0 45 33 C0 */
             }
 
             // windows sig: see CNMRiH_TurnedZombie_Watcher::TurnThink.
@@ -183,8 +239,13 @@
             {
                 "library"   "server"
                 "linux"     "@_ZN11CAI_BaseNPC12SetConditionEi"
-                "windows"   "\x55\x8B\xEC\x56\x8B\x75\x08\x57\x8B\xF9\x81\xFE\x00\xCA\x9A\x3B\x7D\x2A\x8B\x07\xFF\x90\x24\x09\x00\x00\x56\x8D\x48\x34\xE8\x2A\x2A\x2A\x2A\x8B\xF0\x83\xFE\xFF\x74\x2A\x8D\x8E\x00\x36\x65\xC4\x83\xF9\xFF\x74\x2A\x8B\xC1\x83\xE1\x1F\xC1\xF8\x05\x8D\x14\x87\xB8\x01\x00\x00\x00\xD3\xE0\x09\x82\xEC\x08\x00\x00"
-                /* 55 8B EC 56 8B 75 08 57 8B F9 81 FE 00 CA 9A 3B 7D ? 8B 07 FF 90 24 09 00 00 56 8D 48 34 E8 ? ? ? ? 8B F0 83 FE FF 74 ? 8D 8E 00 36 65 C4 83 F9 FF 74 ? 8B C1 83 E1 1F C1 F8 05 8D 14 87 B8 01 00 00 00 D3 E0 09 82 EC 08 00 00 */
+                "linux64"   "@_ZN11CAI_BaseNPC12SetConditionEi"
+
+                "windows"   "\x55\x8B\xEC\x56\x8B\x75\x2A\x57\x8B\xF9\x81\xFE\x2A\x2A\x2A\x2A\x7D\x2A\x8B\x07\xFF\x90\x2A\x2A\x2A\x2A\x56\x8D\x48\x2A\xE8\x2A\x2A\x2A\x2A\x8B\xF0\x83\xFE\x2A\x74\x2A\x8D\x96\x2A\x2A\x2A\x2A\x83\xFA\x2A\x74\x2A\x8B\xC2\x83\xE2\x2A\xC1\xF8\x2A\x8D\x0C\x87\x8B\x81\x2A\x2A\x2A\x2A\x0F\xAB\xD0\x89\x81\x2A\x2A\x2A\x2A\x5F\x5E\x5D\xC2\x2A\x2A\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC\x55\x8B\xEC\x53"
+                /* 55 8B EC 56 8B 75 ? 57 8B F9 81 FE ? ? ? ? 7D ? 8B 07 FF 90 ? ? ? ? 56 8D 48 ? E8 ? ? ? ? 8B F0 83 FE ? 74 ? 8D 96 ? ? ? ? 83 FA ? 74 ? 8B C2 83 E2 ? C1 F8 ? 8D 0C 87 8B 81 ? ? ? ? 0F AB D0 89 81 ? ? ? ? 5F 5E 5D C2 ? ? CC CC CC CC CC CC CC CC CC CC CC 55 8B EC 53 */
+
+                "windows64" "\x48\x89\x5C\x24\x2A\x57\x48\x83\xEC\x2A\x8B\xDA\x48\x8B\xF9\x81\xFA\x2A\x2A\x2A\x2A\x7D\x2A\x48\x8B\x01\xFF\x90\x2A\x2A\x2A\x2A\x8B\xD3\x48\x8D\x48\x2A\xE8\x2A\x2A\x2A\x2A\x8B\xD8\x83\xF8\x2A\x74\x2A\x8D\x8B\x2A\x2A\x2A\x2A\x83\xF9\x2A\x74\x2A\x48\x63\xC3\x48\x2D\x2A\x2A\x2A\x2A\x48\xC1\xF8\x2A\x48\x8D\x14\x87\xB8\x2A\x2A\x2A\x2A\xD3\xE0\x09\x82\x2A\x2A\x2A\x2A\x48\x8B\x5C\x24\x2A\x48\x83\xC4\x2A\x5F\xC3\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC\x48\x89\x5C\x24"
+                /* 48 89 5C 24 ? 57 48 83 EC ? 8B DA 48 8B F9 81 FA ? ? ? ? 7D ? 48 8B 01 FF 90 ? ? ? ? 8B D3 48 8D 48 ? E8 ? ? ? ? 8B D8 83 F8 ? 74 ? 8D 8B ? ? ? ? 83 F9 ? 74 ? 48 63 C3 48 2D ? ? ? ? 48 C1 F8 ? 48 8D 14 87 B8 ? ? ? ? D3 E0 09 82 ? ? ? ? 48 8B 5C 24 ? 48 83 C4 ? 5F C3 CC CC CC CC CC CC CC CC CC CC 48 89 5C 24 */
             }
 
             // windows sig: see CNMRiH_TurnedZombie_Watcher::TurnThink.
@@ -192,8 +253,13 @@
             {
                 "library"   "server"
                 "linux"     "@_ZN11CAI_BaseNPC17SetSequenceByNameEPKc"
-                "windows"   "\x55\x8B\xEC\x56\xFF\x75\x2A\x8B\xF1\xE8\x2A\x2A\x2A\x2A\x83\xF8"
-                /* 55 8B EC 56 FF 75 ? 8B F1 E8 ? ? ? ? 83 F8 */
+                "linux64"   "@_ZN11CAI_BaseNPC17SetSequenceByNameEPKc"
+
+                "windows"   "\x55\x8B\xEC\x53\x56\x57\x8B\x7D\x2A\x8B\xF1\x57\xE8\x2A\x2A\x2A\x2A\x8B\xD8"
+                /* 55 8B EC 53 56 57 8B 7D ? 8B F1 57 E8 ? ? ? ? 8B D8 */
+
+                "windows64" "\x48\x89\x5C\x24\x2A\x48\x89\x74\x24\x2A\x57\x48\x83\xEC\x2A\x48\x8B\xFA\x48\x8B\xD9\xE8"
+                /* 48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B FA 48 8B D9 E8 */
             }
 
             // windows sig: see CNMRiH_TurnedZombie_Watcher::TurnThink.
@@ -201,8 +267,13 @@
             {
                 "library"   "server"
                 "linux"     "@_ZN11CAI_BaseNPC17SetHullSizeNormalEb"
+                "linux64"   "@_ZN11CAI_BaseNPC17SetHullSizeNormalEb"
+
                 "windows"   "\x55\x8B\xEC\x83\xEC\x2A\x56\x8B\xF1\x80\xBE\x2A\x2A\x2A\x2A\x2A\x75\x2A\x80\x7D"
                 /* 55 8B EC 83 EC ? 56 8B F1 80 BE ? ? ? ? ? 75 ? 80 7D */
+
+                "windows64" "\x40\x53\x48\x83\xEC\x2A\x80\xB9\x2A\x2A\x2A\x2A\x2A\x48\x8B\xD9\x75\x2A\x84\xD2"
+                /* 40 53 48 83 EC ? 80 B9 ? ? ? ? ? 48 8B D9 75 ? 84 D2 */
             }
 
             // windows sig: see CNMRiH_TurnedZombie_Watcher::TurnThink.
@@ -210,8 +281,13 @@
             {
                 "library"   "server"
                 "linux"     "@_ZN11CBaseEntity12SetNextThinkEfPKc"
+                "linux64"   "@_ZN11CBaseEntity12SetNextThinkEfPKc"
+
                 "windows"   "\x55\x8B\xEC\xF3\x0F\x10\x45\x2A\x0F\x2E\x05\x2A\x2A\x2A\x2A\x53"
                 /* 55 8B EC F3 0F 10 45 ? 0F 2E 05 ? ? ? ? 53 */
+
+                "windows64" "\x48\x89\x5C\x24\x2A\x48\x89\x74\x24\x2A\x57\x48\x83\xEC\x2A\x0F\x2E\x0D"
+                /* 48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 0F 2E 0D */
             }
         }
     }

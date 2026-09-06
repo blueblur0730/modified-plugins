@@ -24,8 +24,10 @@
         {
             "CNMRiH_BaseMedicalItem::GiveToPlayer"
             {
-                "linux"     "438"
-                "windows"   "437"
+                "linux"     "442"
+                "linux64"   "442"
+                "windows"   "441"
+                "windows64" "441"
             }
         }
     }
