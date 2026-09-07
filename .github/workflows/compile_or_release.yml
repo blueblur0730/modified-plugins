@@ -6,11 +6,11 @@ name: Compile or Release
 on:
   pull_request:
     paths: ["source/**", "include/**"]
-    branches: [main]
+    branches: [main, workflow]
 
   push:
     paths: ["source/**", "include/**", "pushtrigger.txt"]
-    branches: [main]
+    branches: [main, workflow]
 
   workflow_dispatch:
 
