@@ -9,7 +9,6 @@
 
 #define INVALID_EHANDLE_INDEX 0xFFFFFFFF
 
-static int g_iOff__win_read_entlist = -1;
 static int g_iOff_TurnedZombieEntry_t_size = -1;
 static int g_iOff_m_TurnedZombieEntry = -1;
 static int g_iOff_m_hRagDollHandle = -1;
@@ -176,8 +175,6 @@ void LoadGameData()
     g_hDetour = gd.CreateDetourOrFail("CNMRiH_TurnedZombie_Watcher::TurnThink", true, DTR_CNMRiH_TurnedZombie_Watcher_TurnThink_Pre);
     g_pEntityList = gd.GetAddress("g_pEntityList");
 
-    OperatingSystem iOS = gd.OS;
-    g_iOff__win_read_entlist = gd.GetOffset("_win_entlist_read");
     g_iOff_TurnedZombieEntry_t_size = gd.GetOffset("sizeof(TurnedZombieEntry_t)");
     g_iOff_m_TurnedZombieEntry = gd.GetOffset("CNMRiH_TurnedZombie_Watcher->m_TurnedZombieEntry");
     g_iOff_m_hRagDollHandle = gd.GetOffset("TurnedZombieEntry_t->m_hRagDollHandle");
@@ -185,11 +182,6 @@ void LoadGameData()
     g_iOff_m_angTurnedAngle = gd.GetOffset("TurnedZombieEntry_t->m_angTurnedAngle");
     g_iOff_m_flTurnedTime = gd.GetOffset("TurnedZombieEntry_t->m_flTurnedTime");
     g_iOff_m_szModel = gd.GetOffset("TurnedZombieEntry_t->m_szModel");
-
-    if (iOS == OS_Windows)
-    {
-        g_pEntityList = LoadFromAddress(g_pEntityList + g_iOff__win_read_entlist, NumberType_Int32);
-    }
 
     SDKCallParamsWrapper param1[] = {{SDKType_PlainOldData, SDKPass_Pointer}};
     g_hSDKCall_UTIL_RemoveImmediate = gd.CreateSDKCallOrFail(SDKCall_Static, SDKConf_Signature, "UTIL_RemoveImmediate", param1, sizeof(param1));

@@ -1,16 +1,5 @@
 "Games"
 {
-    "#default"
-    {
-        "Offsets"
-        {
-            "OS"
-            {
-                "linux"     "1"
-                "windows"   "0"
-            }
-        }
-    }
     "nmrih"
     {
         "Functions"
@@ -33,22 +22,27 @@
                     "signature"     "g_pEntityList"
                 }
 
+                "linux64"
+                {
+                    "signature"     "g_pEntityList"
+                }
+
                 "windows"
                 {
                     "signature"     "CNMRiH_TurnedZombie_Watcher::TurnThink"
-                    // "read"          "79"
+                    "read"          "100" // 0x64
+                }
+
+                "windows64"
+                {
+                    "signature"     "CNMRiH_TurnedZombie_Watcher::TurnThink"
+                    "read"          "143" // 0x8F
                 }
             }
         }
 
         "Offsets"
         {
-            "_win_entlist_read"
-            {
-                "windows"       "100"   // 0x64
-                "windows64"     "143"   // 0x8F
-            }
-
             "sizeof(TurnedZombieEntry_t)"
             {
                 "linux"     "292"
@@ -167,15 +161,15 @@
                 "linux"     "12"
                 "linux64"   "12"
                 "windows"   "12"
-                "windows64" ""
+                "windows64" "12"
             }
 
             "mstudiomodel_t->name"
             {
                 "linux"     "0"
-                "linux64"   "12"
+                "linux64"   "0"
                 "windows"   "0"
-                "windows64" "12"
+                "windows64" "0"
             }
             
         }
@@ -186,6 +180,7 @@
             {
                 "library"   "server"
                 "linux"     "@gEntList"
+                "linux64"   "@gEntList"
             }
 
             // windows sig: search string "models/nmr_zombie/%s.mdl"
