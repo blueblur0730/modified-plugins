@@ -69,7 +69,7 @@ int g_iOff_m_pPlayer = -1;
 #include "nmrih_dev_menu/drop.sp"
 #include "nmrih_dev_menu/stamina.sp"
 
-#define PLUGIN_VERSION "1.1"
+#define PLUGIN_VERSION "1.1.1"
 
 public Plugin myinfo =
 {
@@ -84,7 +84,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
 	char name[64];
 	GetGameFolderName(name, sizeof(name));
-	if ((GetEngineVersion() != Engine_SDK2013) || strcmp(name, "nmrih") != 0)
+	if ((GetEngineVersion() != Engine_HL2DM) || strcmp(name, "nmrih") != 0)
 	{
 		strcopy(error, err_max, "This plugin is only for NMRiH.");
 		return APLRes_SilentFailure;
