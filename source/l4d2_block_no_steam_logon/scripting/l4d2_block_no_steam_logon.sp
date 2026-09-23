@@ -43,6 +43,18 @@ enum EAuthSessionResponse
 															   // k_EAuthSessionResponsePublisherIssuedBan = 9,			// The user is banned for this game. The ban came via the web api and not VAC (not in l4d engine)
 }
 
+/*
+ * MSVC builds CBaseClient / CGameClient / CHLTVClient with the IClient subobject at +4 (RTTI mdisp = 4),
+ * while the engine hands CSteam3Server::OnValidateAuthTicketResponseHelper the complete object pointer.
+ * Every IClient member therefore has to be reached through (client + 4) on Windows - the engine itself
+ * does the same in CBaseServer::CheckTimeouts (v3 = client + 4; netchan = v3->vtbl[18](v3)).
+ * On Linux the plugin's pointers / vtable indices work as they are, so the adjustment is Windows only.
+ */
+stock Address GetIClientPtr(Address pClient)
+{
+	return (g_iOS == OS_Windows) ? (pClient + view_as<Address>(4)) : pClient;
+}
+
 methodmap INetChannel{
 	public bool IsTimingOut(){
 		return SDKCall(g_hSDKCall_IsTimingOut, view_as<Address>(this));
@@ -52,15 +64,17 @@ methodmap INetChannel{
 methodmap CBaseClient
 {
 	public INetChannel GetNetChannel(){
-		return view_as<INetChannel>(SDKCall(g_hSDKCall_GetNetChannel, view_as<Address>(this)));
+		// windows: IClient vtable slot 18 (see the frame rule note in the gamedata).
+		return view_as<INetChannel>(SDKCall(g_hSDKCall_GetNetChannel, GetIClientPtr(view_as<Address>(this))));
 	}
 
 	public void Disconnect(const char[] reason){
-		SDKCall(g_hSDKCall_Disconnect, view_as<Address>(this), reason);
+		// windows: the IClient implementation (vtable slot 13, RVA 0x4EC60) expects the IClient subobject.
+		SDKCall(g_hSDKCall_Disconnect, GetIClientPtr(view_as<Address>(this)), reason);
 	}
 
 	public void GetClientName(char[] name, int maxlen){
-		SDKCall(g_hSDKCall_GetClientName, view_as<Address>(this), name, maxlen);
+		SDKCall(g_hSDKCall_GetClientName, GetIClientPtr(view_as<Address>(this)), name, maxlen);
 	}
 }
 

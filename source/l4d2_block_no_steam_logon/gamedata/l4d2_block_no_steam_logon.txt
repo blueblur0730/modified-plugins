@@ -14,8 +14,42 @@
 
     "left4dead2"
     {
+        /*
+         * Windows verification target: engine.dll (PE32 x86, imagebase 0x10000000, PE timestamp 2026-06-30).
+         * All three binary signatures below still match exactly once in that build
+         * (RVA 0x12D750 / 0x4E870 / 0x4EC60) - see the per entry comments.
+         *
+         * Frame rule (Windows): MSVC puts the IClient subobject at +4 inside CGameClient /
+         * CBaseClient / CHLTVClient (RTTI base class mdisp = 4), while the engine hands the auth
+         * ticket helper the *complete* object pointer. Every IClient virtual therefore has to be
+         * invoked on (client + 4):
+         *     GetNetChannel = slot 18, GetClientName = slot 17, Disconnect = slot 13.
+         * Direct (non virtual) calls into the engine's IClient implementations need the same +4 -
+         * the Disconnect signature below *is* the IClient slot 13 implementation, and the engine's
+         * own timeout check calls it as (client + 4)->vtbl[13]((client + 4), reason)
+         * (CBaseServer::CheckTimeouts, engine.dll RVA 0x135880).
+         */
         "Functions"
         {
+            /*
+             * The real function is
+             *     void __thiscall CSteam3Server::OnValidateAuthTicketResponseHelper(CBaseClient *, EAuthSessionResponse)
+             * i.e. TWO stack arguments (engine.dll: `retn 8`, verified in IDA).
+             *
+             * An earlier revision declared a phantom third argument ("a1"). DHooks builds its parameter
+             * description from this list, so a third entry describes a frame one argument wider than the real
+             * one - that is what made a SourcePawn Get(3) fail at runtime with
+             * "Invalid param number 3 max params is 2" (observed live). The entry is removed because the
+             * description has to match the function (retn 8, two stack arguments), NOT because a crash was
+             * traced to it: a recorded Windows crash inside steam_api's callback pump was checked against that
+             * theory and does not fit. Its five frames form an intact direct call chain (every recorded return
+             * address lands exactly at call+5), the fault is a `mov eax, [esi]` pointer dereference in
+             * steam_api's own container code, and no SourceMod / DHooks / engine frame appears in it at all.
+             * A Supercede that had unbalanced the stack would have destroyed those return addresses.
+             *
+             * The plugin source has always used Get(1) = client and Get(2) = response, so dropping the phantom
+             * argument needs no .sp change.
+             */
             "CSteam3Server::OnValidateAuthTicketResponseHelper"
             {
                 "signature" "CSteam3Server::OnValidateAuthTicketResponseHelper"
@@ -24,19 +58,14 @@
                 "this"      "ignore"
                 "arguments"
                 {
-                    "a1"
-                    {
-                        "type"  "int"   // visible class pointer so be it.
-                    }
-
                     "CBaseClient"
                     {
-                        "type"  "int"   // pointer address
+                        "type"  "int"   // complete object pointer the engine passes (the helper adds +4 itself)
                     }
 
                     "EAuthSessionResponse"
                     {
-                        "type"  "int"   // enum EAuthSessionResponse
+                        "type"  "int"   // enum EAuthSessionResponse; the engine only calls this on non-zero (failure)
                     }
                 }
             }
@@ -44,18 +73,46 @@
 
         "Offsets"
         {
+            /*
+             * CNetChan vtable slot 7.
+             * windows verified (engine.dll RVA 0x1B1D50):
+             *   return m_flLastReceivedTime != -1.0 && g_flTime > m_flLastReceivedTime + 4.0
+             * i.e. the hard coded 4.0s check the plugin documents in its source.
+             * Called on the INetChannel* returned by GetNetChannel, so no frame adjustment needed.
+             */
             "CNetChan::IsTimingOut"
             {
                 "linux"     "7"
                 "windows"   "7"
             }
 
+            /*
+             * IClient vtable slot 18.
+             * windows verified (engine.dll RVA 0x4FCE0, one match per client class):
+             *   mov eax, [ecx+0E4h] ; ret      -> CBaseClient::m_NetChannel (IClient* + 0xE4 = object + 0xE8)
+             * The engine itself does exactly this in CBaseServer::CheckTimeouts (RVA 0x135880):
+             *   v3 = client + 4;  netchan = (*(void ***)v3)[18](v3);  if (netchan) netchan->IsTimingOut()
+             * The previous windows value 9 was counting the __purecall entries of the +0 frame's
+             * vtable (IGameEventListener2 / CBaseClient side). Slot 9 of that frame is a nullstub for
+             * CBaseClient/CHLTVClient and an unrelated sound helper for CGameClient, so it can never
+             * return a net channel. Note that on Windows this virtual must be called with
+             * (pBaseClient + 4); the gamedata alone cannot add that offset - see the frame rule above.
+             */
             "CBaseClient::GetNetChannel"
             {
                 "linux"     "8"
-                "windows"   "9" // probably, a lot __purcall in the vtable. if it is wrong, try use sig: \x8D\x41\x38\xC3
+                "windows"   "18"
             }
 
+            /*
+             * char m_Name[32] inside CBaseClient, read straight from the complete object pointer
+             * (the same pointer the detour receives), which is exactly what the plugin does.
+             * windows verified (engine.dll):
+             *   - name setter, +0 frame vtable slot 16 (RVA 0x4DE60): copies into (this + 60),
+             *     pads with "unnamed", mirrors it to ConVar "name".
+             *   - the IClient name getter (slot 17) returns (IClient* + 0x38) = object + 0x3C = 60,
+             *     so the value is consistent for both frames.
+             */
             // linux: CBaseClient::GetClientName
             // windows: CBaseClient::SetName
             "CBaseClient->m_Name"
@@ -68,6 +125,8 @@
         "Signatures"
         {
             // many strings like "no steam logon".
+            // windows verified (engine.dll RVA 0x12D750): the STEAMAUTH warning plus the
+            // EAuthSessionResponse switch ("No Steam logon", "Client timed out", "Client dropped by server").
             "CSteam3Server::OnValidateAuthTicketResponseHelper"
             {
                 "library"   "engine"
@@ -76,7 +135,7 @@
                 /* 55 8B EC 53 56 8B 75 ? 8B 46 ? 8B 50 ? 57 8B 7D ? 83 C6 ? 8B D9 57 8B CE FF D2 50 68 ? ? ? ? FF 15 ? ? ? ? 8B 06 8B 50 ? 83 C4 ? 57 8B CE FF D2 */
             }
 
-            // vtable linux: 7, win: 6.
+            // vtable linux: 7, win: 6  (windows verified: index 6 of ??_7CBaseServer@@6B@, engine.dll RVA 0x4E870)
             // return: IClient*, input: engine client index.
             /* virtual IClient *GetClient( int index )  return m_Clients[index];  */
             "CBaseServer::GetClient"
@@ -87,8 +146,9 @@
                 /* 55 8B EC 8B 81 ? ? ? ? 8B 4D ? 8B 04 88 85 C0 74 ? 83 C0 ? 5D C2 ? ? 33 C0 5D C2 */
             }
 
-            /* CBaseClient::Disconnect(CBaseClient *this, char *src, ...) */
-            // search for string "leaving splitscreen"
+            /* IClient::Disconnect - IClient vtable slot 13 (engine.dll RVA 0x4EC60, windows verified) */
+            // search for string "leaving splitscreen" (referenced inside this function)
+            // windows: must be called with (pBaseClient + 4), the implementation expects the IClient subobject pointer
             "CBaseClient::Disconnect"
             {
                 "library"   "engine"
@@ -97,11 +157,20 @@
                 /* 55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 ? 57 8B 7D ? 83 BF */
             }
 
-            // unknown for windows.
+            /*
+             * IClient vtable slot 17 - the only client name getter in the engine (used by the
+             * STEAMAUTH warning and by the "Sending file ... from client %s" messages).
+             * windows verified (engine.dll RVA 0x4FCD0, exactly one match):
+             *   8D 41 38 C3    lea eax, [ecx+38h] ; ret   -> returns the same buffer as "CBaseClient->m_Name"
+             * It is a 4 byte leaf function, so the signature cannot be longer than that.
+             * Only usable with (pBaseClient + 4); the plugin itself reads m_Name directly on Windows.
+             */
             "CBaseClient::GetClientName"
             {
                 "library"   "engine"
                 "linux"     "@_ZNK11CBaseClient13GetClientNameEv"
+                "windows"   "\x8D\x41\x38\xC3"
+                /* 8D 41 38 C3 */
             }
         }
     }
